@@ -777,10 +777,27 @@ implementation, so a common base declaring `verify(mixed, MutationContext)` woul
 the concrete type and call it directly, which is what keeps the typing exact.
 
 ### Step 4 — `packages/wordpress`
-- Custom table mapping and migration runner
-- Post type registration driven by `handle` + `WordPressPost` pattern
-- `before_delete_post` hook
-- Capability declaration
+- `SchemaBuilder`: the spec's physical schema — columns, indexes, edge placement
+- `QueryCompiler`: a Criteria as a parameterised SELECT
+- `MigrationPlanner`: the diff, split into what can be applied and what cannot
+- `WordPressAdaptor`: dispatch and the transaction boundary, over a narrow `Database`
+- `PostTypeRegistrar` and `OrphanGuard`
+
+**The adaptor is deliberately thin.** Everything worth getting right — how a spec
+becomes a schema, how a Criteria becomes SQL, what a migration may do unattended — is
+a pure class testable without a database. What remains in the adaptor is dispatch.
+
+**Identifiers are resolved, not escaped.** A value always becomes a placeholder, but a
+column name cannot be parameterised, so the query compiler resolves field names against
+the table's own schema and refuses anything it does not find. An unknown column is a
+bug in the caller, and refusing beats quoting whatever arrived.
+
+**Enum columns are sized to their longest member**, from the spec rather than a fixed
+width, so adding a longer member surfaces as a migration instead of being absorbed.
+
+**PHPStan needs the WordPress stubs**, which are large enough to exhaust the default
+128M — hence `--memory-limit=1G` on the `stan` script. The architecture rule still
+keeps those symbols out of the core packages.
 
 ### Step 5 — Unit of work
 - Command buffer and `commit()`

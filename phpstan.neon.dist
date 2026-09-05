@@ -7,4 +7,9 @@ parameters:
         analyse:
             - packages/*/vendor
     tmpDir: .phpstan.cache
+    # WordPress ships no autoloadable class map, so its symbols come from stubs.
+    # Only packages/wordpress and packages/wpgraphql may use them; the architecture
+    # check enforces that the core packages do not.
+    scanFiles:
+        - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
     treatPhpDocTypesAsCertain: false

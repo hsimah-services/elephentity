@@ -1,0 +1,153 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PheFr\WordPress\Tests;
+
+use PheFr\Schema\Ir\Schema;
+use PheFr\Schema\SchemaCompiler;
+use PheFr\Schema\SpecSource;
+use PheFr\WordPress\Sql\Naming;
+use PheFr\WordPress\Sql\SchemaBuilder;
+use PheFr\WordPress\Sql\TableSchema;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+
+#[CoversClass(SchemaBuilder::class)]
+#[CoversClass(Naming::class)]
+final class SchemaBuilderTest extends TestCase
+{
+    private static ?Schema $schema = null;
+
+    public function testEveryEntityGetsATableWithAnImplicitId(): void
+    {
+        $post = $this->table('wp_phe_post');
+
+        $id = $post->column('id');
+
+        self::assertNotNull($id);
+        self::assertSame('BIGINT UNSIGNED', $id->type);
+        self::assertTrue($id->autoIncrement);
+        self::assertSame('id', $post->primaryKey);
+    }
+
+    public function testCamelCaseFieldsBecomeSnakeCaseColumns(): void
+    {
+        $post = $this->table('wp_phe_post');
+
+        self::assertNotNull($post->column('created_at'));
+        self::assertNotNull($post->column('post_id'));
+        self::assertNull($post->column('createdAt'));
+    }
+
+    public function testColumnTypesFollowThePrimitive(): void
+    {
+        $post = $this->table('wp_phe_post');
+
+        $title = $post->column('title');
+        $createdAt = $post->column('created_at');
+        $updatedAt = $post->column('updated_at');
+        $postId = $post->column('post_id');
+        $body = $this->table('wp_phe_comment')->column('body');
+
+        self::assertNotNull($title);
+        self::assertNotNull($createdAt);
+        self::assertNotNull($updatedAt);
+        self::assertNotNull($postId);
+        self::assertNotNull($body);
+
+        // maxLength: 200 in the spec.
+        self::assertSame('VARCHAR(200)', $title->type);
+        self::assertSame('DATETIME', $createdAt->type);
+        self::assertSame('BIGINT', $postId->type);
+        self::assertSame('LONGTEXT', $body->type);
+
+        // required and nullable are separate facts, and only the second shapes the
+        // column.
+        self::assertFalse($createdAt->nullable);
+        self::assertTrue($updatedAt->nullable);
+    }
+
+    public function testEnumColumnsAreSizedToTheirLongestMember(): void
+    {
+        // Sized from the spec rather than a fixed width, so adding a longer member
+        // surfaces as a migration rather than being absorbed silently.
+        $post = $this->table('wp_phe_post');
+
+        // PostStatus: draft, scheduled, published — longest is 9.
+        self::assertSame('VARCHAR(9)', $post->column('status')?->type);
+        // Inline: public, private — longest is 7.
+        self::assertSame('VARCHAR(7)', $post->column('visibility')?->type);
+    }
+
+    public function testAOneToManyEdgePutsTheKeyOnTheFarSide(): void
+    {
+        // Post declares comments; the column lands on the comment table, named from
+        // the reverse accessor.
+        $comment = $this->table('wp_phe_comment');
+        $column = $comment->column('post_id');
+
+        self::assertNotNull($column);
+        self::assertSame('BIGINT UNSIGNED', $column->type);
+        self::assertTrue($column->nullable, 'a referencing row can exist before it is attached');
+        self::assertArrayHasKey('wp_phe_comment_post_id_idx', $comment->indexes);
+
+        self::assertNull($this->table('wp_phe_post')->column('comments_id'));
+    }
+
+    public function testAManyToManyEdgeDerivesAJoinTable(): void
+    {
+        $join = $this->table('wp_phe_post_tags');
+
+        self::assertNotNull($join->column('post_id'));
+        self::assertNotNull($join->column('tag_id'));
+        self::assertSame('', $join->primaryKey, 'the pair is the identity, not a surrogate');
+
+        $unique = $join->indexes['wp_phe_post_tags_pair_uniq'] ?? null;
+
+        self::assertNotNull($unique);
+        self::assertTrue($unique->unique);
+        self::assertSame(['post_id', 'tag_id'], $unique->columns);
+    }
+
+    public function testUniqueAndIndexedFieldsProduceTheMatchingIndex(): void
+    {
+        self::assertArrayHasKey('wp_phe_tag_label_uniq', $this->table('wp_phe_tag')->indexes);
+        self::assertTrue($this->table('wp_phe_tag')->indexes['wp_phe_tag_label_uniq']->unique);
+
+        self::assertArrayHasKey('wp_phe_post_title_idx', $this->table('wp_phe_post')->indexes);
+        self::assertFalse($this->table('wp_phe_post')->indexes['wp_phe_post_title_idx']->unique);
+    }
+
+    public function testTheTablePrefixIsApplied(): void
+    {
+        $unprefixed = (new SchemaBuilder(new Naming()))->build($this->schema());
+
+        self::assertArrayHasKey('phe_post', $unprefixed);
+        self::assertArrayNotHasKey('wp_phe_post', $unprefixed);
+    }
+
+    private function table(string $name): TableSchema
+    {
+        $tables = (new SchemaBuilder(new Naming('wp_')))->build($this->schema());
+
+        self::assertArrayHasKey($name, $tables);
+
+        return $tables[$name];
+    }
+
+    private function schema(): Schema
+    {
+        if (null !== self::$schema) {
+            return self::$schema;
+        }
+
+        $compiled = (new SchemaCompiler())->compile(
+            new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
+        );
+
+        self::assertTrue($compiled->isSuccess());
+
+        return self::$schema = $compiled->schema();
+    }
+}

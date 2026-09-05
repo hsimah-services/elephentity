@@ -43,7 +43,7 @@ jobs:
         run: vendor/bin/php-cs-fixer fix --dry-run --diff --show-progress=none
 
       - name: Static analysis
-        run: vendor/bin/phpstan analyse --no-progress
+        run: composer stan -- --no-progress
 
       - name: Architecture rules
         run: composer arch
