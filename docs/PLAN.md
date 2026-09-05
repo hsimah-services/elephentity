@@ -91,6 +91,28 @@ spec field mean", and drift from each other rather than from the spec.
 | `wpgraphql/` | IR → compiled registration manifest |
 | `cli/` | `phefr generate` / `validate` / `check` / `migrate` |
 
+### Packaging: a Composer library
+
+PheFr ships as a Composer library consumed by a thin WordPress plugin — **not** as a
+WP plugin itself. Shipping the framework as a plugin would bake WordPress into the
+distribution model of a thing whose whole premise is that WP is one adapter among
+several, making the abstraction nominal.
+
+The packages split cleanly by lifecycle:
+
+- **Dev-only, build time:** `schema`, `codegen`, `cli` — never ship to production.
+- **Runtime, shipped:** `runtime`, `wordpress`, `wpgraphql`.
+
+**Known risk.** WordPress has no dependency manager and no class isolation — every
+plugin loads into one shared PHP process, and PHP class names are global. If two
+plugins each bundle their own `vendor/` with a different PheFr version, whichever
+autoloads first wins and the other silently gets the wrong classes. Accepted for now
+because we are the only consumer; the fix, if PheFr is ever distributed widely, is
+[php-scoper](https://github.com/humbug/php-scoper) to rewrite dependencies under a
+private namespace prefix at build time.
+
+### Storage port
+
 The storage port is defined **now**, with exactly one adapter, rather than retrofitted
 later — WP concepts (int post IDs, postmeta as untyped KV, taxonomies-as-edges,
 `WP_Query` semantics) leak quietly otherwise. Enforced statically: no `WP_*` symbol
@@ -658,8 +680,7 @@ Cheapest first, each catching a distinct class of failure:
 ## 15. Implementation steps
 
 ### Step 0 — Foundations
-Repo layout, Composer packages and autoloading, CI skeleton, PHPStan config. Decide
-library-vs-plugin packaging.
+Repo layout, Composer packages and autoloading, CI skeleton, PHPStan config.
 
 **PHP 8.3 is the floor.** It is WordPress.org's own recommended line, it holds
 security support into 2027 (8.2 loses it in December 2026), and it is universally
@@ -732,8 +753,6 @@ schema format we have — better than inventing a `Post` example.
 
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
-- **Packaging** — Composer library consumed by a thin WP plugin (recommended, keeps
-  `wordpress/` genuinely swappable), or a WP plugin itself?
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
 - **Finder vs statics** — confirm generated `PostFinder`.
 - **Pagination shape** — cursor format, and whether it is opaque.
