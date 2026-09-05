@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# Run any command against the PheFr PHP toolchain in a throwaway container.
+#
+#   ./tools/php composer install
+#   ./tools/php composer ci
+#   ./tools/php vendor/bin/phpunit
+#   ./tools/php vendor/bin/phpstan analyse
+#   ./tools/php php -v
+#   ./tools/php bash                  # interactive shell
+#
+# The container is removed on exit (--rm). Nothing runs in the background, so there
+# is nothing to shut down when you are finished.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+IMAGE="phefr-dev:8.3"
+
+if command -v podman >/dev/null 2>&1; then
+    ENGINE=podman
+elif command -v docker >/dev/null 2>&1; then
+    ENGINE=docker
+else
+    echo "tools/php: needs podman or docker." >&2
+    echo "  Fedora:  sudo dnf install podman" >&2
+    exit 1
+fi
+
+if ! "$ENGINE" image exists "$IMAGE" >/dev/null 2>&1 \
+    && ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "Building $IMAGE (first run only)..." >&2
+    "$ENGINE" build -t "$IMAGE" -f .docker/Dockerfile .docker
+fi
+
+# Rootless podman maps the host user to root inside the container, so files land
+# owned by you. Docker runs as real root and would leave root-owned files behind.
+USER_ARGS=()
+if [ "$ENGINE" = "docker" ]; then
+    USER_ARGS=(--user "$(id -u):$(id -g)")
+fi
+
+# Interactive only when attached to a terminal, so CI and pipes still work.
+TTY_ARGS=()
+if [ -t 0 ] && [ -t 1 ]; then
+    TTY_ARGS=(-it)
+fi
+
+exec "$ENGINE" run --rm \
+    "${TTY_ARGS[@]}" \
+    "${USER_ARGS[@]}" \
+    `# :z relabels the mount for SELinux, which Fedora enforces by default.` \
+    -v "$PWD:/app:z" \
+    `# Persist Composer's download cache between runs; otherwise every install refetches.` \
+    -v phefr-composer-cache:/composer \
+    -e COMPOSER_HOME=/composer \
+    -w /app \
+    "$IMAGE" "$@"
