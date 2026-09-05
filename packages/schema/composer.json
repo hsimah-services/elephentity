@@ -1,0 +1,23 @@
+{
+    "name": "phefr/schema",
+    "description": "Spec parser, JSON Schema, pattern resolution and IR for PheFr. Build-time only.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.3",
+        "symfony/yaml": "^7.0 || ^8.0",
+        "opis/json-schema": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "PheFr\\Schema\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PheFr\\Schema\\Tests\\": "tests/"
+        }
+    }
+}

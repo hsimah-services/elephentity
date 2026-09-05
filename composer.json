@@ -1,0 +1,53 @@
+{
+    "name": "phefr/phentity-framework",
+    "description": "An AI-native framework for building PHP business logic from human-readable specs.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.3",
+        "symfony/yaml": "^7.0 || ^8.0",
+        "opis/json-schema": "^2.3",
+        "nette/php-generator": "^4.1",
+        "symfony/console": "^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0 || ^12.0",
+        "phpstan/phpstan": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "php-stubs/wordpress-stubs": "^6.7 || ^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PheFr\\Schema\\": "packages/schema/src/",
+            "PheFr\\Codegen\\": "packages/codegen/src/",
+            "PheFr\\Runtime\\": "packages/runtime/src/",
+            "PheFr\\WordPress\\": "packages/wordpress/src/",
+            "PheFr\\WPGraphQL\\": "packages/wpgraphql/src/",
+            "PheFr\\Cli\\": "packages/cli/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PheFr\\Schema\\Tests\\": "packages/schema/tests/",
+            "PheFr\\Codegen\\Tests\\": "packages/codegen/tests/",
+            "PheFr\\Runtime\\Tests\\": "packages/runtime/tests/",
+            "PheFr\\WordPress\\Tests\\": "packages/wordpress/tests/",
+            "PheFr\\WPGraphQL\\Tests\\": "packages/wpgraphql/tests/",
+            "PheFr\\Cli\\Tests\\": "packages/cli/tests/"
+        }
+    },
+    "bin": ["packages/cli/bin/phefr"],
+    "scripts": {
+        "test": "phpunit",
+        "stan": "phpstan analyse",
+        "style": "php-cs-fixer fix --dry-run --diff",
+        "style:fix": "php-cs-fixer fix",
+        "arch": "./tools/check-architecture.sh",
+        "ci": ["@style", "@stan", "@arch", "@test"]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

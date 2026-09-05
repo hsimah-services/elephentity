@@ -1,0 +1,10 @@
+parameters:
+    level: max
+    phpVersion: 80300
+    paths:
+        - packages
+    excludePaths:
+        analyse:
+            - packages/*/vendor
+    tmpDir: .phpstan.cache
+    treatPhpDocTypesAsCertain: false

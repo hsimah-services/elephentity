@@ -1,0 +1,27 @@
+{
+    "name": "phefr/cli",
+    "description": "The phefr command: validate, generate, check, fmt, migrate. Build-time only.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.3",
+        "symfony/console": "^7.0 || ^8.0",
+        "phefr/schema": "self.version",
+        "phefr/codegen": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "PheFr\\Cli\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PheFr\\Cli\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/phefr"
+    ]
+}

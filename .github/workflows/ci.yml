@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Gates that exist today. The PheFr-specific gates are added as their packages land:
+  #   validate           — spec well-formed and semantically closed   (Step 1)
+  #   generate --check   — regenerate and diff; zero tolerance        (Step 3)
+  #   signature check    — generated file header hashes match content (Step 3)
+  #   fmt --check        — canonical spec formatting, so diffs stay semantic
+  #   conformance        — every spec field reaches a getter and a GraphQL field
+  build:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.3 is the floor. 8.4 runs to catch forward-compatibility breaks early.
+        php: ['8.3', '8.4']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Code style
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --show-progress=none
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Architecture rules
+        run: ./tools/check-architecture.sh
+
+      - name: Tests
+        run: vendor/bin/phpunit

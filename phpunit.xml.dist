@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         failOnRisky="true"
+         failOnWarning="true"
+         beStrictAboutOutputDuringTests="true"
+         colors="true">
+    <testsuites>
+        <testsuite name="phefr">
+            <directory>packages/schema/tests</directory>
+            <directory>packages/codegen/tests</directory>
+            <directory>packages/runtime/tests</directory>
+            <directory>packages/wordpress/tests</directory>
+            <directory>packages/wpgraphql/tests</directory>
+            <directory>packages/cli/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>packages/schema/src</directory>
+            <directory>packages/codegen/src</directory>
+            <directory>packages/runtime/src</directory>
+            <directory>packages/wordpress/src</directory>
+            <directory>packages/wpgraphql/src</directory>
+            <directory>packages/cli/src</directory>
+        </include>
+    </source>
+</phpunit>
