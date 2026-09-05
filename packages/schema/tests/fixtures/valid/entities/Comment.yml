@@ -1,0 +1,8 @@
+entity: Comment
+storage:
+  driver: wordpress
+  table: phe_comment
+fields:
+  body:
+    type: text
+    required: true

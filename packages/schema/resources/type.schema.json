@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://phefr.dev/schema/type.json",
+    "title": "PheFr type specification",
+    "description": "A value type aliasing a primitive, or a declared enum.",
+    "type": "object",
+    "required": ["type", "primitive"],
+    "additionalProperties": false,
+    "properties": {
+        "type": { "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName" },
+        "description": { "type": "string" },
+        "primitive": { "$ref": "https://phefr.dev/schema/common.json#/$defs/primitive" },
+        "processors": {
+            "const": true,
+            "description": "Generate ReadProcessor and WriteProcessor interfaces. Boot fails until both are implemented."
+        },
+        "values": {
+            "type": "array",
+            "items": { "$ref": "https://phefr.dev/schema/common.json#/$defs/enumValue" },
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Members of a declared enum. Requires primitive: string or int."
+        }
+    }
+}

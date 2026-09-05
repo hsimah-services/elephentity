@@ -1,0 +1,9 @@
+pattern: WordPressPost
+description: Participation in the WordPress post ecosystem.
+requires:
+  driver: wordpress
+fields:
+  postId:
+    type: int
+    indexed: true
+    unique: true

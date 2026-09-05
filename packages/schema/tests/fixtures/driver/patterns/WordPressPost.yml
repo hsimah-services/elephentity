@@ -1,0 +1,4 @@
+pattern: WordPressPost
+requires: { driver: wordpress }
+fields:
+  postId: { type: int }

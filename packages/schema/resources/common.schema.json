@@ -1,0 +1,347 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://phefr.dev/schema/common.json",
+    "title": "Shared definitions for PheFr specs",
+    "$defs": {
+        "typeName": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]*$",
+            "description": "PascalCase name of an entity, pattern or declared type."
+        },
+        "memberName": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9]*$",
+            "description": "camelCase name of a field, edge, query, action or trigger."
+        },
+        "primitive": {
+            "enum": [
+                "string",
+                "text",
+                "int",
+                "float",
+                "bool",
+                "datetime",
+                "id",
+                "enum",
+                "json"
+            ]
+        },
+        "enumValue": {
+            "type": "string",
+            "pattern": "^[a-z][a-zA-Z0-9_]*$"
+        },
+        "storage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "driver": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "table": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "handle": {
+                    "type": "string",
+                    "description": "The name the storage system knows this entity by. A post type slug under the wordpress driver; a collection name elsewhere."
+                }
+            }
+        },
+        "arguments": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/argument"
+            }
+        },
+        "argument": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "nullable": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "fields": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/field"
+            }
+        },
+        "field": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "A primitive, or the name of a declared type."
+                },
+                "description": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "default": true,
+                "unique": {
+                    "type": "boolean"
+                },
+                "indexed": {
+                    "type": "boolean"
+                },
+                "immutable": {
+                    "type": "boolean"
+                },
+                "maxLength": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4096,
+                    "description": "VARCHAR width for string fields. Past this ceiling the answer is `text`, not a bigger number."
+                },
+                "values": {
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/enumValue"
+                            },
+                            "minItems": 1,
+                            "uniqueItems": true
+                        },
+                        {
+                            "$ref": "#/$defs/typeName"
+                        }
+                    ],
+                    "description": "Inline enum members, or the name of a declared enum type."
+                },
+                "verify": {
+                    "const": true,
+                    "description": "Generate an entity-specific verifier interface for this field."
+                }
+            }
+        },
+        "edges": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/edge"
+            }
+        },
+        "edge": {
+            "type": "object",
+            "required": [
+                "to",
+                "cardinality"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "to": {
+                    "$ref": "#/$defs/typeName"
+                },
+                "cardinality": {
+                    "enum": [
+                        "one",
+                        "many"
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "inverse": {
+                    "oneOf": [
+                        {
+                            "const": true
+                        },
+                        {
+                            "$ref": "#/$defs/memberName"
+                        },
+                        {
+                            "$ref": "#/$defs/edgeInverse"
+                        }
+                    ],
+                    "description": "true derives the reverse accessor name from this entity; a string names it; an object also states whether the reverse side is unique."
+                },
+                "onDelete": {
+                    "enum": [
+                        "restrict",
+                        "cascade",
+                        "nullify"
+                    ]
+                }
+            }
+        },
+        "queries": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/query"
+            }
+        },
+        "query": {
+            "type": "object",
+            "required": [
+                "returns",
+                "handler"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "args": {
+                    "$ref": "#/$defs/arguments"
+                },
+                "returns": {
+                    "type": "object",
+                    "required": [
+                        "type"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "$ref": "#/$defs/typeName"
+                        },
+                        "cardinality": {
+                            "enum": [
+                                "one",
+                                "many"
+                            ]
+                        }
+                    }
+                },
+                "handler": {
+                    "const": true
+                }
+            }
+        },
+        "actions": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/action"
+            }
+        },
+        "action": {
+            "type": "object",
+            "required": [
+                "writes",
+                "handler"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "args": {
+                    "$ref": "#/$defs/arguments"
+                },
+                "writes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "The action's blast radius. It receives a context exposing only these members.",
+                    "properties": {
+                        "fields": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/memberName"
+                            },
+                            "uniqueItems": true
+                        },
+                        "edges": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/memberName"
+                            },
+                            "uniqueItems": true
+                        }
+                    }
+                },
+                "handler": {
+                    "const": true
+                }
+            }
+        },
+        "triggers": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/trigger"
+            }
+        },
+        "trigger": {
+            "type": "object",
+            "required": [
+                "on",
+                "handler"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "on": {
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "create",
+                            "update",
+                            "delete"
+                        ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "phase": {
+                    "enum": [
+                        "preCommit",
+                        "postCommit"
+                    ]
+                },
+                "handler": {
+                    "const": true
+                }
+            }
+        },
+        "edgeInverse": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "$ref": "#/$defs/memberName",
+                    "description": "The reverse accessor name. Omitted, it is derived from the declaring entity, which is only legal when the reverse is unique."
+                },
+                "unique": {
+                    "type": "boolean",
+                    "description": "Whether the target points back at exactly one of the declaring entity. With cardinality many, true is one-to-many and false is many-to-many."
+                }
+            }
+        }
+    }
+}

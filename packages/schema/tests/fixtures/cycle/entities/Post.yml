@@ -1,0 +1,3 @@
+entity: Post
+use: [A]
+storage: { driver: wordpress, table: phe_post }

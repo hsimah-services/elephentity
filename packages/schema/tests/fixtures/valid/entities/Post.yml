@@ -1,0 +1,58 @@
+entity: Post
+description: A published article.
+use:
+  - Auditable
+  - WordPressPost
+storage:
+  driver: wordpress
+  table: phe_post
+  handle: post
+fields:
+  title:
+    type: string
+    required: true
+    maxLength: 200
+    indexed: true
+  price:
+    type: Money
+    nullable: true
+    verify: true
+  status:
+    type: enum
+    values: PostStatus
+    required: true
+  visibility:
+    type: enum
+    values: [public, private]
+edges:
+  comments:
+    to: Comment
+    cardinality: many
+    inverse: true
+  tags:
+    to: Tag
+    cardinality: many
+    inverse:
+      name: posts
+      unique: false
+queries:
+  published:
+    args:
+      limit: { type: int, nullable: true }
+    returns:
+      type: Post
+      cardinality: many
+    handler: true
+actions:
+  publish:
+    args:
+      at: { type: datetime, nullable: true }
+    writes:
+      fields: [status]
+      edges: [comments]
+    handler: true
+triggers:
+  reindex:
+    on: [create, update]
+    phase: postCommit
+    handler: true

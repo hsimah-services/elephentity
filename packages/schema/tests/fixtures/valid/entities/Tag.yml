@@ -1,0 +1,9 @@
+entity: Tag
+storage:
+  driver: wordpress
+  table: phe_tag
+fields:
+  label:
+    type: string
+    required: true
+    unique: true

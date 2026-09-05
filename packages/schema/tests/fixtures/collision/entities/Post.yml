@@ -1,0 +1,5 @@
+entity: Post
+use: [Timestamps]
+storage: { driver: wordpress, table: phe_post }
+fields:
+  createdAt: { type: string }

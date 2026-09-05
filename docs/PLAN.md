@@ -198,7 +198,16 @@ deduplicate within a single entity.
 - Patterns may declare `requires: { driver: wordpress }`, so using a platform-specific
   pattern on the wrong driver is a compile error naming the reason, rather than
   generated code that cannot work. This is where capability checking lands.
-- Patterns carry fields, indexes and storage plumbing — not just fields.
+- **A pattern is a fragment of an entity spec.** Any section an entity may declare, a
+  pattern may declare: fields, edges, storage, queries, actions and triggers. Sealed
+  collisions apply uniformly, with no per-section special cases.
+
+  This is more powerful than it first appears. A `Publishable` pattern can carry a
+  `publish` action, and every entity using it gets its own generated
+  `PostPublishAction` / `PagePublishAction` interface to implement — consistent
+  behaviour, entity-specific logic. The cost is that reading `Post.yml` alone tells
+  you less; you follow the `use:` list. That is already true of fields, and `use:` sits
+  at the top of the file.
 
 ```yaml
 # patterns/WordPressPost.yml
@@ -426,20 +435,39 @@ edges:
   comments:
     to: Comment
     cardinality: many
-    inverse: true
+    inverse: true                 # reverse is unique: one-to-many
+  tags:
+    to: Tag
+    cardinality: many
+    inverse: { name: posts, unique: false }   # many-to-many
 ```
 
-**Relation storage is inferred, never declared** — one-to-many puts the FK on the many
-side, many-to-many derives a join table name. If the generator can work it out, a
+`cardinality` describes the forward side; `inverse.unique` describes the reverse.
+Together they determine the relation, and therefore storage:
+
+| `cardinality` | `inverse.unique` | relation | storage |
+|---|---|---|---|
+| `one` | `true` | one-to-one | foreign key here, unique |
+| `one` | `false` | many-to-one | foreign key here |
+| `many` | `true` | one-to-many | foreign key on the far side |
+| `many` | `false` | many-to-many | join table |
+
+**Relation storage is inferred, never declared.** If the generator can work it out, a
 human choosing it is a chance for two entities to disagree.
+
+Describing the reverse side this way rather than adding a `manyToMany` cardinality
+keeps each key describing one direction, and it buys one-to-one, which the format
+could not previously express.
 
 ### Inverses are optional and opt-in
 
-- `inverse: true` — generate the reverse accessor, name derived from the source entity
-  lowercased (`Post.comments` → `Comment::getPost()`). Allowed only when the reverse
-  is to-one.
-- `inverse: post` — explicit name, always allowed.
-- many-to-many with `inverse: true` — **compile error**, telling you to name it.
+- `inverse: true` — generate the reverse accessor, name derived from the declaring
+  entity lowercased (`Post.comments` → `Comment::getPost()`). `unique` defaults to
+  true.
+- `inverse: post` — shorthand for `{ name: post }`.
+- `inverse: { name: posts, unique: false }` — the full form.
+- A derived name with `unique: false` is a **compile error**: the derived name is
+  singular, and a to-many reverse would have to be pluralised.
 
 The generator never pluralises. English inflection quietly produces `Categorys` and
 different libraries disagree; that is not acceptable in a framework whose selling
@@ -756,4 +784,3 @@ schema format we have — better than inventing a `Post` example.
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
 - **Finder vs statics** — confirm generated `PostFinder`.
 - **Pagination shape** — cursor format, and whether it is opaque.
-- **Can patterns carry queries and actions**, or only fields/indexes/storage?

@@ -1,0 +1,4 @@
+type: Money
+description: An amount in minor units.
+primitive: int
+processors: true

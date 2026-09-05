@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://phefr.dev/schema/pattern.json",
+    "title": "PheFr pattern specification",
+    "description": "A fragment of an entity spec. Any section an entity may declare, a pattern may declare.",
+    "type": "object",
+    "required": ["pattern"],
+    "additionalProperties": false,
+    "properties": {
+        "pattern": { "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName" },
+        "description": { "type": "string" },
+        "use": {
+            "type": "array",
+            "items": { "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName" },
+            "uniqueItems": true
+        },
+        "requires": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Capabilities an entity must have for this pattern to apply. Using it elsewhere is a compile error naming the reason.",
+            "properties": {
+                "driver": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+            }
+        },
+        "storage": { "$ref": "https://phefr.dev/schema/common.json#/$defs/storage" },
+        "fields": { "$ref": "https://phefr.dev/schema/common.json#/$defs/fields" },
+        "edges": { "$ref": "https://phefr.dev/schema/common.json#/$defs/edges" },
+        "queries": { "$ref": "https://phefr.dev/schema/common.json#/$defs/queries" },
+        "actions": { "$ref": "https://phefr.dev/schema/common.json#/$defs/actions" },
+        "triggers": { "$ref": "https://phefr.dev/schema/common.json#/$defs/triggers" }
+    }
+}

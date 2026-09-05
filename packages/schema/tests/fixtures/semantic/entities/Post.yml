@@ -1,0 +1,28 @@
+entity: Post
+storage:
+  driver: wordpress
+  table: phe_post
+  handle: ProductVariationSlugThatIsTooLong
+fields:
+  id: { type: int }
+  slug: { type: string, maxLength: 1000, unique: true }
+  body: { type: text, maxLength: 40 }
+  price: { type: Money }
+  status: { type: enum }
+edges:
+  comments:
+    to: Comment
+    cardinality: many
+    inverse: { unique: false }
+  ghosts:
+    to: Ghost
+    cardinality: one
+actions:
+  publish:
+    writes:
+      fields: [nonexistent]
+    handler: true
+queries:
+  find:
+    returns: { type: Ghost }
+    handler: true

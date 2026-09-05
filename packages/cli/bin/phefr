@@ -3,6 +3,9 @@
 
 declare(strict_types=1);
 
+use PheFr\Cli\Command\ValidateCommand;
+use Symfony\Component\Console\Application;
+
 // Works both when PheFr is the root project and when it is installed as a dependency.
 foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
     if (file_exists($autoload)) {
@@ -12,6 +15,6 @@ foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../
     }
 }
 
-fwrite(STDERR, "phefr: no commands registered yet (Step 1).\n");
-
-exit(1);
+$application = new Application('phefr', '0.1.0');
+$application->add(new ValidateCommand());
+$application->run();

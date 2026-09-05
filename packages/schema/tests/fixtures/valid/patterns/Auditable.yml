@@ -1,0 +1,9 @@
+pattern: Auditable
+description: Writes an audit record after every commit.
+use:
+  - Timestamps
+triggers:
+  audit:
+    on: [create, update]
+    phase: postCommit
+    handler: true
