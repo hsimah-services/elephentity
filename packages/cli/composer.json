@@ -9,7 +9,8 @@
         "php": ">=8.3",
         "symfony/console": "^7.0 || ^8.0",
         "phefr/schema": "self.version",
-        "phefr/codegen": "self.version"
+        "phefr/codegen": "self.version",
+        "phefr/wpgraphql": "self.version"
     },
     "autoload": {
         "psr-4": {

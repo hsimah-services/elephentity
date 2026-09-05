@@ -10,7 +10,8 @@
         "phefr/runtime": "self.version"
     },
     "require-dev": {
-        "php-stubs/wordpress-stubs": "^6.7 || ^7.0"
+        "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
+        "axepress/wp-graphql-stubs": "^2.22"
     },
     "autoload": {
         "psr-4": {

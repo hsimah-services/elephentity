@@ -840,8 +840,34 @@ getter does not. Hence `preload()`, called explicitly, with an identity map cove
 the repeat-access case in between.
 
 ### Step 6 — `packages/wpgraphql`
-- Compiled registration manifest
-- Type and field registration, mutations, connections over the lazy query object
+- `ManifestBuilder`: schema → the whole API surface, pure and therefore tested
+- `ManifestExporter`: the manifest as PHP source, emitted by `phefr generate`
+- `TypeRegistrar`: the thin translation into WPGraphQL's arrays
+- `ConnectionResolver`: connections over the lazy query, and where `preload()` is called
+- `ConformanceChecker` and `phefr check`
+
+**A manifest of constructor calls, not nested arrays.** The file type-checks like any
+other code, so a manifest that no longer matches its value objects fails at build time
+rather than on the first request — and a diff reads as a description of the API
+surface, which is what a reviewer wants when a spec changes.
+
+**A value type travels as its backing primitive.** Money is an `Int` over the wire. A
+custom scalar would need serialise and parse functions the spec does not carry, and
+would insert a second, unvalidated conversion between the client and the write
+processor that already owns that job.
+
+**`required` says nothing about reading.** A field is non-null in the GraphQL output
+when the *spec* says it is not nullable; `required` describes creating a row, so it
+shapes the create mutation's inputs and nothing else. An immutable field is present on
+create and absent from update — the same rule the mutator enforces by generating no
+setter.
+
+**`phefr check` is a different question from `generate --check`.** One asks whether the
+tree matches the spec; the other asks whether the tree is *coherent* — that every field
+the API exposes resolves to a method that exists. It loads the generated classes with
+its own PSR-4 autoloader rather than the project's, because relying on the project's
+Composer configuration would make the gate pass silently whenever that configuration
+was wrong, which is exactly when it should fail.
 
 ### Step 7 — Verification and CI gates
 Architecture rules, conformance tests, the advisory md/yaml agent, GitHub Actions

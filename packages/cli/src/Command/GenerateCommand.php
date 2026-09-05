@@ -6,11 +6,14 @@ namespace PheFr\Cli\Command;
 
 use PheFr\Cli\ProjectConfig;
 use PheFr\Codegen\Codegen;
+use PheFr\Codegen\GeneratedFile;
 use PheFr\Codegen\GeneratorConfig;
 use PheFr\Codegen\Output\Writer;
 use PheFr\Codegen\Output\WriteReport;
 use PheFr\Schema\SchemaCompiler;
 use PheFr\Schema\SpecSource;
+use PheFr\WPGraphQL\Manifest\ManifestBuilder;
+use PheFr\WPGraphQL\Manifest\ManifestExporter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -31,6 +34,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 final class GenerateCommand extends Command
 {
+    public const MANIFEST_PATH = 'graphql-manifest.php';
+
     protected function configure(): void
     {
         $this->addOption(
@@ -85,6 +90,13 @@ final class GenerateCommand extends Command
             $outputDirectory,
             $config->typeNamespace,
         )))->generate($compiled->schema());
+
+        // The GraphQL surface is compiled here too, so one build step produces
+        // everything and `--check` covers the manifest as well as the classes.
+        $files[] = new GeneratedFile(
+            self::MANIFEST_PATH,
+            (new ManifestExporter())->export((new ManifestBuilder())->build($compiled->schema())),
+        );
 
         $writer = new Writer($outputDirectory);
         $report = $check ? $writer->check($files) : $writer->write($files);

@@ -12,4 +12,5 @@ parameters:
     # check enforces that the core packages do not.
     scanFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+        - vendor/axepress/wp-graphql-stubs/wp-graphql-stubs.php
     treatPhpDocTypesAsCertain: false

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9053834a7ab338e1e0cd6f892594aad8",
+    "content-hash": "bb2c51cd246a4087261ff0d881eed18f",
     "packages": [
         {
             "name": "nette/php-generator",
@@ -1224,6 +1224,59 @@
         }
     ],
     "packages-dev": [
+        {
+            "name": "axepress/wp-graphql-stubs",
+            "version": "v2.22.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/AxeWP/wp-graphql-stubs.git",
+                "reference": "33d4311d78a456910d2ca8db28afae1525a75a35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/AxeWP/wp-graphql-stubs/zipball/33d4311d78a456910d2ca8db28afae1525a75a35",
+                "reference": "33d4311d78a456910d2ca8db28afae1525a75a35",
+                "shasum": ""
+            },
+            "require": {
+                "php-stubs/wordpress-stubs": ">=5.4"
+            },
+            "require-dev": {
+                "php": ">=7.4",
+                "php-stubs/generator": "^0.9.0",
+                "phpstan/phpstan": "^2.1.5"
+            },
+            "suggest": {
+                "axepress/wp-graphql-cs": "Coding standards for WPGraphQL projects",
+                "szepeviktor/phpstan-wordpress": "WordPress extensions for PHPStan"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "WPGraphQL function and class declaration stubs for static analysis.",
+            "homepage": "https://github.com/axewp/wp-graphql-stubs",
+            "keywords": [
+                "PHPStan",
+                "graphql",
+                "static analysis",
+                "wordpress",
+                "wp-graphql",
+                "wpgraphql"
+            ],
+            "support": {
+                "issues": "https://github.com/AxeWP/wp-graphql-stubs/issues",
+                "source": "https://github.com/AxeWP/wp-graphql-stubs/tree/v2.22.2"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/AxeWp",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-09-05T04:12:35+00:00"
+        },
         {
             "name": "clue/ndjson-react",
             "version": "v1.3.0",
