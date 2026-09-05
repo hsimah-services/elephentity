@@ -11,16 +11,16 @@ fields:
   title:
     type: string
     required: true
-    maxLength: 200
     indexed: true
+    maxLength: 200
   price:
     type: Money
     nullable: true
     verify: true
   status:
     type: enum
-    values: PostStatus
     required: true
+    values: PostStatus
   visibility:
     type: enum
     values: [public, private]

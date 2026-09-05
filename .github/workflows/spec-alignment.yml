@@ -1,0 +1,64 @@
+name: Spec alignment
+
+# Advisory, on the pull request, and never blocking.
+#
+# Documentation drifting from the thing it documents is an unsolved human problem, and
+# an md file describing an entity is no exception. Rather than pretend otherwise, this
+# leaves a comment while the author is still looking at the diff — post-merge would
+# mean the drift is already in main and whoever caused it has moved on.
+#
+# The agent is asked to enumerate, not to judge. "Are these aligned?" produces an
+# opinion nobody can check; "list the fields in the yaml with no counterpart in the md"
+# produces a list where a false positive is obvious at a glance.
+
+on:
+  pull_request:
+    paths:
+      - '**/*.yml'
+      - '**/*.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  alignment:
+    name: Compare specs against their descriptions
+    runs-on: ubuntu-latest
+    # Requires ANTHROPIC_API_KEY. Skipped entirely where it is absent, so a fork's PR
+    # does not fail on a secret it cannot have.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect changed specs
+        id: changed
+        run: |
+          {
+            echo 'files<<EOF'
+            git diff --name-only "origin/${{ github.base_ref }}"... -- '*.yml' '*.md'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Ask for an enumeration, not an opinion
+        if: steps.changed.outputs.files != ''
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            For each entity spec changed in this pull request, compare the .yml against
+            its companion .md and report exactly two lists:
+
+            1. Fields, edges, queries, actions and triggers present in the yaml with no
+               counterpart described in the md.
+            2. Statements in the md describing behaviour that the yaml does not declare.
+
+            Report only those two lists. Do not judge whether the description reads
+            well, do not suggest wording, and do not comment on the code. If both lists
+            are empty for every changed spec, say so in one line and stop.
+
+            Changed files:
+            ${{ steps.changed.outputs.files }}

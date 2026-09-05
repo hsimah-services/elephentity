@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use PheFr\Cli\Command\CheckCommand;
+use PheFr\Cli\Command\FmtCommand;
 use PheFr\Cli\Command\GenerateCommand;
 use PheFr\Cli\Command\ValidateCommand;
 use Symfony\Component\Console\Application;
@@ -21,4 +22,5 @@ $application = new Application('phefr', '0.1.0');
 $application->add(new ValidateCommand());
 $application->add(new GenerateCommand());
 $application->add(new CheckCommand());
+$application->add(new FmtCommand());
 $application->run();

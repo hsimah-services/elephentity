@@ -5,5 +5,5 @@ requires:
 fields:
   postId:
     type: int
-    indexed: true
     unique: true
+    indexed: true

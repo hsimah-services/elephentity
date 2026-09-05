@@ -870,8 +870,25 @@ Composer configuration would make the gate pass silently whenever that configura
 was wrong, which is exactly when it should fail.
 
 ### Step 7 — Verification and CI gates
-Architecture rules, conformance tests, the advisory md/yaml agent, GitHub Actions
-wiring.
+- `phefr fmt`, the canonical key-order gate
+- An end-to-end pipeline test running all four gates in order
+- `docs/CI.md`, the workflow a consuming project uses
+- `.github/workflows/spec-alignment.yml`, the advisory md/yaml agent
+
+**`fmt` reports rather than rewrites.** PHP's YAML parsers discard comments, so a
+parse-and-dump formatter would delete every explanatory note an author had written.
+Losing someone's reasoning to fix an ordering nit is the wrong trade, so until there is
+a comment-preserving emitter the fix stays manual and the report stays precise. It
+found three ordering slips in our own fixtures the first time it ran.
+
+**Ordering applies to keys, never to members.** Trigger declaration order *is*
+execution order, so sorting members would quietly change behaviour.
+
+**The pipeline test is the one that proves the wiring.** Every layer is unit-tested in
+its own package, which proves each is correct and proves nothing about them working
+together. It also surfaced a real constraint: PHP loads a class once per process, so
+`check` must be a one-shot command rather than something a long-lived worker calls
+repeatedly.
 
 ### Step 8 — First real entity
 Port one entity out of the existing WordPress plugin. That is the best test of the
