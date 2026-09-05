@@ -78,7 +78,7 @@ and 8.4 matrix:
 |---|---|
 | Code style | `php-cs-fixer fix --dry-run --diff` |
 | Static analysis | `phpstan analyse` (level max) |
-| Architecture rules | `./tools/check-architecture.sh` |
+| Architecture rules | `composer arch` |
 | Tests | `phpunit` |
 
 The PheFr-specific gates — `validate`, `generate --check`, signature verification,
@@ -98,5 +98,5 @@ packages/
   cli/                 the phefr command                                  (dev-only)
 tools/
   php                  run a command in the throwaway PHP container
-  check-architecture.sh  enforces the platform-free core
+  check-architecture.php  enforces the platform-free core
 ```

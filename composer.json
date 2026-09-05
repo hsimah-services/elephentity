@@ -36,14 +36,21 @@
             "PheFr\\Cli\\Tests\\": "packages/cli/tests/"
         }
     },
-    "bin": ["packages/cli/bin/phefr"],
+    "bin": [
+        "packages/cli/bin/phefr"
+    ],
     "scripts": {
         "test": "phpunit",
         "stan": "phpstan analyse",
         "style": "php-cs-fixer fix --dry-run --diff",
         "style:fix": "php-cs-fixer fix",
-        "arch": "./tools/check-architecture.sh",
-        "ci": ["@style", "@stan", "@arch", "@test"]
+        "arch": "@php tools/check-architecture.php",
+        "ci": [
+            "@style",
+            "@stan",
+            "@arch",
+            "@test"
+        ]
     },
     "config": {
         "sort-packages": true

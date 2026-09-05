@@ -738,12 +738,25 @@ The keystone; everything is downstream.
 - `phefr validate`
 
 ### Step 2 — `packages/runtime` contracts
-No implementations yet — just the shapes everything else compiles against.
-- `StorageAdaptor` port + capability declaration
+No implementations — just the shapes everything else compiles against.
+- `StorageAdaptor` port, speaking only in entity names and primitives
+- `Capability` / `Capabilities`, declared per adaptor rather than flattened to a
+  lowest common denominator
 - `Verification`, `Violation`
-- `ReadProcessor`, `WriteProcessor`, `MutationContext`
-- Lazy edge query / collection interfaces
-- ID value object
+- `ReadProcessor`, `WriteProcessor`, `ProcessorRegistry`, `MutationContext`
+- `EntityQuery`, the lazy edge query every to-many accessor and finder returns
+- `Identifier`, split into `EntityId` (persisted, opaque) and `PendingId`
+
+**Two identity states, not one.** A commit creating a Post *and* its Comments needs to
+refer to the Post before the database has assigned it an id, so both states satisfy
+`Identifier` and the unit of work resolves each `PendingId` to a real `EntityId` as its
+target is flushed. `PendingId` compares by object identity, because there is nothing
+else yet to compare.
+
+**`MutationContext` uses `original()` and `pending()`**, not `new()` — `new` is a
+reserved word, and while PHP permits it as a method name it reads badly at the call
+site. `pending()` falls back to the original for untouched fields, so a verifier always
+sees what the row will actually hold.
 
 ### Step 3 — `packages/codegen`
 - Templates: Entity, Mutator, Finder, handler and verifier interfaces

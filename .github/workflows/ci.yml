@@ -49,7 +49,7 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress
 
       - name: Architecture rules
-        run: ./tools/check-architecture.sh
+        run: composer arch
 
       - name: Tests
         run: vendor/bin/phpunit
