@@ -816,6 +816,22 @@ on the relation, and only the adaptor knows the physical schema. `EdgePlanner` d
 placement once, and both the schema builder and the query compiler read it — two
 derivations would be two chances to disagree about the same edge.
 
+**The generated bridges close the loop.** The runtime must call a verifier and a
+trigger polymorphically, but the interfaces the application implements take concrete
+types — `verify(Money, PostMutationContext)` — and PHP forbids narrowing a parameter,
+so no shared base could declare them. Generated code is allowed to know both sides:
+`PostVerifiers`, `PostTriggers` and `PostHydrator` take `mixed`, narrow with an assert,
+wrap the context, and dispatch. The user's interface stays exactly typed and the
+runtime stays generic.
+
+Coercion rules live in `ValueDecoder` and `ValueEncoder` rather than being emitted into
+every hydrator: they are identical for every entity, and testing them once beats
+generating fifty copies of the same `is_string` check.
+
+**Field names never reach SQL.** `FieldMap` translates between the spec's field names
+and the database's columns, in the adaptor and nowhere else. Everything above speaks in
+fields; everything below in columns.
+
 **Laziness is free; batching is not.** An edge accessor returning a query costs nothing
 until asked. But once fifty posts have each been asked for their comments one at a
 time, fifty queries have run — batching cannot be retrofitted onto calls already made.

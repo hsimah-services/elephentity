@@ -10,7 +10,11 @@ use PheFr\Runtime\Identity\PendingId;
 use PheFr\Runtime\Storage\Write\Insert;
 use PheFr\Runtime\Storage\Write\Update;
 use PheFr\Runtime\Storage\Write\WriteBatch;
+use PheFr\Schema\SchemaCompiler;
+use PheFr\Schema\SpecSource;
 use PheFr\WordPress\Sql\Column;
+use PheFr\WordPress\Sql\FieldMap;
+use PheFr\WordPress\Sql\Naming;
 use PheFr\WordPress\Sql\TableSchema;
 use PheFr\WordPress\WordPressAdaptor;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -141,13 +145,46 @@ final class WordPressAdaptorTest extends TestCase
         self::assertSame(['begin', 'rollback'], $database->transactionLog);
     }
 
+    public function testFieldNamesBecomeColumnNamesOnTheWayDown(): void
+    {
+        // Nothing above the adaptor should have to know this backend spells fields
+        // in snake_case.
+        $database = new FakeDatabase();
+
+        $this->adaptor($database)->write(new WriteBatch(
+            new Insert('Post', new PendingId('Post'), ['createdAt' => '2026-09-05 00:00:00']),
+        ));
+
+        self::assertSame(['created_at' => '2026-09-05 00:00:00'], $database->inserts[0]['values']);
+    }
+
+    public function testColumnNamesBecomeFieldNamesOnTheWayBack(): void
+    {
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 1, 'created_at' => '2026-09-05 00:00:00']];
+
+        $record = $this->adaptor($database)->get('Post', EntityId::of(1));
+
+        self::assertSame(['createdAt' => '2026-09-05 00:00:00'], $record?->values);
+    }
+
     private function adaptor(FakeDatabase $database): WordPressAdaptor
     {
-        return new WordPressAdaptor($database, [
-            'Post' => new TableSchema('wp_phe_post', [
-                'id' => new Column('id', 'BIGINT UNSIGNED', autoIncrement: true),
-                'title' => new Column('title', 'VARCHAR(255)'),
-            ]),
-        ]);
+        $compiled = (new SchemaCompiler())->compile(
+            new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
+        );
+
+        self::assertTrue($compiled->isSuccess());
+
+        return new WordPressAdaptor(
+            $database,
+            [
+                'Post' => new TableSchema('wp_phe_post', [
+                    'id' => new Column('id', 'BIGINT UNSIGNED', autoIncrement: true),
+                    'title' => new Column('title', 'VARCHAR(255)'),
+                ]),
+            ],
+            new FieldMap($compiled->schema(), new Naming('wp_')),
+        );
     }
 }

@@ -21,7 +21,7 @@ use PheFr\Runtime\Storage\Write\WriteBatch;
 use PheFr\Runtime\Storage\Write\WriteResult;
 use PheFr\WordPress\Database\Database;
 use PheFr\WordPress\Sql\EdgePlacement;
-use PheFr\WordPress\Sql\Naming;
+use PheFr\WordPress\Sql\FieldMap;
 use PheFr\WordPress\Sql\QueryCompiler;
 use PheFr\WordPress\Sql\TableSchema;
 use RuntimeException;
@@ -43,9 +43,9 @@ final readonly class WordPressAdaptor implements StorageAdaptor
     public function __construct(
         private Database $database,
         private array $tables,
+        private FieldMap $fields,
         private array $placements = [],
         private QueryCompiler $compiler = new QueryCompiler(),
-        private Naming $naming = new Naming(),
     ) {
     }
 
@@ -120,7 +120,10 @@ final readonly class WordPressAdaptor implements StorageAdaptor
             match (true) {
                 $operation instanceof Insert => $result->assign(
                     $operation->pendingId(),
-                    EntityId::of($this->database->insert($table->name, $operation->values)),
+                    EntityId::of($this->database->insert(
+                        $table->name,
+                        $this->fields->toColumns($operation->entity(), $operation->values),
+                    )),
                 ),
                 $operation instanceof Update => $this->update($table, $operation),
                 $operation instanceof Delete => $this->delete($table, $operation),
@@ -274,7 +277,7 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         $bindings = [];
 
         foreach ($operation->values as $field => $value) {
-            $assignments[] = sprintf('`%s` = %%s', $this->naming->column($field));
+            $assignments[] = sprintf('`%s` = %%s', $this->fields->column($operation->entity(), $field));
             $bindings[] = $value;
         }
 
@@ -314,7 +317,9 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
         unset($row['id']);
 
-        return new Record($entity, EntityId::of($id), $row);
+        // Columns become fields here, so nothing above the adaptor ever sees a
+        // snake_case name or has to know how this backend spells things.
+        return new Record($entity, EntityId::of($id), $this->fields->toFields($entity, $row));
     }
 
     private function table(string $entity): TableSchema

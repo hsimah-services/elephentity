@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace PheFr\Codegen;
 
+use PheFr\Codegen\Generator\BridgeGenerator;
 use PheFr\Codegen\Generator\ContextGenerator;
 use PheFr\Codegen\Generator\ContractGenerator;
 use PheFr\Codegen\Generator\EntityGenerator;
 use PheFr\Codegen\Generator\EnumGenerator;
 use PheFr\Codegen\Generator\FinderGenerator;
+use PheFr\Codegen\Generator\HydratorGenerator;
 use PheFr\Codegen\Generator\MutatorGenerator;
 use PheFr\Codegen\Naming\Emitter;
 use PheFr\Codegen\Naming\Names;
@@ -43,6 +45,8 @@ final readonly class Codegen
         $contracts = new ContractGenerator($schema, $names, $types, $emitter);
         $contexts = new ContextGenerator($names, $types, $emitter);
         $enums = new EnumGenerator($names, $emitter);
+        $bridges = new BridgeGenerator($names, $types, $emitter);
+        $hydrators = new HydratorGenerator($schema, $names, $types, $emitter);
 
         $files = $enums->generate($schema);
 
@@ -54,6 +58,11 @@ final readonly class Codegen
             $files[] = $entities->generate($entity);
             $files[] = $mutators->generate($entity);
             $files[] = $contexts->mutationContext($entity);
+            $files[] = $hydrators->generate($entity);
+
+            foreach ($bridges->generate($entity) as $file) {
+                $files[] = $file;
+            }
 
             $finder = $finders->generate($entity);
 

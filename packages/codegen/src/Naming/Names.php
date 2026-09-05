@@ -39,6 +39,21 @@ final readonly class Names
         return $this->config->namespaceFor($entity->name . 'Finder');
     }
 
+    public function verifiers(EntityDefinition $entity): string
+    {
+        return $this->config->namespaceFor('Bridge', $entity->name . 'Verifiers');
+    }
+
+    public function triggers(EntityDefinition $entity): string
+    {
+        return $this->config->namespaceFor('Bridge', $entity->name . 'Triggers');
+    }
+
+    public function hydrator(EntityDefinition $entity): string
+    {
+        return $this->config->namespaceFor('Bridge', $entity->name . 'Hydrator');
+    }
+
     public function mutationContext(EntityDefinition $entity): string
     {
         return $this->config->namespaceFor($entity->name . 'MutationContext');

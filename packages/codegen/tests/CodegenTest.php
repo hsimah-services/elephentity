@@ -25,6 +25,15 @@ final class CodegenTest extends TestCase
         sort($paths);
 
         self::assertSame([
+            'Bridge/CommentHydrator.php',
+            'Bridge/CommentTriggers.php',
+            'Bridge/CommentVerifiers.php',
+            'Bridge/PostHydrator.php',
+            'Bridge/PostTriggers.php',
+            'Bridge/PostVerifiers.php',
+            'Bridge/TagHydrator.php',
+            'Bridge/TagTriggers.php',
+            'Bridge/TagVerifiers.php',
             'Comment.php',
             'CommentMutationContext.php',
             'CommentMutator.php',
@@ -135,6 +144,80 @@ final class CodegenTest extends TestCase
         self::assertStringContainsString('assert(null === $value || $value instanceof Money);', $context);
         self::assertStringContainsString('public function pendingTitle(): ?string', $context);
         self::assertStringContainsString('assert(null === $value || is_string($value));', $context);
+    }
+
+    public function testTheVerifierBridgeNarrowsBeforeCallingTheTypedInterface(): void
+    {
+        // PHP forbids narrowing a parameter type in an implementation, so the runtime
+        // cannot call PostPriceVerifier::verify(Money, PostMutationContext) through any
+        // shared interface. Generated code is allowed to know both sides.
+        $bridge = $this->file('Bridge/PostVerifiers.php');
+
+        self::assertStringContainsString('implements EntityVerifiers', $bridge);
+        self::assertStringContainsString("return ['price'];", $bridge);
+        self::assertStringContainsString('assert($value instanceof Money);', $bridge);
+        self::assertStringContainsString(
+            'return $this->priceVerifier->verify($value, new PostMutationContext($context));',
+            $bridge,
+        );
+    }
+
+    public function testAnEntityWithNoVerifiedFieldsStillGetsABridge(): void
+    {
+        // The runtime should not have to check whether a bridge exists.
+        $bridge = $this->file('Bridge/TagVerifiers.php');
+
+        self::assertStringContainsString('return [];', $bridge);
+        self::assertStringContainsString('return Verification::ok();', $bridge);
+    }
+
+    public function testTriggersDispatchInDeclarationOrderGuardedByPhaseAndEvent(): void
+    {
+        $bridge = $this->file('Bridge/PostTriggers.php');
+
+        self::assertStringContainsString(
+            'if (TriggerPhase::PostCommit === $phase && in_array($event, [TriggerEvent::Create, TriggerEvent::Update], true)) {',
+            $bridge,
+        );
+
+        // audit is declared before reindex in the pattern and the entity respectively.
+        self::assertLessThan(
+            strpos($bridge, 'reindexTrigger->handle'),
+            (int) strpos($bridge, 'auditTrigger->handle'),
+        );
+    }
+
+    public function testTheHydratorCallsTheGeneratedConstructorWithExactTypes(): void
+    {
+        $hydrator = $this->file('Bridge/PostHydrator.php');
+
+        self::assertStringContainsString('public function hydrate(Record $record, EdgeLoader $edges): Post', $hydrator);
+        self::assertStringContainsString('private function title(Record $record): string', $hydrator);
+        self::assertStringContainsString('private function price(Record $record): ?Money', $hydrator);
+        self::assertStringContainsString('private function status(Record $record): PostStatus', $hydrator);
+    }
+
+    public function testTheHydratorShortCircuitsNullAndRunsProcessorsOnDeclaredTypes(): void
+    {
+        $hydrator = $this->file('Bridge/PostHydrator.php');
+
+        // Null never reaches a processor, on the way up as on the way down.
+        self::assertStringContainsString(
+            "return null === \$value ? null : \$this->moneyReader->read(\$this->decode->int(\$value, 'Post.price'));",
+            $hydrator,
+        );
+
+        // A required field has no null branch at all.
+        self::assertStringContainsString(
+            "return \$this->decode->string(\$value, 'Post.title');",
+            $hydrator,
+        );
+    }
+
+    public function testTheHydratorTakesOnlyTheProcessorsItsFieldsNeed(): void
+    {
+        // Tag has no declared types, so its hydrator takes the decoder and nothing else.
+        self::assertStringNotContainsString('Reader', $this->file('Bridge/TagHydrator.php'));
     }
 
     public function testGenerationIsDeterministic(): void
