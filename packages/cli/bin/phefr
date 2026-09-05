@@ -3,6 +3,7 @@
 
 declare(strict_types=1);
 
+use PheFr\Cli\Command\GenerateCommand;
 use PheFr\Cli\Command\ValidateCommand;
 use Symfony\Component\Console\Application;
 
@@ -17,4 +18,5 @@ foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../
 
 $application = new Application('phefr', '0.1.0');
 $application->add(new ValidateCommand());
+$application->add(new GenerateCommand());
 $application->run();

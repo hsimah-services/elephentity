@@ -13,12 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Gates that exist today. The PheFr-specific gates are added as their packages land:
-  #   validate           — spec well-formed and semantically closed   (Step 1)
-  #   generate --check   — regenerate and diff; zero tolerance        (Step 3)
-  #   signature check    — generated file header hashes match content (Step 3)
-  #   fmt --check        — canonical spec formatting, so diffs stay semantic
-  #   conformance        — every spec field reaches a getter and a GraphQL field
+  # These are the framework's own gates. The spec gates PheFr provides — `validate`,
+  # `generate --check`, `fmt --check` and conformance — run in the CI of projects that
+  # use PheFr, against their specs; here they are exercised by the test suite instead.
   build:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest

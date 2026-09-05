@@ -8,7 +8,8 @@
     "require": {
         "php": ">=8.3",
         "nette/php-generator": "^4.1",
-        "phefr/schema": "self.version"
+        "phefr/schema": "self.version",
+        "phefr/runtime": "self.version"
     },
     "autoload": {
         "psr-4": {

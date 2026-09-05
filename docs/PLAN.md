@@ -759,10 +759,22 @@ site. `pending()` falls back to the original for untouched fields, so a verifier
 sees what the row will actually hold.
 
 ### Step 3 — `packages/codegen`
-- Templates: Entity, Mutator, Finder, handler and verifier interfaces
+- Entity, Mutator, Finder, action contexts, typed mutation contexts, enums
+- Handler interfaces: queries, actions, triggers, field verifiers, type processors
 - Header + hash signing, with the single shared verifier
-- `phefr generate`, `phefr generate --check`
-- Golden-file tests over schema fixtures
+- `phefr generate`, `phefr generate --check`, driven by `phefr.json`
+
+**`--check` catches all three ways a tree drifts:** a hand-edited file (digest
+mismatch), a stale file the schema no longer produces, and a deleted one. That is why
+no sidecar manifest is needed to track the tree's contents.
+
+**Paths in the digest are relative.** An absolute path would make every signature
+depend on where the project happens to be checked out.
+
+**Interfaces extend nothing.** PHP forbids narrowing a parameter type in an
+implementation, so a common base declaring `verify(mixed, MutationContext)` would make
+`PostPriceVerifier::verify(Money, PostMutationContext)` illegal. Generated callers know
+the concrete type and call it directly, which is what keeps the typing exact.
 
 ### Step 4 — `packages/wordpress`
 - Custom table mapping and migration runner
