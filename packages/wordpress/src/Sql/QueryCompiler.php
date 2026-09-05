@@ -7,6 +7,7 @@ namespace PheFr\WordPress\Sql;
 use PheFr\Runtime\Storage\Comparison;
 use PheFr\Runtime\Storage\Criteria;
 use PheFr\Runtime\Storage\Direction;
+use PheFr\Runtime\Storage\EdgeFilter;
 use PheFr\Runtime\Storage\Filter;
 use RuntimeException;
 
@@ -22,30 +23,141 @@ final readonly class QueryCompiler
 {
     private const MAX_LIMIT = 1000;
 
-    public function __construct(private Naming $naming = new Naming())
-    {
+    /**
+     * @param array<string, EdgePlacement> $placements Keyed by "Entity.edge".
+     */
+    public function __construct(
+        private Naming $naming = new Naming(),
+        private array $placements = [],
+    ) {
     }
 
     public function select(TableSchema $table, Criteria $criteria): CompiledQuery
     {
+        $links = $this->links($table, $criteria);
         [$where, $bindings] = $this->where($table, $criteria);
 
-        $sql = sprintf('SELECT * FROM `%s`', $table->name)
-            . $where
+        $sql = sprintf('SELECT `%s`.*%s FROM `%s`', $table->name, $links['projection'], $table->name)
+            . $links['join']
+            . $this->combine($where, $links['where'])
             . $this->orderBy($table, $criteria)
             . $this->limit($criteria);
 
-        return new CompiledQuery($sql, $bindings);
+        return new CompiledQuery($sql, [...$links['bindings'], ...$bindings]);
     }
 
     public function count(TableSchema $table, Criteria $criteria): CompiledQuery
     {
+        $links = $this->links($table, $criteria);
         [$where, $bindings] = $this->where($table, $criteria);
 
         return new CompiledQuery(
-            sprintf('SELECT COUNT(*) FROM `%s`', $table->name) . $where,
-            $bindings,
+            sprintf('SELECT COUNT(*) FROM `%s`', $table->name)
+                . $links['join']
+                . $this->combine($where, $links['where']),
+            [...$links['bindings'], ...$bindings],
         );
+    }
+
+    private function combine(string $fieldWhere, string $linkWhere): string
+    {
+        return match (true) {
+            '' === $fieldWhere => $linkWhere,
+            '' === $linkWhere => $fieldWhere,
+            default => $fieldWhere . ' AND ' . substr($linkWhere, strlen(' WHERE ')),
+        };
+    }
+
+    /**
+     * Compile every "linked to" constraint into joins, a where clause, and — when more
+     * than one parent is named — the projection that says which parent a row came from.
+     *
+     * @return array{join: string, where: string, projection: string, bindings: list<scalar|null>}
+     */
+    private function links(TableSchema $table, Criteria $criteria): array
+    {
+        $joins = '';
+        $clauses = [];
+        $projection = '';
+        $bindings = [];
+        $alias = 0;
+
+        foreach ($criteria->links as $link) {
+            $placement = $this->placement($link);
+            $ids = array_map(static fn ($id): string => (string) $id, $link->from);
+            $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+
+            if (!$placement->usesJoinTable() && !$placement->keyIsLocal()) {
+                // The key is a column on this very table, so no join is needed.
+                $clauses[] = sprintf('`%s`.`%s` IN (%s)', $table->name, $placement->localColumn, $placeholders);
+
+                if ($link->needsParentColumn()) {
+                    $projection .= sprintf(
+                        ', `%s`.`%s` AS `%s`',
+                        $table->name,
+                        $placement->localColumn,
+                        EdgeFilter::PARENT_COLUMN,
+                    );
+                }
+            } else {
+                $on = sprintf('l%d', ++$alias);
+
+                [$joinTable, $joinToTarget, $parentColumn] = $placement->usesJoinTable()
+                    ? [$placement->table, (string) $placement->targetColumn, $placement->localColumn]
+                    : [$placement->table, 'id', $placement->localColumn];
+
+                // For a locally-keyed edge the declaring table points at us, so the
+                // join runs the other way round.
+                $joins .= $placement->usesJoinTable()
+                    ? sprintf(
+                        ' INNER JOIN `%s` `%s` ON `%s`.`%s` = `%s`.`id`',
+                        $joinTable,
+                        $on,
+                        $on,
+                        $joinToTarget,
+                        $table->name,
+                    )
+                    : sprintf(
+                        ' INNER JOIN `%s` `%s` ON `%s`.`%s` = `%s`.`id`',
+                        $joinTable,
+                        $on,
+                        $on,
+                        $placement->localColumn,
+                        $table->name,
+                    );
+
+                $clauses[] = $placement->usesJoinTable()
+                    ? sprintf('`%s`.`%s` IN (%s)', $on, $parentColumn, $placeholders)
+                    : sprintf('`%s`.`id` IN (%s)', $on, $placeholders);
+
+                if ($link->needsParentColumn()) {
+                    $projection .= $placement->usesJoinTable()
+                        ? sprintf(', `%s`.`%s` AS `%s`', $on, $parentColumn, EdgeFilter::PARENT_COLUMN)
+                        : sprintf(', `%s`.`id` AS `%s`', $on, EdgeFilter::PARENT_COLUMN);
+                }
+            }
+
+            foreach ($ids as $id) {
+                $bindings[] = $id;
+            }
+        }
+
+        return [
+            'join' => $joins,
+            'where' => [] === $clauses ? '' : ' WHERE ' . implode(' AND ', $clauses),
+            'projection' => $projection,
+            'bindings' => $bindings,
+        ];
+    }
+
+    private function placement(EdgeFilter $link): EdgePlacement
+    {
+        return $this->placements[$link->entity . '.' . $link->edge]
+            ?? throw new RuntimeException(sprintf(
+                'Edge %s.%s has no placement; the schema was not planned.',
+                $link->entity,
+                $link->edge,
+            ));
     }
 
     /**
@@ -61,7 +173,7 @@ final readonly class QueryCompiler
         $bindings = [];
 
         foreach ($criteria->filters as $filter) {
-            $column = $this->resolve($table, $filter->field);
+            $column = sprintf('`%s`.`%s`', $table->name, $this->resolve($table, $filter->field));
 
             [$clause, $values] = $this->clause($column, $filter);
 
@@ -80,7 +192,7 @@ final readonly class QueryCompiler
      */
     private function clause(string $column, Filter $filter): array
     {
-        $quoted = sprintf('`%s`', $column);
+        $quoted = $column;
 
         return match ($filter->comparison) {
             Comparison::IsNull => [$quoted . ' IS NULL', []],
@@ -153,7 +265,8 @@ final readonly class QueryCompiler
 
         foreach ($criteria->order as $order) {
             $parts[] = sprintf(
-                '`%s` %s',
+                '`%s`.`%s` %s',
+                $table->name,
                 $this->resolve($table, $order->field),
                 Direction::Descending === $order->direction ? 'DESC' : 'ASC',
             );

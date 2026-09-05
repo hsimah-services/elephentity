@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PheFr\WordPress\Sql;
 
-use PheFr\Schema\Ir\EdgeDefinition;
 use PheFr\Schema\Ir\EntityDefinition;
 use PheFr\Schema\Ir\FieldDefinition;
 use PheFr\Schema\Ir\Primitive;
+use PheFr\Schema\Ir\RelationKind;
 use PheFr\Schema\Ir\Schema;
 use RuntimeException;
 
@@ -29,8 +29,15 @@ final readonly class SchemaBuilder
 {
     private const DEFAULT_STRING_LENGTH = 255;
 
-    public function __construct(private Naming $naming = new Naming())
-    {
+    private EdgePlanner $planner;
+
+    public function __construct(
+        private Naming $naming = new Naming(),
+        ?EdgePlanner $planner = null,
+    ) {
+        // The planner must name tables exactly as this builder does; defaulting it to
+        // its own Naming would silently give the two different prefixes.
+        $this->planner = $planner ?? new EdgePlanner($naming);
     }
 
     /**
@@ -45,11 +52,10 @@ final readonly class SchemaBuilder
         }
 
         // Edges are resolved second: a one-to-many edge on Post adds a column to the
-        // comment table, which must already exist.
-        foreach ($schema->entities as $entity) {
-            foreach ($entity->edges as $edge) {
-                $this->applyEdge($schema, $tables, $entity, $edge);
-            }
+        // comment table, which must already exist. Placement comes from the planner so
+        // that the query compiler cannot disagree about where a link lives.
+        foreach ($this->planner->plan($schema) as $placement) {
+            $this->applyEdge($tables, $placement);
         }
 
         ksort($tables);
@@ -102,86 +108,72 @@ final readonly class SchemaBuilder
     /**
      * @param array<string, TableSchema> $tables
      */
-    private function applyEdge(
-        Schema $schema,
-        array &$tables,
-        EntityDefinition $entity,
-        EdgeDefinition $edge,
-    ): void {
-        $target = $schema->entity($edge->to);
-
-        if (null === $target) {
-            return;
-        }
-
-        $relation = $edge->relation();
-
-        if ($relation->needsJoinTable()) {
-            $tables[$this->naming->joinTable($entity, $edge)] = $this->joinTable($entity, $target, $edge);
+    private function applyEdge(array &$tables, EdgePlacement $placement): void
+    {
+        if ($placement->usesJoinTable()) {
+            $tables[$placement->table] = $this->joinTable($placement);
 
             return;
         }
 
-        // The key sits on whichever side has at most one of the other.
-        [$owner, $column] = $relation->keyIsLocal()
-            ? [$entity, $this->naming->column($edge->name) . '_id']
-            : [$target, $this->naming->foreignKeyColumn($entity, $edge)];
+        $table = $tables[$placement->table] ?? null;
 
-        $table = $this->naming->table($owner);
-        $schemaForTable = $tables[$table] ?? null;
-
-        if (null === $schemaForTable) {
+        if (null === $table) {
             return;
         }
 
-        if (null !== $schemaForTable->column($column)) {
+        if (null !== $table->column($placement->localColumn)) {
             throw new RuntimeException(sprintf(
                 'Edge %s.%s needs column "%s" on %s, but a field already claims it.',
-                $entity->name,
-                $edge->name,
-                $column,
-                $table,
+                $placement->entity,
+                $placement->edge,
+                $placement->localColumn,
+                $placement->table,
             ));
         }
 
         // Nullable regardless of the relation: the referencing row can exist before
         // the row it points at is attached, and a unit of work relies on that.
-        $withColumn = $schemaForTable->withColumn(
-            new Column($column, 'BIGINT UNSIGNED', nullable: true),
+        $withColumn = $table->withColumn(
+            new Column($placement->localColumn, 'BIGINT UNSIGNED', nullable: true),
         );
 
-        $index = $relation->keyIsLocal() && true === $edge->inverse?->unique
-            ? new Index($this->naming->uniqueName($table, $column), [$column], unique: true)
-            : new Index($this->naming->indexName($table, $column), [$column]);
+        $index = RelationKind::OneToOne === $placement->relation
+            ? new Index(
+                $this->naming->uniqueName($placement->table, $placement->localColumn),
+                [$placement->localColumn],
+                unique: true,
+            )
+            : new Index(
+                $this->naming->indexName($placement->table, $placement->localColumn),
+                [$placement->localColumn],
+            );
 
-        $tables[$table] = $withColumn->withIndex($index);
+        $tables[$placement->table] = $withColumn->withIndex($index);
     }
 
-    private function joinTable(
-        EntityDefinition $left,
-        EntityDefinition $right,
-        EdgeDefinition $edge,
-    ): TableSchema {
-        $name = $this->naming->joinTable($left, $edge);
-        $leftColumn = $this->naming->joinColumn($left->name);
-        $rightColumn = $this->naming->joinColumn($right->name);
+    private function joinTable(EdgePlacement $placement): TableSchema
+    {
+        $name = $placement->table;
+        $left = $placement->localColumn;
+        $right = (string) $placement->targetColumn;
 
         return new TableSchema(
             $name,
             [
-                $leftColumn => new Column($leftColumn, 'BIGINT UNSIGNED'),
-                $rightColumn => new Column($rightColumn, 'BIGINT UNSIGNED'),
+                $left => new Column($left, 'BIGINT UNSIGNED'),
+                $right => new Column($right, 'BIGINT UNSIGNED'),
             ],
             [
-                // The pair is the identity of a link, so uniqueness is the primary key.
+                // The pair is the identity of a link, so uniqueness is the key.
                 $this->naming->uniqueName($name, 'pair') => new Index(
                     $this->naming->uniqueName($name, 'pair'),
-                    [$leftColumn, $rightColumn],
+                    [$left, $right],
                     unique: true,
                 ),
-                $this->naming->indexName($name, $rightColumn) => new Index(
-                    $this->naming->indexName($name, $rightColumn),
-                    [$rightColumn],
+                $this->naming->indexName($name, $right) => new Index(
+                    $this->naming->indexName($name, $right),
+                    [$right],
                 ),
             ],
             primaryKey: '',

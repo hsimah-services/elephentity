@@ -7,16 +7,20 @@ namespace PheFr\WordPress;
 use PheFr\Runtime\Capability\Capabilities;
 use PheFr\Runtime\Capability\Capability;
 use PheFr\Runtime\Identity\EntityId;
+use PheFr\Runtime\Identity\Identifier;
 use PheFr\Runtime\Storage\Criteria;
 use PheFr\Runtime\Storage\Page;
 use PheFr\Runtime\Storage\Record;
 use PheFr\Runtime\Storage\StorageAdaptor;
 use PheFr\Runtime\Storage\Write\Delete;
 use PheFr\Runtime\Storage\Write\Insert;
+use PheFr\Runtime\Storage\Write\Link;
+use PheFr\Runtime\Storage\Write\Unlink;
 use PheFr\Runtime\Storage\Write\Update;
 use PheFr\Runtime\Storage\Write\WriteBatch;
 use PheFr\Runtime\Storage\Write\WriteResult;
 use PheFr\WordPress\Database\Database;
+use PheFr\WordPress\Sql\EdgePlacement;
 use PheFr\WordPress\Sql\Naming;
 use PheFr\WordPress\Sql\QueryCompiler;
 use PheFr\WordPress\Sql\TableSchema;
@@ -33,11 +37,13 @@ use Throwable;
 final readonly class WordPressAdaptor implements StorageAdaptor
 {
     /**
-     * @param array<string, TableSchema> $tables Keyed by entity name.
+     * @param array<string, TableSchema>   $tables     Keyed by entity name.
+     * @param array<string, EdgePlacement> $placements Keyed by "Entity.edge".
      */
     public function __construct(
         private Database $database,
         private array $tables,
+        private array $placements = [],
         private QueryCompiler $compiler = new QueryCompiler(),
         private Naming $naming = new Naming(),
     ) {
@@ -118,6 +124,8 @@ final readonly class WordPressAdaptor implements StorageAdaptor
                 ),
                 $operation instanceof Update => $this->update($table, $operation),
                 $operation instanceof Delete => $this->delete($table, $operation),
+                $operation instanceof Link => $this->link($operation),
+                $operation instanceof Unlink => $this->unlink($operation),
                 default => throw new RuntimeException(sprintf(
                     'Unsupported write operation %s.',
                     $operation::class,
@@ -143,6 +151,117 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         $this->database->commit();
 
         return $value;
+    }
+
+    /**
+     * Attach one row to another.
+     *
+     * How that happens depends on where the edge lives, which is exactly why Link says
+     * nothing about columns: a foreign key on either side and a join table are three
+     * different statements for the same intent.
+     */
+    private function link(Link $operation): void
+    {
+        $placement = $this->placement($operation->entity(), $operation->edge);
+        $from = $this->rawId($operation->from);
+        $to = $this->rawId($operation->to);
+
+        if ($placement->usesJoinTable()) {
+            // INSERT IGNORE, because linking twice is not an error — the unique key on
+            // the pair already says a link exists at most once.
+            $this->database->execute(
+                sprintf(
+                    'INSERT IGNORE INTO `%s` (`%s`, `%s`) VALUES (%%d, %%d)',
+                    $placement->table,
+                    $placement->localColumn,
+                    (string) $placement->targetColumn,
+                ),
+                [$from, $to],
+            );
+
+            return;
+        }
+
+        // The key column lives on one side or the other; whichever it is, the row
+        // carrying it is updated to point at the other.
+        [$row, $value] = $placement->keyIsLocal() ? [$from, $to] : [$to, $from];
+
+        $this->database->execute(
+            sprintf(
+                'UPDATE `%s` SET `%s` = %%d WHERE `id` = %%d',
+                $placement->table,
+                $placement->localColumn,
+            ),
+            [$value, $row],
+        );
+    }
+
+    /**
+     * Detach one row from another, or clear the edge entirely when no target is named.
+     */
+    private function unlink(Unlink $operation): void
+    {
+        $placement = $this->placement($operation->entity(), $operation->edge);
+        $from = $this->rawId($operation->from);
+        $to = null === $operation->to ? null : $this->rawId($operation->to);
+
+        if ($placement->usesJoinTable()) {
+            $sql = sprintf(
+                'DELETE FROM `%s` WHERE `%s` = %%d',
+                $placement->table,
+                $placement->localColumn,
+            );
+
+            $bindings = [$from];
+
+            if (null !== $to) {
+                $sql .= sprintf(' AND `%s` = %%d', (string) $placement->targetColumn);
+                $bindings[] = $to;
+            }
+
+            $this->database->execute($sql, $bindings);
+
+            return;
+        }
+
+        if ($placement->keyIsLocal()) {
+            $this->database->execute(
+                sprintf('UPDATE `%s` SET `%s` = NULL WHERE `id` = %%d', $placement->table, $placement->localColumn),
+                [$from],
+            );
+
+            return;
+        }
+
+        $sql = sprintf(
+            'UPDATE `%s` SET `%s` = NULL WHERE `%s` = %%d',
+            $placement->table,
+            $placement->localColumn,
+            $placement->localColumn,
+        );
+
+        $bindings = [$from];
+
+        if (null !== $to) {
+            $sql .= ' AND `id` = %d';
+            $bindings[] = $to;
+        }
+
+        $this->database->execute($sql, $bindings);
+    }
+
+    private function placement(string $entity, string $edge): EdgePlacement
+    {
+        return $this->placements[$entity . '.' . $edge] ?? throw new RuntimeException(sprintf(
+            'Edge %s.%s is not mapped.',
+            $entity,
+            $edge,
+        ));
+    }
+
+    private function rawId(Identifier $identifier): int|string
+    {
+        return $identifier instanceof EntityId ? $identifier->raw() : (string) $identifier;
     }
 
     private function update(TableSchema $table, Update $operation): void

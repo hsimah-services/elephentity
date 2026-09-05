@@ -800,10 +800,28 @@ width, so adding a longer member surfaces as a migration instead of being absorb
 keeps those symbols out of the core packages.
 
 ### Step 5 — Unit of work
-- Command buffer and `commit()`
-- Dependency-ordered writes
-- Two-tier verification pipeline with aggregated violations
-- Batched edge loaders
+- `Mutation`: the command buffer and the context, two views of one state
+- `VerificationPipeline`: both tiers, aggregated
+- `DependencySorter`: parents before the children that reference them
+- `UnitOfWork`: verify → sort → rows → links → preCommit → COMMIT → postCommit
+- `LazyEntityQuery` and `CachingEdgeLoader` on the read side
+
+**Verification happens before anything is written.** A rejected commit leaves no
+partial state and reports every violation at once, which is the whole reason verifiers
+return violations rather than throwing.
+
+**Links are a port concept, not a SQL one.** `Link` and `Unlink` say what the
+relationship is; whether that becomes a foreign key update or a join-table row depends
+on the relation, and only the adaptor knows the physical schema. `EdgePlanner` decides
+placement once, and both the schema builder and the query compiler read it — two
+derivations would be two chances to disagree about the same edge.
+
+**Laziness is free; batching is not.** An edge accessor returning a query costs nothing
+until asked. But once fifty posts have each been asked for their comments one at a
+time, fifty queries have run — batching cannot be retrofitted onto calls already made.
+It needs a caller holding every id up front, which a GraphQL resolver has and a
+getter does not. Hence `preload()`, called explicitly, with an identity map covering
+the repeat-access case in between.
 
 ### Step 6 — `packages/wpgraphql`
 - Compiled registration manifest

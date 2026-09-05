@@ -24,7 +24,7 @@ final class QueryCompilerTest extends TestCase
     {
         $compiled = $this->compile(new Criteria('Post'));
 
-        self::assertSame('SELECT * FROM `wp_phe_post`', $compiled->sql);
+        self::assertSame('SELECT `wp_phe_post`.* FROM `wp_phe_post`', $compiled->sql);
         self::assertSame([], $compiled->bindings);
     }
 
@@ -34,7 +34,10 @@ final class QueryCompilerTest extends TestCase
             (new Criteria('Post'))->where(new Filter('title', Comparison::Equals, "'; DROP TABLE --")),
         );
 
-        self::assertSame('SELECT * FROM `wp_phe_post` WHERE `title` = %s', $compiled->sql);
+        self::assertSame(
+            'SELECT `wp_phe_post`.* FROM `wp_phe_post` WHERE `wp_phe_post`.`title` = %s',
+            $compiled->sql,
+        );
         self::assertSame(["'; DROP TABLE --"], $compiled->bindings);
     }
 
@@ -44,7 +47,7 @@ final class QueryCompilerTest extends TestCase
             (new Criteria('Post'))->where(new Filter('createdAt', Comparison::GreaterThan, '2026-01-01')),
         );
 
-        self::assertStringContainsString('`created_at` > %s', $compiled->sql);
+        self::assertStringContainsString('`wp_phe_post`.`created_at` > %s', $compiled->sql);
     }
 
     public function testAnUnknownFieldIsRefusedRatherThanQuoted(): void
@@ -63,7 +66,7 @@ final class QueryCompilerTest extends TestCase
             (new Criteria('Post'))->where(new Filter('title', Comparison::IsNull)),
         );
 
-        self::assertStringContainsString('`title` IS NULL', $compiled->sql);
+        self::assertStringContainsString('`wp_phe_post`.`title` IS NULL', $compiled->sql);
         self::assertSame([], $compiled->bindings);
     }
 
@@ -89,7 +92,7 @@ final class QueryCompilerTest extends TestCase
             (new Criteria('Post'))->where(new Filter('id', Comparison::In, [1, 2, 3])),
         );
 
-        self::assertStringContainsString('`id` IN (%s, %s, %s)', $compiled->sql);
+        self::assertStringContainsString('`wp_phe_post`.`id` IN (%s, %s, %s)', $compiled->sql);
         self::assertSame([1, 2, 3], $compiled->bindings);
     }
 
@@ -112,7 +115,9 @@ final class QueryCompilerTest extends TestCase
         );
 
         self::assertSame(
-            'SELECT * FROM `wp_phe_post` WHERE `title` = %s AND `id` > %s ORDER BY `created_at` DESC',
+            'SELECT `wp_phe_post`.* FROM `wp_phe_post`'
+                . ' WHERE `wp_phe_post`.`title` = %s AND `wp_phe_post`.`id` > %s'
+                . ' ORDER BY `wp_phe_post`.`created_at` DESC',
             $compiled->sql,
         );
         self::assertSame(['a', 5], $compiled->bindings);
@@ -136,7 +141,10 @@ final class QueryCompilerTest extends TestCase
                 ->take(10),
         );
 
-        self::assertSame('SELECT COUNT(*) FROM `wp_phe_post` WHERE `title` = %s', $compiled->sql);
+        self::assertSame(
+            'SELECT COUNT(*) FROM `wp_phe_post` WHERE `wp_phe_post`.`title` = %s',
+            $compiled->sql,
+        );
     }
 
     private function compile(Criteria $criteria): CompiledQuery
