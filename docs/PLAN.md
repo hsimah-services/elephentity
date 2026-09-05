@@ -658,8 +658,25 @@ Cheapest first, each catching a distinct class of failure:
 ## 15. Implementation steps
 
 ### Step 0 — Foundations
-Repo layout, PHP version, Composer packages and autoloading, CI skeleton, PHPStan
-config. Decide library-vs-plugin packaging.
+Repo layout, Composer packages and autoloading, CI skeleton, PHPStan config. Decide
+library-vs-plugin packaging.
+
+**PHP 8.3 is the floor.** It is WordPress.org's own recommended line, it holds
+security support into 2027 (8.2 loses it in December 2026), and it is universally
+available on managed WP hosts. It supplies everything the design needs: native backed
+enums (8.1) for generated enum classes, `readonly` properties (8.1) and readonly
+classes (8.2) for immutable entity snapshots, and typed class constants plus
+`#[\Override]` (8.3), the latter genuinely useful where hand-written classes implement
+generated interfaces.
+
+Not 8.4, despite it being the newer recommendation: host support is thinner, and its
+two most attractive features for us — property hooks and asymmetric visibility — are
+moot because the WPGraphQL layer maps spec field → `getField()`, so we are committed
+to explicit accessors regardless. Everything else 8.4 offers is internal and reachable
+later by regenerating.
+
+Every generated file emits `declare(strict_types=1)`, and a lint rule requires it in
+hand-written code.
 
 ### Step 1 — `packages/schema`
 The keystone; everything is downstream.
@@ -715,7 +732,6 @@ schema format we have — better than inventing a `Post` example.
 
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
-- **PHP version target.**
 - **Packaging** — Composer library consumed by a thin WP plugin (recommended, keeps
   `wordpress/` genuinely swappable), or a WP plugin itself?
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
