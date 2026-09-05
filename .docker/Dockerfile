@@ -4,7 +4,9 @@
 # containers are created per command and removed on exit. When the WordPress adaptor
 # needs real integration tests, MariaDB and WordPress arrive as a compose file
 # alongside this — those are the things you would start and stop.
-FROM php:8.3-cli
+# Image names are fully qualified: podman refuses to guess a registry for an
+# unqualified name and prompts interactively, which would break unattended builds.
+FROM docker.io/library/php:8.3-cli
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -18,7 +20,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=docker.io/library/composer:2 /usr/bin/composer /usr/bin/composer
 
 # Composer refuses to run as root without this, and rootless podman maps the host
 # user to root inside the container.
