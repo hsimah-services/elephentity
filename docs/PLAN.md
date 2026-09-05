@@ -1,0 +1,665 @@
+# PheFr — Architecture Plan
+
+An AI-native PHP framework that compiles human-readable specs into locked-down,
+deterministic business-logic code.
+
+> This document is the running record of design decisions. Every decision below has
+> been agreed unless marked **[proposed]** (suggested, not yet confirmed) or listed
+> under Open Questions.
+
+---
+
+## 1. Core premise
+
+Consistency comes from **determinism**, not from linting. Anything a generator can
+derive from the spec is generated; agents and humans only write the parts where no
+deterministic answer exists — and even those are constrained by generated, typed
+interfaces that static analysis can prove against.
+
+Generated files are **locked**. Users may never edit them. Editing one is a build
+failure, not a convention.
+
+---
+
+## 2. The pipeline
+
+```
+  conversation ──▶ entity.md ──▶ entity.yml ──▶ PHP ──▶ signed ──▶ commit ──▶ CI
+      (LLM)          (LLM)        (build)      (build)   (md+yml+php)   (verify)
+```
+
+1. Talk to an LLM; produce a markdown description of the object and its use.
+2. LLM generates a YAML schema file of a known format from the md.
+3. LLM or human runs the build script; schema is compiled to PHP, clobbering the
+   previous output.
+4. The build script signs each generated file.
+5. All three artifacts (md, yml, php) are committed together.
+6. CI verifies signatures, regenerates and diffs, runs static analysis and tests.
+
+### Source of truth
+
+The **YAML is authoritative** from the moment it first exists. The md is the record
+of intent — what the object is and why — and stays committed and reviewed alongside,
+but is not re-compiled wholesale (the md → yaml step is the only non-deterministic
+one in the chain; re-running it would churn unrelated fields and clobber hand
+corrections).
+
+### md/yaml drift
+
+Accepted as an unsolved human problem, same class as API docs going stale. Mitigated,
+not fixed, by an **advisory** agentic check that runs on the PR (not post-merge, so
+it lands while the author is still looking at the diff). The agent is given narrow,
+mechanical questions — "list fields in the yaml with no counterpart in the md, and
+statements in the md describing behaviour absent from the yaml" — rather than "are
+these aligned?", because enumerations are checkable and opinions are not.
+
+---
+
+## 3. Layer stack
+
+```
+spec (.md + .yaml)
+      │
+      ▼
+Schema IR ─────────────┬──────────────┬────────────────┐
+  parse, validate,     │              │                │
+  resolve patterns     ▼              ▼                ▼
+                   codegen        migrations      wpgraphql manifest
+                       │
+                       ▼
+              Entity / Mutator / Finder
+                       │
+                       ▼
+                 StorageAdaptor (port)
+                       │
+                       ▼
+                WordPress adapter
+```
+
+The **Schema IR** sits between the spec and every consumer. Without it, the entity
+generator and the GraphQL generator each grow their own half-answer to "what does a
+spec field mean", and drift from each other rather than from the spec.
+
+### Package boundaries
+
+| Package | Responsibility |
+|---|---|
+| `schema/` | spec parser, JSON Schema, pattern resolution, IR, semantic validation |
+| `codegen/` | IR → PHP (entity, mutator, finder, handler interfaces, migrations) |
+| `runtime/` | StorageAdaptor port, capabilities, unit of work, loaders, verification |
+| `wordpress/` | the one adapter — the **only** package allowed to name `WP_*` |
+| `wpgraphql/` | IR → compiled registration manifest |
+| `cli/` | `phefr generate` / `validate` / `check` / `migrate` |
+
+The storage port is defined **now**, with exactly one adapter, rather than retrofitted
+later — WP concepts (int post IDs, postmeta as untyped KV, taxonomies-as-edges,
+`WP_Query` semantics) leak quietly otherwise. Enforced statically: no `WP_*` symbol
+outside `wordpress/`.
+
+Adaptors **declare capabilities** (transactions, full-text, faceting) rather than the
+port flattening to a lowest common denominator.
+
+---
+
+## 4. Generated code and locking
+
+### What is generated
+
+Everything mechanical: field getters, setters, edge accessors, finders, storage
+mapping, handler interfaces, GraphQL registration, migrations.
+
+### What is hand-written
+
+Only implementations of generated interfaces — custom queries, actions, field
+verifiers. The spec declares the bespoke unit; the generator emits its exactly-typed
+interface; a human or agent writes the class.
+
+**Spec-first is therefore mandatory, not encouraged.** A new custom query needs a spec
+entry before the code can exist.
+
+### Failure mode
+
+**Boot-time.** The container wires handlers on startup; a missing implementation
+throws immediately, before any request is served, and the error names every missing
+handler at once. Codegen stays a pure function of the spec (it never scans `src/`),
+and "the app won't start" is as hard a failure as we need.
+
+### Signing
+
+Each generated file carries a fixed-length header containing a hash of `path +
+content`, where the hash covers **everything after the header** (a fixed line count is
+excluded — a file cannot hash its own hash). One shared verifier owns the line count.
+
+No sidecar manifest. This gives up hash-based detection of *added* or *deleted* files
+in the generated tree, but `generate --check` — regenerate into a temp tree and diff —
+catches both, so nothing is lost.
+
+Verification runs **as part of the build process** / CI, not per-request at runtime.
+
+---
+
+## 5. Spec format
+
+YAML, one file per entity, validated against a JSON Schema.
+
+```yaml
+entity: Post
+description: A published article.     # one line; real prose lives in the md
+use:
+  - Timestamps
+  - WordPressPost
+storage:
+  driver: wordpress
+  table: phe_post
+  handle: post          # WP post type slug; a collection name on other drivers
+fields:   { ... }
+edges:    { ... }
+queries:  { ... }
+actions:  { ... }
+```
+
+`handle` is deliberately driver-agnostic — other adaptors may use it for something
+else — while the compiler applies **driver-specific validation** to it (with
+`driver: wordpress`, a post type slug must be lowercase and ≤ 20 chars, so
+`handle: ProductVariation` fails at compile time rather than being silently truncated
+by WP at registration).
+
+### Patterns (reusable config)
+
+Cross-file reuse via our own `use:` directive, resolved by the schema compiler before
+IR construction. **Not** YAML anchors or merge keys — those are file-local and only
+deduplicate within a single entity.
+
+- **Sealed.** An entity declaring a field a pattern already defines is a hard error.
+  Overridable patterns would mean reading one file no longer tells you what a field
+  is, which is precisely the drift the framework exists to prevent.
+- Patterns may declare `requires: { driver: wordpress }`, so using a platform-specific
+  pattern on the wrong driver is a compile error naming the reason, rather than
+  generated code that cannot work. This is where capability checking lands.
+- Patterns carry fields, indexes and storage plumbing — not just fields.
+
+```yaml
+# patterns/WordPressPost.yml
+pattern: WordPressPost
+requires:
+  driver: wordpress
+fields:
+  post_id: { type: int, indexed: true, unique: true }
+```
+
+`WordPressPost` provides the WP-specific extras; the entity still declares its own
+`handle`. A `FacetWP` pattern is the intended home for facet integration later — same
+mechanism, no special case in the core.
+
+---
+
+## 6. Type system
+
+A **closed** set of primitives, so every mapping (SQL column, PHP type, GraphQL type,
+validation) is a lookup table in the generator with no escape hatch:
+
+`string`, `text`, `int`, `float`, `bool`, `datetime`, `id`, `enum`, `json`
+
+Domain types are declared as value types aliasing a primitive:
+
+```yaml
+types:
+  Money:
+    primitive: int              # cents
+    read:  App\Type\MoneyReadProcessor
+    write: App\Type\MoneyWriteProcessor
+```
+
+### Processors
+
+Mirrors the Entity/Mutator split at the type level — same shape all the way down.
+
+```php
+/** @template TIn @template TOut */
+interface ReadProcessor {
+    /** @param TIn $value @return TOut */
+    public function read(mixed $value): mixed;
+}
+
+/** @template TIn @template TOut */
+interface WriteProcessor {
+    /** @param TOut $value */
+    public function verify(mixed $value, MutationContext $context): Verification;
+    /** @param TOut $value @return TIn */
+    public function write(mixed $value): mixed;
+}
+```
+
+---
+
+## 7. Verification
+
+### Violations are returned, never thrown
+
+Throwing means the first invalid field aborts and the caller fixes one error per round
+trip — painful when a GraphQL mutation submits fifteen fields. Returning lets the
+Mutator run every verify up front and reject the whole unit of work with a complete
+list.
+
+```php
+final class Verification {
+    public static function ok(): self;
+    public static function failed(Violation ...$violations): self;
+}
+
+final class Violation {
+    public function __construct(
+        public readonly string $code,      // 'money.negative'
+        public readonly string $message,
+    ) {}
+}
+```
+
+A processor does not know which field it is attached to (`Money` is reused across many
+entities), so it returns code and message only; the **Mutator attaches the field
+path** as it aggregates. `failed()` is variadic so a single rule can fail in several
+ways at once.
+
+### MutationContext
+
+Passed as the second argument to every `verify`. Holds:
+
+- the **old value** — the object being mutated as it was when the mutation started
+  (null on create; processors must handle that)
+- a **property bag of new/mutated fields**
+
+so a verifier can inspect original values, or other fields' new and old values. Every
+verify runs against the **same final pending state**, not incrementally as setters
+fire — so ordering does not matter and two fields can validate against each other
+symmetrically.
+
+Values in the bag are domain-typed (`TOut`) on both sides: `write()` has not run yet
+at verify time, and old values come from the Entity.
+
+### Two tiers
+
+1. **Field verifier** — entity-specific, runs first, and can be exactly typed because
+   the generator knows both the entity and the field's domain type:
+
+   ```php
+   interface PostPriceVerifier {
+       public function verify(Money $value, PostMutationContext $ctx): Verification;
+   }
+   ```
+
+2. **Type verifier** — the shared `WriteProcessor::verify`, generic across entities,
+   which is where unavoidable `mixed` access (`$ctx->new('price')`) lives.
+
+Both tiers always run even when the first fails, so violations aggregate into one
+response.
+
+Field verifiers are declared `verify: true` — the generator emits the interface and
+boot fails until something implements it, exactly like queries and actions. The spec
+never carries application namespaces, so a class rename is not a spec edit.
+
+---
+
+## 8. Fields
+
+```yaml
+fields:
+  price:
+    type: Money
+    required: true      # must be supplied on create
+    nullable: false     # column allows NULL
+    default: 0
+    unique: false
+    indexed: true
+    immutable: false    # write-once: settable on create, no setter after
+```
+
+`required` and `nullable` are deliberately separate facts; all four combinations are
+meaningful.
+
+### Identity
+
+Every entity has an `id`, implicitly — no pattern needed, no way to override.
+
+**BIGINT auto-increment for now.** WP-standard and unblocking; the alternative
+(UUIDv7 as `BINARY(16)`, time-ordered so it indexes nearly as well as an int,
+generatable before the row exists) is better for the unit of work but is a fight with
+the platform we do not need yet.
+
+To keep that refactor cheap, the ID is **opaque above the storage layer** — a value
+object in PHP, a string in GraphQL. Nothing outside the adaptor does arithmetic on it
+or assumes it is numeric.
+
+**Consequence:** server-generated IDs mean a commit that creates a Post *and* its
+Comments must insert the Post, read back its ID, then insert the Comments. The unit of
+work therefore **orders writes by dependency** rather than firing a flat batch. Built
+in from the start; retrofitting ordering into a flush loop is unpleasant.
+
+---
+
+## 9. Edges
+
+```yaml
+edges:
+  comments:
+    to: Comment
+    cardinality: many
+    inverse: true
+```
+
+**Relation storage is inferred, never declared** — one-to-many puts the FK on the many
+side, many-to-many derives a join table name. If the generator can work it out, a
+human choosing it is a chance for two entities to disagree.
+
+### Inverses are optional and opt-in
+
+- `inverse: true` — generate the reverse accessor, name derived from the source entity
+  lowercased (`Post.comments` → `Comment::getPost()`). Allowed only when the reverse
+  is to-one.
+- `inverse: post` — explicit name, always allowed.
+- many-to-many with `inverse: true` — **compile error**, telling you to name it.
+
+The generator never pluralises. English inflection quietly produces `Categorys` and
+different libraries disagree; that is not acceptable in a framework whose selling
+point is predictable output.
+
+### To-many returns a lazy edge query, not an array
+
+```php
+$post->comments()->count();
+$post->comments()->page(limit: 20, after: $cursor);
+$post->comments()->all();          // explicit, so unbounded loads are visible
+```
+
+Three reasons: unbounded loads become a deliberate `->all()`; GraphQL connections map
+onto it directly instead of a resolver slicing an already-hydrated array; and the
+loader can **batch across a result set** — one query for the comments of fifty posts
+instead of fifty. That last is the N+1 defence and is very hard to add once code
+everywhere assumes an array.
+
+### Deletion — provisional
+
+Not a current priority; to be shored up when deletion is actually implemented.
+
+- `onDelete: restrict | cascade | nullify`, defaulting to `restrict` so orphaning
+  data takes a deliberate keystroke.
+- **Framework-enforced**, so errors are good and actions/logging still run.
+- A `before_delete_post` hook in the adaptor catches out-of-band WP deletes (someone
+  empties the trash, another plugin calls `wp_delete_post()`) — no framework-level
+  enforcement can see those.
+- **No real foreign keys for now.** `dbDelta()` does not understand FK constraints, so
+  emitting them takes us fully off the WP path.
+
+---
+
+## 10. Queries, actions and triggers
+
+### Queries — collection-level finders
+
+Edge traversal is covered by the edges section, so `queries:` is for finders.
+
+```yaml
+queries:
+  inCategory:
+    args:    { categoryId: { type: id } }
+    returns: { type: Post, cardinality: many }
+    handler: true
+```
+
+Generated into an injectable **`PostFinder`**, not as statics on the Entity —
+statics are awkward to inject into and to fake in tests, and it keeps the Entity
+exactly one thing (a single-row read model) rather than also a collection gateway.
+**[proposed]**
+
+Finders return the same lazy query object edges return, so `->page()` and `->count()`
+work identically however you got there.
+
+### Actions
+
+A named write operation on the Mutator — `publish`, `approve`, `transferOwnership` —
+that sets fields, writes edges, and commits as one unit.
+
+```yaml
+actions:
+  publish:
+    args:  { at: { type: datetime, nullable: true } }
+    writes:
+      fields: [status, publishedAt]
+      edges:  [revisions]
+    handler: true
+```
+
+Generates `PostMutator::publish(?DateTimeImmutable $at)` delegating to a
+`PostPublishAction` interface.
+
+#### Declared blast radius
+
+An action does **not** receive the Mutator. It receives a **narrow context** generated
+from its `writes:` block, exposing only `setStatus()`, `setPublishedAt()` and
+`revisions()->add()`. An action physically cannot touch a field it did not declare,
+and PHPStan enforces it.
+
+This makes blast radius reviewable in the yaml rather than discoverable only by
+reading the implementation. Widening an action is a spec edit and a regeneration —
+which is the point, not the cost (see *The spec as changelog* below).
+
+There is no `writes.entities`. Cross-cutting side effects are triggers, not actions.
+Clean line: **actions are this entity's business operations; triggers are what happens
+on commit.**
+
+### Triggers
+
+Classes that receive the mutation context and run as part of the commit.
+
+```yaml
+triggers:
+  audit:
+    on: [create, update]
+    phase: preCommit        # default
+    handler: true           # → PostAuditTrigger
+  reindex:
+    on: [create, update]
+    phase: postCommit
+    handler: true
+```
+
+#### Declared in the entity spec, never registered elsewhere
+
+This is the whole difference between triggers and WordPress hooks. If a trigger could
+be registered anywhere, reading `Post.yml` would no longer tell you what a commit
+does, and debugging becomes "grep for anything that might fire". Registration lives in
+the spec; only the implementation is a class.
+
+Reuse without copypasta is already solved by patterns: `use: [Auditable]` and the
+pattern carries the trigger.
+
+#### Ordering
+
+**Declaration order in the yaml.** Deterministic, visible in the diff, and no
+`add_action($hook, $fn, 10)` priority-number archaeology.
+
+#### Phases — precise semantics
+
+| Phase | When | A thrown exception |
+|---|---|---|
+| `preCommit` | inside the transaction, **after** the entity's writes are flushed, before `COMMIT` | rolls back the entire commit |
+| `postCommit` | after `COMMIT`; data is durable | logged; remaining triggers still run |
+
+`preCommit` deliberately runs *after* the flush, not before it: with auto-increment
+IDs a create trigger that ran earlier would have no ID to work with. This way the row
+exists, the ID is real, and a throw still rolls everything back.
+
+Anything slow or external (email, HTTP, search indexing) belongs in `postCommit` —
+holding DB locks while calling a third party is how transactions die.
+
+#### Failure handling is the trigger's job
+
+The framework does not classify triggers as critical or not. Throw to abort, swallow
+to continue. The trigger knows; the framework shouldn't guess.
+
+#### Mutation is allowed in `postCommit` only
+
+| Phase | May mutate? | Why |
+|---|---|---|
+| `preCommit` | **No** | keeps the in-transaction path a single pass — no cascades, no re-triggering, no cycle detection. It is a veto-and-observe phase. |
+| `postCommit` | **Yes** | the transaction is already closed, so a write here is simply a *new* unit of work rather than an extension of the current one. |
+
+This is what makes audit logging work: an `AuditLog` **entity** is written by a
+`postCommit` trigger like any other entity, with no special framework support and no
+writing below the entity layer.
+
+Two properties of a `postCommit` mutation to be aware of:
+
+- **It is not atomic with the commit that caused it.** It can fail after the original
+  succeeded. Fine for audit trails, denormalised counters and projections; never use
+  it to enforce an invariant.
+- **It is an ordinary commit, so it fires its own triggers.** Genuine cascades are
+  therefore possible (`Post` → writes `Comment` → whose `postCommit` writes `Post`).
+  Nothing detects that today; a depth limit is the obvious guard if it bites.
+
+### The spec as changelog
+
+The yaml is the record of the entity's history — widening an action or adding a
+trigger shows up in a commit diff, which is the intent.
+
+That makes diff noise a real cost, so a canonical formatter (`phefr fmt`, enforced in
+CI) keeps key order and style stable and every diff semantic, rather than recording
+whichever whitespace the LLM felt like that day.
+
+---
+
+## 11. Runtime model **[proposed]**
+
+- **Entity** — immutable hydrated snapshot; edges lazy-loaded through a per-request
+  batching loader.
+- **Mutator** — a command buffer accumulating operations, flushed in `commit()`. That
+  *is* the unit of work; "actions" are named, individually testable methods on it
+  rather than a grab-bag.
+
+---
+
+## 12. Storage: WordPress adapter
+
+**Custom tables, WP-native where needed.** Real typed columns and indexes for entity
+fields; register a post type only where WP ecosystem integration (FacetWP, admin,
+permalinks) actually requires it.
+
+### Migrations — a layer custom tables force on us
+
+DDL is generated deterministically from the schema, but a diff of two schema versions
+cannot infer intent: `title` disappearing while `heading` appears is either a rename
+or a drop-plus-add, and guessing destroys data.
+
+- Additive changes (new nullable column, new index) → generated and auto-applied.
+- Destructive or ambiguous changes → **generation fails** and demands an explicit,
+  checked-in migration file.
+
+Our own migration runner, not `dbDelta()`.
+
+### Post-row divergence
+
+When a post type is registered, the custom table row and the post row are two records
+that can diverge. The **custom table is authoritative**; the post row is a projection
+the Mutator writes as part of the same unit of work.
+
+---
+
+## 13. Plugin layer: WPGraphQL
+
+Registration is driven by a **compiled manifest generated at build time** and read at
+runtime — rather than generating resolver PHP (which can drift) or walking the IR
+reflectively on every request (runtime cost, no static analysis).
+
+Convention: spec field `title` → `getTitle()` on the read object → GraphQL field
+`title`.
+
+---
+
+## 14. Verification gates (CI)
+
+Cheapest first, each catching a distinct class of failure:
+
+1. **`validate`** — spec well-formed against the JSON Schema, and semantically closed
+   (every edge target resolves, every inverse is legal, every pattern's `requires` is
+   satisfied).
+2. **`generate --check`** — regenerate and diff; zero tolerance. Also catches added and
+   deleted files in the generated tree.
+3. **Signature check** — header hashes match content.
+   Also `phefr fmt --check`, so spec diffs stay semantic.
+4. **PHPStan at max** — on both generated and hand-written trees. Generated code should
+   be typed well enough that PHPStan can prove the plugin layer correct.
+5. **Architecture rules** — no `WP_*` outside `wordpress/`; Entity never writes;
+   Mutator never returns an Entity.
+6. **Conformance tests** — every spec field reaches a getter and a GraphQL field.
+7. **Advisory md/yaml alignment agent** — non-blocking PR comment.
+
+---
+
+## 15. Implementation steps
+
+### Step 0 — Foundations
+Repo layout, PHP version, Composer packages and autoloading, CI skeleton, PHPStan
+config. Decide library-vs-plugin packaging.
+
+### Step 1 — `packages/schema`
+The keystone; everything is downstream.
+- JSON Schema for the spec format
+- YAML parser and loader
+- `use:` pattern resolution with sealed-collision errors and `requires:` checking
+- IR construction (entities, fields, types, edges, queries, actions)
+- Semantic validation: edge targets resolve, inverse legality, driver-specific rules
+  (e.g. `handle` constraints), no dangling type references
+- `phefr validate`
+
+### Step 2 — `packages/runtime` contracts
+No implementations yet — just the shapes everything else compiles against.
+- `StorageAdaptor` port + capability declaration
+- `Verification`, `Violation`
+- `ReadProcessor`, `WriteProcessor`, `MutationContext`
+- Lazy edge query / collection interfaces
+- ID value object
+
+### Step 3 — `packages/codegen`
+- Templates: Entity, Mutator, Finder, handler and verifier interfaces
+- Header + hash signing, with the single shared verifier
+- `phefr generate`, `phefr generate --check`
+- Golden-file tests over schema fixtures
+
+### Step 4 — `packages/wordpress`
+- Custom table mapping and migration runner
+- Post type registration driven by `handle` + `WordPressPost` pattern
+- `before_delete_post` hook
+- Capability declaration
+
+### Step 5 — Unit of work
+- Command buffer and `commit()`
+- Dependency-ordered writes
+- Two-tier verification pipeline with aggregated violations
+- Batched edge loaders
+
+### Step 6 — `packages/wpgraphql`
+- Compiled registration manifest
+- Type and field registration, mutations, connections over the lazy query object
+
+### Step 7 — Verification and CI gates
+Architecture rules, conformance tests, the advisory md/yaml agent, GitHub Actions
+wiring.
+
+### Step 8 — First real entity
+Port one entity out of the existing WordPress plugin. That is the best test of the
+schema format we have — better than inventing a `Post` example.
+
+---
+
+## 16. Open questions
+
+- **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
+  documented-and-your-problem?
+- **Where `types:` are declared** — per-entity, or a global types file?
+- **PHP version target.**
+- **Packaging** — Composer library consumed by a thin WP plugin (recommended, keeps
+  `wordpress/` genuinely swappable), or a WP plugin itself?
+- **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
+- **Finder vs statics** — confirm generated `PostFinder`.
+- **Enum handling** — spec declaration, PHP backing, GraphQL mapping.
+- **Pagination shape** — cursor format, and whether it is opaque.
+- **Can patterns carry queries and actions**, or only fields/indexes/storage?
