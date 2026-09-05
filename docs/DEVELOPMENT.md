@@ -6,12 +6,10 @@ background.
 
 ## Containerised PHP (recommended)
 
-Install Docker once:
+Install podman once:
 
 ```bash
-sudo dnf install moby-engine
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"     # log out and back in for this to take effect
+sudo dnf install podman
 ```
 
 Then run any command through the wrapper:
@@ -24,36 +22,39 @@ Then run any command through the wrapper:
 ./tools/php bash                         # interactive shell in the container
 ```
 
-The image builds itself on first use, and each command runs in a container removed on
-exit — nothing accumulates between commands.
+The image builds itself on first use and each command runs in a container removed on
+exit. **There is nothing to turn off** — podman has no daemon, so when you stop running
+commands, nothing is left running at all.
 
-Docker does keep a daemon running. When you are finished with PHP for the day:
-
-```bash
-sudo systemctl stop docker
-```
-
-To reclaim the space entirely:
+To reclaim the space when you are done with PHP for a while:
 
 ```bash
-docker rmi phefr-dev:8.3
+podman rmi phefr-dev:8.3
 rm -rf ~/.cache/phefr
 ```
+
+### Why podman here
+
+- **No daemon.** Docker leaves `dockerd` running and needs `sudo systemctl stop docker`
+  to actually stop; podman has nothing to stop.
+- **Smaller.** 49 MiB installed against 108 MiB for `moby-engine`. (Both are dwarfed by
+  the `php:8.3-cli` image itself, so treat this as a tiebreaker rather than the reason.)
+- **Rootless.** Podman maps your host user into the container, so files created by
+  Composer come out owned by you without any extra flags.
+
+Docker is supported as an automatic fallback. The wrapper detects whichever is
+installed and passes `--user` under docker only, since podman already maps the user and
+doing both would double-map it.
 
 ### Fedora specifics the wrapper handles for you
 
 - **SELinux.** Mounts are passed `:z` to relabel them. Without it the container cannot
   read your files at all.
-- **File ownership.** The container runs as your UID and GID, so Composer's output
-  stays owned by you rather than root.
-- **Composer cache.** A Docker *named* volume would be created root-owned and
-  unwritable by a `--user` container, so the cache is a host directory at
-  `~/.cache/phefr/composer` that the wrapper creates with the right ownership.
-- **`HOME`.** An arbitrary UID has no `/etc/passwd` entry and therefore no `HOME`,
-  which some tools trip over, so the wrapper sets it explicitly.
-
-Podman is still supported as a fallback if Docker is unavailable — the wrapper detects
-whichever is installed, preferring Docker.
+- **Composer cache.** Kept at `~/.cache/phefr/composer` as a host directory rather than
+  a named volume — under docker's `--user` a named volume is created root-owned and
+  unwritable, and a host directory works identically for podman.
+- **`HOME`.** Set explicitly, because a UID with no `/etc/passwd` entry has none and
+  some tools trip over that.
 
 ## Local PHP instead
 
