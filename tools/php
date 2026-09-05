@@ -9,37 +9,43 @@
 #   ./tools/php php -v
 #   ./tools/php bash                  # interactive shell
 #
-# The container is removed on exit (--rm). Nothing runs in the background, so there
-# is nothing to shut down when you are finished.
+# The container is removed on exit (--rm), so nothing accumulates between commands.
+# Docker's daemon does keep running; stop it with `sudo systemctl stop docker` when
+# you are finished with PHP for the day.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 IMAGE="phefr-dev:8.3"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/phefr/composer"
 
-if command -v podman >/dev/null 2>&1; then
-    ENGINE=podman
-elif command -v docker >/dev/null 2>&1; then
+if command -v docker >/dev/null 2>&1; then
     ENGINE=docker
+elif command -v podman >/dev/null 2>&1; then
+    ENGINE=podman
 else
-    echo "tools/php: needs podman or docker." >&2
-    echo "  Fedora:  sudo dnf install podman" >&2
+    echo "tools/php: needs docker or podman." >&2
+    echo "  Fedora:  sudo dnf install moby-engine && sudo systemctl enable --now docker" >&2
     exit 1
 fi
 
-if ! "$ENGINE" image exists "$IMAGE" >/dev/null 2>&1 \
-    && ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "Building $IMAGE (first run only)..." >&2
     "$ENGINE" build -t "$IMAGE" -f .docker/Dockerfile .docker
 fi
 
-# Rootless podman maps the host user to root inside the container, so files land
-# owned by you. Docker runs as real root and would leave root-owned files behind.
+# Run as the host user so nothing in the working tree ends up owned by root.
+# Rootless podman already maps the host user, and passing --user there would
+# double-map it, so this is docker-only.
 USER_ARGS=()
 if [ "$ENGINE" = "docker" ]; then
     USER_ARGS=(--user "$(id -u):$(id -g)")
 fi
+
+# A named volume would be created root-owned and unwritable by --user, so the
+# Composer cache is a host directory we create ourselves with the right ownership.
+mkdir -p "$CACHE_DIR"
 
 # Interactive only when attached to a terminal, so CI and pipes still work.
 TTY_ARGS=()
@@ -52,8 +58,9 @@ exec "$ENGINE" run --rm \
     "${USER_ARGS[@]}" \
     `# :z relabels the mount for SELinux, which Fedora enforces by default.` \
     -v "$PWD:/app:z" \
-    `# Persist Composer's download cache between runs; otherwise every install refetches.` \
-    -v phefr-composer-cache:/composer \
+    -v "$CACHE_DIR:/composer:z" \
     -e COMPOSER_HOME=/composer \
+    `# An arbitrary UID has no passwd entry, so HOME is unset and some tools fall over.` \
+    -e HOME=/tmp \
     -w /app \
     "$IMAGE" "$@"

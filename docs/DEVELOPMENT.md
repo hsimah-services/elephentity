@@ -6,10 +6,12 @@ background.
 
 ## Containerised PHP (recommended)
 
-Install a container engine once:
+Install Docker once:
 
 ```bash
-sudo dnf install podman        # Fedora's native choice: rootless and daemonless
+sudo dnf install moby-engine
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"     # log out and back in for this to take effect
 ```
 
 Then run any command through the wrapper:
@@ -22,27 +24,36 @@ Then run any command through the wrapper:
 ./tools/php bash                         # interactive shell in the container
 ```
 
-The image builds itself on first use and each command runs in a container removed on
-exit. **There is nothing to turn off.** Podman has no daemon either, so when you stop
-running commands, nothing is left running at all.
+The image builds itself on first use, and each command runs in a container removed on
+exit — nothing accumulates between commands.
 
-To reclaim the space when you are done with PHP for a while:
+Docker does keep a daemon running. When you are finished with PHP for the day:
 
 ```bash
-podman rmi phefr-dev:8.3
-podman volume rm phefr-composer-cache
+sudo systemctl stop docker
 ```
 
-### Why podman over docker here
+To reclaim the space entirely:
 
-Rootless podman maps your host user to root inside the container, so files created by
-Composer come out owned by you. Docker runs as real root and leaves root-owned files
-in your working tree — `tools/php` passes `--user` to compensate, but podman needs no
-compensation. Podman also has no background daemon, which is closer to what you asked
-for than "a container you turn off".
+```bash
+docker rmi phefr-dev:8.3
+rm -rf ~/.cache/phefr
+```
 
-The wrapper mounts the working tree with `:z` because Fedora enforces SELinux, and
-without relabelling the container cannot read your files.
+### Fedora specifics the wrapper handles for you
+
+- **SELinux.** Mounts are passed `:z` to relabel them. Without it the container cannot
+  read your files at all.
+- **File ownership.** The container runs as your UID and GID, so Composer's output
+  stays owned by you rather than root.
+- **Composer cache.** A Docker *named* volume would be created root-owned and
+  unwritable by a `--user` container, so the cache is a host directory at
+  `~/.cache/phefr/composer` that the wrapper creates with the right ownership.
+- **`HOME`.** An arbitrary UID has no `/etc/passwd` entry and therefore no `HOME`,
+  which some tools trip over, so the wrapper sets it explicitly.
+
+Podman is still supported as a fallback if Docker is unavailable — the wrapper detects
+whichever is installed, preferring Docker.
 
 ## Local PHP instead
 
