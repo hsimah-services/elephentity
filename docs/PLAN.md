@@ -200,15 +200,40 @@ validation) is a lookup table in the generator with no escape hatch:
 
 `string`, `text`, `int`, `float`, `bool`, `datetime`, `id`, `enum`, `json`
 
-Domain types are declared as value types aliasing a primitive:
+### Declaration
+
+Domain types are value types aliasing a primitive. **One file per type in `types/`**,
+matching `entities/` and `patterns/` — same discovery convention, and a type gets its
+own commit history, which matters now that the spec is the changelog.
 
 ```yaml
-types:
-  Money:
-    primitive: int              # cents
-    read:  App\Type\MoneyReadProcessor
-    write: App\Type\MoneyWriteProcessor
+# types/Money.yml
+type: Money
+primitive: int          # cents
+processors: true        # → MoneyReadProcessor / MoneyWriteProcessor interfaces
 ```
+
+**No application namespaces in the spec.** `processors: true` follows the same rule as
+`verify: true` and `handler: true`: the generator emits the interfaces, boot fails
+until both are implemented. Fully-qualified names are resolved from a root namespace
+configured once in `phefr.json` — configuration, not specification — so a class rename
+is never a spec edit.
+
+### The value class is user-owned
+
+The generator does **not** emit `Money`. A value object has real behaviour
+(`add()`, `allocate()`, `format()`) that no generator can invent, so it stays plain,
+unconstrained PHP written by hand.
+
+The framework only requires that it exists: a missing value class fails boot by name,
+same as a missing handler, and PHPStan catches it earlier still because generated
+signatures type-hint it.
+
+### Null short-circuits
+
+A nullable field holding null **never reaches** `read()`, `verify()` or `write()`.
+Null in, null out. Otherwise every processor ever written opens with the same null
+check.
 
 ### Processors
 
@@ -229,6 +254,42 @@ interface WriteProcessor {
     public function write(mixed $value): mixed;
 }
 ```
+
+### Enums
+
+The one type the generator owns outright — an enum is pure data, so it emits a locked
+PHP 8.1 backed enum with no user code involved.
+
+`values:` accepts either an array or the name of a declared enum:
+
+```yaml
+values: [draft, scheduled, published]    # inline; generates PostStatus
+values: PostStatus                       # references types/PostStatus.yml
+```
+
+- An inline enum derives its class name from **entity + field**, so an inline
+  `Post.status` colliding with a declared `types/PostStatus.yml` is a **compile
+  error**, not a silent overwrite.
+- Both forms generate the **same FQN**, so promoting an inline enum to a file is a
+  no-op in generated code — move three words into `types/`, regenerate, nothing
+  downstream changes. Free refactoring path for when a second entity wants the same
+  enum.
+
+### String sizing
+
+`string` becomes `VARCHAR(n)`, defaulting to **255**, overridden per field with
+`maxLength`.
+
+**Indexed strings are checked against the driver's index limit.** MariaDB with DYNAMIC
+row format allows 3072 bytes per index and utf8mb4 is 4 bytes per character — 768
+characters. Exceeding it is a **compile error**, never a silent prefix index: the
+WordPress tradition of quietly indexing the first 191 characters is a trap, because
+with `unique: true` a prefix index enforces uniqueness *of the prefix*, so two
+genuinely different values collide and nothing tells you.
+
+**Past a ceiling, the answer is `text`, not a bigger number.** The compiler rejects an
+oversized `maxLength` with "use `text`" rather than letting VARCHAR creep toward the
+65,535-byte row limit, where the failure arrives much later and is far more confusing.
 
 ---
 
@@ -654,12 +715,10 @@ schema format we have — better than inventing a `Post` example.
 
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
-- **Where `types:` are declared** — per-entity, or a global types file?
 - **PHP version target.**
 - **Packaging** — Composer library consumed by a thin WP plugin (recommended, keeps
   `wordpress/` genuinely swappable), or a WP plugin itself?
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
 - **Finder vs statics** — confirm generated `PostFinder`.
-- **Enum handling** — spec declaration, PHP backing, GraphQL mapping.
 - **Pagination shape** — cursor format, and whether it is opaque.
 - **Can patterns carry queries and actions**, or only fields/indexes/storage?
