@@ -1,0 +1,4 @@
+pattern: Rival
+config:
+  visibility:
+    type: bool

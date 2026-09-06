@@ -73,6 +73,26 @@ to-many, because the generator will not invent a plural.
 
 ## Shapes the model
 
+### 6b. If it is a post type, how should it behave?
+
+Ask alongside question 2, because the answers travel together: publicly queryable or
+private? Listed in wp-admin, and under which menu? Should the post editor be able to
+edit anything at all?
+
+These are pattern configuration, supplied per entity:
+
+```yaml
+configure:
+  WordPressPost:
+    visibility: private
+    adminMenu: clog
+    supports: []
+```
+
+Default `supports` to empty unless someone asks otherwise. The post row is a projection
+of the custom table, so anything editable in the post editor edits a copy that nothing
+will notice diverging.
+
 ### 7. What do you search or filter by?
 
 Those fields get `indexed: true`. Indexes are cheap to add now and awkward to reason

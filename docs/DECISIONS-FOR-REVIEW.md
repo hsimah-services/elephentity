@@ -111,9 +111,8 @@ format settles. Say the word.
 
 ## 7. Not done
 
-- **No changes to `PostTypeRegistrar`.** It still hardcodes `public: true` and
-  `supports: ['title']`, which is inconsistent with "the post row is a projection". It
-  is entangled with making registration arguments expressible in the spec, and that is
-  a design conversation rather than an assumption.
+- ~~**No changes to `PostTypeRegistrar`.**~~ **Resolved 2026-09-06.** Registration
+  arguments now come from pattern configuration, and `supports` defaults to empty —
+  so the post row is a projection by default rather than an editable copy.
 - **No GraphQL root query fields.** Recorded as an open question in the plan.
 - **No changes to the clog spec** beyond the single-barcode change you asked for.

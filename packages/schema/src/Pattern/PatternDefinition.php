@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PheFr\Schema\Pattern;
 
+use PheFr\Schema\Ir\ConfigParameter;
 use PheFr\Schema\Spec\ParsedSections;
 
 /**
@@ -12,8 +13,9 @@ use PheFr\Schema\Spec\ParsedSections;
 final readonly class PatternDefinition
 {
     /**
-     * @param list<string>         $uses    Patterns this pattern itself pulls in.
-     * @param array<string, string> $storage Partial storage keys this pattern contributes.
+     * @param list<string>                    $uses    Patterns this pattern itself pulls in.
+     * @param array<string, string>           $storage Partial storage keys this pattern contributes.
+     * @param array<string, ConfigParameter>  $config  Parameters entities may supply.
      */
     public function __construct(
         public string $name,
@@ -22,6 +24,7 @@ final readonly class PatternDefinition
         public array $uses = [],
         public ?string $requiresDriver = null,
         public array $storage = [],
+        public array $config = [],
         public ?string $description = null,
     ) {
     }

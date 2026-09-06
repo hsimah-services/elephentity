@@ -342,6 +342,68 @@
                     "description": "Whether the target points back at exactly one of the declaring entity. With cardinality many, true is one-to-many and false is many-to-many."
                 }
             }
+        },
+        "configParameters": {
+            "type": "object",
+            "description": "Parameters a pattern accepts, supplied by each entity that uses it.",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/configParameter"
+            }
+        },
+        "configParameter": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "string",
+                        "int",
+                        "bool",
+                        "enum",
+                        "list"
+                    ],
+                    "description": "A list is permitted here though not for fields: configuration is build-time data and never becomes a column, so the reason fields cannot hold one does not apply."
+                },
+                "description": {
+                    "type": "string"
+                },
+                "of": {
+                    "enum": [
+                        "string",
+                        "int"
+                    ],
+                    "description": "Element type. Required when type is list."
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/enumValue"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "description": "Permitted values. Required when type is enum."
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "default": true
+            }
+        },
+        "configure": {
+            "type": "object",
+            "description": "Values for the parameters the used patterns declare. Checked against those declarations, not here.",
+            "propertyNames": {
+                "$ref": "#/$defs/typeName"
+            },
+            "additionalProperties": {
+                "type": "object"
+            }
         }
     }
 }

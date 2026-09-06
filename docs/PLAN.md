@@ -198,6 +198,18 @@ deduplicate within a single entity.
 - Patterns may declare `requires: { driver: wordpress }`, so using a platform-specific
   pattern on the wrong driver is a compile error naming the reason, rather than
   generated code that cannot work. This is where capability checking lands.
+- **Patterns may be configured.** A pattern declares parameters with `config:`; each
+  entity supplies them with `configure:`. The compiler validates values against the
+  pattern's own declaration, so a WordPress pattern can carry WordPress configuration
+  without the core learning what `visibility` means. Every applied pattern contributes
+  into one map — a consumer reads the keys it knows rather than looking a pattern up by
+  name, which would mean renaming a pattern silently disabled what depended on it. Two
+  patterns declaring the same key is a compile error.
+
+  `type: list` is permitted in configuration though not in fields: configuration is
+  build-time data and never becomes a column, so the reason fields cannot hold one does
+  not apply.
+
 - **A pattern is a fragment of an entity spec.** Any section an entity may declare, a
   pattern may declare: fields, edges, storage, queries, actions and triggers. Sealed
   collisions apply uniformly, with no per-section special cases.

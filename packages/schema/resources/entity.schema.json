@@ -3,27 +3,54 @@
     "$id": "https://phefr.dev/schema/entity.json",
     "title": "PheFr entity specification",
     "type": "object",
-    "required": ["entity", "storage"],
+    "required": [
+        "entity",
+        "storage"
+    ],
     "additionalProperties": false,
     "properties": {
-        "entity": { "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName" },
+        "entity": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName"
+        },
         "description": {
             "type": "string",
             "description": "One line. The real prose lives in the companion markdown file."
         },
         "use": {
             "type": "array",
-            "items": { "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName" },
+            "items": {
+                "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName"
+            },
             "uniqueItems": true
         },
-        "storage": {
-            "allOf": [{ "$ref": "https://phefr.dev/schema/common.json#/$defs/storage" }],
-            "required": ["driver", "table"]
+        "configure": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/configure"
         },
-        "fields": { "$ref": "https://phefr.dev/schema/common.json#/$defs/fields" },
-        "edges": { "$ref": "https://phefr.dev/schema/common.json#/$defs/edges" },
-        "queries": { "$ref": "https://phefr.dev/schema/common.json#/$defs/queries" },
-        "actions": { "$ref": "https://phefr.dev/schema/common.json#/$defs/actions" },
-        "triggers": { "$ref": "https://phefr.dev/schema/common.json#/$defs/triggers" }
+        "storage": {
+            "allOf": [
+                {
+                    "$ref": "https://phefr.dev/schema/common.json#/$defs/storage"
+                }
+            ],
+            "required": [
+                "driver",
+                "table"
+            ]
+        },
+        "fields": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/fields"
+        },
+        "edges": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/edges"
+        },
+        "queries": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/queries"
+        },
+        "actions": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/actions"
+        },
+        "triggers": {
+            "$ref": "https://phefr.dev/schema/common.json#/$defs/triggers"
+        }
     }
 }

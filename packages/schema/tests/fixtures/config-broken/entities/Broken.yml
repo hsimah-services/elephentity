@@ -1,0 +1,9 @@
+entity: Broken
+use: [Platform, Rival]
+configure:
+  Platform:
+    visibility: sideways
+    nonsense: 1
+  Absent:
+    x: 1
+storage: { driver: wordpress, table: broken }

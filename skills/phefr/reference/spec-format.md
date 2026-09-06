@@ -164,6 +164,48 @@ fields:
   postId: { type: int, unique: true, indexed: true }
 ```
 
+### Configuration
+
+A pattern may declare parameters each entity supplies:
+
+```yaml
+# patterns/WordPressPost.yml
+pattern: WordPressPost
+requires:
+  driver: wordpress
+config:
+  visibility:
+    type: enum
+    values: [public, private]
+    default: private
+  supports:
+    type: list
+    of: string
+    default: []
+```
+
+```yaml
+# entities/Post.yml
+use:
+  - WordPressPost
+configure:
+  WordPressPost:
+    visibility: public
+    supports: [title, editor]
+```
+
+The core validates values against the *pattern's own declaration* and has no idea what
+any of them mean — which is what lets a WordPress pattern carry WordPress configuration
+without WordPress leaking into the framework.
+
+Every applied pattern contributes into one map, so a consumer reads the keys it knows
+rather than looking a pattern up by name. Two patterns declaring the same key is a
+compile error, so a resolved value has exactly one source. Defaults are applied at
+compile time; nothing downstream deals with absent keys.
+
+`type: list` is allowed here and not for fields. Configuration is build-time data that
+never becomes a column, so the reason a field cannot hold a list does not apply.
+
 **Patterns are sealed.** An entity redeclaring a member a pattern defines is a hard
 error — to change it, stop using the pattern. Overridable patterns would mean reading
 one file no longer tells you what a field is.

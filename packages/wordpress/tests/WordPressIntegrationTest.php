@@ -28,18 +28,33 @@ final class WordPressIntegrationTest extends TestCase
         $types = (new PostTypeRegistrar($this->schema()))->arguments();
 
         self::assertSame(['post'], array_keys($types));
-        self::assertSame('Post', $types['post']['label']);
         self::assertSame('A published article.', $types['post']['description']);
     }
 
-    public function testThePostRowIsAProjectionRatherThanTheContent(): void
+    public function testRegistrationArgumentsComeFromPatternConfiguration(): void
     {
-        // The custom table is authoritative; the post row exists so the ecosystem has
-        // something to hold on to, so it supports almost nothing itself.
+        // The fixture's WordPressPost pattern declares visibility and supports; Post
+        // configures them. Nothing here is hardcoded, and packages/schema validated
+        // the values without knowing what any of them mean.
         $types = (new PostTypeRegistrar($this->schema()))->arguments();
 
-        self::assertSame(['title'], $types['post']['supports']);
-        self::assertFalse($types['post']['show_in_rest']);
+        self::assertTrue($types['post']['public']);
+        self::assertTrue($types['post']['publicly_queryable']);
+        self::assertFalse($types['post']['exclude_from_search']);
+        self::assertSame(['title', 'editor'], $types['post']['supports']);
+    }
+
+    public function testLabelsAreDerivedFromTheEntityName(): void
+    {
+        // Nine labels is exactly the boilerplate this framework exists to delete.
+        $labels = (new PostTypeRegistrar($this->schema()))->arguments()['post']['labels'];
+
+        self::assertIsArray($labels);
+
+        self::assertSame('Post', $labels['singular_name']);
+        self::assertSame('Posts', $labels['name']);
+        self::assertSame('Add New Post', $labels['add_new_item']);
+        self::assertSame('No posts found in Trash', $labels['not_found_in_trash']);
     }
 
     public function testTheOrphanGuardWatchesOnlyTablesThatTrackPosts(): void

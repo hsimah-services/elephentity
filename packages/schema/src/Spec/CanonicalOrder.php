@@ -21,8 +21,8 @@ final readonly class CanonicalOrder
 {
     /** @var array<string, list<string>> */
     private const ORDERS = [
-        'entity' => ['entity', 'description', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
-        'pattern' => ['pattern', 'description', 'requires', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
+        'entity' => ['entity', 'description', 'use', 'configure', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
+        'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
         'type' => ['type', 'description', 'primitive', 'processors', 'values'],
         'storage' => ['driver', 'table', 'handle'],
         'requires' => ['driver'],
@@ -35,6 +35,7 @@ final readonly class CanonicalOrder
         'writes' => ['fields', 'edges'],
         'trigger' => ['description', 'on', 'phase', 'handler'],
         'argument' => ['type', 'nullable'],
+        'configParameter' => ['type', 'description', 'of', 'values', 'nullable', 'default'],
     ];
 
     /**

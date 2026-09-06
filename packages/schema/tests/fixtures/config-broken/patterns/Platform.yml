@@ -1,7 +1,4 @@
-pattern: WordPressPost
-description: Participation in the WordPress post ecosystem.
-requires:
-  driver: wordpress
+pattern: Platform
 config:
   visibility:
     type: enum
@@ -14,8 +11,6 @@ config:
   adminMenu:
     type: string
     nullable: true
-fields:
-  postId:
+  weight:
     type: int
-    unique: true
-    indexed: true
+    default: 10

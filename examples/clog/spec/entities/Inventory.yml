@@ -2,6 +2,12 @@ entity: Inventory
 description: One stocked instance of an item, in a location, with its own expiry.
 use:
   - ClogPost
+configure:
+  ClogPost:
+    visibility: private
+    adminMenu: clog
+    label: Inventory Entry
+    pluralLabel: Inventory
 storage:
   driver: wordpress
   table: clog_inventory

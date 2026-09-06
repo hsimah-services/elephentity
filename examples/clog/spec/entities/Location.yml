@@ -2,6 +2,12 @@ entity: Location
 description: Somewhere inventory can be kept.
 use:
   - ClogPost
+configure:
+  ClogPost:
+    visibility: private
+    adminMenu: clog
+    label: Location
+    pluralLabel: Locations
 storage:
   driver: wordpress
   table: clog_location

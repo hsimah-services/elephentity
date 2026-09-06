@@ -3,6 +3,10 @@ description: A published article.
 use:
   - Auditable
   - WordPressPost
+configure:
+  WordPressPost:
+    visibility: public
+    supports: [title, editor]
 storage:
   driver: wordpress
   table: phe_post

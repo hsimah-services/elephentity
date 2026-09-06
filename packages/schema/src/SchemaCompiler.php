@@ -6,12 +6,15 @@ namespace PheFr\Schema;
 
 use PheFr\Schema\Error\CompilationResult;
 use PheFr\Schema\Error\SpecError;
+use PheFr\Schema\Ir\ConfigParameter;
+use PheFr\Schema\Ir\ConfigType;
 use PheFr\Schema\Ir\EntityDefinition;
 use PheFr\Schema\Ir\Origin;
 use PheFr\Schema\Ir\Primitive;
 use PheFr\Schema\Ir\Schema;
 use PheFr\Schema\Ir\StorageDefinition;
 use PheFr\Schema\Ir\TypeDefinition;
+use PheFr\Schema\Pattern\ConfigResolver;
 use PheFr\Schema\Pattern\PatternDefinition;
 use PheFr\Schema\Pattern\PatternResolver;
 use PheFr\Schema\Pattern\SectionMerger;
@@ -37,6 +40,7 @@ final readonly class SchemaCompiler
         private SectionParser $parser = new SectionParser(),
         private PatternResolver $resolver = new PatternResolver(),
         private SectionMerger $merger = new SectionMerger(),
+        private ConfigResolver $config = new ConfigResolver(),
     ) {
     }
 
@@ -158,11 +162,38 @@ final readonly class SchemaCompiler
                 uses: $reader->stringList('use'),
                 requiresDriver: $reader->reader('requires')?->optionalString('driver'),
                 storage: $storage,
+                config: $this->configParameters($reader),
                 description: $reader->optionalString('description'),
             );
         }
 
         return $patterns;
+    }
+
+    /**
+     * @return array<string, ConfigParameter>
+     */
+    private function configParameters(\PheFr\Schema\Spec\SpecReader $reader): array
+    {
+        $parameters = [];
+
+        foreach ($reader->readers('config') as $name => $declaration) {
+            $type = ConfigType::from($declaration->string('type'));
+            $of = $declaration->optionalString('of');
+
+            $parameters[$name] = new ConfigParameter(
+                name: $name,
+                type: $type,
+                description: $declaration->optionalString('description'),
+                of: null === $of ? null : ConfigType::from($of),
+                values: $declaration->has('values') ? $declaration->stringList('values') : null,
+                nullable: $declaration->bool('nullable'),
+                default: $declaration->raw('default'),
+                hasDefault: $declaration->has('default'),
+            );
+        }
+
+        return $parameters;
     }
 
     /**
@@ -207,6 +238,9 @@ final readonly class SchemaCompiler
 
             /** @var list<ParsedSections> $contributions */
             $contributions = [];
+
+            /** @var list<PatternDefinition> $applied */
+            $applied = [];
 
             $storage = ['driver' => $driver, 'table' => (string) $storageReader?->string('table')];
 
@@ -253,9 +287,18 @@ final readonly class SchemaCompiler
                 }
 
                 $contributions[] = $pattern->sections;
+                $applied[] = $pattern;
             }
 
             $contributions[] = $this->parser->parse($reader, Origin::entity($spec->file));
+
+            $configuration = $this->config->resolve(
+                $applied,
+                $reader->reader('configure'),
+                $name,
+                $spec->file,
+                $errors,
+            );
 
             $merged = $this->merger->merge($contributions, $name, $spec->file);
 
@@ -280,6 +323,7 @@ final readonly class SchemaCompiler
                 queries: $sections->queries,
                 actions: $sections->actions,
                 triggers: $sections->triggers,
+                config: $configuration,
             );
         }
 

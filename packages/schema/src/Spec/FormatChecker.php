@@ -61,6 +61,23 @@ final readonly class FormatChecker
             'triggers' => 'trigger',
         ];
 
+        $parameters = $spec->data['config'] ?? null;
+
+        if (is_array($parameters)) {
+            foreach ($parameters as $name => $parameter) {
+                if (is_array($parameter) && is_string($name)) {
+                    /** @var array<string, mixed> $parameter */
+                    $this->checkMapping(
+                        $spec,
+                        'configParameter',
+                        $parameter,
+                        sprintf('/config/%s', $name),
+                        $errors,
+                    );
+                }
+            }
+        }
+
         foreach (['storage', 'requires'] as $shape) {
             $nested = $spec->data[$shape] ?? null;
 

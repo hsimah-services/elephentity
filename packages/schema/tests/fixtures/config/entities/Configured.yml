@@ -1,0 +1,7 @@
+entity: Configured
+use: [Platform]
+configure:
+  Platform:
+    visibility: public
+    supports: [title]
+storage: { driver: wordpress, table: configured }

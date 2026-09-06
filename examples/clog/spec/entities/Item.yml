@@ -2,6 +2,12 @@ entity: Item
 description: A thing that can be stocked, identified by its barcode.
 use:
   - ClogPost
+configure:
+  ClogPost:
+    visibility: private
+    adminMenu: clog
+    label: Item
+    pluralLabel: Items
 storage:
   driver: wordpress
   table: clog_item
