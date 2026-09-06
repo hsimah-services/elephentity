@@ -1,0 +1,201 @@
+# The spec format
+
+**The JSON Schemas are the authority.** When this document and a schema disagree, the
+schema is right.
+
+```
+vendor/phefr/phentity-framework/packages/schema/resources/
+  common.schema.json    shared definitions — fields, edges, queries, actions, triggers
+  entity.schema.json    entities/*.yml
+  pattern.schema.json   patterns/*.yml
+  type.schema.json      types/*.yml
+```
+
+Read them when you need certainty about what a key accepts. `phefr validate` checks
+against them, so anything they reject is not a spec.
+
+## Entity
+
+```yaml
+entity: Post                      # PascalCase, matches the filename
+description: A published article. # one line; real prose lives in the .md
+use:                              # patterns to pull in
+  - Timestamps
+storage:
+  driver: wordpress
+  table: phe_post                 # snake_case
+  handle: post                    # what the storage system calls it
+fields: { }
+edges: { }
+queries: { }
+actions: { }
+triggers: { }
+```
+
+`handle` is driver-agnostic — a WordPress post type slug here, a collection name
+elsewhere — but validated per driver. Under `wordpress` it must be lowercase and at
+most 20 characters, because WP silently truncates longer slugs at registration.
+
+Every entity has an implicit `id`. Declaring one is an error.
+
+## Fields
+
+```yaml
+fields:
+  title:
+    type: string
+    description: What it is called.
+    required: true      # must be supplied on create
+    nullable: false     # the column admits NULL
+    default: null
+    unique: false
+    indexed: true
+    immutable: false    # settable on create, no setter afterwards
+    maxLength: 200      # string only; default 255
+    values: [a, b]      # enum only — a list, or the name of a declared enum
+    verify: true        # generate an entity-specific verifier interface
+```
+
+**`required` and `nullable` are different facts.** `required` is about creating a row;
+`nullable` is about what the column can hold. All four combinations are meaningful, and
+conflating them is the most common mistake in a first spec.
+
+Primitives: `string` `text` `int` `float` `bool` `datetime` `id` `enum` `json`.
+
+An indexed or unique `string` may not exceed 768 characters — the utf8mb4 index limit.
+Exceeding it is a compile error rather than a silent prefix index, because a prefix
+`UNIQUE` enforces uniqueness of the prefix and lets two different values collide.
+
+## Edges
+
+```yaml
+edges:
+  comments:
+    to: Comment
+    cardinality: many
+    inverse: true                            # or: post
+                                             # or: { name: posts, unique: false }
+    onDelete: restrict
+```
+
+`cardinality` describes the forward side; `inverse.unique` describes the reverse. The
+two together determine the relation, and therefore storage — which is inferred, never
+declared:
+
+| `cardinality` | `inverse.unique` | relation | storage |
+|---|---|---|---|
+| `one` | `true` | one-to-one | foreign key here, unique |
+| `one` | `false` | many-to-one | foreign key here |
+| `many` | `true` | one-to-many | foreign key on the far side |
+| `many` | `false` | many-to-many | join table |
+
+`inverse` is optional. `true` derives the reverse accessor name from the declaring
+entity, lowercased — legal only when the reverse is unique, because the derived name is
+singular and **the generator never pluralises**. For a non-unique reverse, name it:
+`inverse: { name: posts, unique: false }`.
+
+## Queries
+
+```yaml
+queries:
+  published:
+    args:
+      limit: { type: int, nullable: true }
+    returns:
+      type: Post
+      cardinality: many
+    handler: true
+```
+
+Generates a method on `PostFinder` and an interface for you to implement. Collection
+level only — traversing an edge is what `edges:` is for.
+
+## Actions
+
+```yaml
+actions:
+  publish:
+    args:
+      at: { type: datetime, nullable: true }
+    writes:
+      fields: [status, publishedAt]
+      edges: [revisions]
+    handler: true
+```
+
+The handler does **not** receive the mutator. It receives a context generated from
+`writes:`, exposing only those members — so an action physically cannot touch a field
+it did not declare, and PHPStan enforces it. Widening an action means editing the spec,
+which is the point: blast radius is reviewable in the diff.
+
+## Triggers
+
+```yaml
+triggers:
+  audit:
+    on: [create, update]
+    phase: postCommit
+    handler: true
+```
+
+Declared in the entity spec and nowhere else. That is the difference between this and
+WordPress hooks: reading the yaml tells you everything that happens on commit.
+
+**Execution order is declaration order.** No priority numbers.
+
+| phase | when | a throw | may mutate |
+|---|---|---|---|
+| `preCommit` (default) | inside the transaction, after the flush so ids exist | rolls back everything | no |
+| `postCommit` | after `COMMIT` | logged; remaining triggers still run | yes — as a new unit of work |
+
+A `postCommit` mutation is **not atomic** with the commit that caused it, and fires its
+own triggers. Fine for audit trails and projections; never for an invariant.
+
+## Patterns
+
+A pattern is a fragment of an entity spec — any section an entity may declare, it may
+declare.
+
+```yaml
+pattern: WordPressPost
+requires:
+  driver: wordpress    # using it elsewhere is a compile error naming the reason
+fields:
+  postId: { type: int, unique: true, indexed: true }
+```
+
+**Patterns are sealed.** An entity redeclaring a member a pattern defines is a hard
+error — to change it, stop using the pattern. Overridable patterns would mean reading
+one file no longer tells you what a field is.
+
+Patterns may `use:` other patterns. Cycles are reported.
+
+## Types
+
+```yaml
+type: Money
+primitive: int          # cents
+processors: true        # → MoneyReadProcessor / MoneyWriteProcessor interfaces
+```
+
+```yaml
+type: PostStatus
+primitive: string
+values: [draft, scheduled, published]
+```
+
+A type with `values:` is an enum and the generator owns the class outright. A type with
+`processors:` names a value class **you** write; the generator only references it.
+
+**No application namespaces appear in a spec.** `processors: true`, `handler: true` and
+`verify: true` all say "generate the interface" — the namespace comes from
+`phefr.json`, so renaming one is a config change rather than an edit to every entity.
+
+## Canonical key order
+
+`phefr fmt` enforces the order keys are written in, so a spec diff shows what changed
+and nothing else. It reports rather than rewrites — PHP's YAML parsers discard
+comments, and deleting an author's notes to fix an ordering nit is the wrong trade.
+
+Order applies to **keys**, never to **members**: trigger declaration order is execution
+order, so sorting members would change behaviour.
