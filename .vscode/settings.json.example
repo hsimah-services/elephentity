@@ -1,0 +1,40 @@
+// Copy to .vscode/settings.json in a project that uses Elephentity.
+//
+// VS Code reads settings.json as JSONC, so these comments are fine to keep.
+{
+    // Validate spec files as you type, against the published schemas.
+    //
+    // Mapped by glob rather than by a `# yaml-language-server:` comment in each file,
+    // so there is no URL to repeat and nothing to forget when adding a spec.
+    //
+    // This checks shape only — that a key exists and its value is the right type. It
+    // cannot know whether an edge target resolves or a pattern's `requires` is
+    // satisfied. `eleph validate` remains the gate.
+    "yaml.schemas": {
+        "https://dev.hbla.ke/elephentity/v0/project.schema.json": "spec/project.yml",
+        "https://dev.hbla.ke/elephentity/v0/entity.schema.json": "spec/entities/*.yml",
+        "https://dev.hbla.ke/elephentity/v0/pattern.schema.json": "spec/patterns/*.yml",
+        "https://dev.hbla.ke/elephentity/v0/type.schema.json": "spec/types/*.yml"
+    },
+
+    // Refuse edits to generated code, at the point of temptation.
+    //
+    // The build already rejects a hand-edited file — its digest stops matching — but
+    // that feedback arrives minutes later, after you have written something and formed
+    // an intention. This arrives immediately, which is the difference between a rule
+    // and a guard rail.
+    //
+    // Adjust the path if `output` in eleph.json is not "generated".
+    "files.readonlyInclude": {
+        "generated/**": true
+    },
+
+    // Generated code is worth reading and rarely worth editing, so it stays searchable
+    // and stays out of quick-open.
+    "search.exclude": {
+        "generated/**": false
+    },
+    "files.watcherExclude": {
+        "**/generated/**": true
+    }
+}

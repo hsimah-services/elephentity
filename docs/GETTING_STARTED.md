@@ -101,6 +101,16 @@ That interface has no implementation, so the application will not boot. Write on
 That loop — change the spec, regenerate, implement what appeared under `Contract/` — is
 the whole workflow.
 
+## Wire up your editor
+
+```bash
+cp vendor/elephentity/elephentity/.vscode/settings.json.example .vscode/settings.json
+```
+
+Validates spec files as you type against the published schemas, and marks `generated/`
+read-only so the editor refuses an edit the build would reject later. See
+[PUBLISHING-SCHEMAS.md](PUBLISHING-SCHEMAS.md).
+
 ## Wire it into CI
 
 See [CI.md](CI.md). Four gates, in order.

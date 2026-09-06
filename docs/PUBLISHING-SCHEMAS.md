@@ -59,22 +59,27 @@ Per file, with a comment the YAML language server reads:
 entity: Item
 ```
 
-Or once per project, by glob — `.vscode/settings.json`:
+Or once per project, by glob. Copy
+[`.vscode/settings.json.example`](../.vscode/settings.json.example) to
+`.vscode/settings.json`:
 
 ```json
-{
-    "yaml.schemas": {
-        "https://dev.hbla.ke/elephentity/v0/project.schema.json": "spec/project.yml",
-        "https://dev.hbla.ke/elephentity/v0/entity.schema.json": "spec/entities/*.yml",
-        "https://dev.hbla.ke/elephentity/v0/pattern.schema.json": "spec/patterns/*.yml",
-        "https://dev.hbla.ke/elephentity/v0/type.schema.json": "spec/types/*.yml"
-    }
+"yaml.schemas": {
+    "https://dev.hbla.ke/elephentity/v0/project.schema.json": "spec/project.yml",
+    "https://dev.hbla.ke/elephentity/v0/entity.schema.json": "spec/entities/*.yml",
+    "https://dev.hbla.ke/elephentity/v0/pattern.schema.json": "spec/patterns/*.yml",
+    "https://dev.hbla.ke/elephentity/v0/type.schema.json": "spec/types/*.yml"
 }
 ```
 
 The glob form is better: no URL repeated in every spec file, and nothing to forget when
 adding one. JetBrains IDEs have the same mapping under **Languages & Frameworks → Schemas
 and DTDs → JSON Schema Mappings**.
+
+The same file also marks `generated/**` read-only. The build already rejects a
+hand-edited file, but that feedback arrives minutes later, after you have written
+something and formed an intention; the editor refusing the keystroke is the difference
+between a rule and a guard rail.
 
 ## What this does not replace
 
