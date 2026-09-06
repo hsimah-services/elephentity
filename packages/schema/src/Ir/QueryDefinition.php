@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Ir;
+namespace Eleph\Schema\Ir;
 
 /**
  * A collection-level finder. Edge traversal is covered by edges, not queries.

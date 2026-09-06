@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
 enum TestStatus: string
 {

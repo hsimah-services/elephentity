@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Resolver;
+namespace Eleph\WPGraphQL\Resolver;
 
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Query\CachingEdgeLoader;
-use PheFr\Runtime\Query\EntityQuery;
-use PheFr\Runtime\Storage\Cursor;
-use PheFr\WPGraphQL\Manifest\ConnectionEntry;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Query\CachingEdgeLoader;
+use Eleph\Runtime\Query\EntityQuery;
+use Eleph\Runtime\Storage\Cursor;
+use Eleph\WPGraphQL\Manifest\ConnectionEntry;
 
 /**
  * Resolves a connection from the lazy query an edge accessor returns.

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
 /**
  * A parsed but not yet validated spec document, with the path it came from.

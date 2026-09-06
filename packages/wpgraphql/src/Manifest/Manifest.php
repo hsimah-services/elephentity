@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Manifest;
+namespace Eleph\WPGraphQL\Manifest;
 
 /**
  * Everything the GraphQL layer registers, computed once at build time.

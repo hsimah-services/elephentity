@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\Identity;
+namespace Eleph\Runtime\Tests\Identity;
 
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\PendingId;
 use InvalidArgumentException;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Identity\PendingId;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

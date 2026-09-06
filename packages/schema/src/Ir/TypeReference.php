@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Ir;
+namespace Eleph\Schema\Ir;
 
 /**
  * A field or argument's declared type: either a primitive or a declared value type.

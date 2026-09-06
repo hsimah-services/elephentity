@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen;
+namespace Eleph\Codegen;
 
 /**
  * One file the generator owns, addressed relative to the output directory.

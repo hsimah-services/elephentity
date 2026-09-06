@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Verification;
+namespace Eleph\Runtime\Verification;
 
-use PheFr\Runtime\Mutation\MutationContext;
+use Eleph\Runtime\Mutation\MutationContext;
 
 /**
  * The bridge between the runtime and one entity's exactly-typed field verifiers.

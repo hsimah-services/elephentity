@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Storage\Cursor;
-use PheFr\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Cursor;
+use Eleph\Runtime\Storage\Page;
 
 /**
  * A lazy, batchable handle on a set of entities.

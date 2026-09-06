@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Registration;
+namespace Eleph\WPGraphQL\Registration;
 
-use PheFr\WPGraphQL\Manifest\ConnectionEntry;
-use PheFr\WPGraphQL\Manifest\FieldEntry;
-use PheFr\WPGraphQL\Manifest\Manifest;
-use PheFr\WPGraphQL\Manifest\ObjectTypeEntry;
+use Eleph\WPGraphQL\Manifest\ConnectionEntry;
+use Eleph\WPGraphQL\Manifest\FieldEntry;
+use Eleph\WPGraphQL\Manifest\Manifest;
+use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
 
 /**
  * Registers the manifest with WPGraphQL.

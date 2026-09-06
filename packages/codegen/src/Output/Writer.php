@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Output;
+namespace Eleph\Codegen\Output;
 
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Signing\SignatureStatus;
+use Eleph\Codegen\Signing\Signer;
 use FilesystemIterator;
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Signing\SignatureStatus;
-use PheFr\Codegen\Signing\Signer;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;

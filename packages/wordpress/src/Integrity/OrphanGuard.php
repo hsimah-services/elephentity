@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Integrity;
+namespace Eleph\WordPress\Integrity;
 
-use PheFr\Schema\Ir\Schema;
-use PheFr\WordPress\Database\Database;
-use PheFr\WordPress\Sql\Naming;
+use Eleph\Schema\Ir\Schema;
+use Eleph\WordPress\Database\Database;
+use Eleph\WordPress\Sql\Naming;
 
 /**
  * Keeps custom tables in step when WordPress deletes a post behind our back.

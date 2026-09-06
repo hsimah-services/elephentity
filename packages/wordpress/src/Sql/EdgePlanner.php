@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Schema\Ir\Schema;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Decides where every edge lives, once.

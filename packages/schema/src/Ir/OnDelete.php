@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Ir;
+namespace Eleph\Schema\Ir;
 
 /**
  * What happens to the far side of an edge when this entity is deleted.

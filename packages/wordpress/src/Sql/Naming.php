@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Schema\Ir\EdgeDefinition;
-use PheFr\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\EdgeDefinition;
+use Eleph\Schema\Ir\EntityDefinition;
 
 /**
  * Every SQL identifier this adaptor derives, in one place.

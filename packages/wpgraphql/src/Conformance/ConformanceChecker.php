@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Conformance;
+namespace Eleph\WPGraphQL\Conformance;
 
 use Closure;
-use PheFr\WPGraphQL\Manifest\Manifest;
+use Eleph\WPGraphQL\Manifest\Manifest;
 
 /**
  * Proves the GraphQL surface and the generated entities agree.
@@ -42,7 +42,7 @@ final readonly class ConformanceChecker
 
             if (!class_exists($class)) {
                 $problems[] = sprintf(
-                    '%s is exposed as a GraphQL type but %s does not exist. Run `phefr generate`.',
+                    '%s is exposed as a GraphQL type but %s does not exist. Run `eleph generate`.',
                     $object->entity,
                     $class,
                 );

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli\Command;
+namespace Eleph\Cli\Command;
 
 use Closure;
-use PheFr\Cli\ProjectConfig;
-use PheFr\Codegen\GeneratorConfig;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WPGraphQL\Conformance\ConformanceChecker;
-use PheFr\WPGraphQL\Manifest\ManifestBuilder;
+use Eleph\Cli\ProjectConfig;
+use Eleph\Codegen\GeneratorConfig;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Conformance\ConformanceChecker;
+use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -39,7 +39,7 @@ final class CheckCommand extends Command
             'project',
             'p',
             InputOption::VALUE_REQUIRED,
-            'Directory holding phefr.json.',
+            'Directory holding eleph.json.',
             '.',
         );
     }
@@ -47,7 +47,7 @@ final class CheckCommand extends Command
     /**
      * Load generated classes without depending on the project's autoloader.
      *
-     * PheFr owns the layout of this tree — the namespace below the root mirrors the
+     * Elephentity owns the layout of this tree — the namespace below the root mirrors the
      * directory exactly — so it can always find its own output. Relying on the
      * project's Composer configuration would make the gate silently pass whenever that
      * configuration was wrong, which is precisely when it should fail.

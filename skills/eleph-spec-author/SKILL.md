@@ -1,16 +1,16 @@
 ---
-name: phefr-spec-author
-description: Turning a written description of a domain object into a PheFr spec. Use when given a markdown document, a ticket, a conversation or a sketch describing an entity and asked to produce spec YAML — or when starting a new PheFr project from scratch. Covers what to ask before writing anything, how prose maps onto spec constructs, and what PheFr cannot express.
+name: eleph-spec-author
+description: Turning a written description of a domain object into an Elephentity spec. Use when given a markdown document, a ticket, a conversation or a sketch describing an entity and asked to produce spec YAML — or when starting a new Elephentity project from scratch. Covers what to ask before writing anything, how prose maps onto spec constructs, and what Elephentity cannot express.
 ---
 
-# Writing a PheFr spec from a description
+# Writing an Elephentity spec from a description
 
 The output of this skill is a spec, an accompanying markdown file, and a short list of
 things the author had to decide. It is not a first draft to be corrected later: the
 spec is the entity's changelog, and its first commit is the one everything else is
 diffed against.
 
-Read the `phefr` skill first if you have not — particularly `reference/spec-format.md`.
+Read the `eleph` skill first if you have not — particularly `reference/spec-format.md`.
 
 ## Interview before you write
 
@@ -59,7 +59,7 @@ hand corrections. Subsequent changes edit the yaml directly.
 4. **Write the types first** — enums and value types — so entities can reference them.
 5. **Write each entity**: storage, fields, edges, then queries, actions, triggers.
 6. **Run the gates.** `fmt`, `validate`. They will find what you got wrong, precisely.
-7. **Report what you assumed**, and what PheFr could not express.
+7. **Report what you assumed**, and what Elephentity could not express.
 
 ## Mapping prose onto the spec
 
@@ -86,7 +86,7 @@ hand corrections. Subsequent changes edit the yaml directly.
 - **Do not guess a `handle`.** Whether the entity needs a WordPress post type is a
   question with real consequences — ask it.
 
-## What PheFr cannot express
+## What Elephentity cannot express
 
 When the description needs one of these, say so rather than approximating quietly:
 

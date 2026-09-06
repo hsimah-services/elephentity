@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
 /**
  * One page of results, with the cursor needed to ask for the next.

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Type;
+namespace Eleph\Runtime\Type;
 
-use PheFr\Runtime\Boot\MissingImplementations;
+use Eleph\Runtime\Boot\MissingImplementations;
 
 /**
  * Resolves the processors a declared type needs.

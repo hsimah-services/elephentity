@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Tests;
+namespace Eleph\WPGraphQL\Tests;
 
-use PheFr\Schema\Ir\Schema;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WPGraphQL\Manifest\Manifest;
-use PheFr\WPGraphQL\Manifest\ManifestBuilder;
-use PheFr\WPGraphQL\Manifest\MutationEntry;
-use PheFr\WPGraphQL\Manifest\TypeMapper;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Manifest\Manifest;
+use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use Eleph\WPGraphQL\Manifest\MutationEntry;
+use Eleph\WPGraphQL\Manifest\TypeMapper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

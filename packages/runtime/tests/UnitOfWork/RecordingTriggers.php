@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
-use PheFr\Runtime\Mutation\EntityTriggers;
-use PheFr\Runtime\Mutation\MutationContext;
-use PheFr\Runtime\Trigger\TriggerEvent;
-use PheFr\Runtime\Trigger\TriggerPhase;
+use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\MutationContext;
+use Eleph\Runtime\Trigger\TriggerEvent;
+use Eleph\Runtime\Trigger\TriggerPhase;
 
 /**
  * A stand-in for the generated trigger bridge.

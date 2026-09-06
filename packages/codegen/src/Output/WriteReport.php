@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Output;
+namespace Eleph\Codegen\Output;
 
 /**
  * What a generation run did, or would do.

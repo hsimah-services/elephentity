@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\Schema\Ir\Schema;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WordPress\Integrity\OrphanGuard;
-use PheFr\WordPress\Registration\PostTypeRegistrar;
-use PheFr\WordPress\Sql\Naming;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WordPress\Integrity\OrphanGuard;
+use Eleph\WordPress\Registration\PostTypeRegistrar;
+use Eleph\WordPress\Sql\Naming;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The two places PheFr has to meet WordPress on its own terms.
+ * The two places Elephentity has to meet WordPress on its own terms.
  */
 #[CoversClass(PostTypeRegistrar::class)]
 #[CoversClass(OrphanGuard::class)]

@@ -1,4 +1,4 @@
-# PheFr
+# Elephentity
 
 An AI-native PHP framework that compiles human-readable specs into locked, signed
 business logic. Read [docs/PLAN.md](docs/PLAN.md) first — it carries every design
@@ -12,7 +12,7 @@ There is no local PHP. Everything runs in a container:
 ./tools/php composer ci          # style, static analysis, architecture, tests
 ./tools/php composer style:fix
 ./tools/php vendor/bin/phpunit --filter SomeTest
-./tools/php packages/cli/bin/phefr generate --project examples/clog
+./tools/php packages/cli/bin/eleph generate --project examples/clog
 ```
 
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are
@@ -28,7 +28,7 @@ typed, so an exception here undermines the product.
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `wordpress/` | yes | the one adaptor — the only package that may name `WP_*` |
 | `wpgraphql/` | yes | IR → compiled GraphQL manifest |
-| `cli/` | dev | the `phefr` command |
+| `cli/` | dev | the `eleph` command |
 
 `tools/check-architecture.php` enforces that `schema`, `codegen`, `runtime` and `cli`
 reference no WordPress symbol. It uses the tokenizer, so prose in a doc comment is
@@ -37,7 +37,7 @@ fine and a real call is not.
 ## Conventions that are load bearing
 
 - **The spec carries no application namespaces.** `handler: true`, `verify: true` and
-  `processors: true` mean "generate the interface"; names come from `phefr.json`.
+  `processors: true` mean "generate the interface"; names come from `eleph.json`.
 - **Storage placement is inferred, never declared.** If the framework can work it out,
   a human choosing it is a chance for two entities to disagree.
 - **Errors accumulate.** Compilers, verifiers and planners collect problems and report

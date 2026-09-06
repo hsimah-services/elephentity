@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Emits backed enums.

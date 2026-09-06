@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Identity;
+namespace Eleph\Runtime\Identity;
 
 use InvalidArgumentException;
 

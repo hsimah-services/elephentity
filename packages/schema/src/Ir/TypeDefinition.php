@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Ir;
+namespace Eleph\Schema\Ir;
 
 /**
  * A declared value type aliasing a primitive, or a declared enum.

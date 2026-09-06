@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
-use PheFr\Runtime\Mutation\MutationContext;
-use PheFr\Runtime\Verification\EntityVerifiers;
-use PheFr\Runtime\Verification\Verification;
+use Eleph\Runtime\Mutation\MutationContext;
+use Eleph\Runtime\Verification\EntityVerifiers;
+use Eleph\Runtime\Verification\Verification;
 
 /**
  * A stand-in for the generated verifier bridge.

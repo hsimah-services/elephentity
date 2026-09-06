@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Ir;
+namespace Eleph\Schema\Ir;
 
 /**
  * A fully resolved entity: its own spec with every pattern merged in.

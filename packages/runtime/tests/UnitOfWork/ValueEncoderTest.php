@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
 use DateTimeImmutable;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\UnitOfWork\ValueEncoder;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

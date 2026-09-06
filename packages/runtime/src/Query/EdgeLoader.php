@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\EntityId;
 
 /**
  * Resolves an entity's edges, lazily and in batches.

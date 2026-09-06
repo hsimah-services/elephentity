@@ -1,6 +1,6 @@
 # What you write by hand
 
-PheFr generates everything it can infer. What remains is code no generator could
+Elephentity generates everything it can infer. What remains is code no generator could
 invent, and it arrives as interfaces with exact types.
 
 ## Finding the list

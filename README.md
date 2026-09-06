@@ -1,8 +1,10 @@
-# phentity-framework
+# Elephentity
 
 An AI-native framework for building PHP business logic. Utilizes layers of agentic
 rules and skills to turn human readable specs into consistent, scalable and reliable
 underlying code.
+
+The command is `eleph`; the PHP namespace is `Eleph\`.
 
 ## Start here
 
@@ -14,11 +16,11 @@ underlying code.
 
 ## Agent skills
 
-PheFr ships skills that teach an agent to use it, in [skills/](skills):
+Elephentity ships skills that teach an agent to use it, in [skills/](skills):
 
-- `phefr` — the spec format, the build loop, finding what is left to implement
-- `phefr-spec-author` — turning a written description into a spec, and what to ask first
+- `eleph` — the spec format, the build loop, finding what is left to implement
+- `eleph-spec-author` — turning a written description into a spec, and what to ask first
 
 ```bash
-cp -r vendor/phefr/phentity-framework/skills/* .claude/skills/
+cp -r vendor/elephentity/elephentity/skills/* .claude/skills/
 ```

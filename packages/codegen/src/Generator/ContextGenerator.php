@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Runtime\Mutation\EdgeMutation;
-use PheFr\Runtime\Mutation\MutationBuffer;
-use PheFr\Runtime\Mutation\MutationContext;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Runtime\Mutation\EdgeMutation;
+use Eleph\Runtime\Mutation\MutationBuffer;
+use Eleph\Runtime\Mutation\MutationContext;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
 
 /**
  * Emits the two kinds of context: an action's narrow write surface, and an entity's

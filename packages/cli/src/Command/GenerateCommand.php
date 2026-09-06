@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli\Command;
+namespace Eleph\Cli\Command;
 
-use PheFr\Cli\ProjectConfig;
-use PheFr\Codegen\Codegen;
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\GeneratorConfig;
-use PheFr\Codegen\Output\Writer;
-use PheFr\Codegen\Output\WriteReport;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WPGraphQL\Manifest\ManifestBuilder;
-use PheFr\WPGraphQL\Manifest\ManifestExporter;
+use Eleph\Cli\ProjectConfig;
+use Eleph\Codegen\Codegen;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\GeneratorConfig;
+use Eleph\Codegen\Output\Writer;
+use Eleph\Codegen\Output\WriteReport;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use Eleph\WPGraphQL\Manifest\ManifestExporter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -49,7 +49,7 @@ final class GenerateCommand extends Command
             'project',
             'p',
             InputOption::VALUE_REQUIRED,
-            'Directory holding phefr.json.',
+            'Directory holding eleph.json.',
             '.',
         );
     }
@@ -121,7 +121,7 @@ final class GenerateCommand extends Command
         $this->list($io, 'Would be updated', $report->updated);
         $this->list($io, 'No longer produced by the schema', $report->deleted);
 
-        $io->writeln('Run <info>phefr generate</info> and commit the result.');
+        $io->writeln('Run <info>eleph generate</info> and commit the result.');
 
         return Command::FAILURE;
     }

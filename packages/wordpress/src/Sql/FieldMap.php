@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Schema\Ir\Schema;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Translates between the spec's field names and the database's column names.

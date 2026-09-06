@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\Schema\Ir\Schema;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WordPress\Sql\Naming;
-use PheFr\WordPress\Sql\SchemaBuilder;
-use PheFr\WordPress\Sql\TableSchema;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WordPress\Sql\Naming;
+use Eleph\WordPress\Sql\SchemaBuilder;
+use Eleph\WordPress\Sql\TableSchema;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

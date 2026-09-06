@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
-use PheFr\Runtime\Type\ProcessorRegistry;
-use PheFr\Runtime\Type\ReadProcessor;
-use PheFr\Runtime\Type\WriteProcessor;
+use Eleph\Runtime\Type\ProcessorRegistry;
+use Eleph\Runtime\Type\ReadProcessor;
+use Eleph\Runtime\Type\WriteProcessor;
 use RuntimeException;
 
 final class StubProcessors implements ProcessorRegistry

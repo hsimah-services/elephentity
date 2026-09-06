@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
 /**
  * The three kinds of spec document, discriminated by their required root key.
@@ -15,7 +15,7 @@ enum SpecKind: string
 
     public function schemaUri(): string
     {
-        return sprintf('https://phefr.dev/schema/%s.json', $this->value);
+        return sprintf('https://elephentity.dev/schema/%s.json', $this->value);
     }
 
     public function directory(): string

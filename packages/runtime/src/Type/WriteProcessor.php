@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Type;
+namespace Eleph\Runtime\Type;
 
-use PheFr\Runtime\Mutation\MutationContext;
-use PheFr\Runtime\Verification\Verification;
+use Eleph\Runtime\Mutation\MutationContext;
+use Eleph\Runtime\Verification\Verification;
 
 /**
  * Checks a domain value and turns it back into a stored primitive.

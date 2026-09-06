@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Pattern;
+namespace Eleph\Schema\Pattern;
 
-use PheFr\Schema\Error\SpecError;
-use PheFr\Schema\Ir\Contributed;
-use PheFr\Schema\Spec\ParsedSections;
+use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\Ir\Contributed;
+use Eleph\Schema\Spec\ParsedSections;
 
 /**
  * Merges pattern sections into an entity's own, sealed.

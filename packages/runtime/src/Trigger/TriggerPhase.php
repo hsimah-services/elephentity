@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Trigger;
+namespace Eleph\Runtime\Trigger;
 
 /**
  * When a trigger runs relative to the transaction.

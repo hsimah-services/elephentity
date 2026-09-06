@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Mutation;
+namespace Eleph\Runtime\Mutation;
 
 /**
  * The state a verifier is allowed to reason about.

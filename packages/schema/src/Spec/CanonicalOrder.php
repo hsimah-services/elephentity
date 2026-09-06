@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
 /**
  * The order keys are written in, everywhere.

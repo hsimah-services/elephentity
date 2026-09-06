@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Naming;
+namespace Eleph\Codegen\Naming;
 
-use PheFr\Codegen\GeneratorConfig;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
+use Eleph\Codegen\GeneratorConfig;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
 
 /**
  * Every name the generator produces, in one place.

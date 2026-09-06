@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Migration;
+namespace Eleph\WordPress\Migration;
 
 /**
  * What the schema needs, split by what can be applied automatically.

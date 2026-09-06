@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
 use BackedEnum;
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use Exception;
 use JsonException;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\UnitOfWork\ValueEncoder;
 use RuntimeException;
 
 /**

@@ -1,6 +1,6 @@
 {
-    "name": "phefr/schema",
-    "description": "Spec parser, JSON Schema, pattern resolution and IR for PheFr. Build-time only.",
+    "name": "elephentity/schema",
+    "description": "Spec parser, JSON Schema, pattern resolution and IR for Elephentity. Build-time only.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
@@ -12,12 +12,12 @@
     },
     "autoload": {
         "psr-4": {
-            "PheFr\\Schema\\": "src/"
+            "Eleph\\Schema\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PheFr\\Schema\\Tests\\": "tests/"
+            "Eleph\\Schema\\Tests\\": "tests/"
         }
     }
 }

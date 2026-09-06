@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\Cursor;
-use PheFr\Runtime\Storage\Page;
-use PheFr\Runtime\Storage\Record;
-use PheFr\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Cursor;
+use Eleph\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Record;
+use Eleph\Runtime\Storage\StorageAdaptor;
 
 /**
  * A criteria that has not run yet.

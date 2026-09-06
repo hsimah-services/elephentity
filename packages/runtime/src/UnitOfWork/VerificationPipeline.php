@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\UnitOfWork;
+namespace Eleph\Runtime\UnitOfWork;
 
-use PheFr\Runtime\Mutation\Mutation;
-use PheFr\Runtime\Type\ProcessorRegistry;
-use PheFr\Runtime\Verification\EntityVerifiers;
-use PheFr\Runtime\Verification\FieldViolation;
-use PheFr\Runtime\Verification\Verification;
+use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\Type\ProcessorRegistry;
+use Eleph\Runtime\Verification\EntityVerifiers;
+use Eleph\Runtime\Verification\FieldViolation;
+use Eleph\Runtime\Verification\Verification;
 
 /**
  * Runs both tiers of verification over a mutation and collects everything that failed.

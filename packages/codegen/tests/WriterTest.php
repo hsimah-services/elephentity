@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Tests;
+namespace Eleph\Codegen\Tests;
 
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Output\Writer;
 use FilesystemIterator;
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Output\Writer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -23,7 +23,7 @@ final class WriterTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->directory = sys_get_temp_dir() . '/phefr-writer-' . bin2hex(random_bytes(6));
+        $this->directory = sys_get_temp_dir() . '/eleph-writer-' . bin2hex(random_bytes(6));
         mkdir($this->directory, 0o775, true);
     }
 

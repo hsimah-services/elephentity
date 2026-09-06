@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Manifest;
+namespace Eleph\WPGraphQL\Manifest;
 
 /**
  * A GraphQL type reference: a name, plus whether it is non-null and whether it is a

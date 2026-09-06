@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli\Command;
+namespace Eleph\Cli\Command;
 
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

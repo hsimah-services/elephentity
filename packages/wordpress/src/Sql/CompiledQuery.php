@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
 /**
  * A SQL statement and the values to bind into it.

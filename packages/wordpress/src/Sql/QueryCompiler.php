@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Runtime\Storage\Comparison;
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\Direction;
-use PheFr\Runtime\Storage\EdgeFilter;
-use PheFr\Runtime\Storage\Filter;
+use Eleph\Runtime\Storage\Comparison;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Direction;
+use Eleph\Runtime\Storage\EdgeFilter;
+use Eleph\Runtime\Storage\Filter;
 use RuntimeException;
 
 /**

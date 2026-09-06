@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
+use Eleph\Runtime\Identity\Identifier;
 use InvalidArgumentException;
-use PheFr\Runtime\Identity\Identifier;
 
 /**
  * Constrain a result set to what one or more entities are linked to along an edge.

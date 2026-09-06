@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Runtime\Query\EntityQuery;
+use Eleph\Runtime\Type\ReadProcessor;
+use Eleph\Runtime\Type\WriteProcessor;
+use Eleph\Runtime\Verification\Verification;
+use Eleph\Schema\Ir\ArgumentDefinition;
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Schema;
 use Nette\PhpGenerator\Method;
 use Nette\PhpGenerator\PhpNamespace;
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Runtime\Query\EntityQuery;
-use PheFr\Runtime\Type\ReadProcessor;
-use PheFr\Runtime\Type\WriteProcessor;
-use PheFr\Runtime\Verification\Verification;
-use PheFr\Schema\Ir\ArgumentDefinition;
-use PheFr\Schema\Ir\Cardinality;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\Schema;
 
 /**
  * Emits the interfaces the application must implement.

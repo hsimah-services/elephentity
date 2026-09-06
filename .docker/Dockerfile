@@ -1,4 +1,4 @@
-# Build-time toolchain for PheFr: PHPStan, PHPUnit, PHP-CS-Fixer and the phefr CLI.
+# Build-time toolchain for Elephentity: PHPStan, PHPUnit, PHP-CS-Fixer and the eleph CLI.
 #
 # There is deliberately no service here. Nothing in this image runs as a daemon, so
 # containers are created per command and removed on exit. When the WordPress adaptor

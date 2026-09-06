@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
-use PheFr\Schema\Ir\ActionDefinition;
-use PheFr\Schema\Ir\ActionWrites;
-use PheFr\Schema\Ir\ArgumentDefinition;
-use PheFr\Schema\Ir\Cardinality;
-use PheFr\Schema\Ir\EdgeDefinition;
-use PheFr\Schema\Ir\EdgeInverse;
-use PheFr\Schema\Ir\EnumSource;
-use PheFr\Schema\Ir\FieldDefinition;
-use PheFr\Schema\Ir\OnDelete;
-use PheFr\Schema\Ir\Origin;
-use PheFr\Schema\Ir\QueryDefinition;
-use PheFr\Schema\Ir\ReturnDefinition;
-use PheFr\Schema\Ir\TriggerDefinition;
-use PheFr\Schema\Ir\TriggerEvent;
-use PheFr\Schema\Ir\TriggerPhase;
-use PheFr\Schema\Ir\TypeReference;
+use Eleph\Schema\Ir\ActionDefinition;
+use Eleph\Schema\Ir\ActionWrites;
+use Eleph\Schema\Ir\ArgumentDefinition;
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EdgeDefinition;
+use Eleph\Schema\Ir\EdgeInverse;
+use Eleph\Schema\Ir\EnumSource;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\OnDelete;
+use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\QueryDefinition;
+use Eleph\Schema\Ir\ReturnDefinition;
+use Eleph\Schema\Ir\TriggerDefinition;
+use Eleph\Schema\Ir\TriggerEvent;
+use Eleph\Schema\Ir\TriggerPhase;
+use Eleph\Schema\Ir\TypeReference;
 
 /**
  * Turns a validated spec document into IR sections.

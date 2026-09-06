@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Mutation;
+namespace Eleph\Runtime\Mutation;
 
-use PheFr\Runtime\Identity\Identifier;
+use Eleph\Runtime\Identity\Identifier;
 
 /**
  * Pending changes to one edge.

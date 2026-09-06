@@ -1,7 +1,7 @@
 # Development
 
-PheFr's toolchain is entirely build-time — PHPStan, PHPUnit, PHP-CS-Fixer and the
-`phefr` CLI. Nothing runs as a service, so you never need a container sitting in the
+Elephentity's toolchain is entirely build-time — PHPStan, PHPUnit, PHP-CS-Fixer and the
+`eleph` CLI. Nothing runs as a service, so you never need a container sitting in the
 background.
 
 ## Containerised PHP (recommended)
@@ -29,8 +29,8 @@ commands, nothing is left running at all.
 To reclaim the space when you are done with PHP for a while:
 
 ```bash
-podman rmi phefr-dev:8.3
-rm -rf ~/.cache/phefr
+podman rmi eleph-dev:8.3
+rm -rf ~/.cache/eleph
 ```
 
 ### Why podman here
@@ -50,7 +50,7 @@ doing both would double-map it.
 
 - **SELinux.** Mounts are passed `:z` to relabel them. Without it the container cannot
   read your files at all.
-- **Composer cache.** Kept at `~/.cache/phefr/composer` as a host directory rather than
+- **Composer cache.** Kept at `~/.cache/eleph/composer` as a host directory rather than
   a named volume — under docker's `--user` a named volume is created root-owned and
   unwritable, and a host directory works identically for podman.
 - **`HOME`.** Set explicitly, because a UID with no `/etc/passwd` entry has none and
@@ -81,7 +81,7 @@ and 8.4 matrix:
 | Architecture rules | `composer arch` |
 | Tests | `phpunit` |
 
-The PheFr-specific gates — `validate`, `generate --check`, signature verification,
+The Elephentity-specific gates — `validate`, `generate --check`, signature verification,
 `fmt --check` and conformance — are added as their packages land. See §14 of
 [PLAN.md](PLAN.md).
 
@@ -95,7 +95,7 @@ packages/
   runtime/             storage port, unit of work, verification, loaders  (shipped)
   wordpress/           the one adaptor; only package that may name WP_*   (shipped)
   wpgraphql/           IR → compiled registration manifest                (shipped)
-  cli/                 the phefr command                                  (dev-only)
+  cli/                 the eleph command                                  (dev-only)
 tools/
   php                  run a command in the throwaway PHP container
   check-architecture.php  enforces the platform-free core

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Database;
+namespace Eleph\WordPress\Database;
 
 /**
  * The narrow slice of wpdb this adaptor uses.

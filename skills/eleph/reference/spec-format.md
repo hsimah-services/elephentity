@@ -4,14 +4,14 @@
 schema is right.
 
 ```
-vendor/phefr/phentity-framework/packages/schema/resources/
+vendor/elephentity/elephentity/packages/schema/resources/
   common.schema.json    shared definitions — fields, edges, queries, actions, triggers
   entity.schema.json    entities/*.yml
   pattern.schema.json   patterns/*.yml
   type.schema.json      types/*.yml
 ```
 
-Read them when you need certainty about what a key accepts. `phefr validate` checks
+Read them when you need certainty about what a key accepts. `eleph validate` checks
 against them, so anything they reject is not a spec.
 
 ## Entity
@@ -231,11 +231,11 @@ A type with `values:` is an enum and the generator owns the class outright. A ty
 
 **No application namespaces appear in a spec.** `processors: true`, `handler: true` and
 `verify: true` all say "generate the interface" — the namespace comes from
-`phefr.json`, so renaming one is a config change rather than an edit to every entity.
+`eleph.json`, so renaming one is a config change rather than an edit to every entity.
 
 ## Canonical key order
 
-`phefr fmt` enforces the order keys are written in, so a spec diff shows what changed
+`eleph fmt` enforces the order keys are written in, so a spec diff shows what changed
 and nothing else. It reports rather than rewrites — PHP's YAML parsers discard
 comments, and deleting an author's notes to fix an ordering nit is the wrong trade.
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage\Write;
+namespace Eleph\Runtime\Storage\Write;
 
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\PendingId;
 use OutOfBoundsException;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Identity\PendingId;
 use SplObjectStorage;
 
 /**

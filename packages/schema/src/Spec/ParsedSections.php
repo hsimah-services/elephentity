@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
-use PheFr\Schema\Ir\ActionDefinition;
-use PheFr\Schema\Ir\EdgeDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
-use PheFr\Schema\Ir\QueryDefinition;
-use PheFr\Schema\Ir\TriggerDefinition;
+use Eleph\Schema\Ir\ActionDefinition;
+use Eleph\Schema\Ir\EdgeDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\QueryDefinition;
+use Eleph\Schema\Ir\TriggerDefinition;
 
 /**
  * The declarable sections of a spec, parsed but not yet merged.

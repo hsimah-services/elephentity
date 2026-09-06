@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\Query;
+namespace Eleph\Runtime\Tests\Query;
 
-use PheFr\Runtime\Query\ValueDecoder;
-use PheFr\Runtime\Tests\UnitOfWork\TestStatus;
+use Eleph\Runtime\Query\ValueDecoder;
+use Eleph\Runtime\Tests\UnitOfWork\TestStatus;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

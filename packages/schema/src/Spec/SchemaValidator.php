@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
+use Eleph\Schema\Error\SpecError;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;
 use Opis\JsonSchema\Validator;
-use PheFr\Schema\Error\SpecError;
 
 /**
  * Validates spec documents against the JSON Schemas that define the spec format.
@@ -29,7 +29,7 @@ final class SchemaValidator
 
         foreach (['common', 'entity', 'pattern', 'type'] as $name) {
             $resolver?->registerFile(
-                sprintf('https://phefr.dev/schema/%s.json', $name),
+                sprintf('https://elephentity.dev/schema/%s.json', $name),
                 sprintf('%s/%s.schema.json', self::RESOURCE_DIRECTORY, $name),
             );
         }

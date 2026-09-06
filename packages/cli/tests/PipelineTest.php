@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli\Tests;
+namespace Eleph\Cli\Tests;
 
+use Eleph\Cli\Command\CheckCommand;
+use Eleph\Cli\Command\FmtCommand;
+use Eleph\Cli\Command\GenerateCommand;
+use Eleph\Cli\Command\ValidateCommand;
 use FilesystemIterator;
-use PheFr\Cli\Command\CheckCommand;
-use PheFr\Cli\Command\FmtCommand;
-use PheFr\Cli\Command\GenerateCommand;
-use PheFr\Cli\Command\ValidateCommand;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -34,7 +34,7 @@ final class PipelineTest extends TestCase
     /**
      * A namespace per test, because PHP loads a class once per process: two tests
      * generating the same class name would have the second silently inspecting the
-     * first's code. The same constraint is why `phefr check` must be a one-shot
+     * first's code. The same constraint is why `eleph check` must be a one-shot
      * process rather than something a long-lived worker calls repeatedly.
      */
     private string $namespace;
@@ -43,8 +43,8 @@ final class PipelineTest extends TestCase
     {
         $suffix = bin2hex(random_bytes(6));
 
-        $this->project = sys_get_temp_dir() . '/phefr-pipeline-' . $suffix;
-        $this->namespace = 'PipelineFixture' . $suffix . '\\PheFr';
+        $this->project = sys_get_temp_dir() . '/eleph-pipeline-' . $suffix;
+        $this->namespace = 'PipelineFixture' . $suffix . '\\Elephentity';
 
         mkdir($this->project . '/spec', 0o775, true);
 
@@ -55,7 +55,7 @@ final class PipelineTest extends TestCase
             );
         }
 
-        file_put_contents($this->project . '/phefr.json', json_encode([
+        file_put_contents($this->project . '/eleph.json', json_encode([
             'spec' => 'spec',
             'output' => 'generated',
             'namespace' => $this->namespace,

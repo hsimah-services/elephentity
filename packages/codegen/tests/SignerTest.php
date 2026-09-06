@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Tests;
+namespace Eleph\Codegen\Tests;
 
-use PheFr\Codegen\Signing\SignatureStatus;
-use PheFr\Codegen\Signing\Signer;
+use Eleph\Codegen\Signing\SignatureStatus;
+use Eleph\Codegen\Signing\Signer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

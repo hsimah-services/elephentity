@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\WordPress\Migration\MigrationPlan;
-use PheFr\WordPress\Migration\MigrationPlanner;
-use PheFr\WordPress\Sql\Column;
-use PheFr\WordPress\Sql\DdlCompiler;
-use PheFr\WordPress\Sql\Index;
-use PheFr\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Migration\MigrationPlan;
+use Eleph\WordPress\Migration\MigrationPlanner;
+use Eleph\WordPress\Sql\Column;
+use Eleph\WordPress\Sql\DdlCompiler;
+use Eleph\WordPress\Sql\Index;
+use Eleph\WordPress\Sql\TableSchema;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

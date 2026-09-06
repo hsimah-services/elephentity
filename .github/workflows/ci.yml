@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # These are the framework's own gates. The spec gates PheFr provides — `validate`,
+  # These are the framework's own gates. The spec gates Elephentity provides — `validate`,
   # `generate --check`, `fmt --check` and conformance — run in the CI of projects that
-  # use PheFr, against their specs; here they are exercised by the test suite instead.
+  # use Elephentity, against their specs; here they are exercised by the test suite instead.
   build:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest

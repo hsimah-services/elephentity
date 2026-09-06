@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Tests;
+namespace Eleph\Schema\Tests;
 
-use PheFr\Schema\Error\CompilationResult;
-use PheFr\Schema\Ir\Cardinality;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\RelationKind;
-use PheFr\Schema\Ir\TriggerPhase;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
+use Eleph\Schema\Error\CompilationResult;
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\RelationKind;
+use Eleph\Schema\Ir\TriggerPhase;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 

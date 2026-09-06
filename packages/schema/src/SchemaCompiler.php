@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema;
+namespace Eleph\Schema;
 
-use PheFr\Schema\Error\CompilationResult;
-use PheFr\Schema\Error\SpecError;
-use PheFr\Schema\Ir\ConfigParameter;
-use PheFr\Schema\Ir\ConfigType;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\Origin;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\Schema;
-use PheFr\Schema\Ir\StorageDefinition;
-use PheFr\Schema\Ir\TypeDefinition;
-use PheFr\Schema\Pattern\ConfigResolver;
-use PheFr\Schema\Pattern\PatternDefinition;
-use PheFr\Schema\Pattern\PatternResolver;
-use PheFr\Schema\Pattern\SectionMerger;
-use PheFr\Schema\Spec\ParsedSections;
-use PheFr\Schema\Spec\RawSpec;
-use PheFr\Schema\Spec\SchemaValidator;
-use PheFr\Schema\Spec\SectionParser;
-use PheFr\Schema\Spec\SpecKind;
-use PheFr\Schema\Spec\SpecLoader;
+use Eleph\Schema\Error\CompilationResult;
+use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\Ir\ConfigParameter;
+use Eleph\Schema\Ir\ConfigType;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\Ir\StorageDefinition;
+use Eleph\Schema\Ir\TypeDefinition;
+use Eleph\Schema\Pattern\ConfigResolver;
+use Eleph\Schema\Pattern\PatternDefinition;
+use Eleph\Schema\Pattern\PatternResolver;
+use Eleph\Schema\Pattern\SectionMerger;
+use Eleph\Schema\Spec\ParsedSections;
+use Eleph\Schema\Spec\RawSpec;
+use Eleph\Schema\Spec\SchemaValidator;
+use Eleph\Schema\Spec\SectionParser;
+use Eleph\Schema\Spec\SpecKind;
+use Eleph\Schema\Spec\SpecLoader;
 
 /**
  * Compiles a directory of specs into the IR.
@@ -173,7 +173,7 @@ final readonly class SchemaCompiler
     /**
      * @return array<string, ConfigParameter>
      */
-    private function configParameters(\PheFr\Schema\Spec\SpecReader $reader): array
+    private function configParameters(\Eleph\Schema\Spec\SpecReader $reader): array
     {
         $parameters = [];
 

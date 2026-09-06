@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Manifest;
+namespace Eleph\WPGraphQL\Manifest;
 
-use PheFr\Schema\Ir\Cardinality;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Compiles the schema into everything the GraphQL layer needs to register.

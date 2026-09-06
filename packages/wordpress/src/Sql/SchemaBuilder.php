@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\RelationKind;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\RelationKind;
+use Eleph\Schema\Ir\Schema;
 use RuntimeException;
 
 /**

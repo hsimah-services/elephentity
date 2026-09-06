@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Boot;
+namespace Eleph\Runtime\Boot;
 
 use RuntimeException;
 
@@ -27,7 +27,7 @@ final class MissingImplementations extends RuntimeException
     public function __construct(public readonly array $interfaces)
     {
         parent::__construct(sprintf(
-            "PheFr cannot start: %d generated interface(s) have no implementation.\n  %s",
+            "Elephentity cannot start: %d generated interface(s) have no implementation.\n  %s",
             count($interfaces),
             implode("\n  ", $interfaces),
         ));

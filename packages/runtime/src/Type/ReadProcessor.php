@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Type;
+namespace Eleph\Runtime\Type;
 
 /**
  * Turns a stored primitive into its domain type.

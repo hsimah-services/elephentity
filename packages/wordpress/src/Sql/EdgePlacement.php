@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Sql;
+namespace Eleph\WordPress\Sql;
 
-use PheFr\Schema\Ir\RelationKind;
+use Eleph\Schema\Ir\RelationKind;
 
 /**
  * Where one edge physically lives.

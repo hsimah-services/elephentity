@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Mutation;
+namespace Eleph\Runtime\Mutation;
 
-use PheFr\Runtime\Identity\Identifier;
+use Eleph\Runtime\Identity\Identifier;
 
 /**
  * Where a mutator's pending changes accumulate until the unit of work commits.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage\Write;
+namespace Eleph\Runtime\Storage\Write;
 
-use PheFr\Runtime\Identity\Identifier;
-use PheFr\Runtime\Identity\PendingId;
+use Eleph\Runtime\Identity\Identifier;
+use Eleph\Runtime\Identity\PendingId;
 
 final readonly class Insert implements WriteOperation
 {

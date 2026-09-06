@@ -5,14 +5,14 @@ others cannot see. Running them out of order wastes time; skipping one leaves a 
 of failure to be found later and further away.
 
 ```bash
-vendor/bin/phefr fmt
-vendor/bin/phefr validate spec
-vendor/bin/phefr generate          # generate --check in CI
-vendor/bin/phefr check
+vendor/bin/eleph fmt
+vendor/bin/eleph validate spec
+vendor/bin/eleph generate          # generate --check in CI
+vendor/bin/eleph check
 ```
 
 All except `validate` take `--project` (default `.`), the directory holding
-`phefr.json`. `validate` takes the spec directory as an argument instead.
+`eleph.json`. `validate` takes the spec directory as an argument instead.
 
 ---
 

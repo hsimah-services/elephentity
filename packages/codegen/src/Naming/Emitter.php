@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Naming;
+namespace Eleph\Codegen\Naming;
 
+use Eleph\Codegen\GeneratedFile;
 use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Method;
 use Nette\PhpGenerator\PhpNamespace;
-use PheFr\Codegen\GeneratedFile;
 
 /**
  * The mechanics every generator shares: open a namespace, print it, address the file.

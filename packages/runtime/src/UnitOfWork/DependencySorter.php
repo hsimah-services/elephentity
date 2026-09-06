@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\UnitOfWork;
+namespace Eleph\Runtime\UnitOfWork;
 
-use PheFr\Runtime\Identity\Identifier;
-use PheFr\Runtime\Mutation\Mutation;
+use Eleph\Runtime\Identity\Identifier;
+use Eleph\Runtime\Mutation\Mutation;
 use RuntimeException;
 
 /**

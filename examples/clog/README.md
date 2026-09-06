@@ -1,7 +1,7 @@
 # Clog, spec'd
 
 The three post types from [clog](https://github.com/hsimah-services/clog) — Item,
-Location and Inventory — written as PheFr specs, with the generated output committed
+Location and Inventory — written as Elephentity specs, with the generated output committed
 so the two can be compared.
 
 This is a smoke test of the generator against real post types, not a migration plan.
@@ -13,10 +13,10 @@ rediscover later — not because any of them needs acting on.
 All four gates pass:
 
 ```
-phefr fmt        Specs are in canonical form.
-phefr validate   Specs are valid: 3 entities, 1 type.
-phefr generate   22 file(s).
-phefr check      Conformant: 3 type(s), every field resolves.
+eleph fmt        Specs are in canonical form.
+eleph validate   Specs are valid: 3 entities, 1 type.
+eleph generate   22 file(s).
+eleph check      Conformant: 3 type(s), every field resolves.
 ```
 
 ## What the spec captures cleanly
@@ -50,7 +50,7 @@ What remains is the WordPress surface.
 ### The post row stops being the entity
 
 This started as "`post_title` becomes `name`", which is the least of it. The rename
-itself is a free choice: PheFr has no opinion about the field name, only that it must
+itself is a free choice: Elephentity has no opinion about the field name, only that it must
 be *declared*, because the custom table is authoritative and the post row is a
 projection. Call it `title` in the spec and clients see `title`.
 
@@ -61,19 +61,19 @@ supplies `title`, `databaseId`, `date`, `modified`, `slug`, `status`, `content` 
 `author` without anyone asking, plus root fields `clogItem(id:)` and
 `clogItems(where:)` carrying WP's filtering, ordering and cursor pagination.
 
-Under PheFr, `Item` is built solely from the spec. You get precisely what you declared:
+Under Elephentity, `Item` is built solely from the spec. You get precisely what you declared:
 `id`, `createdAt`, `updatedAt`, `postId`, `name`, `barcode`, `defaultExpiryUnit`,
 `defaultExpiryValue`. `createdAt` and `updatedAt` cover what `date` and `modified` did;
 the rest either need declaring or need to go.
 
-**A gap in PheFr, not in the model.** The manifest today registers object types, enums
+**A gap in Elephentity, not in the model.** The manifest today registers object types, enums
 and mutations — and no root query fields. A declared `queries:` block generates an
 injectable PHP finder, but nothing exposes it to GraphQL, so there is currently no way
 to *fetch* an Item through the generated API at all. Entry points are the missing piece
 of the plugin layer, and this port is what surfaced it.
 
 **The divergence hazard.** `show_ui: true` with `supports: ['title']` means a human can
-edit the title in wp-admin. Under PheFr the column is authoritative and `post_title` is
+edit the title in wp-admin. Under Elephentity the column is authoritative and `post_title` is
 written by the Mutator as part of the same unit of work — so an admin edit changes the
 projection and not the truth, and nothing notices. `OrphanGuard` catches deletes;
 nothing catches edits.
@@ -89,7 +89,7 @@ Three ways out, and only one of them is honest:
 - **Let them diverge** until the next write re-projects. Silently wrong, which is the
   worst of the three.
 
-Worth noting that PheFr's own `PostTypeRegistrar` currently emits `supports: ['title']`,
+Worth noting that Elephentity's own `PostTypeRegistrar` currently emits `supports: ['title']`,
 so it ships the same hazard. That wants changing.
 
 ### Post type registration is not in the spec

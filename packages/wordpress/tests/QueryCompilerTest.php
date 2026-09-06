@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\Runtime\Storage\Comparison;
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\Direction;
-use PheFr\Runtime\Storage\Filter;
-use PheFr\Runtime\Storage\Order;
-use PheFr\WordPress\Sql\Column;
-use PheFr\WordPress\Sql\CompiledQuery;
-use PheFr\WordPress\Sql\QueryCompiler;
-use PheFr\WordPress\Sql\TableSchema;
+use Eleph\Runtime\Storage\Comparison;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Direction;
+use Eleph\Runtime\Storage\Filter;
+use Eleph\Runtime\Storage\Order;
+use Eleph\WordPress\Sql\Column;
+use Eleph\WordPress\Sql\CompiledQuery;
+use Eleph\WordPress\Sql\QueryCompiler;
+use Eleph\WordPress\Sql\TableSchema;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

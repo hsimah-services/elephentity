@@ -1,4 +1,4 @@
-# PheFr — Architecture Plan
+# Elephentity — Architecture Plan
 
 An AI-native PHP framework that compiles human-readable specs into locked-down,
 deterministic business-logic code.
@@ -89,11 +89,11 @@ spec field mean", and drift from each other rather than from the spec.
 | `runtime/` | StorageAdaptor port, capabilities, unit of work, loaders, verification |
 | `wordpress/` | the one adapter — the **only** package allowed to name `WP_*` |
 | `wpgraphql/` | IR → compiled registration manifest |
-| `cli/` | `phefr generate` / `validate` / `check` / `migrate` |
+| `cli/` | `eleph generate` / `validate` / `check` / `migrate` |
 
 ### Packaging: a Composer library
 
-PheFr ships as a Composer library consumed by a thin WordPress plugin — **not** as a
+Elephentity ships as a Composer library consumed by a thin WordPress plugin — **not** as a
 WP plugin itself. Shipping the framework as a plugin would bake WordPress into the
 distribution model of a thing whose whole premise is that WP is one adapter among
 several, making the abstraction nominal.
@@ -105,9 +105,9 @@ The packages split cleanly by lifecycle:
 
 **Known risk.** WordPress has no dependency manager and no class isolation — every
 plugin loads into one shared PHP process, and PHP class names are global. If two
-plugins each bundle their own `vendor/` with a different PheFr version, whichever
+plugins each bundle their own `vendor/` with a different Elephentity version, whichever
 autoloads first wins and the other silently gets the wrong classes. Accepted for now
-because we are the only consumer; the fix, if PheFr is ever distributed widely, is
+because we are the only consumer; the fix, if Elephentity is ever distributed widely, is
 [php-scoper](https://github.com/humbug/php-scoper) to rewrite dependencies under a
 private namespace prefix at build time.
 
@@ -259,7 +259,7 @@ processors: true        # → MoneyReadProcessor / MoneyWriteProcessor interface
 **No application namespaces in the spec.** `processors: true` follows the same rule as
 `verify: true` and `handler: true`: the generator emits the interfaces, boot fails
 until both are implemented. Fully-qualified names are resolved from a root namespace
-configured once in `phefr.json` — configuration, not specification — so a class rename
+configured once in `eleph.json` — configuration, not specification — so a class rename
 is never a spec edit.
 
 ### The value class is user-owned
@@ -644,7 +644,7 @@ Two properties of a `postCommit` mutation to be aware of:
 The yaml is the record of the entity's history — widening an action or adding a
 trigger shows up in a commit diff, which is the intent.
 
-That makes diff noise a real cost, so a canonical formatter (`phefr fmt`, enforced in
+That makes diff noise a real cost, so a canonical formatter (`eleph fmt`, enforced in
 CI) keeps key order and style stable and every diff semantic, rather than recording
 whichever whitespace the LLM felt like that day.
 
@@ -707,7 +707,7 @@ Cheapest first, each catching a distinct class of failure:
 2. **`generate --check`** — regenerate and diff; zero tolerance. Also catches added and
    deleted files in the generated tree.
 3. **Signature check** — header hashes match content.
-   Also `phefr fmt --check`, so spec diffs stay semantic.
+   Also `eleph fmt --check`, so spec diffs stay semantic.
 4. **PHPStan at max** — on both generated and hand-written trees. Generated code should
    be typed well enough that PHPStan can prove the plugin layer correct.
 5. **Architecture rules** — no `WP_*` outside `wordpress/`; Entity never writes;
@@ -747,7 +747,7 @@ The keystone; everything is downstream.
 - IR construction (entities, fields, types, edges, queries, actions)
 - Semantic validation: edge targets resolve, inverse legality, driver-specific rules
   (e.g. `handle` constraints), no dangling type references
-- `phefr validate`
+- `eleph validate`
 
 ### Step 2 — `packages/runtime` contracts
 No implementations — just the shapes everything else compiles against.
@@ -774,7 +774,7 @@ sees what the row will actually hold.
 - Entity, Mutator, Finder, action contexts, typed mutation contexts, enums
 - Handler interfaces: queries, actions, triggers, field verifiers, type processors
 - Header + hash signing, with the single shared verifier
-- `phefr generate`, `phefr generate --check`, driven by `phefr.json`
+- `eleph generate`, `eleph generate --check`, driven by `eleph.json`
 
 **`--check` catches all three ways a tree drifts:** a hand-edited file (digest
 mismatch), a stale file the schema no longer produces, and a deleted one. That is why
@@ -865,10 +865,10 @@ the repeat-access case in between.
 
 ### Step 6 — `packages/wpgraphql`
 - `ManifestBuilder`: schema → the whole API surface, pure and therefore tested
-- `ManifestExporter`: the manifest as PHP source, emitted by `phefr generate`
+- `ManifestExporter`: the manifest as PHP source, emitted by `eleph generate`
 - `TypeRegistrar`: the thin translation into WPGraphQL's arrays
 - `ConnectionResolver`: connections over the lazy query, and where `preload()` is called
-- `ConformanceChecker` and `phefr check`
+- `ConformanceChecker` and `eleph check`
 
 **A manifest of constructor calls, not nested arrays.** The file type-checks like any
 other code, so a manifest that no longer matches its value objects fails at build time
@@ -886,7 +886,7 @@ shapes the create mutation's inputs and nothing else. An immutable field is pres
 create and absent from update — the same rule the mutator enforces by generating no
 setter.
 
-**`phefr check` is a different question from `generate --check`.** One asks whether the
+**`eleph check` is a different question from `generate --check`.** One asks whether the
 tree matches the spec; the other asks whether the tree is *coherent* — that every field
 the API exposes resolves to a method that exists. It loads the generated classes with
 its own PSR-4 autoloader rather than the project's, because relying on the project's
@@ -894,7 +894,7 @@ Composer configuration would make the gate pass silently whenever that configura
 was wrong, which is exactly when it should fail.
 
 ### Step 7 — Verification and CI gates
-- `phefr fmt`, the canonical key-order gate
+- `eleph fmt`, the canonical key-order gate
 - An end-to-end pipeline test running all four gates in order
 - `docs/CI.md`, the workflow a consuming project uses
 - `.github/workflows/spec-alignment.yml`, the advisory md/yaml agent

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Runtime\Query\EdgeLoader;
-use PheFr\Runtime\Query\Hydrator;
-use PheFr\Runtime\Query\ValueDecoder;
-use PheFr\Runtime\Storage\Record;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Runtime\Query\EdgeLoader;
+use Eleph\Runtime\Query\Hydrator;
+use Eleph\Runtime\Query\ValueDecoder;
+use Eleph\Runtime\Storage\Record;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Emits the class that turns a stored row into an entity.

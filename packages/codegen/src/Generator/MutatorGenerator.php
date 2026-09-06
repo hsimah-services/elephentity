@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Runtime\Mutation\MutationBuffer;
-use PheFr\Schema\Ir\EntityDefinition;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Runtime\Mutation\MutationBuffer;
+use Eleph\Schema\Ir\EntityDefinition;
 
 /**
  * Emits the write model: a command buffer with one method per declared operation.

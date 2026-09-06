@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Signing;
+namespace Eleph\Codegen\Signing;
 
 enum SignatureStatus
 {
@@ -11,7 +11,7 @@ enum SignatureStatus
     /** The file exists and is signed, but its content no longer matches the digest. */
     case Tampered;
 
-    /** No PheFr header, or one the current format cannot read. */
+    /** No Elephentity header, or one the current format cannot read. */
     case Unsigned;
 
     case Missing;

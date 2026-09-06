@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Boot\MissingImplementations;
+use Eleph\Runtime\Boot\MissingImplementations;
 
 /**
  * Finds the hydrator for an entity name.

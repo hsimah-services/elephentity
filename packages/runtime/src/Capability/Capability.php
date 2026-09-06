@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Capability;
+namespace Eleph\Runtime\Capability;
 
 /**
  * Something a storage adaptor may or may not be able to do.

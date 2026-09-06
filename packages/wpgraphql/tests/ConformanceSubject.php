@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Tests;
+namespace Eleph\WPGraphQL\Tests;
 
 /**
  * A stand-in entity that is missing accessors on purpose, so the conformance check

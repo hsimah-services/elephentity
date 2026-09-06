@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Verification;
+namespace Eleph\Runtime\Verification;
 
 use InvalidArgumentException;
 

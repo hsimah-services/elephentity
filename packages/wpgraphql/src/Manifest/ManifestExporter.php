@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Manifest;
+namespace Eleph\WPGraphQL\Manifest;
 
 /**
  * Writes a manifest out as PHP source that rebuilds it.

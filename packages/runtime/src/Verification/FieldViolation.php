@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Verification;
+namespace Eleph\Runtime\Verification;
 
 /**
  * A violation once the unit of work has attached where it happened.

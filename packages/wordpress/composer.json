@@ -1,25 +1,25 @@
 {
-    "name": "phefr/wordpress",
-    "description": "WordPress storage adaptor for PheFr. The only package permitted to reference WP symbols.",
+    "name": "elephentity/wordpress",
+    "description": "WordPress storage adaptor for Elephentity. The only package permitted to reference WP symbols.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "phefr/runtime": "self.version"
+        "elephentity/runtime": "self.version"
     },
     "require-dev": {
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0"
     },
     "autoload": {
         "psr-4": {
-            "PheFr\\WordPress\\": "src/"
+            "Eleph\\WordPress\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PheFr\\WordPress\\Tests\\": "tests/"
+            "Eleph\\WordPress\\Tests\\": "tests/"
         }
     }
 }

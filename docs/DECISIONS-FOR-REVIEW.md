@@ -53,7 +53,7 @@ entity.
 `Contract/` tree.
 
 **Why.** It makes "what do I owe this entity?" answerable by listing one directory,
-which is exactly the question the `phefr` skill teaches an agent to ask. The cost is
+which is exactly the question the `eleph` skill teaches an agent to ask. The cost is
 that a project-wide "what is unimplemented?" needs a glob — `ls generated/*/Contract/`
 — rather than one listing. That felt like the better trade, but it is a trade.
 
@@ -62,14 +62,14 @@ that a project-wide "what is unimplemented?" needs a glob — `ls generated/*/Co
 ## 4. Skills ship in `skills/`, symlinked into `.claude/skills/`
 
 **Done:** canonical files live in `skills/`, so they ship inside the Composer package
-and a consumer copies them. This repository symlinks `.claude/skills/phefr` →
-`../../skills/phefr` so they are live here too.
+and a consumer copies them. This repository symlinks `.claude/skills/eleph` →
+`../../skills/eleph` so they are live here too.
 
 **If the symlinks do not resolve** in your Claude Code setup, replace them with copies
 — but then remember they are copies.
 
-**Two skills, deliberately.** `phefr` is for working in a project that uses the
-framework; `phefr-spec-author` is for turning a description into a spec. They have
+**Two skills, deliberately.** `eleph` is for working in a project that uses the
+framework; `eleph-spec-author` is for turning a description into a spec. They have
 different triggers and different failure modes, and one combined skill would load a
 lot of irrelevant context in both cases.
 
@@ -77,7 +77,7 @@ lot of irrelevant context in both cases.
 
 ## 5. The interview has six blocking questions
 
-`skills/phefr-spec-author/reference/interview.md` splits questions into blocking, model
+`skills/eleph-spec-author/reference/interview.md` splits questions into blocking, model
 shaping, and ask-last. The six blocking ones are: storage location, whether it needs a
 WordPress post type, what makes two rows the same, required-versus-nullable per field,
 what is write-once, and the direction and cardinality of each relationship.
@@ -95,7 +95,7 @@ blob has made a database decision on your behalf.
 ## 6. "Evaluated" read as "gradeable by the gates"
 
 You asked for "evaluated agent operable infrastructure". I have not built an eval
-harness. What I did instead is document, in `skills/phefr/reference/commands.md`, that
+harness. What I did instead is document, in `skills/eleph/reference/commands.md`, that
 **the four gates are a deterministic grader** for agent-written specs: `fmt` scores
 convention, `validate` scores meaning, `generate` scores producibility, `check` plus
 PHPStan score coherence.

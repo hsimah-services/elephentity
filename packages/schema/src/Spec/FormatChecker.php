@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Spec;
+namespace Eleph\Schema\Spec;
 
-use PheFr\Schema\Error\SpecError;
-use PheFr\Schema\SpecSource;
+use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\SpecSource;
 
 /**
  * Checks that specs are written in canonical form.

@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress;
+namespace Eleph\WordPress;
 
-use PheFr\Runtime\Capability\Capabilities;
-use PheFr\Runtime\Capability\Capability;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Identity\Identifier;
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\Page;
-use PheFr\Runtime\Storage\Record;
-use PheFr\Runtime\Storage\StorageAdaptor;
-use PheFr\Runtime\Storage\Write\Delete;
-use PheFr\Runtime\Storage\Write\Insert;
-use PheFr\Runtime\Storage\Write\Link;
-use PheFr\Runtime\Storage\Write\Unlink;
-use PheFr\Runtime\Storage\Write\Update;
-use PheFr\Runtime\Storage\Write\WriteBatch;
-use PheFr\Runtime\Storage\Write\WriteResult;
-use PheFr\WordPress\Database\Database;
-use PheFr\WordPress\Sql\EdgePlacement;
-use PheFr\WordPress\Sql\FieldMap;
-use PheFr\WordPress\Sql\QueryCompiler;
-use PheFr\WordPress\Sql\TableSchema;
+use Eleph\Runtime\Capability\Capabilities;
+use Eleph\Runtime\Capability\Capability;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\Identifier;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Record;
+use Eleph\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Storage\Write\Delete;
+use Eleph\Runtime\Storage\Write\Insert;
+use Eleph\Runtime\Storage\Write\Link;
+use Eleph\Runtime\Storage\Write\Unlink;
+use Eleph\Runtime\Storage\Write\Update;
+use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Runtime\Storage\Write\WriteResult;
+use Eleph\WordPress\Database\Database;
+use Eleph\WordPress\Sql\EdgePlacement;
+use Eleph\WordPress\Sql\FieldMap;
+use Eleph\WordPress\Sql\QueryCompiler;
+use Eleph\WordPress\Sql\TableSchema;
 use RuntimeException;
 use Throwable;
 

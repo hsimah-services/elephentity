@@ -30,7 +30,7 @@ Six of those seven change the spec. None were in the prose.
 
 "We scan barcodes to find items" is the load-bearing sentence, and it is easy to miss.
 
-The first draft modelled barcodes as a list, which PheFr can only store as `json` — and
+The first draft modelled barcodes as a list, which Elephentity can only store as `json` — and
 a JSON column cannot be indexed. The description's one clue about *how the data is
 used* rules out the obvious model. Options:
 

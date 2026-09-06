@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Database;
+namespace Eleph\WordPress\Database;
 
 use RuntimeException;
 use wpdb;

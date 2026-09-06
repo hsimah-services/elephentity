@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\Verification;
+namespace Eleph\Runtime\Tests\Verification;
 
+use Eleph\Runtime\Verification\Verification;
+use Eleph\Runtime\Verification\Violation;
 use InvalidArgumentException;
-use PheFr\Runtime\Verification\Verification;
-use PheFr\Runtime\Verification\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

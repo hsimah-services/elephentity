@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WPGraphQL\Tests;
+namespace Eleph\WPGraphQL\Tests;
 
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WPGraphQL\Conformance\ConformanceChecker;
-use PheFr\WPGraphQL\Manifest\Manifest;
-use PheFr\WPGraphQL\Manifest\ManifestBuilder;
-use PheFr\WPGraphQL\Registration\TypeRegistrar;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Conformance\ConformanceChecker;
+use Eleph\WPGraphQL\Manifest\Manifest;
+use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use Eleph\WPGraphQL\Registration\TypeRegistrar;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -78,7 +78,7 @@ final class RegistrarAndConformanceTest extends TestCase
         ))->check();
 
         self::assertNotSame([], $problems);
-        self::assertStringContainsString('Run `phefr generate`', $problems[0]);
+        self::assertStringContainsString('Run `eleph generate`', $problems[0]);
     }
 
     public function testConformanceFailsWhenAnAccessorIsMissing(): void

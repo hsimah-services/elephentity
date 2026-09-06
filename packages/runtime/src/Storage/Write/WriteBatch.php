@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage\Write;
+namespace Eleph\Runtime\Storage\Write;
 
 use Countable;
 

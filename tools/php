@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run any command against the PheFr PHP toolchain in a throwaway container.
+# Run any command against the Elephentity PHP toolchain in a throwaway container.
 #
 #   ./tools/php composer install
 #   ./tools/php composer ci
@@ -16,8 +16,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-IMAGE="phefr-dev:8.3"
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/phefr/composer"
+IMAGE="eleph-dev:8.3"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eleph/composer"
 
 if command -v podman >/dev/null 2>&1; then
     ENGINE=podman

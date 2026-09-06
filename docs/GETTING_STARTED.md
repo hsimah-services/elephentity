@@ -6,8 +6,8 @@
 > repository — the package names below are what it will publish as.
 
 ```bash
-composer require phefr/runtime phefr/wordpress phefr/wpgraphql
-composer require --dev phefr/schema phefr/codegen phefr/cli
+composer require elephentity/runtime elephentity/wordpress elephentity/wpgraphql
+composer require --dev elephentity/schema elephentity/codegen elephentity/cli
 ```
 
 The dev packages run at build time and never ship. The others do.
@@ -15,7 +15,7 @@ The dev packages run at build time and never ship. The others do.
 ## Lay out the project
 
 ```
-phefr.json
+eleph.json
 spec/
   entities/
   patterns/
@@ -61,8 +61,8 @@ fields:
 ```
 
 ```bash
-vendor/bin/phefr validate spec
-vendor/bin/phefr generate
+vendor/bin/eleph validate spec
+vendor/bin/eleph generate
 ```
 
 You now have `generated/Note/Note.php`, `NoteMutator`, `NoteMutationContext`,
@@ -78,13 +78,13 @@ You now have `generated/Note/Note.php`, `NoteMutator`, `NoteMutationContext`,
 ```
 
 ```bash
-vendor/bin/phefr generate
+vendor/bin/eleph generate
 ls generated/Note/Contract/
 # NoteBodyVerifier.php
 ```
 
 That interface has no implementation, so the application will not boot. Write one in
-`src/`, wire it into your container, and `vendor/bin/phefr check` goes green.
+`src/`, wire it into your container, and `vendor/bin/eleph check` goes green.
 
 That loop — change the spec, regenerate, implement what appeared under `Contract/` — is
 the whole workflow.
@@ -95,14 +95,14 @@ See [CI.md](CI.md). Four gates, in order.
 
 ## Install the agent skills
 
-PheFr ships skills that teach an agent how to use it:
+Elephentity ships skills that teach an agent how to use it:
 
 ```bash
-cp -r vendor/phefr/phentity-framework/skills/* .claude/skills/
+cp -r vendor/elephentity/elephentity/skills/* .claude/skills/
 ```
 
-- `phefr` — the spec format, the build loop, and how to find what is left to implement
-- `phefr-spec-author` — turning a written description into a spec, and what to ask first
+- `eleph` — the spec format, the build loop, and how to find what is left to implement
+- `eleph-spec-author` — turning a written description into a spec, and what to ask first
 
 ## Committing generated code
 

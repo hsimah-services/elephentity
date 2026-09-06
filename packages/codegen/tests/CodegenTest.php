@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Tests;
+namespace Eleph\Codegen\Tests;
 
-use PheFr\Codegen\Codegen;
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\GeneratorConfig;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
+use Eleph\Codegen\Codegen;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\GeneratorConfig;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
@@ -239,7 +239,7 @@ final class CodegenTest extends TestCase
     public function testGeneratedCodeParses(): void
     {
         foreach ($this->generated() as $path => $body) {
-            $file = tempnam(sys_get_temp_dir(), 'phefr') . '.php';
+            $file = tempnam(sys_get_temp_dir(), 'eleph') . '.php';
             file_put_contents($file, "<?php\n\ndeclare(strict_types=1);\n\n" . $body);
 
             $output = [];
@@ -280,8 +280,8 @@ final class CodegenTest extends TestCase
         self::assertTrue($compiled->isSuccess());
 
         $files = (new Codegen(new GeneratorConfig(
-            'App\\PheFr',
-            '/tmp/phefr-not-written',
+            'App\\Elephentity',
+            '/tmp/eleph-not-written',
             'App\\Type',
         )))->generate($compiled->schema());
 

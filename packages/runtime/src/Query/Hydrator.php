@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Storage\Record;
+use Eleph\Runtime\Storage\Record;
 
 /**
  * Turns a stored row into an entity.

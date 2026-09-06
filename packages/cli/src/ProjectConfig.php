@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli;
+namespace Eleph\Cli;
 
 use JsonException;
 use RuntimeException;
 
 /**
- * phefr.json — the paths and namespaces a project generates into.
+ * eleph.json — the paths and namespaces a project generates into.
  *
  * Configuration, deliberately separate from specification. Namespaces live here so
  * that renaming one is a config change rather than an edit to every entity yaml.
  */
 final readonly class ProjectConfig
 {
-    public const FILENAME = 'phefr.json';
+    public const FILENAME = 'eleph.json';
 
     public function __construct(
         public string $specDirectory,

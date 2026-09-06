@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen;
+namespace Eleph\Codegen;
 
-use PheFr\Codegen\Generator\BridgeGenerator;
-use PheFr\Codegen\Generator\ContextGenerator;
-use PheFr\Codegen\Generator\ContractGenerator;
-use PheFr\Codegen\Generator\EntityGenerator;
-use PheFr\Codegen\Generator\EnumGenerator;
-use PheFr\Codegen\Generator\FinderGenerator;
-use PheFr\Codegen\Generator\HydratorGenerator;
-use PheFr\Codegen\Generator\MutatorGenerator;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Codegen\Generator\BridgeGenerator;
+use Eleph\Codegen\Generator\ContextGenerator;
+use Eleph\Codegen\Generator\ContractGenerator;
+use Eleph\Codegen\Generator\EntityGenerator;
+use Eleph\Codegen\Generator\EnumGenerator;
+use Eleph\Codegen\Generator\FinderGenerator;
+use Eleph\Codegen\Generator\HydratorGenerator;
+use Eleph\Codegen\Generator\MutatorGenerator;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Turns a compiled schema into the complete set of files the generator owns.

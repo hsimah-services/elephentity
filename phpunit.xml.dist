@@ -9,7 +9,7 @@
          beStrictAboutOutputDuringTests="true"
          colors="true">
     <testsuites>
-        <testsuite name="phefr">
+        <testsuite name="eleph">
             <directory>packages/schema/tests</directory>
             <directory>packages/codegen/tests</directory>
             <directory>packages/runtime/tests</directory>

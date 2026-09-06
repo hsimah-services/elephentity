@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\Capability;
+namespace Eleph\Runtime\Tests\Capability;
 
-use PheFr\Runtime\Capability\Capabilities;
-use PheFr\Runtime\Capability\Capability;
-use PheFr\Runtime\Capability\UnsupportedCapability;
+use Eleph\Runtime\Capability\Capabilities;
+use Eleph\Runtime\Capability\Capability;
+use Eleph\Runtime\Capability\UnsupportedCapability;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

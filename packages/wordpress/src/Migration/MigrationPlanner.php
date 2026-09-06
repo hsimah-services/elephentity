@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Migration;
+namespace Eleph\WordPress\Migration;
 
-use PheFr\WordPress\Sql\DdlCompiler;
-use PheFr\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Sql\DdlCompiler;
+use Eleph\WordPress\Sql\TableSchema;
 
 /**
  * Diffs the database against the spec.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Pattern;
+namespace Eleph\Schema\Pattern;
 
-use PheFr\Schema\Error\SpecError;
-use PheFr\Schema\Ir\ConfigParameter;
-use PheFr\Schema\Spec\SpecReader;
+use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\Ir\ConfigParameter;
+use Eleph\Schema\Spec\SpecReader;
 
 /**
  * Merges what patterns declare with what an entity supplies.

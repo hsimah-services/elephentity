@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
-use PheFr\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\EntityId;
 
 /**
  * One stored row, in primitive form.

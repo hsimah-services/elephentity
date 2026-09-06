@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Tests\UnitOfWork;
+namespace Eleph\Runtime\Tests\UnitOfWork;
 
-use PheFr\Runtime\Capability\Capabilities;
-use PheFr\Runtime\Capability\Capability;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\Page;
-use PheFr\Runtime\Storage\Record;
-use PheFr\Runtime\Storage\StorageAdaptor;
-use PheFr\Runtime\Storage\Write\Insert;
-use PheFr\Runtime\Storage\Write\WriteBatch;
-use PheFr\Runtime\Storage\Write\WriteResult;
+use Eleph\Runtime\Capability\Capabilities;
+use Eleph\Runtime\Capability\Capability;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Record;
+use Eleph\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Storage\Write\Insert;
+use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Runtime\Storage\Write\WriteResult;
 use Throwable;
 
 final class FakeStorage implements StorageAdaptor

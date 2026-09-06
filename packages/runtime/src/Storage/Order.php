@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
 final readonly class Order
 {

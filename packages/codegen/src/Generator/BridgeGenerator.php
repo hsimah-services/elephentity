@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Generator;
+namespace Eleph\Codegen\Generator;
 
-use PheFr\Codegen\GeneratedFile;
-use PheFr\Codegen\Naming\Emitter;
-use PheFr\Codegen\Naming\Names;
-use PheFr\Codegen\Naming\TypeMapper;
-use PheFr\Runtime\Mutation\EntityTriggers;
-use PheFr\Runtime\Mutation\MutationContext;
-use PheFr\Runtime\Trigger\TriggerEvent;
-use PheFr\Runtime\Trigger\TriggerPhase;
-use PheFr\Runtime\Verification\EntityVerifiers;
-use PheFr\Runtime\Verification\Verification;
-use PheFr\Schema\Ir\EntityDefinition;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Naming\Emitter;
+use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\MutationContext;
+use Eleph\Runtime\Trigger\TriggerEvent;
+use Eleph\Runtime\Trigger\TriggerPhase;
+use Eleph\Runtime\Verification\EntityVerifiers;
+use Eleph\Runtime\Verification\Verification;
+use Eleph\Schema\Ir\EntityDefinition;
 
 /**
  * Emits the adapters between the runtime and the application's exactly-typed classes.

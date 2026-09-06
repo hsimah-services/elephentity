@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen;
+namespace Eleph\Codegen;
 
 /**
  * Everything the generator needs that is configuration rather than specification.
@@ -13,7 +13,7 @@ namespace PheFr\Codegen;
 final readonly class GeneratorConfig
 {
     public function __construct(
-        /** Root namespace for generated code, e.g. App\PheFr. */
+        /** Root namespace for generated code, e.g. App\Elephentity. */
         public string $rootNamespace,
         /** Where generated files are written. Entirely machine-owned. */
         public string $outputDirectory,

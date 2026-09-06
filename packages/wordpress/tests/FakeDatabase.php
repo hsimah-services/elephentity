@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\WordPress\Database\Database;
+use Eleph\WordPress\Database\Database;
 
 /**
  * Records what the adaptor asked for, and answers with whatever the test set up.

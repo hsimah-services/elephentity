@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Cli\Command;
+namespace Eleph\Cli\Command;
 
-use PheFr\Cli\ProjectConfig;
-use PheFr\Schema\Spec\FormatChecker;
-use PheFr\Schema\SpecSource;
+use Eleph\Cli\ProjectConfig;
+use Eleph\Schema\Spec\FormatChecker;
+use Eleph\Schema\SpecSource;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -38,7 +38,7 @@ final class FmtCommand extends Command
             'project',
             'p',
             InputOption::VALUE_REQUIRED,
-            'Directory holding phefr.json.',
+            'Directory holding eleph.json.',
             '.',
         );
     }

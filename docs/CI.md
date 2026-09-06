@@ -1,13 +1,13 @@
-# CI for a project using PheFr
+# CI for a project using Elephentity
 
-PheFr ships four gates. They are cheap, they run in this order, and each catches a
+Elephentity ships four gates. They are cheap, they run in this order, and each catches a
 class of failure the others cannot see.
 
 ```yaml
-- run: vendor/bin/phefr fmt                 # canonical key order, so diffs stay semantic
-- run: vendor/bin/phefr validate spec       # well-formed and semantically closed
-- run: vendor/bin/phefr generate --check    # the tree matches the spec
-- run: vendor/bin/phefr check               # every exposed field resolves
+- run: vendor/bin/eleph fmt                 # canonical key order, so diffs stay semantic
+- run: vendor/bin/eleph validate spec       # well-formed and semantically closed
+- run: vendor/bin/eleph generate --check    # the tree matches the spec
+- run: vendor/bin/eleph check               # every exposed field resolves
 - run: vendor/bin/phpstan analyse
 - run: vendor/bin/phpunit
 ```

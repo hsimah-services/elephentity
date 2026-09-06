@@ -1,6 +1,6 @@
 {
-    "name": "phefr/runtime",
-    "description": "PheFr runtime contracts: storage port, unit of work, verification, loaders.",
+    "name": "elephentity/runtime",
+    "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
@@ -11,12 +11,12 @@
     },
     "autoload": {
         "psr-4": {
-            "PheFr\\Runtime\\": "src/"
+            "Eleph\\Runtime\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PheFr\\Runtime\\Tests\\": "tests/"
+            "Eleph\\Runtime\\Tests\\": "tests/"
         }
     }
 }

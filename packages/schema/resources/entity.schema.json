@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://phefr.dev/schema/entity.json",
-    "title": "PheFr entity specification",
+    "$id": "https://elephentity.dev/schema/entity.json",
+    "title": "Elephentity entity specification",
     "type": "object",
     "required": [
         "entity",
@@ -10,7 +10,7 @@
     "additionalProperties": false,
     "properties": {
         "entity": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName"
         },
         "description": {
             "type": "string",
@@ -19,17 +19,17 @@
         "use": {
             "type": "array",
             "items": {
-                "$ref": "https://phefr.dev/schema/common.json#/$defs/typeName"
+                "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName"
             },
             "uniqueItems": true
         },
         "configure": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/configure"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/configure"
         },
         "storage": {
             "allOf": [
                 {
-                    "$ref": "https://phefr.dev/schema/common.json#/$defs/storage"
+                    "$ref": "https://elephentity.dev/schema/common.json#/$defs/storage"
                 }
             ],
             "required": [
@@ -38,19 +38,19 @@
             ]
         },
         "fields": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/fields"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/fields"
         },
         "edges": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/edges"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/edges"
         },
         "queries": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/queries"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/queries"
         },
         "actions": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/actions"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/actions"
         },
         "triggers": {
-            "$ref": "https://phefr.dev/schema/common.json#/$defs/triggers"
+            "$ref": "https://elephentity.dev/schema/common.json#/$defs/triggers"
         }
     }
 }

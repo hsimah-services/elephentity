@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
 /**
  * What to fetch. Immutable; the with* methods return modified copies.

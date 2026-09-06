@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema;
+namespace Eleph\Schema;
 
-use PheFr\Schema\Spec\SpecKind;
+use Eleph\Schema\Spec\SpecKind;
 
 /**
  * Where the specs live.

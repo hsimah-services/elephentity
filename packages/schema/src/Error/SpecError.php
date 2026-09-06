@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Error;
+namespace Eleph\Schema\Error;
 
 /**
  * One reason a spec was rejected.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Mutation;
+namespace Eleph\Runtime\Mutation;
 
-use PheFr\Runtime\Trigger\TriggerEvent;
-use PheFr\Runtime\Trigger\TriggerPhase;
+use Eleph\Runtime\Trigger\TriggerEvent;
+use Eleph\Runtime\Trigger\TriggerPhase;
 
 /**
  * The bridge between the runtime and one entity's typed trigger handlers.

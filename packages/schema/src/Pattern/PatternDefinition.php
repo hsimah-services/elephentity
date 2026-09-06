@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Pattern;
+namespace Eleph\Schema\Pattern;
 
-use PheFr\Schema\Ir\ConfigParameter;
-use PheFr\Schema\Spec\ParsedSections;
+use Eleph\Schema\Ir\ConfigParameter;
+use Eleph\Schema\Spec\ParsedSections;
 
 /**
  * A reusable fragment of an entity spec.

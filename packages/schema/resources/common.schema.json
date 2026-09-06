@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://phefr.dev/schema/common.json",
-    "title": "Shared definitions for PheFr specs",
+    "$id": "https://elephentity.dev/schema/common.json",
+    "title": "Shared definitions for Elephentity specs",
     "$defs": {
         "typeName": {
             "type": "string",

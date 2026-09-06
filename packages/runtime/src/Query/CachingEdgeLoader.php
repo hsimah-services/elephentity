@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Query;
+namespace Eleph\Runtime\Query;
 
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Storage\Criteria;
-use PheFr\Runtime\Storage\EdgeFilter;
-use PheFr\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\EdgeFilter;
+use Eleph\Runtime\Storage\StorageAdaptor;
 use RuntimeException;
 
 /**

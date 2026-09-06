@@ -1,6 +1,6 @@
 {
-    "name": "phefr/codegen",
-    "description": "Compiles the PheFr IR into locked, signed PHP. Build-time only.",
+    "name": "elephentity/codegen",
+    "description": "Compiles the Elephentity IR into locked, signed PHP. Build-time only.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
@@ -8,17 +8,17 @@
     "require": {
         "php": ">=8.3",
         "nette/php-generator": "^4.1",
-        "phefr/schema": "self.version",
-        "phefr/runtime": "self.version"
+        "elephentity/schema": "self.version",
+        "elephentity/runtime": "self.version"
     },
     "autoload": {
         "psr-4": {
-            "PheFr\\Codegen\\": "src/"
+            "Eleph\\Codegen\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PheFr\\Codegen\\Tests\\": "tests/"
+            "Eleph\\Codegen\\Tests\\": "tests/"
         }
     }
 }

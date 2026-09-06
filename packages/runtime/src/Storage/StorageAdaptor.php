@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Runtime\Storage;
+namespace Eleph\Runtime\Storage;
 
-use PheFr\Runtime\Capability\Capabilities;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Storage\Write\WriteBatch;
-use PheFr\Runtime\Storage\Write\WriteResult;
+use Eleph\Runtime\Capability\Capabilities;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Runtime\Storage\Write\WriteResult;
 
 /**
  * The port every storage backend implements.

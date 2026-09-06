@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Tests;
+namespace Eleph\WordPress\Tests;
 
-use PheFr\Runtime\Capability\Capability;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Runtime\Identity\PendingId;
-use PheFr\Runtime\Storage\Write\Insert;
-use PheFr\Runtime\Storage\Write\Update;
-use PheFr\Runtime\Storage\Write\WriteBatch;
-use PheFr\Schema\SchemaCompiler;
-use PheFr\Schema\SpecSource;
-use PheFr\WordPress\Sql\Column;
-use PheFr\WordPress\Sql\FieldMap;
-use PheFr\WordPress\Sql\Naming;
-use PheFr\WordPress\Sql\TableSchema;
-use PheFr\WordPress\WordPressAdaptor;
+use Eleph\Runtime\Capability\Capability;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Storage\Write\Insert;
+use Eleph\Runtime\Storage\Write\Update;
+use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Schema\SchemaCompiler;
+use Eleph\Schema\SpecSource;
+use Eleph\WordPress\Sql\Column;
+use Eleph\WordPress\Sql\FieldMap;
+use Eleph\WordPress\Sql\Naming;
+use Eleph\WordPress\Sql\TableSchema;
+use Eleph\WordPress\WordPressAdaptor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

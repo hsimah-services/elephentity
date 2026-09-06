@@ -1,13 +1,13 @@
 {
-    "name": "phefr/wpgraphql",
-    "description": "Exposes PheFr entities and mutators to WPGraphQL from a compiled manifest.",
+    "name": "elephentity/wpgraphql",
+    "description": "Exposes Elephentity entities and mutators to WPGraphQL from a compiled manifest.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "phefr/runtime": "self.version"
+        "elephentity/runtime": "self.version"
     },
     "require-dev": {
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
@@ -15,12 +15,12 @@
     },
     "autoload": {
         "psr-4": {
-            "PheFr\\WPGraphQL\\": "src/"
+            "Eleph\\WPGraphQL\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PheFr\\WPGraphQL\\Tests\\": "tests/"
+            "Eleph\\WPGraphQL\\Tests\\": "tests/"
         }
     }
 }

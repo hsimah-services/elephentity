@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Migration;
+namespace Eleph\WordPress\Migration;
 
 /**
  * A change the planner will not make on its own.

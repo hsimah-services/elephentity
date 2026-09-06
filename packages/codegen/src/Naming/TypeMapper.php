@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Codegen\Naming;
+namespace Eleph\Codegen\Naming;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Schema\Ir\ArgumentDefinition;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\Ir\TypeReference;
 use LogicException;
-use PheFr\Runtime\Identity\EntityId;
-use PheFr\Schema\Ir\ArgumentDefinition;
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\FieldDefinition;
-use PheFr\Schema\Ir\Primitive;
-use PheFr\Schema\Ir\Schema;
-use PheFr\Schema\Ir\TypeReference;
 
 /**
  * Maps spec types onto PHP types.

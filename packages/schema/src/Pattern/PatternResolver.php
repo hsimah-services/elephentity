@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PheFr\Schema\Pattern;
+namespace Eleph\Schema\Pattern;
 
-use PheFr\Schema\Error\SpecError;
+use Eleph\Schema\Error\SpecError;
 
 /**
  * Expands an entity's `use:` list into the full, ordered set of patterns that apply.

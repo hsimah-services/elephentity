@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PheFr\WordPress\Registration;
+namespace Eleph\WordPress\Registration;
 
-use PheFr\Schema\Ir\EntityDefinition;
-use PheFr\Schema\Ir\Schema;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Schema;
 
 /**
  * Registers a WordPress post type for entities that declare a handle.
