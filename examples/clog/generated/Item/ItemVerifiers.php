@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemVerifiers.php
- * digest: sha256:fa5133a7f94300b39659bddcbfeddfc07113ed1841b873727e1d155a6ffc721d
+ * digest: sha256:567587656256c370c53c3692a8ac56eca4642e76c5ac82060dc38354cb309ea3
  */
 
 namespace Clog\Entity\Item;
@@ -26,7 +26,7 @@ use Eleph\Runtime\Verification\Verification;
  */
 final readonly class ItemVerifiers implements EntityVerifiers
 {
-    private function __construct(
+    public function __construct(
         private ItemDefaultExpiryUnitVerifier $defaultExpiryUnitVerifier,
         private ItemDefaultExpiryValueVerifier $defaultExpiryValueVerifier,
     ) {
@@ -61,12 +61,5 @@ final readonly class ItemVerifiers implements EntityVerifiers
         assert(is_int($value));
 
         return $this->defaultExpiryValueVerifier->verify($value, ItemMutationContext::of($context));
-    }
-
-    public static function of(
-        ItemDefaultExpiryUnitVerifier $defaultExpiryUnitVerifier,
-        ItemDefaultExpiryValueVerifier $defaultExpiryValueVerifier,
-    ): self {
-        return new self($defaultExpiryUnitVerifier, $defaultExpiryValueVerifier);
     }
 }

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryTriggers.php
- * digest: sha256:f8fdf9df3c941c169a5b66cb243655aa8c4ae5e173e20ee9f81145cf689bab97
+ * digest: sha256:235aecc2e0aeaaff0eed7f9f5da93b5febdf0a45eb686e517a904b14d1311514
  */
 
 namespace Clog\Entity\Inventory;
@@ -24,16 +24,11 @@ use Eleph\Runtime\Trigger\TriggerPhase;
  */
 final readonly class InventoryTriggers implements EntityTriggers
 {
-    private function __construct()
+    public function __construct()
     {
     }
 
     public function dispatch(TriggerPhase $phase, TriggerEvent $event, MutationContext $context): void
     {
-    }
-
-    public static function of(): self
-    {
-        return new self();
     }
 }

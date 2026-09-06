@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryHydrator.php
- * digest: sha256:72043733459b82710489c1e2aa57b31555e5e6fc351b612d93e3664b61b7a3d3
+ * digest: sha256:4d6c54c087f129fa76d1332a7b27d326b056ee4ffce73b925953db1e32d7a107
  */
 
 namespace Clog\Entity\Inventory;
@@ -27,7 +27,7 @@ use Eleph\Runtime\Storage\Record;
  */
 final readonly class InventoryHydrator implements Hydrator
 {
-    private function __construct(
+    public function __construct(
         private ValueDecoder $decode,
     ) {
     }
@@ -86,10 +86,5 @@ final readonly class InventoryHydrator implements Hydrator
         $value = $record->value('dateExpiry');
 
         return null === $value ? null : $this->decode->datetime($value, 'Inventory.dateExpiry');
-    }
-
-    public static function of(ValueDecoder $decode): self
-    {
-        return new self($decode);
     }
 }

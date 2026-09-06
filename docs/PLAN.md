@@ -790,10 +790,15 @@ listing a directory. Enums stay in `Enum/` regardless of whether they were decla
 inline, because that shared placement is what makes promoting an inline enum a no-op;
 type processors stay in `Type/`, since Money belongs to no single entity.
 
-**Generated classes are sealed behind a named constructor.** `Item::of(...)`, with the
-constructor private. `new Item(...)` beside `Item::of(...)` says nothing about which is
-intended, and the runtime already reads this way — `EntityId::of()`,
-`Verification::ok()`, `Cursor::of()`.
+**What generated code builds is sealed behind a named constructor**; what a container
+builds is not. Entities and contexts get `Item::of(...)` with a private constructor —
+`new Item(...)` beside `Item::of(...)` says nothing about which is intended, and the
+runtime already reads this way (`EntityId::of()`, `Verification::ok()`).
+
+Mutators, finders, hydrators and bridges keep public constructors, because every
+mainstream container autowires through one. Sealing them would buy uniformity at the
+price of an explicit service definition per entity, forever. The line is "who
+instantiates this", which is crisp enough to apply without thinking.
 
 **Interfaces extend nothing.** PHP forbids narrowing a parameter type in an
 implementation, so a common base declaring `verify(mixed, MutationContext)` would make

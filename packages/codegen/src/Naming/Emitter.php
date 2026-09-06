@@ -40,6 +40,12 @@ final readonly class Emitter
      *
      * Promoted properties still declare the shape, so the constructor stays; it simply
      * becomes private, and the factory mirrors its signature exactly.
+     *
+     * Applied to what generated code builds — entities and contexts — and deliberately
+     * not to what a container builds. Mutators, finders, hydrators and bridges are
+     * services, and every mainstream container autowires through a public constructor:
+     * sealing those would trade a small gain in uniformity for an explicit service
+     * definition per entity, forever.
      */
     public function namedConstructor(ClassType $type, Method $constructor, string $name = 'of'): void
     {

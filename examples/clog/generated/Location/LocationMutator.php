@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationMutator.php
- * digest: sha256:833a45e406ff18d0895af4fa508f7a0818ec9770633a9818bd828a06cb100479
+ * digest: sha256:4ec316c982bf0959c721c31cb4049ec4e3acc3763a1276b9a679a82a41375cc1
  */
 
 namespace Clog\Entity\Location;
@@ -22,7 +22,7 @@ use Eleph\Runtime\Mutation\MutationBuffer;
  */
 final class LocationMutator
 {
-    private function __construct(
+    public function __construct(
         private readonly MutationBuffer $buffer,
     ) {
     }
@@ -46,10 +46,5 @@ final class LocationMutator
         $this->buffer->set('name', $name);
 
         return $this;
-    }
-
-    public static function of(MutationBuffer $buffer): self
-    {
-        return new self($buffer);
     }
 }

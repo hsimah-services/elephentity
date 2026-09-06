@@ -187,15 +187,35 @@ final class CodegenTest extends TestCase
         );
     }
 
-    public function testGeneratedClassesAreSealedBehindANamedConstructor(): void
+    public function testWhatGeneratedCodeBuildsIsSealedBehindANamedConstructor(): void
     {
         // One entry point rather than two: `new Post(...)` beside `Post::of(...)` says
         // nothing about which is intended, and it matches the runtime's own style.
-        $post = $this->file('Post/Post.php');
+        foreach (['Post/Post.php', 'Post/PostMutationContext.php', 'Post/PostPublishContext.php'] as $path) {
+            $source = $this->file($path);
 
-        self::assertStringContainsString('private function __construct(', $post);
-        self::assertStringContainsString('public static function of(', $post);
-        self::assertStringContainsString('return new self($id, $edges,', $post);
+            self::assertStringContainsString('private function __construct(', $source, $path);
+            self::assertStringContainsString('public static function of(', $source, $path);
+        }
+    }
+
+    public function testWhatAContainerBuildsKeepsAPublicConstructor(): void
+    {
+        // Every mainstream container autowires through a public constructor. Sealing
+        // services would buy uniformity at the price of an explicit service definition
+        // per entity, forever.
+        foreach ([
+            'Post/PostMutator.php',
+            'Post/PostFinder.php',
+            'Post/PostHydrator.php',
+            'Post/PostVerifiers.php',
+            'Post/PostTriggers.php',
+        ] as $path) {
+            $source = $this->file($path);
+
+            self::assertStringContainsString('public function __construct(', $source, $path);
+            self::assertStringNotContainsString('public static function of(', $source, $path);
+        }
     }
 
     public function testTheHydratorCallsTheGeneratedConstructorWithExactTypes(): void

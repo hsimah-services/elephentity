@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemHydrator.php
- * digest: sha256:bbadeb3e3ef9e7c4a78de56107a2d69db932452ff48c0b17efda40f43d35e854
+ * digest: sha256:bc5e208566feee10668e4abee834557331e0daf63499d59d3f2be4da1ef3cce5
  */
 
 namespace Clog\Entity\Item;
@@ -28,7 +28,7 @@ use Eleph\Runtime\Storage\Record;
  */
 final readonly class ItemHydrator implements Hydrator
 {
-    private function __construct(
+    public function __construct(
         private ValueDecoder $decode,
     ) {
     }
@@ -95,10 +95,5 @@ final readonly class ItemHydrator implements Hydrator
         $value = $record->value('defaultExpiryValue');
 
         return null === $value ? null : $this->decode->int($value, 'Item.defaultExpiryValue');
-    }
-
-    public static function of(ValueDecoder $decode): self
-    {
-        return new self($decode);
     }
 }

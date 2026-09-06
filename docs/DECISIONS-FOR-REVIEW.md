@@ -6,26 +6,11 @@ load-bearing enough that reversing it is expensive.
 
 ---
 
-## 1. Named constructors on *every* generated class, including services
+## 1. Named constructors ~~on every generated class~~ ✅ RESOLVED 2026-09-06
 
-**Asked for:** static getters over public constructors.
-
-**Done:** every generated class has a private constructor and a public static `of()`.
-
-**The wrinkle.** Entities and contexts are value-ish and clearly benefit. But mutators,
-finders, hydrators and bridges are dependency-injected services, and **most containers
-autowire through a public constructor**. Symfony, Laravel and PHP-DI can all be told to
-use a factory method, but none does so by default — so a project will need explicit
-service definitions for generated services.
-
-**Reverse it by** leaving the constructor public on the four service classes
-(`MutatorGenerator`, `FinderGenerator`, `HydratorGenerator`, `BridgeGenerator`) and
-keeping `of()` on entities and contexts only. One line each: drop the
-`$this->emitter->namedConstructor(...)` call.
-
-I went with consistency because you said "all files", and because a container that
-cannot call a static factory is a container problem rather than a framework one. But
-you will hit this the first time you wire a real project.
+**Settled:** split by who instantiates. Entities, action contexts and mutation contexts
+are sealed behind `of()`; mutators, finders, hydrators and bridges keep public
+constructors so containers autowire them without per-entity service definitions.
 
 ---
 

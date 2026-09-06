@@ -122,8 +122,6 @@ final readonly class MutatorGenerator
             }
         }
 
-        $this->emitter->namedConstructor($type, $constructor);
-
         return $this->emitter->file($class, $namespace);
     }
 }

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutator.php
- * digest: sha256:541a631ec85e4bd7edd39a8f54dc7ad79a19dc7a37d2b77d414b7efa88fdd33c
+ * digest: sha256:84dbda89fd31b2ebf4ca265f27e0f6bd7d2fa83d058f5adc1c39b33d60472d8e
  */
 
 namespace Clog\Entity\Item;
@@ -23,7 +23,7 @@ use Eleph\Runtime\Mutation\MutationBuffer;
  */
 final class ItemMutator
 {
-    private function __construct(
+    public function __construct(
         private readonly MutationBuffer $buffer,
     ) {
     }
@@ -68,10 +68,5 @@ final class ItemMutator
         $this->buffer->set('defaultExpiryValue', $defaultExpiryValue);
 
         return $this;
-    }
-
-    public static function of(MutationBuffer $buffer): self
-    {
-        return new self($buffer);
     }
 }

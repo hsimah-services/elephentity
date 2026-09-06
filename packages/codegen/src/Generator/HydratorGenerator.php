@@ -108,8 +108,6 @@ final readonly class HydratorGenerator
             $reader->addParameter('record')->setType(Record::class);
         }
 
-        $this->emitter->namedConstructor($type, $constructor);
-
         return $this->emitter->file($class, $namespace);
     }
 

@@ -98,7 +98,6 @@ final readonly class BridgeGenerator
 
         if ([] === $verified) {
             $dispatch->setBody('return Verification::ok();');
-            $this->emitter->namedConstructor($type, $constructor);
 
             return $this->emitter->file($class, $namespace);
         }
@@ -145,8 +144,6 @@ final readonly class BridgeGenerator
             $method->addParameter('context')->setType(MutationContext::class);
         }
 
-        $this->emitter->namedConstructor($type, $constructor);
-
         return $this->emitter->file($class, $namespace);
     }
 
@@ -186,7 +183,6 @@ final readonly class BridgeGenerator
 
         if ([] === $entity->triggers) {
             $dispatch->setBody('');
-            $this->emitter->namedConstructor($type, $constructor);
 
             return $this->emitter->file($class, $namespace);
         }
@@ -210,8 +206,6 @@ final readonly class BridgeGenerator
         }
 
         $dispatch->setBody(rtrim(implode("\n", $lines)));
-        $this->emitter->namedConstructor($type, $constructor);
-
         return $this->emitter->file($class, $namespace);
     }
 

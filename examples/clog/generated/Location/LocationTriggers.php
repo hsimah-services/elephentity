@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationTriggers.php
- * digest: sha256:310c80b8788c7f40d66a02fa284bcb3ce5474da0e87624e55456ad5be7d54d6f
+ * digest: sha256:0cda5622aa1322ce806e9351ea05429434aef6eabf718d72f75d2e54a1515a73
  */
 
 namespace Clog\Entity\Location;
@@ -24,16 +24,11 @@ use Eleph\Runtime\Trigger\TriggerPhase;
  */
 final readonly class LocationTriggers implements EntityTriggers
 {
-    private function __construct()
+    public function __construct()
     {
     }
 
     public function dispatch(TriggerPhase $phase, TriggerEvent $event, MutationContext $context): void
     {
-    }
-
-    public static function of(): self
-    {
-        return new self();
     }
 }

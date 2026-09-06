@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryVerifiers.php
- * digest: sha256:57469b8f93f86b6ba3a15827de78df1a9299b4bee40751b35a9fd6e3a6090c39
+ * digest: sha256:83682335967d18801ed3712b180a3f5fe299da15c3c15df16053bad6fe91b466
  */
 
 namespace Clog\Entity\Inventory;
@@ -23,7 +23,7 @@ use Eleph\Runtime\Verification\Verification;
  */
 final readonly class InventoryVerifiers implements EntityVerifiers
 {
-    private function __construct()
+    public function __construct()
     {
     }
 
@@ -38,10 +38,5 @@ final readonly class InventoryVerifiers implements EntityVerifiers
     public function verify(string $field, mixed $value, MutationContext $context): Verification
     {
         return Verification::ok();
-    }
-
-    public static function of(): self
-    {
-        return new self();
     }
 }

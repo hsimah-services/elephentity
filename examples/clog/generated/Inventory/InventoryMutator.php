@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:ab97ac3d640aaffea36984f50dec5901b662d3438d47b33e7e264d6208e3364e
+ * digest: sha256:7ff0301770c9c95010dbd14712956cef026fc7949b2b21419ab2949f20cff8b8
  */
 
 namespace Clog\Entity\Inventory;
@@ -22,7 +22,7 @@ use Eleph\Runtime\Mutation\MutationBuffer;
  */
 final class InventoryMutator
 {
-    private function __construct(
+    public function __construct(
         private readonly MutationBuffer $buffer,
     ) {
     }
@@ -60,10 +60,5 @@ final class InventoryMutator
         $this->buffer->set('dateExpiry', $dateExpiry);
 
         return $this;
-    }
-
-    public static function of(MutationBuffer $buffer): self
-    {
-        return new self($buffer);
     }
 }

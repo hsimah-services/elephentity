@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationHydrator.php
- * digest: sha256:ba40d18d8d2d99305ba68c3e29d2f2f188a4a272868ffcabef97276cf25602ec
+ * digest: sha256:5c717fed8c3c618a7b0bc8024ea5a17cb32a050a20c5c9ba962f097fe2ac1328
  */
 
 namespace Clog\Entity\Location;
@@ -27,7 +27,7 @@ use Eleph\Runtime\Storage\Record;
  */
 final readonly class LocationHydrator implements Hydrator
 {
-    private function __construct(
+    public function __construct(
         private ValueDecoder $decode,
     ) {
     }
@@ -70,10 +70,5 @@ final readonly class LocationHydrator implements Hydrator
         $value = $record->value('name');
 
         return $this->decode->string($value, 'Location.name');
-    }
-
-    public static function of(ValueDecoder $decode): self
-    {
-        return new self($decode);
     }
 }
