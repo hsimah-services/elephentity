@@ -972,6 +972,33 @@ It needs a caller holding every id up front, which a GraphQL resolver has and a
 getter does not. Hence `preload()`, called explicitly, with an identity map covering
 the repeat-access case in between.
 
+### Assembly
+
+Every layer is separately testable and separately useless — an adaptor with no
+hydrators, a unit of work with no verifiers. Three pieces bring them together, and all
+three exist because the IR is a build-time artefact that does not survive to run time.
+
+**A generated `Catalogue`** answers what exists: which hydrator belongs to which
+entity, what an edge points at, which field carries a declared type, and every contract
+the project owes. All of it is a walk over the spec, so it is done once rather than per
+request. It resolves generated services through the application's container rather than
+taking dozens of constructor arguments — except mutators, which it builds, because a
+mutator writes into one buffer and every mutation needs its own.
+
+**A generated storage manifest** carries the physical schema — tables, columns, edge
+placements — for whichever driver the project declared. Table names are left unprefixed:
+a WordPress install can use any prefix and multisite uses one per site, so the prefix
+arrives from `$wpdb` at boot rather than being baked in.
+
+**A generated `Input` per entity** converts raw values into typed ones. A protocol layer
+hands over `'2026-09-06'` and a setter wants a `DateTimeImmutable`; only generated code
+knows both ends, which keeps the gateway untyped at its edge alone. A key that is absent
+is left alone, which is what makes a partial update partial.
+
+**`BootCheck` needs nothing from the application but its container.** The catalogue
+already lists every contract the spec produced, so there is no list to register and none
+to drift.
+
 ### Step 6 — `packages/wpgraphql`
 - `ManifestBuilder`: schema → the whole API surface, pure and therefore tested
 - `ManifestExporter`: the manifest as PHP source, emitted by `eleph generate`

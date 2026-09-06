@@ -185,6 +185,14 @@ states it exactly, and the application does not boot until something discharges 
 the root under a name the spec gives it. Distinct from the entity being exposed —
 publishing a query is its own decision.
 
+**Catalogue.** The generated class that tells the runtime what exists — hydrators, edge
+targets, field types, deletion rules, and every contract the project owes. All of it is
+a walk over the spec, done once at build rather than per request.
+
+**Storage manifest.** The compiled physical schema — tables, columns, edge placements —
+emitted per driver. Unprefixed, because a WordPress install's prefix is a property of
+the installation rather than the spec.
+
 **Gateway.** `EntityGateway` — entities addressed by name rather than type. The one
 place the framework gives up type safety, because a protocol layer is handed strings
 and cannot reach the generated typed classes.

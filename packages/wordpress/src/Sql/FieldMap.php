@@ -22,22 +22,37 @@ final readonly class FieldMap
     /** @var array<string, array<string, string>> entity => column => field */
     private array $toField;
 
-    public function __construct(Schema $schema, Naming $naming = new Naming())
+    /**
+     * @param array<string, array<string, string>> $columns Entity => field => column.
+     */
+    public function __construct(array $columns)
     {
-        $toColumn = [];
         $toField = [];
 
-        foreach ($schema->entities as $entity) {
-            foreach ($entity->fields as $field) {
-                $column = $naming->column($field->name);
-
-                $toColumn[$entity->name][$field->name] = $column;
-                $toField[$entity->name][$column] = $field->name;
+        foreach ($columns as $entity => $fields) {
+            foreach ($fields as $field => $column) {
+                $toField[$entity][$column] = $field;
             }
         }
 
-        $this->toColumn = $toColumn;
+        $this->toColumn = $columns;
         $this->toField = $toField;
+    }
+
+    /**
+     * Built from the spec at build time; from the manifest at run time.
+     */
+    public static function fromSchema(Schema $schema, Naming $naming = new Naming()): self
+    {
+        $columns = [];
+
+        foreach ($schema->entities as $entity) {
+            foreach ($entity->fields as $field) {
+                $columns[$entity->name][$field->name] = $naming->column($field->name);
+            }
+        }
+
+        return new self($columns);
     }
 
     public function column(string $entity, string $field): string

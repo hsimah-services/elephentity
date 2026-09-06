@@ -13,6 +13,8 @@ use Eleph\Codegen\Output\Writer;
 use Eleph\Codegen\Output\WriteReport;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\WordPress\Manifest\StorageManifestBuilder;
+use Eleph\WordPress\Manifest\StorageManifestExporter;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\ManifestExporter;
@@ -37,6 +39,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class GenerateCommand extends Command
 {
     public const MANIFEST_PATH = 'graphql-manifest.php';
+
+    public const STORAGE_MANIFEST_PATH = 'storage-manifest.php';
 
     protected function configure(): void
     {
@@ -98,6 +102,18 @@ final class GenerateCommand extends Command
         //
         // Only when the project speaks GraphQL: a project that does not should not
         // find a manifest in its tree wondering where it came from.
+        // The physical schema, for whichever driver the project declared. Emitted the
+        // same way and for the same reason: the adaptor needs it at run time and the
+        // IR that produces it does not survive the build.
+        if ('wordpress' === $compiled->schema()->project->driver) {
+            $files[] = new GeneratedFile(
+                self::STORAGE_MANIFEST_PATH,
+                (new StorageManifestExporter())->export(
+                    (new StorageManifestBuilder())->build($compiled->schema()),
+                ),
+            );
+        }
+
         if ($compiled->schema()->project->speaks(WpGraphQL::NAME)) {
             $files[] = new GeneratedFile(
                 self::MANIFEST_PATH,

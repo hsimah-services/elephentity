@@ -26,9 +26,11 @@ final class CodegenTest extends TestCase
         sort($paths);
 
         self::assertSame([
+            'Catalogue.php',
             'Comment/Comment.php',
             'Comment/CommentDeleter.php',
             'Comment/CommentHydrator.php',
+            'Comment/CommentInput.php',
             'Comment/CommentMutationContext.php',
             'Comment/CommentMutator.php',
             'Comment/CommentTriggers.php',
@@ -44,6 +46,7 @@ final class CodegenTest extends TestCase
             'Post/PostDeleter.php',
             'Post/PostFinder.php',
             'Post/PostHydrator.php',
+            'Post/PostInput.php',
             'Post/PostMutationContext.php',
             'Post/PostMutator.php',
             'Post/PostPublishContext.php',
@@ -52,6 +55,7 @@ final class CodegenTest extends TestCase
             'Tag/Tag.php',
             'Tag/TagDeleter.php',
             'Tag/TagHydrator.php',
+            'Tag/TagInput.php',
             'Tag/TagMutationContext.php',
             'Tag/TagMutator.php',
             'Tag/TagTriggers.php',
@@ -285,6 +289,51 @@ final class CodegenTest extends TestCase
     public function testAnEntityNothingDependsOnHasNoRules(): void
     {
         self::assertStringContainsString('return [];', $this->file('Comment/CommentDeleter.php'));
+    }
+
+    public function testTheCatalogueListsEveryContractTheProjectOwes(): void
+    {
+        // What the boot check reads. Generated from the spec, so it cannot drift from
+        // what was actually emitted.
+        $catalogue = $this->file('Catalogue.php');
+
+        self::assertStringContainsString('PostPriceVerifier', $catalogue);
+        self::assertStringContainsString('PostPublishAction', $catalogue);
+        self::assertStringContainsString('PostAuditTrigger', $catalogue);
+        self::assertStringContainsString('MoneyReadProcessor', $catalogue);
+        self::assertStringContainsString('MoneyWriteProcessor', $catalogue);
+    }
+
+    public function testTheCatalogueBuildsMutatorsRatherThanResolvingThem(): void
+    {
+        // A mutator writes into one buffer and every mutation needs its own, so it
+        // cannot come from a container the way a stateless service does.
+        $catalogue = $this->file('Catalogue.php');
+
+        self::assertStringContainsString(
+            "'Post' => new PostMutator(\$buffer, \$this->container->get(PostPublishAction::class))",
+            $catalogue,
+        );
+    }
+
+    public function testAnInputApplierOnlyTouchesKeysThatWereSupplied(): void
+    {
+        // What makes a partial update partial.
+        $input = $this->file('Post/PostInput.php');
+
+        self::assertStringContainsString("if (array_key_exists('title', \$input)) {", $input);
+        self::assertStringContainsString("\$buffer->set('title', \$this->title(\$input['title']))", $input);
+    }
+
+    public function testAnInputApplierConvertsToTheTypeTheSetterWants(): void
+    {
+        // A protocol layer hands over '2026-09-06'; the setter wants a
+        // DateTimeImmutable, and only generated code knows both ends.
+        $input = $this->file('Post/PostInput.php');
+
+        self::assertStringContainsString('private function createdAt(mixed $value): ?DateTimeImmutable', $input);
+        self::assertStringContainsString("\$this->decode->datetime(\$value, 'Post.createdAt')", $input);
+        self::assertStringContainsString('$this->moneyReader->read(', $input);
     }
 
     public function testGenerationIsDeterministic(): void

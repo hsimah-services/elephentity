@@ -217,7 +217,7 @@ final class WordPressAdaptorTest extends TestCase
                     'title' => new Column('title', 'VARCHAR(255)'),
                 ]),
             ],
-            new FieldMap($compiled->schema(), new Naming('wp_')),
+            FieldMap::fromSchema($compiled->schema(), new Naming('wp_')),
         );
     }
 }

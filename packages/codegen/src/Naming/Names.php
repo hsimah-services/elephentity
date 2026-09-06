@@ -72,6 +72,20 @@ final readonly class Names
         return $this->member($entity, 'Deleter');
     }
 
+    public function input(EntityDefinition $entity): string
+    {
+        return $this->member($entity, 'Input');
+    }
+
+    /**
+     * The one class that is about the project rather than an entity, so it sits at the
+     * root of the generated tree rather than in a folder.
+     */
+    public function catalogue(): string
+    {
+        return $this->config->namespaceFor('Catalogue');
+    }
+
     public function actionContext(EntityDefinition $entity, string $action): string
     {
         return $this->member($entity, ucfirst($action) . 'Context');

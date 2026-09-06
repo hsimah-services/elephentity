@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\Codegen;
 
 use Eleph\Codegen\Generator\BridgeGenerator;
+use Eleph\Codegen\Generator\CatalogueGenerator;
 use Eleph\Codegen\Generator\ContextGenerator;
 use Eleph\Codegen\Generator\ContractGenerator;
 use Eleph\Codegen\Generator\DeleterGenerator;
@@ -12,6 +13,7 @@ use Eleph\Codegen\Generator\EntityGenerator;
 use Eleph\Codegen\Generator\EnumGenerator;
 use Eleph\Codegen\Generator\FinderGenerator;
 use Eleph\Codegen\Generator\HydratorGenerator;
+use Eleph\Codegen\Generator\InputGenerator;
 use Eleph\Codegen\Generator\MutatorGenerator;
 use Eleph\Codegen\Naming\Emitter;
 use Eleph\Codegen\Naming\Names;
@@ -49,6 +51,7 @@ final readonly class Codegen
         $bridges = new BridgeGenerator($names, $types, $emitter);
         $hydrators = new HydratorGenerator($schema, $names, $types, $emitter);
         $deleters = new DeleterGenerator($schema, $names, $emitter);
+        $inputs = new InputGenerator($schema, $names, $types, $emitter);
 
         $files = $enums->generate($schema);
 
@@ -62,6 +65,7 @@ final readonly class Codegen
             $files[] = $contexts->mutationContext($entity);
             $files[] = $hydrators->generate($entity);
             $files[] = $deleters->generate($entity);
+            $files[] = $inputs->generate($entity);
 
             foreach ($bridges->generate($entity) as $file) {
                 $files[] = $file;
@@ -81,6 +85,8 @@ final readonly class Codegen
                 $files[] = $file;
             }
         }
+
+        $files[] = (new CatalogueGenerator($schema, $names, $emitter))->generate();
 
         usort($files, static fn (GeneratedFile $a, GeneratedFile $b) => strcmp($a->relativePath, $b->relativePath));
 
