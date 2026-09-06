@@ -2,6 +2,9 @@
 
 ## Install
 
+> Not on Packagist yet. Until it is, add this repository as a Composer `path` or `vcs`
+> repository — the package names below are what it will publish as.
+
 ```bash
 composer require phefr/runtime phefr/wordpress phefr/wpgraphql
 composer require --dev phefr/schema phefr/codegen phefr/cli
