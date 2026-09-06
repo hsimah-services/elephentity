@@ -6,8 +6,10 @@ namespace Eleph\WordPress\Tests;
 
 use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Cursor;
 use Eleph\Runtime\Storage\Direction;
 use Eleph\Runtime\Storage\Filter;
+use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Order;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\CompiledQuery;
@@ -125,10 +127,29 @@ final class QueryCompilerTest extends TestCase
 
     public function testAnUnboundedLimitIsCapped(): void
     {
-        // A page without a ceiling is how a lazy query stops being lazy.
+        // A page without a ceiling is how a lazy query stops being lazy. The extra row
+        // is deliberate: its presence is how hasNextPage is answered without a second
+        // query, and the adaptor drops it before anyone sees the page.
         $compiled = $this->compile((new Criteria('Post'))->take(999_999));
 
-        self::assertStringEndsWith(' LIMIT 1000', $compiled->sql);
+        self::assertStringEndsWith(' LIMIT 1001', $compiled->sql);
+    }
+
+    public function testACursorBecomesAnOffset(): void
+    {
+        $compiled = $this->compile(
+            (new Criteria('Post'))->take(20, (new Offset(40))->toCursor()),
+        );
+
+        self::assertStringEndsWith(' LIMIT 21 OFFSET 40', $compiled->sql);
+    }
+
+    public function testAnUnreadableCursorRestartsTheListRatherThanFailing(): void
+    {
+        // A cursor from an older format should not break a page someone is looking at.
+        $compiled = $this->compile((new Criteria('Post'))->take(20, Cursor::of('nonsense')));
+
+        self::assertStringEndsWith(' LIMIT 21', $compiled->sql);
     }
 
     public function testCountingDropsOrderingAndLimits(): void

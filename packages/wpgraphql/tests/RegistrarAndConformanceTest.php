@@ -23,7 +23,7 @@ final class RegistrarAndConformanceTest extends TestCase
 
     public function testEnumConfigsCarryTheStoredValueBehindTheGraphQLName(): void
     {
-        $configs = (new TypeRegistrar($this->manifest()))->enumConfigs();
+        $configs = (new TypeRegistrar($this->manifest(), new FakeGateway()))->enumConfigs();
 
         self::assertSame(
             ['value' => 'draft'],
@@ -88,7 +88,7 @@ final class RegistrarAndConformanceTest extends TestCase
 
     public function testRootFieldsCoverBothOneAndMany(): void
     {
-        $names = array_column((new TypeRegistrar($this->manifest()))->rootFieldConfigs(), 'name');
+        $names = array_column((new TypeRegistrar($this->manifest(), new FakeGateway()))->rootFieldConfigs(), 'name');
 
         self::assertContains('post', $names, 'one by id');
         self::assertNotContains('posts', $names, 'the collection is a connection, not a field');
@@ -99,7 +99,7 @@ final class RegistrarAndConformanceTest extends TestCase
      */
     private function connection(string $field): array
     {
-        foreach ((new TypeRegistrar($this->manifest()))->connectionConfigs() as $config) {
+        foreach ((new TypeRegistrar($this->manifest(), new FakeGateway()))->connectionConfigs() as $config) {
             if ($field === $config['fromFieldName']) {
                 return $config;
             }
@@ -140,7 +140,7 @@ final class RegistrarAndConformanceTest extends TestCase
      */
     private function postFields(): array
     {
-        $config = (new TypeRegistrar($this->manifest()))->objectConfigs()['Post'];
+        $config = (new TypeRegistrar($this->manifest(), new FakeGateway()))->objectConfigs()['Post'];
 
         self::assertIsArray($config['fields']);
 

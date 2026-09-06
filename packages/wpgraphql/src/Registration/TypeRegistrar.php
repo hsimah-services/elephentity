@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Registration;
 
+use Eleph\Runtime\Gateway\EntityGateway;
+use Eleph\Runtime\Identity\EntityId;
 use Eleph\WPGraphQL\Manifest\ConnectionEntry;
 use Eleph\WPGraphQL\Manifest\FieldEntry;
 use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
+use Eleph\WPGraphQL\Manifest\QueryFieldEntry;
+use Eleph\WPGraphQL\Resolver\Connections;
 
 /**
  * Registers the manifest with WPGraphQL.
@@ -20,8 +24,11 @@ use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
  */
 final readonly class TypeRegistrar
 {
-    public function __construct(private Manifest $manifest)
-    {
+    public function __construct(
+        private Manifest $manifest,
+        private EntityGateway $gateway,
+        private Connections $connections = new Connections(),
+    ) {
     }
 
     /**
@@ -114,11 +121,17 @@ final readonly class TypeRegistrar
         }
 
         foreach ($this->manifest->roots as $root) {
+            $entity = $root->entity;
+
             $configs[] = $this->connection(
                 'RootQuery',
                 $root->type,
                 $root->collection(),
                 sprintf('Every %s.', $root->type),
+                fn (mixed $source, array $args): array => $this->connections->resolve(
+                    $this->gateway->all($entity),
+                    $args,
+                ),
             );
         }
 
@@ -128,7 +141,13 @@ final readonly class TypeRegistrar
             }
 
             $configs[] = [
-                ...$this->connection('RootQuery', $query->type, $query->field, $query->description ?? ''),
+                ...$this->connection(
+                    'RootQuery',
+                    $query->type,
+                    $query->field,
+                    $query->description ?? '',
+                    $this->queryResolver($query),
+                ),
                 // The query's own arguments sit alongside the paging ones WPGraphQL adds.
                 'connectionArgs' => $this->args($query->args),
             ];
@@ -140,13 +159,19 @@ final readonly class TypeRegistrar
     /**
      * @return array<string, mixed>
      */
-    private function connection(string $from, string $to, string $field, string $description): array
-    {
+    private function connection(
+        string $from,
+        string $to,
+        string $field,
+        string $description,
+        ?callable $resolve = null,
+    ): array {
         return [
             'fromType' => $from,
             'toType' => $to,
             'fromFieldName' => $field,
             'description' => $description,
+            ...(null === $resolve ? [] : ['resolve' => $resolve]),
             // WPGraphQL supplies pageInfo, edges and nodes; totalCount it does not.
             // A table wants it, and the lazy query counts without hydrating, so it
             // costs one query rather than the whole set.
@@ -201,12 +226,21 @@ final readonly class TypeRegistrar
         $configs = [];
 
         foreach ($this->manifest->roots as $root) {
+            $entity = $root->entity;
+
             $configs[] = [
                 'name' => $root->single(),
                 'field' => [
                     'type' => $root->type,
                     'description' => sprintf('One %s by id.', $root->type),
                     'args' => ['id' => ['type' => ['non_null' => 'ID']]],
+                    'resolve' => function (mixed $source, array $args) use ($entity): ?object {
+                        $id = $args['id'] ?? null;
+
+                        return is_string($id) || is_int($id)
+                            ? $this->gateway->find($entity, EntityId::of($id))
+                            : null;
+                    },
                 ],
             ];
 
@@ -223,11 +257,22 @@ final readonly class TypeRegistrar
                     'type' => $query->type,
                     'description' => $query->description ?? '',
                     'args' => $this->args($query->args),
+                    'resolve' => fn (mixed $source, array $args): ?object => $this->gateway
+                        ->runQuery($query->entity, $query->query, $args)
+                        ->first(),
                 ],
             ];
         }
 
         return $configs;
+    }
+
+    private function queryResolver(QueryFieldEntry $query): callable
+    {
+        return fn (mixed $source, array $args): array => $this->connections->resolve(
+            $this->gateway->runQuery($query->entity, $query->query, $args),
+            $args,
+        );
     }
 
     /**

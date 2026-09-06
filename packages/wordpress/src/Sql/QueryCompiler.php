@@ -9,6 +9,7 @@ use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Direction;
 use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
+use Eleph\Runtime\Storage\Offset;
 use RuntimeException;
 
 /**
@@ -283,7 +284,14 @@ final readonly class QueryCompiler
 
         // A cap rather than trust: an unbounded page is how a lazy query stops being
         // lazy. Callers wanting everything say all() and mean it.
-        return sprintf(' LIMIT %d', min(max($criteria->limit, 1), self::MAX_LIMIT));
+        $limit = min(max($criteria->limit, 1), self::MAX_LIMIT);
+        $offset = Offset::fromCursor($criteria->after)->value;
+
+        // One extra row, discarded before the page is returned, so hasNextPage is
+        // answered without a second query.
+        return 0 === $offset
+            ? sprintf(' LIMIT %d', $limit + 1)
+            : sprintf(' LIMIT %d OFFSET %d', $limit + 1, $offset);
     }
 
     private function resolve(TableSchema $table, string $field): string

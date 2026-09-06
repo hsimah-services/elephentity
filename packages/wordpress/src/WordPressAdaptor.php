@@ -9,6 +9,7 @@ use Eleph\Runtime\Capability\Capability;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Page;
 use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\StorageAdaptor;
@@ -97,10 +98,25 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
         $rows = $this->database->select($compiled->sql, $compiled->bindings);
 
-        return new Page(array_map(
+        $records = array_map(
             fn (array $row): Record => $this->record($criteria->entity, $row),
             $rows,
-        ));
+        );
+
+        if (null === $criteria->limit) {
+            return new Page($records);
+        }
+
+        // The compiler asked for one row more than the caller wanted. Its presence is
+        // the answer to "is there another page", and it is dropped here so nothing
+        // above ever sees it.
+        $offset = Offset::fromCursor($criteria->after)->value;
+        $hasMore = count($records) > $criteria->limit;
+
+        return new Page(
+            array_slice($records, 0, $criteria->limit),
+            $hasMore ? (new Offset($offset + $criteria->limit))->toCursor() : null,
+        );
     }
 
     public function count(Criteria $criteria): int

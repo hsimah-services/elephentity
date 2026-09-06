@@ -185,6 +185,10 @@ states it exactly, and the application does not boot until something discharges 
 the root under a name the spec gives it. Distinct from the entity being exposed —
 publishing a query is its own decision.
 
+**Gateway.** `EntityGateway` — entities addressed by name rather than type. The one
+place the framework gives up type safety, because a protocol layer is handed strings
+and cannot reach the generated typed classes.
+
 **Root field.** The way into the graph — `clogItem(id:)` and `clogItems(…)`. Without
 them every entity would be reachable only by traversing from something else, and
 nothing would be the something else.

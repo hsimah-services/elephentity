@@ -775,6 +775,30 @@ reflectively on every request (runtime cost, no static analysis).
 Convention: spec field `title` → `getTitle()` on the read object → GraphQL field
 `title`.
 
+**Registration is a loop, not generated code.** WPGraphQL takes a closure for every
+resolver, so the whole surface is a walk over the manifest. A generated copy per entity
+would be one more tree to keep in step with the spec, and would buy nothing.
+
+**`Plugin` is the whole layer as one object.** Nothing in Elephentity depends on it: a
+project that speaks no GraphQL never enables the integration, never generates a
+manifest, and never loads the class.
+
+**Resolvers go through `EntityGateway`** — entities addressed by *name*. Everything else
+in the framework is exactly typed, and a protocol layer cannot be: a resolver is handed
+the string "Item" and an array of arguments with no compile-time way to reach
+`ItemFinder`. So the gateway is the one place type safety is given up on purpose, kept
+as small as the protocol layers need, with everything behind it still typed.
+
+**Paging is offset-based**, and worth being honest about: insert or remove rows between
+two pages and a reader can see one twice or miss one. Keyset paging avoids that but
+needs the ordering columns in the cursor and a stable total order the spec does not yet
+make anyone declare. The cursor is opaque, so replacing it later changes nothing above
+the adaptor.
+
+The compiler asks for one row more than the caller wanted — its presence is how
+`hasNextPage` is answered without a second query, and the adaptor drops it before the
+page is returned.
+
 ---
 
 ## 14. Verification gates (CI)

@@ -7,6 +7,8 @@ namespace Eleph\WordPress\Tests;
 use Eleph\Runtime\Capability\Capability;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Write\Insert;
 use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
@@ -144,6 +146,36 @@ final class WordPressAdaptorTest extends TestCase
         // A preCommit trigger throwing must take the whole commit with it.
         self::assertSame('a preCommit trigger said no', $thrown->getMessage());
         self::assertSame(['begin', 'rollback'], $database->transactionLog);
+    }
+
+    public function testAPageDropsTheProbeRowAndReportsThereIsMore(): void
+    {
+        // The compiler asks for one row more than the caller wanted; its presence
+        // answers hasNextPage without a second query, and nothing above sees it.
+        $database = new FakeDatabase();
+        $database->rows = [
+            ['id' => 1, 'created_at' => 'a'],
+            ['id' => 2, 'created_at' => 'b'],
+            ['id' => 3, 'created_at' => 'c'],
+        ];
+
+        $page = $this->adaptor($database)->query((new Criteria('Post'))->take(2));
+
+        self::assertCount(2, $page->items);
+        self::assertTrue($page->hasMore());
+        self::assertSame(2, Offset::fromCursor($page->next)->value);
+    }
+
+    public function testTheLastPageOffersNoCursor(): void
+    {
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 1, 'created_at' => 'a']];
+
+        $page = $this->adaptor($database)->query((new Criteria('Post'))->take(2));
+
+        self::assertCount(1, $page->items);
+        self::assertFalse($page->hasMore());
+        self::assertNull($page->next);
     }
 
     public function testFieldNamesBecomeColumnNamesOnTheWayDown(): void
