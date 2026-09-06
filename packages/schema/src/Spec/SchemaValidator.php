@@ -29,7 +29,7 @@ final class SchemaValidator
 
         foreach (['common', 'project', 'entity', 'pattern', 'type'] as $name) {
             $resolver?->registerFile(
-                sprintf('https://elephentity.dev/schema/%s.json', $name),
+                sprintf('https://dev.hbla.ke/elephentity/v0/%s.schema.json', $name),
                 sprintf('%s/%s.schema.json', self::RESOURCE_DIRECTORY, $name),
             );
         }

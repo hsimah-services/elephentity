@@ -1,13 +1,13 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://elephentity.dev/schema/project.json",
+    "$id": "https://dev.hbla.ke/elephentity/v0/project.schema.json",
     "title": "Elephentity project specification",
     "description": "Settings true of the whole project. Deliberately shallow: it may not declare patterns, fields or anything else an entity would, because reading an entity spec must tell you what that entity has.",
     "type": "object",
     "required": ["project", "storage"],
     "additionalProperties": false,
     "properties": {
-        "project": { "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName" },
+        "project": { "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/typeName" },
         "description": { "type": "string" },
         "storage": {
             "type": "object",

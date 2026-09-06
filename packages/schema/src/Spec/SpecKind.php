@@ -16,7 +16,7 @@ enum SpecKind: string
 
     public function schemaUri(): string
     {
-        return sprintf('https://elephentity.dev/schema/%s.json', $this->value);
+        return sprintf('https://dev.hbla.ke/elephentity/v0/%s.schema.json', $this->value);
     }
 
     /**

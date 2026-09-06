@@ -12,6 +12,7 @@ The command is `eleph`; the PHP namespace is `Eleph\`.
 - [docs/GLOSSARY.md](docs/GLOSSARY.md) — what every term means, and why
 - [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — laying out a project
 - [docs/CI.md](docs/CI.md) — the four gates
+- [docs/PUBLISHING-SCHEMAS.md](docs/PUBLISHING-SCHEMAS.md) — hosting the JSON Schemas for editor validation
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — working on the framework itself
 - [examples/clog](examples/clog) — real post types spec'd, with the generated output
 

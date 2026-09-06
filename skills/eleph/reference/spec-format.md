@@ -15,6 +15,10 @@ vendor/elephentity/elephentity/packages/schema/resources/
 Read them when you need certainty about what a key accepts. `eleph validate` checks
 against them, so anything they reject is not a spec.
 
+They are also published at `https://dev.hbla.ke/elephentity/v0/`, so an editor can
+validate a spec file as it is typed. The CLI never fetches them — it registers the
+local files against those URLs — so validation works offline.
+
 ## Project
 
 One file, `spec/project.yml`, and **every project needs one**.

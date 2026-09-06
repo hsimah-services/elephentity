@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://elephentity.dev/schema/pattern.json",
+    "$id": "https://dev.hbla.ke/elephentity/v0/pattern.schema.json",
     "title": "Elephentity pattern specification",
     "description": "A fragment of an entity spec. Any section an entity may declare, a pattern may declare.",
     "type": "object",
@@ -10,7 +10,7 @@
     "additionalProperties": false,
     "properties": {
         "pattern": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/typeName"
         },
         "description": {
             "type": "string"
@@ -18,7 +18,7 @@
         "use": {
             "type": "array",
             "items": {
-                "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName"
+                "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/typeName"
             },
             "uniqueItems": true
         },
@@ -34,25 +34,25 @@
             }
         },
         "config": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/configParameters"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/configParameters"
         },
         "storage": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/storage"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/storage"
         },
         "fields": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/fields"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/fields"
         },
         "edges": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/edges"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/edges"
         },
         "queries": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/queries"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/queries"
         },
         "actions": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/actions"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/actions"
         },
         "triggers": {
-            "$ref": "https://elephentity.dev/schema/common.json#/$defs/triggers"
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/triggers"
         }
     }
 }

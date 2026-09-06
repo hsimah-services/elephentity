@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://elephentity.dev/schema/common.json",
+    "$id": "https://dev.hbla.ke/elephentity/v0/common.schema.json",
     "title": "Shared definitions for Elephentity specs",
     "$defs": {
         "typeName": {
