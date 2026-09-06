@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   ItemMutationContext.php
- * digest: sha256:26462e9af0b693d6b0e42fc3bb57b5f502415708cdfb53bb86ef5f4fa9a55cc6
+ * digest: sha256:bdbb76c77a7d60a7cf735aca0ed163e8533facf08392a14c147de3e98ba0534c
  */
 
 namespace Clog\Entity;
@@ -125,18 +125,18 @@ final readonly class ItemMutationContext implements MutationContext
         return $value;
     }
 
-    public function originalBarcodes(): ?array
+    public function originalBarcode(): ?string
     {
-        $value = $this->context->original('barcodes');
-        assert(null === $value || is_array($value));
+        $value = $this->context->original('barcode');
+        assert(null === $value || is_string($value));
 
         return $value;
     }
 
-    public function pendingBarcodes(): ?array
+    public function pendingBarcode(): ?string
     {
-        $value = $this->context->pending('barcodes');
-        assert(null === $value || is_array($value));
+        $value = $this->context->pending('barcode');
+        assert(null === $value || is_string($value));
 
         return $value;
     }

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Bridge/ItemHydrator.php
- * digest: sha256:b2652a47d20c5cd84b687b9af3227e4decd03974e3e9d53620834d397957d87b
+ * digest: sha256:97a320b9722740de9f212a72d51901a4f22e4fe49ede287d79d556620f5fb4ca
  */
 
 namespace Clog\Entity\Bridge;
@@ -43,7 +43,7 @@ final readonly class ItemHydrator implements Hydrator
             $this->updatedAt($record),
             $this->postId($record),
             $this->name($record),
-            $this->barcodes($record),
+            $this->barcode($record),
             $this->defaultExpiryUnit($record),
             $this->defaultExpiryValue($record),
         );
@@ -77,11 +77,11 @@ final readonly class ItemHydrator implements Hydrator
         return $this->decode->string($value, 'Item.name');
     }
 
-    private function barcodes(Record $record): ?array
+    private function barcode(Record $record): ?string
     {
-        $value = $record->value('barcodes');
+        $value = $record->value('barcode');
 
-        return null === $value ? null : $this->decode->json($value, 'Item.barcodes');
+        return null === $value ? null : $this->decode->string($value, 'Item.barcode');
     }
 
     private function defaultExpiryUnit(Record $record): ?ExpiryUnit

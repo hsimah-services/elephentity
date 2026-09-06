@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   ItemMutator.php
- * digest: sha256:391d6766217f078d3bb3dd4be5209f5b7ed3737a5c66e51f521ac12fdcc28d33
+ * digest: sha256:09e8e8e271085ab1cd90385bcea6a32146921d2622da790154b4f1a5dbea5846
  */
 
 namespace Clog\Entity;
@@ -49,9 +49,9 @@ final class ItemMutator
         return $this;
     }
 
-    public function setBarcodes(?array $barcodes): self
+    public function setBarcode(?string $barcode): self
     {
-        $this->buffer->set('barcodes', $barcodes);
+        $this->buffer->set('barcode', $barcode);
 
         return $this;
     }

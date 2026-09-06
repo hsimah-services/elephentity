@@ -20,6 +20,9 @@ phefr check      Conformant: 3 type(s), every field resolves.
 `BIGINT UNSIGNED` columns on `wp_clog_inventory`, placed there by the framework because
 `Inventory.item` is declared `cardinality: one` — nobody wrote a column name.
 
+**One barcode, one indexed column.** `barcode` is a unique `VARCHAR(64)`, so finding an
+item by scanning is an index lookup rather than a scan of serialized blobs.
+
 **`ClogExpiryUnit` is declared once** as `types/ExpiryUnit.yml` and appears as a PHP
 backed enum, a `VARCHAR(6)` column sized to its longest member, and a GraphQL enum
 whose `DAYS`/`MONTHS` names sit over the stored `days`/`months`. The hand-written
@@ -29,44 +32,70 @@ version had that mapping in three files.
 entity that participates in the WordPress admin says so in one line, and the compiler
 refuses that pattern on a non-WordPress driver.
 
-## What it does not capture — three gaps this exercise found
+## What it does not capture
 
-### 1. There is no list-of-scalar field type
+Both serialization gaps are closed by changing the model rather than the framework:
+`barcode` is now one indexed unique `VARCHAR(64)` per item, and `defaultExpiry` was
+already two plain columns. Nothing is serialized except the `json` primitive, which
+nothing here uses.
 
-`barcodes` is `[String]` in the existing API. The closest PheFr offers is `json`, which
-is what the spec uses, and it is a poor fit twice over: the GraphQL field degrades from
-`[String]` to `String`, and a `LONGTEXT` blob cannot be indexed.
+What remains is the WordPress surface.
 
-That second point matters more than it looks. Scanning a barcode to find an item is
-presumably the query this data exists to serve, and as JSON it cannot be one.
+### The post row stops being the entity
 
-Two ways out, and they are not equivalent:
+This started as "`post_title` becomes `name`", which is the least of it. The rename
+itself is a free choice: PheFr has no opinion about the field name, only that it must
+be *declared*, because the custom table is authoritative and the post row is a
+projection. Call it `title` in the spec and clients see `title`.
 
-- **A `list` modifier on field types.** Faithful to the current API, and the column
-  stays a blob — so it fixes the type and not the lookup.
-- **A `Barcode` entity** with an indexed unique `code` and an edge to `Item`. Changes
-  the data model, and makes barcode lookup an actual indexed query.
+The real change is everything else that came free with being a post type.
 
-The second is probably the better system and the first is the smaller change. This is
-a decision about Clog, not about PheFr, which is why the spec models it as `json` and
-leaves the choice open.
+**What WPGraphQL gave you.** `ClogItem` is a registered post type, so WPGraphQL
+supplies `title`, `databaseId`, `date`, `modified`, `slug`, `status`, `content` and
+`author` without anyone asking, plus root fields `clogItem(id:)` and
+`clogItems(where:)` carrying WP's filtering, ordering and cursor pagination.
 
-### 2. There is no composite value object
+Under PheFr, `Item` is built solely from the spec. You get precisely what you declared:
+`id`, `createdAt`, `updatedAt`, `postId`, `name`, `barcode`, `defaultExpiryUnit`,
+`defaultExpiryValue`. `createdAt` and `updatedAt` cover what `date` and `modified` did;
+the rest either need declaring or need to go.
 
-`defaultExpiry` is a nested `ClogDefaultExpiry` object in GraphQL, built from two meta
-fields and returned as null unless both are present. PheFr flattens it to
-`defaultExpiryUnit` and `defaultExpiryValue`, so the API shape changes.
+**A gap in PheFr, not in the model.** The manifest today registers object types, enums
+and mutations — and no root query fields. A declared `queries:` block generates an
+injectable PHP finder, but nothing exposes it to GraphQL, so there is currently no way
+to *fetch* an Item through the generated API at all. Entry points are the missing piece
+of the plugin layer, and this port is what surfaced it.
 
-Declared types alias exactly one primitive, so they cannot express a two-field
-composite. Supporting one would mean embedded types that group fields into a nested
-GraphQL type while storing as separate columns.
+**The divergence hazard.** `show_ui: true` with `supports: ['title']` means a human can
+edit the title in wp-admin. Under PheFr the column is authoritative and `post_title` is
+written by the Mutator as part of the same unit of work — so an admin edit changes the
+projection and not the truth, and nothing notices. `OrphanGuard` catches deletes;
+nothing catches edits.
 
-### 3. `post_title` becomes `name`, not `title`
+Three ways out, and only one of them is honest:
 
-WPGraphQL exposes `title` for free from the post row. Under PheFr the custom table is
-authoritative and the post row is a projection, so the field has to be declared — and
-`name` reads better for a Location than `title` does. It is a rename in the client
-either way, so it may as well be the better name; but it *is* a breaking change.
+- **Stop supporting `title` on the post type.** The post row becomes what the design
+  says it is — an anchor for the ecosystem, holding nothing. Given Clog has its own
+  React client, losing the wp-admin title column costs little.
+- **Sync `post_title` back on `post_updated`.** Makes the projection bidirectional,
+  which contradicts "the custom table is authoritative" and invites write loops
+  between the hook and the Mutator.
+- **Let them diverge** until the next write re-projects. Silently wrong, which is the
+  worst of the three.
+
+Worth noting that PheFr's own `PostTypeRegistrar` currently emits `supports: ['title']`,
+so it ships the same hazard. That wants changing.
+
+### Post type registration is not in the spec
+
+Related, and blocking for this port: `PostTypeRegistrar` hardcodes `public: true`,
+`show_in_rest: false` and `supports: ['title']`. Clog needs `public: false`,
+`show_ui: true`, `show_in_menu: 'clog'`, `exclude_from_search: true` and a full label
+set. None of that is expressible today.
+
+The `ClogPost` pattern is the natural home for it — it is already the thing that says
+"this entity participates in the WordPress admin", and a pattern can carry storage
+configuration.
 
 ## What this exercise confirmed
 

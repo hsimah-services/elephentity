@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item.php
- * digest: sha256:4fcc3f113344d35a76adeed52a927c4d15f7f406e765475bbf3a9e8ac5a158bc
+ * digest: sha256:56ac3935f32ca6d493fd9f6165ce0642cdcba56c428d82e3ebde9d01954e5c3c
  */
 
 namespace Clog\Entity;
@@ -31,7 +31,7 @@ final class Item
         private readonly ?DateTimeImmutable $updatedAt,
         private readonly int $postId,
         private readonly string $name,
-        private readonly ?array $barcodes,
+        private readonly ?string $barcode,
         private readonly ?ExpiryUnit $defaultExpiryUnit,
         private readonly ?int $defaultExpiryValue,
     ) {
@@ -69,11 +69,11 @@ final class Item
     }
 
     /**
-     * Barcodes that identify this item. See README: json is a poor fit for what is really a list of scalars, and scanning a barcode to find an item is the query this data exists to serve.
+     * The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.
      */
-    public function getBarcodes(): ?array
+    public function getBarcode(): ?string
     {
-        return $this->barcodes;
+        return $this->barcode;
     }
 
     /**

@@ -13,13 +13,15 @@ fields:
     required: true
     indexed: true
     maxLength: 200
-  barcodes:
-    type: json
+  barcode:
+    type: string
     description: >
-      Barcodes that identify this item. See README: json is a poor fit for what is
-      really a list of scalars, and scanning a barcode to find an item is the query
-      this data exists to serve.
+      The barcode that identifies this item. One per item: a serialized list could
+      not be indexed, and scanning a barcode to find an item is the query this data
+      exists to serve.
     nullable: true
+    unique: true
+    maxLength: 64
   defaultExpiryUnit:
     type: enum
     description: Half of the default expiry; meaningless without the other half.

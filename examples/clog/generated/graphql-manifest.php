@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:d031b26ee810c3c4188784573dee008f44fa9dbdd6c1e84fb8bba474fd7e28c0
+ * digest: sha256:738655aeea3c77df4bef9ccaf3dc56cf86e29b39a7e8702189269d6e10a3a99e
  */
 
 namespace PheFr\WPGraphQL\Manifest;
@@ -48,7 +48,7 @@ return new Manifest(
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null),
                 'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.'),
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the item is called. Projected to post_title.'),
-                'barcodes' => new FieldEntry('barcodes', new GraphQLType('String', false, false), 'getBarcodes', 'Barcodes that identify this item. See README: json is a poor fit for what is really a list of scalars, and scanning a barcode to find an item is the query this data exists to serve.
+                'barcode' => new FieldEntry('barcode', new GraphQLType('String', false, false), 'getBarcode', 'The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.
 '),
                 'defaultExpiryUnit' => new FieldEntry('defaultExpiryUnit', new GraphQLType('ExpiryUnit', false, false), 'getDefaultExpiryUnit', 'Half of the default expiry; meaningless without the other half.'),
                 'defaultExpiryValue' => new FieldEntry('defaultExpiryValue', new GraphQLType('Int', false, false), 'getDefaultExpiryValue', 'Half of the default expiry; meaningless without the other half.'),
@@ -98,7 +98,7 @@ return new Manifest(
                 'updatedAt' => new GraphQLType('String', false, false),
                 'postId' => new GraphQLType('Int', false, false),
                 'name' => new GraphQLType('String', true, false),
-                'barcodes' => new GraphQLType('String', false, false),
+                'barcode' => new GraphQLType('String', false, false),
                 'defaultExpiryUnit' => new GraphQLType('ExpiryUnit', false, false),
                 'defaultExpiryValue' => new GraphQLType('Int', false, false),
             ],
@@ -142,7 +142,7 @@ return new Manifest(
                 'updatedAt' => new GraphQLType('String', false, false),
                 'postId' => new GraphQLType('Int', false, false),
                 'name' => new GraphQLType('String', false, false),
-                'barcodes' => new GraphQLType('String', false, false),
+                'barcode' => new GraphQLType('String', false, false),
                 'defaultExpiryUnit' => new GraphQLType('ExpiryUnit', false, false),
                 'defaultExpiryValue' => new GraphQLType('Int', false, false),
             ],
