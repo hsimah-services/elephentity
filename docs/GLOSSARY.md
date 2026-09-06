@@ -104,6 +104,11 @@ and inverse.unique together give the **relation**.
 **Relation.** One of one-to-one, many-to-one, one-to-many, many-to-many. Derived, never
 declared, and it determines where the key lives.
 
+**Deletion policy.** `onDelete` on an edge, governing the *dependent* side — whoever
+holds the foreign key. Generated into `ItemDeleter` rather than resolved at runtime,
+because what depends on an entity is a build-time fact found by reading every other
+entity's edges.
+
 **Placement.** Where an edge physically lives: a foreign key on one side or the other,
 or a join table. Inferred — if the framework can work it out, a human choosing it is a
 chance for two entities to disagree.

@@ -7,6 +7,7 @@ namespace Eleph\Codegen;
 use Eleph\Codegen\Generator\BridgeGenerator;
 use Eleph\Codegen\Generator\ContextGenerator;
 use Eleph\Codegen\Generator\ContractGenerator;
+use Eleph\Codegen\Generator\DeleterGenerator;
 use Eleph\Codegen\Generator\EntityGenerator;
 use Eleph\Codegen\Generator\EnumGenerator;
 use Eleph\Codegen\Generator\FinderGenerator;
@@ -47,6 +48,7 @@ final readonly class Codegen
         $enums = new EnumGenerator($names, $emitter);
         $bridges = new BridgeGenerator($names, $types, $emitter);
         $hydrators = new HydratorGenerator($schema, $names, $types, $emitter);
+        $deleters = new DeleterGenerator($schema, $names, $emitter);
 
         $files = $enums->generate($schema);
 
@@ -59,6 +61,7 @@ final readonly class Codegen
             $files[] = $mutators->generate($entity);
             $files[] = $contexts->mutationContext($entity);
             $files[] = $hydrators->generate($entity);
+            $files[] = $deleters->generate($entity);
 
             foreach ($bridges->generate($entity) as $file) {
                 $files[] = $file;

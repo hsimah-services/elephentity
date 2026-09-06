@@ -37,6 +37,7 @@ edges:
     inverse:
       name: inventoryEntries
       unique: false
+    onDelete: cascade
   location:
     to: Location
     cardinality: one

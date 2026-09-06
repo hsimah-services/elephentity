@@ -7,6 +7,7 @@ namespace Eleph\Runtime\UnitOfWork;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Storage\Write\Insert;
@@ -14,9 +15,11 @@ use Eleph\Runtime\Storage\Write\Link;
 use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Runtime\Storage\Write\WriteOperation;
 use Eleph\Runtime\Storage\Write\WriteResult;
 use Eleph\Runtime\Trigger\TriggerPhase;
 use Eleph\Runtime\Verification\CommitRejected;
+use RuntimeException;
 
 /**
  * One commit: everything registered, verified together, written in dependency order.
@@ -38,12 +41,20 @@ final class UnitOfWork
     /** @var list<Mutation> */
     private array $mutations = [];
 
+    /** @var list<Deletion> */
+    private array $deletions = [];
+
     public function __construct(
         private readonly StorageAdaptor $storage,
         private readonly VerificationPipeline $verification,
         private readonly ValueEncoder $encoder,
         private readonly TriggerDispatcher $triggers,
         private readonly DependencySorter $sorter = new DependencySorter(),
+        /**
+         * Absent when a project has no deletions to plan. Optional rather than
+         * required because it needs the edge graph, which not every caller has.
+         */
+        private readonly ?DeletionPlanner $planner = null,
     ) {
     }
 
@@ -52,9 +63,17 @@ final class UnitOfWork
         $this->mutations[] = $mutation;
     }
 
+    /**
+     * Remove a row, and whatever its edges say goes with it.
+     */
+    public function delete(Deletion $deletion): void
+    {
+        $this->deletions[] = $deletion;
+    }
+
     public function isEmpty(): bool
     {
-        return [] === $this->pending();
+        return [] === $this->pending() && [] === $this->deletions;
     }
 
     /**
@@ -63,8 +82,9 @@ final class UnitOfWork
     public function commit(): WriteResult
     {
         $mutations = $this->pending();
+        $deletions = $this->deletions;
 
-        if ([] === $mutations) {
+        if ([] === $mutations && [] === $deletions) {
             return new WriteResult();
         }
 
@@ -72,13 +92,21 @@ final class UnitOfWork
 
         $ordered = $this->sorter->sort($mutations);
 
-        $result = $this->storage->transaction(function () use ($ordered): WriteResult {
+        $result = $this->storage->transaction(function () use ($ordered, $deletions): WriteResult {
             $result = $this->storage->write(new WriteBatch(...$this->rowOperations($ordered)));
 
             $links = $this->linkOperations($ordered, $result);
 
             if ([] !== $links) {
                 $this->storage->write(new WriteBatch(...$links));
+            }
+
+            // Deletions last: a cascade counts and reads dependents, and doing that
+            // before the writes in this same commit would see a stale graph.
+            $removals = $this->deletionOperations($deletions);
+
+            if ([] !== $removals) {
+                $this->storage->write(new WriteBatch(...$removals));
             }
 
             // After the flush so ids exist, before COMMIT so a throw still undoes it.
@@ -88,6 +116,7 @@ final class UnitOfWork
         });
 
         $this->mutations = [];
+        $this->deletions = [];
 
         $this->triggers->dispatch(TriggerPhase::PostCommit, $ordered);
 
@@ -188,6 +217,26 @@ final class UnitOfWork
         }
 
         return $operations;
+    }
+
+    /**
+     * @param list<Deletion> $deletions
+     *
+     * @return list<WriteOperation>
+     */
+    private function deletionOperations(array $deletions): array
+    {
+        if ([] === $deletions) {
+            return [];
+        }
+
+        if (null === $this->planner) {
+            throw new RuntimeException(
+                'This unit of work was built without a DeletionPlanner, so it cannot delete. Supply one, or do not register deletions.',
+            );
+        }
+
+        return $this->planner->plan($deletions);
     }
 
     private function resolve(Identifier $identifier, WriteResult $result): Identifier

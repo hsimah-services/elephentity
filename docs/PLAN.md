@@ -559,18 +559,38 @@ loader can **batch across a result set** — one query for the comments of fifty
 instead of fifty. That last is the N+1 defence and is very hard to add once code
 everywhere assumes an array.
 
-### Deletion — provisional
+### Deletion
 
-Not a current priority; to be shored up when deletion is actually implemented.
+`onDelete: restrict | cascade | nullify`, defaulting to `restrict` so orphaning data
+takes a deliberate keystroke.
 
-- `onDelete: restrict | cascade | nullify`, defaulting to `restrict` so orphaning
-  data takes a deliberate keystroke.
-- **Framework-enforced**, so errors are good and actions/logging still run.
-- A `before_delete_post` hook in the adaptor catches out-of-band WP deletes (someone
-  empties the trash, another plugin calls `wp_delete_post()`) — no framework-level
-  enforcement can see those.
-- **No real foreign keys for now.** `dbDelta()` does not understand FK constraints, so
-  emitting them takes us fully off the WP path.
+**The policy governs the dependent side** — whoever holds the foreign key, which is the
+same rule SQL uses. `Post.comments` puts `post_id` on comments, so deleting a Post
+applies the policy to them. `Inventory.item` puts `item_id` on inventory, so deleting an
+Item applies it to inventory rows.
+
+**Deleting is its own generated class**, `ItemDeleter`, not a method on the mutator. A
+mutator held to change a title should not also be able to destroy the row, and "who may
+delete this" is worth being able to answer from what was injected.
+
+**The rules are generated, not resolved at runtime.** Working out what depends on a Post
+means reading every *other* entity's edges — a build-time fact, and one the runtime has
+no schema to discover.
+
+**Join rows always go, whatever the policy.** A link to a row that will not exist is not
+a policy choice. `cascade` on a many-to-many additionally deletes the far side, which
+for shared vocabulary is rarely wanted and is exactly why it must be asked for.
+
+**Cascades are ordered and guarded.** Dependents are deleted before the row they depend
+on, so a key never dangles even briefly; a visited set stops Post→Comment→Post running
+until the stack gives out, and a depth cap catches the rest.
+
+**Framework-enforced**, so errors are good and actions still run. A `before_delete_post`
+hook in the adaptor catches out-of-band WP deletes — someone emptying the trash, another
+plugin calling `wp_delete_post()` — which no framework-level enforcement can see.
+
+**No real foreign keys.** `dbDelta()` does not understand FK constraints, so emitting
+them takes us fully off the WP path.
 
 ---
 

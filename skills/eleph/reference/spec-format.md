@@ -154,6 +154,11 @@ declared:
 | `many` | `true` | one-to-many | foreign key on the far side |
 | `many` | `false` | many-to-many | join table |
 
+`onDelete` governs the **dependent** side — whoever holds the key. `Post.comments` puts
+`post_id` on comments, so `cascade` there deletes the comments when a Post goes. Join
+rows on a many-to-many always go regardless; `cascade` additionally deletes the far
+side, which for shared vocabulary is rarely what you want.
+
 `inverse` is optional. `true` derives the reverse accessor name from the declaring
 entity, lowercased — legal only when the reverse is unique, because the derived name is
 singular and **the generator never pluralises**. For a non-unique reverse, name it:

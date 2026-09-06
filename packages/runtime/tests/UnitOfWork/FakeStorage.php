@@ -26,6 +26,11 @@ final class FakeStorage implements StorageAdaptor
 
     public int $nextId = 1;
 
+    /** @var array<string, list<Record>> Keyed by entity, so a query answers for the entity it asked about. */
+    public array $records = [];
+
+    public int $countResult = 0;
+
     public function capabilities(): Capabilities
     {
         return new Capabilities('fake', Capability::Transactions);
@@ -43,15 +48,12 @@ final class FakeStorage implements StorageAdaptor
 
     public function query(Criteria $criteria): Page
     {
-        /** @var Page<Record> $page */
-        $page = Page::empty();
-
-        return $page;
+        return new Page($this->records[$criteria->entity] ?? []);
     }
 
     public function count(Criteria $criteria): int
     {
-        return 0;
+        return $this->countResult;
     }
 
     public function write(WriteBatch $batch): WriteResult

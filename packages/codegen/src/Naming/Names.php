@@ -67,6 +67,11 @@ final readonly class Names
         return $this->member($entity, 'Hydrator');
     }
 
+    public function deleter(EntityDefinition $entity): string
+    {
+        return $this->member($entity, 'Deleter');
+    }
+
     public function actionContext(EntityDefinition $entity, string $action): string
     {
         return $this->member($entity, ucfirst($action) . 'Context');

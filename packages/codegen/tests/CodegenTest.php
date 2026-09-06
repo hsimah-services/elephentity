@@ -27,6 +27,7 @@ final class CodegenTest extends TestCase
 
         self::assertSame([
             'Comment/Comment.php',
+            'Comment/CommentDeleter.php',
             'Comment/CommentHydrator.php',
             'Comment/CommentMutationContext.php',
             'Comment/CommentMutator.php',
@@ -40,6 +41,7 @@ final class CodegenTest extends TestCase
             'Post/Contract/PostPublishedQuery.php',
             'Post/Contract/PostReindexTrigger.php',
             'Post/Post.php',
+            'Post/PostDeleter.php',
             'Post/PostFinder.php',
             'Post/PostHydrator.php',
             'Post/PostMutationContext.php',
@@ -48,6 +50,7 @@ final class CodegenTest extends TestCase
             'Post/PostTriggers.php',
             'Post/PostVerifiers.php',
             'Tag/Tag.php',
+            'Tag/TagDeleter.php',
             'Tag/TagHydrator.php',
             'Tag/TagMutationContext.php',
             'Tag/TagMutator.php',
@@ -250,6 +253,38 @@ final class CodegenTest extends TestCase
     {
         // Tag has no declared types, so its hydrator takes the decoder and nothing else.
         self::assertStringNotContainsString('Reader', $this->file('Tag/TagHydrator.php'));
+    }
+
+    public function testADeleterKnowsWhatDependsOnItsEntity(): void
+    {
+        // Found by reading every *other* entity's edges: a Post learns about Comments
+        // from Comment, not from itself.
+        $deleter = $this->file('Post/PostDeleter.php');
+
+        self::assertStringContainsString('public function delete(EntityId $id): void', $deleter);
+        self::assertStringContainsString("new Deletion('Post', \$id)", $deleter);
+        self::assertStringContainsString(
+            "new DeletionRule('Comment', 'comments', 'Post', DeletionPolicy::Restrict, false)",
+            $deleter,
+        );
+    }
+
+    public function testAManyToManyEdgeGivesBothSidesARule(): void
+    {
+        // Join rows dangle whichever end goes first, so both ends must know.
+        self::assertStringContainsString(
+            "new DeletionRule('Tag', 'tags', 'Post', DeletionPolicy::Restrict, true)",
+            $this->file('Post/PostDeleter.php'),
+        );
+        self::assertStringContainsString(
+            "new DeletionRule('Post', 'tags', 'Post', DeletionPolicy::Restrict, true)",
+            $this->file('Tag/TagDeleter.php'),
+        );
+    }
+
+    public function testAnEntityNothingDependsOnHasNoRules(): void
+    {
+        self::assertStringContainsString('return [];', $this->file('Comment/CommentDeleter.php'));
     }
 
     public function testGenerationIsDeterministic(): void
