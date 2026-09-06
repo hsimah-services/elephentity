@@ -1,0 +1,3 @@
+entity: Widget
+storage:
+  table: widget

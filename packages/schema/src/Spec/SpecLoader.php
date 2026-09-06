@@ -22,10 +22,18 @@ final readonly class SpecLoader
         $specs = [];
         $errors = [];
 
+        $project = $this->loadProject($source);
+
+        if ($project instanceof SpecError) {
+            $errors[] = $project;
+        } elseif (null !== $project) {
+            $specs[] = $project;
+        }
+
         foreach (SpecKind::cases() as $kind) {
             $directory = $source->directoryFor($kind);
 
-            if (!is_dir($directory)) {
+            if (null === $directory || !is_dir($directory)) {
                 continue;
             }
 
@@ -43,6 +51,22 @@ final readonly class SpecLoader
         }
 
         return ['specs' => $specs, 'errors' => $errors];
+    }
+
+    /**
+     * The project spec is one file beside the directories, not inside one.
+     */
+    private function loadProject(SpecSource $source): RawSpec|SpecError|null
+    {
+        foreach (['yml', 'yaml'] as $extension) {
+            $path = rtrim($source->root, '/') . '/project.' . $extension;
+
+            if (is_file($path)) {
+                return $this->parse($path, SpecKind::Project);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -94,8 +118,8 @@ final readonly class SpecLoader
             return new SpecError(
                 'spec.wrongKind',
                 sprintf(
-                    'A file in %s/ must declare "%s:" at its root.',
-                    $kind->directory(),
+                    'A file in %s must declare "%s:" at its root.',
+                    null === $kind->directory() ? 'the spec root' : $kind->directory() . '/',
                     $kind->value,
                 ),
                 $file,

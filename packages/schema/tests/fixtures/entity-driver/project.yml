@@ -1,0 +1,3 @@
+project: Shop
+storage:
+  driver: wordpress

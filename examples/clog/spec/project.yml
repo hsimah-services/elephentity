@@ -1,0 +1,4 @@
+project: Clog
+storage:
+  driver: wordpress
+  tablePrefix: clog_

@@ -91,6 +91,35 @@ spec field mean", and drift from each other rather than from the spec.
 | `wpgraphql/` | IR → compiled registration manifest |
 | `cli/` | `eleph generate` / `validate` / `check` / `migrate` |
 
+### The project spec
+
+`spec/project.yml` is required, and holds what no entity can sensibly vary:
+
+```yaml
+project: Clog
+storage:
+  driver: wordpress
+  tablePrefix: clog_
+```
+
+**The driver moved off entities.** It was identical on every one and always would be —
+a unit of work has one adaptor — so repeating it was noise that also implied entities
+could differ, a lie the `requires:` mechanism then had to guard against. Now
+`requires: { driver: … }` resolves once against the project.
+
+**The table prefix is applied at compile time**, so conflict detection, DDL and queries
+all see one resolved name rather than each remembering to prepend it. It stacks with
+the driver's own prefix.
+
+**Explicit non-goal: the project spec may not declare patterns or fields.** It is the
+obvious next request — "every entity gets Timestamps" — and it would mean reading an
+entity spec no longer tells you what that entity has. That is the same reasoning that
+makes patterns sealed, and it is recorded here so it stays decided.
+
+`eleph.json` stays separate. It holds paths and namespaces, and keeping application
+namespaces out of *specs* is load bearing; the division is that `eleph.json` says where
+output goes and `project.yml` says what the project is.
+
 ### Packaging: a Composer library
 
 Elephentity ships as a Composer library consumed by a thin WordPress plugin — **not** as a
@@ -936,3 +965,16 @@ schema format we have — better than inventing a `Post` example.
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
 - **Finder vs statics** — confirm generated `PostFinder`.
 - **Pagination shape** — cursor format, and whether it is opaque.
+
+---
+
+## 17. Deferred work
+
+Not questions — decided, just not built.
+
+- **A template repository.** A `create-project` starting point with `eleph.json`, a
+  project spec, the directory skeleton, the CI workflow and the skills already in
+  place. Every project needs all of it and none of it varies much.
+- **An eval suite for the spec-authoring skill.** Wanted, but a corpus built before the
+  interview has met real specs would enshrine today's guesses as the expected answers.
+  See [DECISIONS-FOR-REVIEW.md](DECISIONS-FOR-REVIEW.md) §6.

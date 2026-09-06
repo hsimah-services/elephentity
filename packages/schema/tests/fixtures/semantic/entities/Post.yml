@@ -1,6 +1,5 @@
 entity: Post
 storage:
-  driver: wordpress
   table: phe_post
   handle: ProductVariationSlugThatIsTooLong
 fields:

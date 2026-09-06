@@ -55,6 +55,11 @@ final class PipelineTest extends TestCase
             );
         }
 
+        copy(
+            __DIR__ . '/../../schema/tests/fixtures/valid/project.yml',
+            $this->project . '/spec/project.yml',
+        );
+
         file_put_contents($this->project . '/eleph.json', json_encode([
             'spec' => 'spec',
             'output' => 'generated',

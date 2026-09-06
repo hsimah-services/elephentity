@@ -78,12 +78,16 @@ final readonly class FormatChecker
             }
         }
 
-        foreach (['storage', 'requires'] as $shape) {
-            $nested = $spec->data[$shape] ?? null;
+        // The project's storage block holds different keys from an entity's.
+        $storageShape = SpecKind::Project === $spec->kind ? 'projectStorage' : 'storage';
+
+        foreach ([$storageShape, 'requires'] as $shape) {
+            $key = 'projectStorage' === $shape ? 'storage' : $shape;
+            $nested = $spec->data[$key] ?? null;
 
             if (is_array($nested)) {
                 /** @var array<string, mixed> $nested */
-                $this->checkMapping($spec, $shape, $nested, '/' . $shape, $errors);
+                $this->checkMapping($spec, $shape, $nested, '/' . $key, $errors);
             }
         }
 

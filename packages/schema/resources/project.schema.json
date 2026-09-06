@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://elephentity.dev/schema/project.json",
+    "title": "Elephentity project specification",
+    "description": "Settings true of the whole project. Deliberately shallow: it may not declare patterns, fields or anything else an entity would, because reading an entity spec must tell you what that entity has.",
+    "type": "object",
+    "required": ["project", "storage"],
+    "additionalProperties": false,
+    "properties": {
+        "project": { "$ref": "https://elephentity.dev/schema/common.json#/$defs/typeName" },
+        "description": { "type": "string" },
+        "storage": {
+            "type": "object",
+            "required": ["driver"],
+            "additionalProperties": false,
+            "properties": {
+                "driver": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "description": "The one storage backend this project uses. A unit of work has one adaptor, so this cannot vary by entity."
+                },
+                "tablePrefix": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*_$",
+                    "description": "Prepended to every entity's table. Stacks with any prefix the driver adds of its own — under WordPress the real table is $wpdb->prefix, then this, then the entity's table."
+                }
+            }
+        }
+    }
+}

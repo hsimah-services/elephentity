@@ -9,6 +9,7 @@ namespace Eleph\Schema\Spec;
  */
 enum SpecKind: string
 {
+    case Project = 'project';
     case Entity = 'entity';
     case Pattern = 'pattern';
     case Type = 'type';
@@ -18,9 +19,13 @@ enum SpecKind: string
         return sprintf('https://elephentity.dev/schema/%s.json', $this->value);
     }
 
-    public function directory(): string
+    /**
+     * The directory this kind is found in, or null for the one that is a single file.
+     */
+    public function directory(): ?string
     {
         return match ($this) {
+            self::Project => null,
             self::Entity => 'entities',
             self::Pattern => 'patterns',
             self::Type => 'types',

@@ -34,10 +34,6 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "driver": {
-                    "type": "string",
-                    "pattern": "^[a-z][a-z0-9_]*$"
-                },
                 "table": {
                     "type": "string",
                     "pattern": "^[a-z][a-z0-9_]*$"
@@ -46,7 +42,8 @@
                     "type": "string",
                     "description": "The name the storage system knows this entity by. A post type slug under the wordpress driver; a collection name elsewhere."
                 }
-            }
+            },
+            "description": "Where an entity's rows live. The driver is declared once for the project, not here."
         },
         "arguments": {
             "type": "object",

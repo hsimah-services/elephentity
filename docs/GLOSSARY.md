@@ -30,6 +30,14 @@ code usually means the third.
 **Spec.** The YAML that describes an entity, pattern or type. Authoritative: it is the
 source everything else is derived from, and the entity's changelog.
 
+**Project spec.** `spec/project.yml`, required. Holds the settings no entity can
+sensibly vary — the storage driver and the table prefix. Deliberately shallow: it may
+not declare patterns or fields, because reading an entity spec must tell you what that
+entity has.
+
+**Table prefix.** A project-level string prepended to every entity's table, resolved at
+compile time. Stacks with whatever prefix the driver adds of its own.
+
 **Entity.** A thing with an identity of its own, stored as one row. Becomes a read
 model, a mutator, and everything around them.
 
@@ -46,7 +54,8 @@ with `configure:`. The compiler validates values against the pattern's own decla
 which is what lets a WordPress pattern carry WordPress settings without the core
 learning what any of them mean.
 
-**Driver.** Which storage backend an entity uses. Only `wordpress` exists.
+**Driver.** Which storage backend the project uses. Declared once in the project spec,
+because a unit of work has one adaptor. Only `wordpress` exists.
 
 **Handle.** What the storage system calls this entity — a post type slug under
 WordPress, a collection name elsewhere. Deliberately driver-agnostic in name, and

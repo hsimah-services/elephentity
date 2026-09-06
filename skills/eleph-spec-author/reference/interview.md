@@ -11,12 +11,14 @@ wrong, and nobody enjoys twelve consecutive questions.
 
 ## Blocking
 
-### 1. Where does this live?
+### 1. What should the table be called?
 
-> Which storage driver, and what should the table be called?
+Snake case. The project's `tablePrefix` and the driver's own prefix are both prepended,
+so ask for the bare name — `item`, not `wp_clog_item`.
 
-Only `wordpress` exists today, so the real question is the table name. Snake case,
-unprefixed — the adaptor adds the WordPress prefix.
+The driver is **not** an entity question: it lives in `spec/project.yml`. If there is no
+project spec yet, that is the first thing to write, and it needs a project name and a
+driver.
 
 ### 2. Does it need to be a WordPress post type?
 

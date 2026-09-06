@@ -11,6 +11,7 @@ use Eleph\Schema\Ir\ConfigType;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Origin;
 use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\Ir\StorageDefinition;
 use Eleph\Schema\Ir\TypeDefinition;
@@ -61,15 +62,21 @@ final readonly class SchemaCompiler
             return CompilationResult::failure($errors);
         }
 
+        $project = $this->buildProject($loaded['specs'], $source, $errors);
+
+        if (null === $project) {
+            return CompilationResult::failure($errors);
+        }
+
         $types = $this->buildTypes($loaded['specs'], $errors);
         $patterns = $this->buildPatterns($loaded['specs'], $errors);
-        $entities = $this->buildEntities($loaded['specs'], $patterns, $errors);
+        $entities = $this->buildEntities($project, $loaded['specs'], $patterns, $errors);
 
         if ([] !== $errors) {
             return CompilationResult::failure($errors);
         }
 
-        $schema = new Schema($entities, $types);
+        $schema = new Schema($project, $entities, $types);
 
         $semantic = (new SemanticValidator())->validate($schema);
 
@@ -171,6 +178,42 @@ final readonly class SchemaCompiler
     }
 
     /**
+     * @param list<RawSpec>   $specs
+     * @param list<SpecError> $errors
+     */
+    private function buildProject(array $specs, SpecSource $source, array &$errors): ?ProjectDefinition
+    {
+        foreach ($specs as $spec) {
+            if (SpecKind::Project !== $spec->kind) {
+                continue;
+            }
+
+            $reader = $spec->reader();
+            $storage = $reader->reader('storage');
+
+            return new ProjectDefinition(
+                name: $spec->name(),
+                driver: (string) $storage?->string('driver'),
+                sourceFile: $spec->file,
+                tablePrefix: $storage?->optionalString('tablePrefix') ?? '',
+                description: $reader->optionalString('description'),
+            );
+        }
+
+        // Without one there is no driver, so nothing downstream can be resolved.
+        $errors[] = new SpecError(
+            'project.missing',
+            sprintf(
+                'No project.yml in %s. Every project needs one; it declares the storage driver.',
+                $source->root,
+            ),
+            $source->root,
+        );
+
+        return null;
+    }
+
+    /**
      * @return array<string, ConfigParameter>
      */
     private function configParameters(\Eleph\Schema\Spec\SpecReader $reader): array
@@ -203,8 +246,12 @@ final readonly class SchemaCompiler
      *
      * @return array<string, EntityDefinition>
      */
-    private function buildEntities(array $specs, array $patterns, array &$errors): array
-    {
+    private function buildEntities(
+        ProjectDefinition $project,
+        array $specs,
+        array $patterns,
+        array &$errors,
+    ): array {
         $entities = [];
 
         foreach ($specs as $spec) {
@@ -234,7 +281,7 @@ final readonly class SchemaCompiler
             }
 
             $storageReader = $reader->reader('storage');
-            $driver = (string) $storageReader?->string('driver');
+            $driver = $project->driver;
 
             /** @var list<ParsedSections> $contributions */
             $contributions = [];
@@ -242,7 +289,12 @@ final readonly class SchemaCompiler
             /** @var list<PatternDefinition> $applied */
             $applied = [];
 
-            $storage = ['driver' => $driver, 'table' => (string) $storageReader?->string('table')];
+            // The project prefix is applied here, so everything downstream — conflict
+            // detection, DDL, queries — sees one resolved table name.
+            $storage = [
+                'driver' => $driver,
+                'table' => $project->tablePrefix . (string) $storageReader?->string('table'),
+            ];
 
             $handle = $storageReader?->optionalString('handle');
 

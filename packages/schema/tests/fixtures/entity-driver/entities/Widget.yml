@@ -1,0 +1,4 @@
+entity: Widget
+storage:
+  driver: postgres
+  table: widget

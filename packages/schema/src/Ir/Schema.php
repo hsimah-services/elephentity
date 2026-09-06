@@ -18,6 +18,7 @@ final readonly class Schema
      * @param array<string, TypeDefinition>   $types
      */
     public function __construct(
+        public ProjectDefinition $project,
         public array $entities = [],
         public array $types = [],
     ) {

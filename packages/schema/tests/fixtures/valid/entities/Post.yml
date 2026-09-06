@@ -8,7 +8,6 @@ configure:
     visibility: public
     supports: [title, editor]
 storage:
-  driver: wordpress
   table: phe_post
   handle: post
 fields:

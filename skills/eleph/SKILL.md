@@ -24,6 +24,7 @@ same way in every entity is navigable; one where each entity was hand-written is
 ```
 eleph.json          spec/output directories and namespaces
 spec/
+  project.yml       the storage driver and table prefix — required
   entities/*.yml    one file per entity
   patterns/*.yml    reusable fragments an entity pulls in with `use:`
   types/*.yml       declared value types and enums

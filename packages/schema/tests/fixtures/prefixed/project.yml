@@ -1,0 +1,4 @@
+project: Shop
+storage:
+  driver: wordpress
+  tablePrefix: shop_

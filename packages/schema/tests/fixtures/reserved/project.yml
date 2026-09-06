@@ -1,0 +1,3 @@
+project: Fixture
+storage:
+  driver: wordpress

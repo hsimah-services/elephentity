@@ -1,2 +1,2 @@
 entity: Enum
-storage: { driver: wordpress, table: reserved_enum }
+storage: { table: reserved_enum }

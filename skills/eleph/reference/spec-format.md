@@ -6,6 +6,7 @@ schema is right.
 ```
 vendor/elephentity/elephentity/packages/schema/resources/
   common.schema.json    shared definitions — fields, edges, queries, actions, triggers
+  project.schema.json   project.yml
   entity.schema.json    entities/*.yml
   pattern.schema.json   patterns/*.yml
   type.schema.json      types/*.yml
@@ -13,6 +14,30 @@ vendor/elephentity/elephentity/packages/schema/resources/
 
 Read them when you need certainty about what a key accepts. `eleph validate` checks
 against them, so anything they reject is not a spec.
+
+## Project
+
+One file, `spec/project.yml`, and **every project needs one**.
+
+```yaml
+project: Clog
+description: Inventory tracking.
+storage:
+  driver: wordpress
+  tablePrefix: clog_
+```
+
+`driver` lives here rather than on each entity because a unit of work has one adaptor —
+letting entities differ would invite a lie the format cannot honour. Pattern
+`requires: { driver: … }` is checked against this, once.
+
+`tablePrefix` is prepended to every entity's table and **stacks** with whatever the
+driver adds: under WordPress the real table is `$wpdb->prefix` + this + the entity's
+own `table`.
+
+It is deliberately shallow. It may **not** declare patterns or fields applied to every
+entity — that would mean reading an entity spec no longer tells you what that entity
+has, which is the same reasoning that makes patterns sealed.
 
 ## Entity
 
@@ -22,8 +47,7 @@ description: A published article. # one line; real prose lives in the .md
 use:                              # patterns to pull in
   - Timestamps
 storage:
-  driver: wordpress
-  table: phe_post                 # snake_case
+  table: post                     # snake_case; the project prefix is prepended
   handle: post                    # what the storage system calls it
 fields: { }
 edges: { }

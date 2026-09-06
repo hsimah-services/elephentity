@@ -9,8 +9,7 @@ configure:
     label: Location
     pluralLabel: Locations
 storage:
-  driver: wordpress
-  table: clog_location
+  table: location
   handle: clog_location
 fields:
   name:

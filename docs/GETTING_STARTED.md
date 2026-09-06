@@ -17,6 +17,7 @@ The dev packages run at build time and never ship. The others do.
 ```
 eleph.json
 spec/
+  project.yml        the storage driver and table prefix
   entities/
   patterns/
   types/
@@ -45,6 +46,18 @@ Add both namespaces to Composer's PSR-4 autoload map:
 }
 ```
 
+## Declare the project
+
+```yaml
+# spec/project.yml
+project: MyApp
+storage:
+  driver: wordpress
+  tablePrefix: app_
+```
+
+Required. It holds the settings no entity can sensibly vary.
+
 ## Write the first entity
 
 ```yaml
@@ -52,8 +65,7 @@ Add both namespaces to Composer's PSR-4 autoload map:
 entity: Note
 description: Something written down.
 storage:
-  driver: wordpress
-  table: app_note
+  table: note
 fields:
   body:
     type: text

@@ -6,4 +6,4 @@ configure:
     nonsense: 1
   Absent:
     x: 1
-storage: { driver: wordpress, table: broken }
+storage: { table: broken }

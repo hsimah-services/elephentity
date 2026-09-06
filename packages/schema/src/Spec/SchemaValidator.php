@@ -27,7 +27,7 @@ final class SchemaValidator
 
         $resolver = $this->validator->resolver();
 
-        foreach (['common', 'entity', 'pattern', 'type'] as $name) {
+        foreach (['common', 'project', 'entity', 'pattern', 'type'] as $name) {
             $resolver?->registerFile(
                 sprintf('https://elephentity.dev/schema/%s.json', $name),
                 sprintf('%s/%s.schema.json', self::RESOURCE_DIRECTORY, $name),

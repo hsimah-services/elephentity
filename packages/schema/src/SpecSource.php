@@ -17,8 +17,10 @@ final readonly class SpecSource
     {
     }
 
-    public function directoryFor(SpecKind $kind): string
+    public function directoryFor(SpecKind $kind): ?string
     {
-        return rtrim($this->root, '/') . '/' . $kind->directory();
+        $directory = $kind->directory();
+
+        return null === $directory ? null : rtrim($this->root, '/') . '/' . $directory;
     }
 }

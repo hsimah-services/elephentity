@@ -9,8 +9,7 @@ configure:
     label: Inventory Entry
     pluralLabel: Inventory
 storage:
-  driver: wordpress
-  table: clog_inventory
+  table: inventory
   handle: clog_inventory
 fields:
   name:

@@ -9,8 +9,7 @@ configure:
     label: Item
     pluralLabel: Items
 storage:
-  driver: wordpress
-  table: clog_item
+  table: item
   handle: clog_item
 fields:
   name:
