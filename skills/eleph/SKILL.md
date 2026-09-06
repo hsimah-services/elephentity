@@ -109,6 +109,7 @@ Say so plainly rather than working around it:
 
 ## Reference
 
+- `docs/GLOSSARY.md` in the framework repository — what every term means
 - `reference/spec-format.md` — every section, every key, and the JSON Schemas
 - `reference/commands.md` — the gates, what each catches, reading failures
 - `reference/bespoke-files.md` — what you implement, and what a good one looks like

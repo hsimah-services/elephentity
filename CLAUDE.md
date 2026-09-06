@@ -3,6 +3,7 @@
 An AI-native PHP framework that compiles human-readable specs into locked, signed
 business logic. Read [docs/PLAN.md](docs/PLAN.md) first — it carries every design
 decision and the reasoning behind it, and this file assumes it.
+[docs/GLOSSARY.md](docs/GLOSSARY.md) defines the vocabulary.
 
 ## Working in this repository
 

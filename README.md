@@ -9,6 +9,7 @@ The command is `eleph`; the PHP namespace is `Eleph\`.
 ## Start here
 
 - **[docs/PLAN.md](docs/PLAN.md)** — every design decision and the reasoning behind it
+- [docs/GLOSSARY.md](docs/GLOSSARY.md) — what every term means, and why
 - [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — laying out a project
 - [docs/CI.md](docs/CI.md) — the four gates
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — working on the framework itself
