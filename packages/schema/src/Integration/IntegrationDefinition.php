@@ -24,12 +24,14 @@ final readonly class IntegrationDefinition
     /**
      * @param array<string, ConfigParameter> $projectConfig Settings declared once, on the project.
      * @param array<string, ConfigParameter> $entityConfig  Settings each exposed entity supplies.
+     * @param array<string, ConfigParameter> $queryConfig   Settings a declared query supplies to be exposed.
      */
     public function __construct(
         public string $name,
         public string $description,
         public array $projectConfig = [],
         public array $entityConfig = [],
+        public array $queryConfig = [],
     ) {
     }
 }

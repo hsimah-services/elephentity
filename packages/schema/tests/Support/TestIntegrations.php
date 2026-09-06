@@ -32,6 +32,9 @@ final readonly class TestIntegrations
                     'singular' => new ConfigParameter('singular', ConfigType::String),
                     'plural' => new ConfigParameter('plural', ConfigType::String),
                 ],
+                queryConfig: [
+                    'field' => new ConfigParameter('field', ConfigType::String),
+                ],
             ),
         );
     }

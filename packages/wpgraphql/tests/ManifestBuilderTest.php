@@ -15,6 +15,7 @@ use Eleph\WPGraphQL\Manifest\MutationEntry;
 use Eleph\WPGraphQL\Manifest\TypeMapper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 #[CoversClass(ManifestBuilder::class)]
 #[CoversClass(TypeMapper::class)]
@@ -175,6 +176,35 @@ final class ManifestBuilderTest extends TestCase
         }
     }
 
+    public function testADeclaredQueryReachesTheRootOnlyIfItSaysSo(): void
+    {
+        // An entity being in the graph does not publish every finder it declares. A
+        // query written to back an admin screen should not become world-readable
+        // because the entity it reads is.
+        $queries = $this->manifest()->queries;
+
+        self::assertSame(['publishedPosts'], array_keys($queries));
+
+        $published = $queries['publishedPosts'];
+
+        self::assertSame('Post', $published->type);
+        self::assertTrue($published->isCollection, 'cardinality many becomes a connection');
+        self::assertSame('published', $published->query);
+        self::assertSame(['limit'], array_keys($published->args));
+    }
+
+    public function testPublishingAQueryThatReturnsAnUnexposedTypeIsRefused(): void
+    {
+        // Dropping it silently would leave a field missing from the API with nothing
+        // saying why.
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('returns Hidden, which is not exposed');
+
+        (new ManifestBuilder())->build(
+            $this->compile(__DIR__ . '/fixtures/unexposed-return'),
+        );
+    }
+
     public function testTheManifestIsDeterministic(): void
     {
         $first = (new ManifestBuilder())->build($this->schema());
@@ -186,6 +216,19 @@ final class ManifestBuilderTest extends TestCase
     private function manifest(): Manifest
     {
         return self::$manifest ??= (new ManifestBuilder())->build($this->schema());
+    }
+
+    private function compile(string $path): Schema
+    {
+        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))
+            ->compile(new SpecSource($path));
+
+        self::assertTrue($compiled->isSuccess(), implode(
+            "\n",
+            array_map(static fn ($e) => $e->describe(), $compiled->errors),
+        ));
+
+        return $compiled->schema();
     }
 
     private function schema(): Schema

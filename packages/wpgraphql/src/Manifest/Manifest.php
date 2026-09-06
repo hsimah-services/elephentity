@@ -19,12 +19,14 @@ final readonly class Manifest
      * @param array<string, EnumTypeEntry>   $enums
      * @param array<string, MutationEntry>   $mutations
      * @param array<string, RootFieldEntry>  $roots
+     * @param array<string, QueryFieldEntry> $queries
      */
     public function __construct(
         public array $objects = [],
         public array $enums = [],
         public array $mutations = [],
         public array $roots = [],
+        public array $queries = [],
     ) {
     }
 

@@ -14,6 +14,7 @@ use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Origin;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\ProjectDefinition;
+use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\Ir\StorageDefinition;
 use Eleph\Schema\Ir\TypeDefinition;
@@ -27,6 +28,7 @@ use Eleph\Schema\Spec\SchemaValidator;
 use Eleph\Schema\Spec\SectionParser;
 use Eleph\Schema\Spec\SpecKind;
 use Eleph\Schema\Spec\SpecLoader;
+use Eleph\Schema\Spec\SpecReader;
 
 /**
  * Compiles a directory of specs into the IR.
@@ -226,6 +228,42 @@ final readonly class SchemaCompiler
     }
 
     /**
+     * Validate each query's integration block once the project is known.
+     *
+     * The parser cannot do it: what a given integration accepts depends on the
+     * registry, and whether it is available depends on the project — neither of which
+     * exists when a pattern's sections are first read.
+     *
+     * @param array<string, QueryDefinition> $queries
+     * @param list<SpecError>                $errors
+     *
+     * @return array<string, QueryDefinition>
+     */
+    private function exposeQueries(
+        array $queries,
+        ProjectDefinition $project,
+        string $entityName,
+        string $file,
+        array &$errors,
+    ): array {
+        $resolver = new IntegrationResolver($this->integrations);
+        $exposed = [];
+
+        foreach ($queries as $queryName => $query) {
+            $exposed[$queryName] = $query->withIntegrations($resolver->forQuery(
+                [] === $query->integrations ? null : new SpecReader($query->integrations),
+                $project->integrations,
+                sprintf('%s::%s', $entityName, $queryName),
+                $file,
+                sprintf('/queries/%s/integrations', $queryName),
+                $errors,
+            ));
+        }
+
+        return $exposed;
+    }
+
+    /**
      * @return array<string, ConfigParameter>
      */
     private function configParameters(\Eleph\Schema\Spec\SpecReader $reader): array
@@ -380,6 +418,14 @@ final readonly class SchemaCompiler
 
             $sections = $merged['sections'];
 
+            $queries = $this->exposeQueries(
+                $sections->queries,
+                $project,
+                $name,
+                $spec->file,
+                $errors,
+            );
+
             $entities[$name] = new EntityDefinition(
                 name: $name,
                 storage: new StorageDefinition(
@@ -392,7 +438,7 @@ final readonly class SchemaCompiler
                 uses: $uses,
                 fields: $sections->fields,
                 edges: $sections->edges,
-                queries: $sections->queries,
+                queries: $queries,
                 actions: $sections->actions,
                 triggers: $sections->triggers,
                 config: $configuration,

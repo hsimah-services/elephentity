@@ -1,0 +1,16 @@
+entity: Shown
+integrations:
+  wpgraphql:
+    singular: Shown
+    plural: Showns
+storage:
+  table: shown
+queries:
+  find:
+    returns:
+      type: Hidden
+      cardinality: many
+    integrations:
+      wpgraphql:
+        field: findHidden
+    handler: true

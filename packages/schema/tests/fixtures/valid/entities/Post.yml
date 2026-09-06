@@ -49,6 +49,9 @@ queries:
     returns:
       type: Post
       cardinality: many
+    integrations:
+      wpgraphql:
+        field: publishedPosts
     handler: true
 actions:
   publish:

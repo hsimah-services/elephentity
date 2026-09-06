@@ -14,7 +14,8 @@ namespace Eleph\Schema\Ir;
 final readonly class QueryDefinition implements Contributed
 {
     /**
-     * @param array<string, ArgumentDefinition> $arguments
+     * @param array<string, ArgumentDefinition>   $arguments
+     * @param array<string, array<string, mixed>> $integrations Keyed by integration name.
      */
     public function __construct(
         public string $name,
@@ -22,7 +23,37 @@ final readonly class QueryDefinition implements Contributed
         public Origin $origin,
         public array $arguments = [],
         public ?string $description = null,
+        public array $integrations = [],
     ) {
+    }
+
+    /**
+     * Whether this query is published through an integration, and how.
+     *
+     * Separate from the entity's own exposure. An entity being in the graph does not
+     * mean every finder it declares belongs at the root — a query written for internal
+     * use should not become public by association.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function exposedVia(string $integration): ?array
+    {
+        return $this->integrations[$integration] ?? null;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $integrations
+     */
+    public function withIntegrations(array $integrations): self
+    {
+        return new self(
+            $this->name,
+            $this->returns,
+            $this->origin,
+            $this->arguments,
+            $this->description,
+            $integrations,
+        );
     }
 
     public function declaredIn(): Origin

@@ -39,6 +39,9 @@ final readonly class ManifestExporter
                     roots: [
                 %s
                     ],
+                    queries: [
+                %s
+                    ],
                 );
 
                 PHP,
@@ -47,6 +50,7 @@ final readonly class ManifestExporter
             $this->enums($manifest),
             $this->mutations($manifest),
             $this->roots($manifest),
+            $this->queries($manifest),
         );
     }
 
@@ -166,6 +170,33 @@ final readonly class ManifestExporter
                 $this->str($root->type),
                 $this->str($root->plural),
                 $this->str($root->entity),
+            );
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function queries(Manifest $manifest): string
+    {
+        $lines = [];
+
+        foreach ($manifest->queries as $query) {
+            $args = [];
+
+            foreach ($query->args as $name => $type) {
+                $args[] = sprintf('%s => %s', $this->str($name), $this->type($type));
+            }
+
+            $lines[] = sprintf(
+                "        %s => new QueryFieldEntry(\n            %s,\n            %s,\n            %s,\n            %s,\n            %s,\n            [%s],\n            %s,\n        ),",
+                $this->str($query->field),
+                $this->str($query->field),
+                $this->str($query->type),
+                $query->isCollection ? 'true' : 'false',
+                $this->str($query->entity),
+                $this->str($query->query),
+                implode(', ', $args),
+                $this->nullableStr($query->description),
             );
         }
 

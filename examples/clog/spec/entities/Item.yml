@@ -42,3 +42,15 @@ fields:
     description: Half of the default expiry; meaningless without the other half.
     nullable: true
     verify: true
+queries:
+  search:
+    description: Items whose name or barcode matches a term, for the table's filter box.
+    args:
+      term: { type: string }
+    returns:
+      type: Item
+      cardinality: many
+    integrations:
+      wpgraphql:
+        field: clogItemSearch
+    handler: true

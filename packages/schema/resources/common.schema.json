@@ -229,6 +229,9 @@
                         }
                     }
                 },
+                "integrations": {
+                    "$ref": "#/$defs/integrations"
+                },
                 "handler": {
                     "const": true
                 }

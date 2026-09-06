@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:4a166e43db6c564716235b9a62bc81af493962a2782cc41ac3812346e8aa969f
+ * digest: sha256:14313a4cfebe6a90c5e7961f2657d44f0afd51c176b2304e2c007a0ab3738d0d
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -167,5 +167,16 @@ return new Manifest(
         'ClogInventory' => new RootFieldEntry('ClogInventory', 'ClogInventoryEntries', 'Inventory'),
         'ClogItem' => new RootFieldEntry('ClogItem', 'ClogItems', 'Item'),
         'ClogLocation' => new RootFieldEntry('ClogLocation', 'ClogLocations', 'Location'),
+    ],
+    queries: [
+        'clogItemSearch' => new QueryFieldEntry(
+            'clogItemSearch',
+            'ClogItem',
+            true,
+            'Item',
+            'search',
+            ['term' => new GraphQLType('String', true, false)],
+            'Items whose name or barcode matches a term, for the table\'s filter box.',
+        ),
     ],
 );

@@ -138,6 +138,15 @@ is exposed. Skipping the first would let an entity widen the project's public su
 on its own; skipping the second would mean adding an entity silently publishes it. The
 extra lines are the feature.
 
+**Exposure is opt-in at three levels**, and each earns its place: the project says what
+it speaks, the entity says whether it is in the graph, and a declared query says whether
+it is published. Without the last, a finder written to back an admin screen would become
+world-readable because the entity it reads is.
+
+An exposed entity already gets a root connection from its `plural`, so no query is
+needed for "all of them". A published query with `cardinality: many` becomes its own
+connection; `one` becomes a plain field.
+
 **A parameter with no default and no permission to be null is required.** Applies to
 pattern configuration too. Without it a missing `singular` would resolve to null and
 fail somewhere far from the spec that omitted it.

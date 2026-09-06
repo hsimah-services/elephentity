@@ -175,6 +175,22 @@ queries:
 Generates a method on `PostFinder` and an interface for you to implement. Collection
 level only — traversing an edge is what `edges:` is for.
 
+A query reaches the API only if it says so, separately from the entity's own exposure:
+
+```yaml
+    integrations:
+      wpgraphql:
+        field: clogItemSearch
+```
+
+`cardinality: many` registers a connection — paging, cursors, `totalCount`; `one`
+registers a plain field. The field is named rather than derived, because gluing a
+plural to a query name produces `clogItemsLowStock`, which is what a generator writes
+and not what a person would.
+
+You do not need a query for "all of them": an exposed entity already gets a root
+connection from its `plural`.
+
 ## Actions
 
 ```yaml

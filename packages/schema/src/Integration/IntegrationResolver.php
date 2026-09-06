@@ -80,10 +80,51 @@ final readonly class IntegrationResolver
         string $file,
         array &$errors,
     ): array {
+        return $this->forScope($declared, $enabled, $entityName, $file, '/integrations', false, $errors);
+    }
+
+    /**
+     * Integrations a declared query is exposed through.
+     *
+     * Separate from the entity's own exposure: an entity being in the graph does not
+     * mean every finder it declares should be a root field. Publishing a query is its
+     * own decision.
+     *
+     * @param array<string, array<string, mixed>> $enabled
+     * @param list<SpecError>                     $errors
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function forQuery(
+        ?SpecReader $declared,
+        array $enabled,
+        string $subject,
+        string $file,
+        string $pointer,
+        array &$errors,
+    ): array {
+        return $this->forScope($declared, $enabled, $subject, $file, $pointer, true, $errors);
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $enabled
+     * @param list<SpecError>                     $errors
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function forScope(
+        ?SpecReader $declared,
+        array $enabled,
+        string $subject,
+        string $file,
+        string $base,
+        bool $queryScope,
+        array &$errors,
+    ): array {
         $resolved = [];
 
         foreach ($this->supplied($declared) as $name => $settings) {
-            $pointer = sprintf('/integrations/%s', $name);
+            $pointer = sprintf('%s/%s', $base, $name);
 
             if (!$this->registry->has($name)) {
                 $errors[] = new SpecError(
@@ -108,7 +149,7 @@ final readonly class IntegrationResolver
                     'integration.notEnabled',
                     sprintf(
                         '%s uses integration "%s", which the project does not enable. Add it to project.yml.',
-                        $entityName,
+                        $subject,
                         $name,
                     ),
                     $file,
@@ -118,8 +159,14 @@ final readonly class IntegrationResolver
                 continue;
             }
 
+            $definition = $this->registry->get($name);
+
+            if (null === $definition) {
+                continue;
+            }
+
             $resolved[$name] = $this->values->resolve(
-                $this->registry->get($name)->entityConfig ?? [],
+                $queryScope ? $definition->queryConfig : $definition->entityConfig,
                 $settings,
                 sprintf('Integration %s', $name),
                 $file,

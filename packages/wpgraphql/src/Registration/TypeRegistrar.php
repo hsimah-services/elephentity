@@ -6,6 +6,7 @@ namespace Eleph\WPGraphQL\Registration;
 
 use Eleph\WPGraphQL\Manifest\ConnectionEntry;
 use Eleph\WPGraphQL\Manifest\FieldEntry;
+use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
 
@@ -121,6 +122,18 @@ final readonly class TypeRegistrar
             );
         }
 
+        foreach ($this->manifest->queries as $query) {
+            if (!$query->isCollection) {
+                continue;
+            }
+
+            $configs[] = [
+                ...$this->connection('RootQuery', $query->type, $query->field, $query->description ?? ''),
+                // The query's own arguments sit alongside the paging ones WPGraphQL adds.
+                'connectionArgs' => $this->args($query->args),
+            ];
+        }
+
         return $configs;
     }
 
@@ -197,6 +210,37 @@ final readonly class TypeRegistrar
                 ],
             ];
 
+        }
+
+        foreach ($this->manifest->queries as $query) {
+            if ($query->isCollection) {
+                continue;
+            }
+
+            $configs[] = [
+                'name' => $query->field,
+                'field' => [
+                    'type' => $query->type,
+                    'description' => $query->description ?? '',
+                    'args' => $this->args($query->args),
+                ],
+            ];
+        }
+
+        return $configs;
+    }
+
+    /**
+     * @param array<string, GraphQLType> $args
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function args(array $args): array
+    {
+        $configs = [];
+
+        foreach ($args as $name => $type) {
+            $configs[$name] = ['type' => $type->toConfig()];
         }
 
         return $configs;

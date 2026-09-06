@@ -156,6 +156,9 @@ final readonly class SectionParser
                 origin: $origin,
                 arguments: $this->arguments($query),
                 description: $query->optionalString('description'),
+                // Raw for now: what a given integration accepts is only knowable once
+                // the compiler has the registry and the project's enabled set.
+                integrations: $this->rawIntegrations($query),
             );
         }
 
@@ -215,6 +218,21 @@ final readonly class SectionParser
         }
 
         return $triggers;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function rawIntegrations(SpecReader $reader): array
+    {
+        $raw = [];
+
+        foreach ($reader->reader('integrations')?->all() ?? [] as $name => $settings) {
+            /** @var array<string, mixed> $settings */
+            $raw[$name] = is_array($settings) ? $settings : [];
+        }
+
+        return $raw;
     }
 
     /**

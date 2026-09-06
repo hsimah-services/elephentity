@@ -9,6 +9,7 @@ use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
+use RuntimeException;
 
 /**
  * Compiles the schema into everything the GraphQL layer needs to register.
@@ -31,6 +32,7 @@ final readonly class ManifestBuilder
         $enums = [];
         $mutations = [];
         $roots = [];
+        $queries = [];
 
         foreach ($schema->types as $type) {
             if ($type->isEnum()) {
@@ -70,14 +72,19 @@ final readonly class ManifestBuilder
             foreach ($this->mutations($types, $entity, $name) as $mutation) {
                 $mutations[$mutation->name] = $mutation;
             }
+
+            foreach ($this->queries($schema, $types, $entity) as $query) {
+                $queries[$query->field] = $query;
+            }
         }
 
         ksort($objects);
         ksort($enums);
         ksort($mutations);
         ksort($roots);
+        ksort($queries);
 
-        return new Manifest($objects, $enums, $mutations, $roots);
+        return new Manifest($objects, $enums, $mutations, $roots, $queries);
     }
 
     private function object(
@@ -144,6 +151,57 @@ final readonly class ManifestBuilder
             $connections,
             $entity->description,
         );
+    }
+
+    /**
+     * @return list<QueryFieldEntry>
+     */
+    private function queries(Schema $schema, TypeMapper $types, EntityDefinition $entity): array
+    {
+        $published = [];
+
+        foreach ($entity->queries as $query) {
+            $exposure = $query->exposedVia(WpGraphQL::NAME);
+
+            if (null === $exposure) {
+                continue;
+            }
+
+            $returns = $schema->entity($query->returns->type);
+            $returnExposure = $returns?->exposedVia(WpGraphQL::NAME);
+
+            if (null === $returns || null === $returnExposure) {
+                // A published query returning a type nobody exposed has nothing to
+                // hand back. Silently dropping it would leave a field missing from the
+                // API with no explanation.
+                throw new RuntimeException(sprintf(
+                    '%s::%s is published to GraphQL but returns %s, which is not exposed. Expose it, or stop publishing the query.',
+                    $entity->name,
+                    $query->name,
+                    $query->returns->type,
+                ));
+            }
+
+            $args = [];
+
+            foreach ($query->arguments as $argument) {
+                $args[$argument->name] = $types->forArgument($argument);
+            }
+
+            $published[] = new QueryFieldEntry(
+                field: is_string($exposure['field'] ?? null) ? $exposure['field'] : $query->name,
+                type: is_string($returnExposure['singular'] ?? null)
+                    ? $returnExposure['singular']
+                    : $returns->name,
+                isCollection: Cardinality::Many === $query->returns->cardinality,
+                entity: $entity->name,
+                query: $query->name,
+                args: $args,
+                description: $query->description,
+            );
+        }
+
+        return $published;
     }
 
     /**

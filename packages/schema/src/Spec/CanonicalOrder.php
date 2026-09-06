@@ -31,7 +31,7 @@ final readonly class CanonicalOrder
         'field' => ['type', 'description', 'required', 'nullable', 'default', 'unique', 'indexed', 'immutable', 'maxLength', 'values', 'verify'],
         'edge' => ['to', 'cardinality', 'description', 'inverse', 'onDelete'],
         'inverse' => ['name', 'unique'],
-        'query' => ['description', 'args', 'returns', 'handler'],
+        'query' => ['description', 'args', 'returns', 'integrations', 'handler'],
         'returns' => ['type', 'cardinality'],
         'action' => ['description', 'args', 'writes', 'handler'],
         'writes' => ['fields', 'edges'],

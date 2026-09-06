@@ -176,6 +176,10 @@ code can stand between the two.
 deliberately without implementations: the spec declares the obligation, the generator
 states it exactly, and the application does not boot until something discharges it.
 
+**Published query.** A declared query that has opted into an integration, appearing at
+the root under a name the spec gives it. Distinct from the entity being exposed —
+publishing a query is its own decision.
+
 **Root field.** The way into the graph — `clogItem(id:)` and `clogItems(…)`. Without
 them every entity would be reachable only by traversing from something else, and
 nothing would be the something else.

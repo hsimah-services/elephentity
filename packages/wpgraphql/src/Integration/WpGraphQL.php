@@ -56,6 +56,16 @@ final readonly class WpGraphQL
                     description: 'Plural for root fields and connections, e.g. ClogItems.',
                 ),
             ],
+            queryConfig: [
+                // Named rather than derived. Gluing the plural to the query name gives
+                // `clogItemsLowStock`, which is what a generator produces and not what
+                // a person would have written.
+                'field' => new ConfigParameter(
+                    name: 'field',
+                    type: ConfigType::String,
+                    description: 'Root field name, e.g. clogItemsLowStock.',
+                ),
+            ],
         );
     }
 }
