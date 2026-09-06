@@ -14,21 +14,14 @@ constructors so containers autowire them without per-entity service definitions.
 
 ---
 
-## 2. Enums stayed outside the entity folders
+## 2. Enums stayed outside the entity folders ✅ RESOLVED 2026-09-06
 
-**Asked for:** `generated/Item/Item*.php`.
+**Settled:** keep them in `generated/Enum/` and `generated/Type/`. The free-promotion
+property is worth more than a tidier `Item/` folder, and jump-to-definition makes the
+split invisible in practice.
 
-**Done:** entity-specific things moved under `Item/`, including `Item/Contract/`. Enums
-did **not** — declared *and* inline enums both stay in `generated/Enum/`.
-
-**Why.** The plan documents a property worth keeping: promoting an inline enum
-(`values: [a, b]` on a field) into a declared type (`types/Foo.yml`) is a no-op in the
-generated code, because both produce the same fully-qualified name. Filing inline enums
-under their entity would break that — promotion would become a class move and a
-breaking change for every consumer.
-
-Type processors also stayed in `generated/Type/`, since `Money` belongs to no single
-entity.
+The one cost: `Enum` and `Type` are now reserved entity names, which the compiler
+rejects rather than letting the collision surface as a confusing tree.
 
 ---
 

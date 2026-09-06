@@ -66,6 +66,13 @@ final class CompilationFailureTest extends TestCase
         self::assertContains('action.unknownWrite', $codes);
     }
 
+    public function testAnEntityCannotTakeANameTheGeneratedTreeAlreadyUses(): void
+    {
+        // Enum/ and Type/ are folders in the generated tree, so an entity of either
+        // name would file its own classes somewhere that means something else.
+        self::assertContains('entity.reservedName', $this->codesFor('reserved'));
+    }
+
     public function testAFailedCompilationExposesNoSchema(): void
     {
         self::assertFalse($this->compile('cycle')->isSuccess());

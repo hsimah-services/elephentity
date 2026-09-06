@@ -38,6 +38,9 @@ most 20 characters, because WP silently truncates longer slugs at registration.
 
 Every entity has an implicit `id`. Declaring one is an error.
 
+`Enum` and `Type` are reserved entity names — the generated tree uses folders of those
+names for every enum and every type processor in the schema.
+
 ## Fields
 
 ```yaml

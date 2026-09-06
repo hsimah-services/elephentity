@@ -37,12 +37,22 @@ final readonly class SemanticValidator
     private const DEFAULT_STRING_LENGTH = 255;
 
     /**
+     * Entity names the generated tree already uses for its shared folders.
+     *
+     * `Enum/` holds every enum and `Type/` every processor, so an entity of either
+     * name would land its own classes in a folder that means something else. Both are
+     * too vague to be a real entity anyway, so refusing them costs nothing.
+     */
+    private const RESERVED_ENTITY_NAMES = ['Enum', 'Type'];
+
+    /**
      * @return list<SpecError>
      */
     public function validate(Schema $schema): array
     {
         $errors = [];
 
+        $this->checkEntityNames($schema, $errors);
         $this->checkTables($schema, $errors);
         $this->checkTypes($schema, $errors);
 
@@ -62,6 +72,29 @@ final readonly class SemanticValidator
         }
 
         return $errors;
+    }
+
+    /**
+     * @param list<SpecError> $errors
+     */
+    private function checkEntityNames(Schema $schema, array &$errors): void
+    {
+        foreach ($schema->entities as $entity) {
+            if (!in_array($entity->name, self::RESERVED_ENTITY_NAMES, true)) {
+                continue;
+            }
+
+            $errors[] = new SpecError(
+                'entity.reservedName',
+                sprintf(
+                    '"%s" is reserved: the generated tree uses a folder of that name for every %s in the schema.',
+                    $entity->name,
+                    'Enum' === $entity->name ? 'enum' : 'type processor',
+                ),
+                $entity->sourceFile,
+                '/entity',
+            );
+        }
     }
 
     /**
