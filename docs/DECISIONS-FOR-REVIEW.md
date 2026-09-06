@@ -1,8 +1,8 @@
 # Decisions made without you
 
 Written 2026-09-05, overnight, against the instruction to assume where necessary and
-flag it. Each of these could reasonably have gone the other way. Nothing here is
-load-bearing enough that reversing it is expensive.
+flag it. Reviewed 2026-09-06: two changed, two stood, three parked until real use
+supplies the evidence to decide them.
 
 ---
 
@@ -37,60 +37,46 @@ that a project-wide "what is unimplemented?" needs a glob — `ls generated/*/Co
 
 ---
 
-## 4. Skills ship in `skills/`, symlinked into `.claude/skills/`
+## 4. Skills ship in `skills/`, symlinked into `.claude/skills/` ⏸ DEFERRED 2026-09-06
 
-**Done:** canonical files live in `skills/`, so they ship inside the Composer package
-and a consumer copies them. This repository symlinks `.claude/skills/eleph` →
-`../../skills/eleph` so they are live here too.
+**Settled for now:** leave the arrangement as it is. How skills should be distributed
+and kept current is not answerable in the abstract — real use will show where the
+friction is, and that is when to decide.
 
-**If the symlinks do not resolve** in your Claude Code setup, replace them with copies
-— but then remember they are copies.
-
-**Two skills, deliberately.** `eleph` is for working in a project that uses the
-framework; `eleph-spec-author` is for turning a description into a spec. They have
-different triggers and different failure modes, and one combined skill would load a
-lot of irrelevant context in both cases.
+Two things to watch when it does: whether a copied skill going stale actually bites,
+and whether both skills reliably load (one turn listed only `eleph`).
 
 ---
 
-## 5. The interview has six blocking questions
+## 5. The interview has six blocking questions ⏸ DEFERRED 2026-09-06
 
-`skills/eleph-spec-author/reference/interview.md` splits questions into blocking, model
-shaping, and ask-last. The six blocking ones are: storage location, whether it needs a
-WordPress post type, what makes two rows the same, required-versus-nullable per field,
-what is write-once, and the direction and cardinality of each relationship.
+**Settled for now:** leave the tiers as written. Which questions genuinely block a spec
+is a call that needs evidence from writing specs, not from reasoning about writing
+them.
 
-**The judgement:** those are the six a spec cannot be written without, and — more to
-the point — the six that prose reliably omits. If you think something else belongs in
-that tier, it is one list to edit.
-
-I also told the skill to **raise model changes rather than absorb them**, using the
-barcode case as the worked example. An agent that quietly turns "barcodes" into a JSON
-blob has made a database decision on your behalf.
+The two things to watch: whether `indexed` belongs in the blocking tier (adding an
+index later is easy; realising you needed one is not), and whether "raise model changes
+rather than absorb them" interrupts too often to be worth it.
 
 ---
 
-## 6. "Evaluated" read as "gradeable by the gates"
+## 6. "Evaluated" read as "gradeable by the gates" ⏸ PARKED 2026-09-06
 
-You asked for "evaluated agent operable infrastructure". I have not built an eval
-harness. What I did instead is document, in `skills/eleph/reference/commands.md`, that
-**the four gates are a deterministic grader** for agent-written specs: `fmt` scores
-convention, `validate` scores meaning, `generate` scores producibility, `check` plus
-PHPStan score coherence.
+**Settled for now:** the four gates stay the grader. An eval suite is wanted long term
+— this is a deferral, not a rejection — but a corpus built before the interview has met
+real specs would enshrine our current guesses about modelling as the expected answers,
+and then defend them.
 
-A spec clearing all four is not necessarily the right model, but it is a real one, and
-anything less is objectively wrong with an error message saying why.
-
-**If you wanted an actual eval suite** — fixture descriptions in, expected specs out,
-scored automatically — that is a real piece of work and worth doing once the spec
-format settles. Say the word.
+Revisit once enough real specs exist that a corpus can be drawn from experience.
 
 ---
 
-## 7. Not done
+## 7. Not done ✅ REVIEWED 2026-09-06
 
-- ~~**No changes to `PostTypeRegistrar`.**~~ **Resolved 2026-09-06.** Registration
-  arguments now come from pattern configuration, and `supports` defaults to empty —
-  so the post row is a projection by default rather than an editable copy.
-- **No GraphQL root query fields.** Recorded as an open question in the plan.
-- **No changes to the clog spec** beyond the single-barcode change you asked for.
+- ~~**No changes to `PostTypeRegistrar`.**~~ **Resolved.** Registration arguments now
+  come from pattern configuration, and `supports` defaults to empty — so the post row
+  is a projection by default rather than an editable copy.
+- ~~**No changes to the clog spec.**~~ **Resolved:** one barcode per item.
+- **No GraphQL root query fields.** Stands, and is the largest remaining hole in the
+  vertical slice: entities can be mutated through the generated API but not fetched.
+  Tracked in [PLAN.md](PLAN.md) §16 as a gap rather than a judgement call.
