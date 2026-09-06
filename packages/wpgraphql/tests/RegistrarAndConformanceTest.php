@@ -58,16 +58,54 @@ final class RegistrarAndConformanceTest extends TestCase
 
     public function testConnectionsAreRegisteredFromAndToTheRightTypes(): void
     {
-        $configs = (new TypeRegistrar($this->manifest()))->connectionConfigs();
+        $comments = $this->connection('comments');
 
-        $comments = array_values(array_filter(
-            $configs,
-            static fn (array $config): bool => 'comments' === $config['fromFieldName'],
-        ));
+        self::assertSame('Post', $comments['fromType']);
+        self::assertSame('Comment', $comments['toType']);
+    }
 
-        self::assertCount(1, $comments);
-        self::assertSame('Post', $comments[0]['fromType']);
-        self::assertSame('Comment', $comments[0]['toType']);
+    public function testARootCollectionIsAConnectionRatherThanAList(): void
+    {
+        // A table needs to page and to say "1-20 of 347". A list_of with first/after
+        // args would offer the arguments and neither of the answers.
+        $posts = $this->connection('posts');
+
+        self::assertSame('RootQuery', $posts['fromType']);
+        self::assertSame('Post', $posts['toType']);
+    }
+
+    public function testEveryConnectionCarriesATotalCount(): void
+    {
+        // WPGraphQL supplies pageInfo, edges and nodes; not this. The lazy query counts
+        // without hydrating, so it costs one query rather than the whole set.
+        foreach (['posts', 'comments'] as $field) {
+            $fields = $this->connection($field)['connectionFields'];
+
+            self::assertIsArray($fields);
+            self::assertArrayHasKey('totalCount', $fields);
+        }
+    }
+
+    public function testRootFieldsCoverBothOneAndMany(): void
+    {
+        $names = array_column((new TypeRegistrar($this->manifest()))->rootFieldConfigs(), 'name');
+
+        self::assertContains('post', $names, 'one by id');
+        self::assertNotContains('posts', $names, 'the collection is a connection, not a field');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function connection(string $field): array
+    {
+        foreach ((new TypeRegistrar($this->manifest()))->connectionConfigs() as $config) {
+            if ($field === $config['fromFieldName']) {
+                return $config;
+            }
+        }
+
+        self::fail(sprintf('No connection registered for "%s".', $field));
     }
 
     public function testConformanceFailsLoudlyWhenTheEntityClassIsMissing(): void

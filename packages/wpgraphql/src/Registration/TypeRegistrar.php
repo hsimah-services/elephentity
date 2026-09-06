@@ -89,6 +89,12 @@ final readonly class TypeRegistrar
     }
 
     /**
+     * Connections, from an entity and from the root alike.
+     *
+     * A root collection is a connection rather than a list. A table needs to page and
+     * to say "1-20 of 347", and a `list_of` with `first`/`after` args offers neither —
+     * the arguments would be there and mean nothing.
+     *
      * @return list<array<string, mixed>>
      */
     public function connectionConfigs(): array
@@ -97,16 +103,47 @@ final readonly class TypeRegistrar
 
         foreach ($this->manifest->objects as $object) {
             foreach ($object->connections as $connection) {
-                $configs[] = [
-                    'fromType' => $connection->fromType,
-                    'toType' => $connection->toType,
-                    'fromFieldName' => $connection->name,
-                    'description' => $connection->description ?? '',
-                ];
+                $configs[] = $this->connection(
+                    $connection->fromType,
+                    $connection->toType,
+                    $connection->name,
+                    $connection->description ?? '',
+                );
             }
         }
 
+        foreach ($this->manifest->roots as $root) {
+            $configs[] = $this->connection(
+                'RootQuery',
+                $root->type,
+                $root->collection(),
+                sprintf('Every %s.', $root->type),
+            );
+        }
+
         return $configs;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function connection(string $from, string $to, string $field, string $description): array
+    {
+        return [
+            'fromType' => $from,
+            'toType' => $to,
+            'fromFieldName' => $field,
+            'description' => $description,
+            // WPGraphQL supplies pageInfo, edges and nodes; totalCount it does not.
+            // A table wants it, and the lazy query counts without hydrating, so it
+            // costs one query rather than the whole set.
+            'connectionFields' => [
+                'totalCount' => [
+                    'type' => 'Int',
+                    'description' => 'How many match, ignoring pagination.',
+                ],
+            ],
+        ];
     }
 
     /**
@@ -139,11 +176,10 @@ final readonly class TypeRegistrar
     }
 
     /**
-     * The way in.
+     * The way in, for a single entity by id.
      *
-     * Without these the graph has types and no entry point: every entity would be
-     * reachable only by traversing from something else, and nothing would be the
-     * something else.
+     * Its collection counterpart is registered as a connection instead — see
+     * connectionConfigs() — because a table needs paging and a total, not a list.
      *
      * @return list<array{name: string, field: array<string, mixed>}>
      */
@@ -161,17 +197,6 @@ final readonly class TypeRegistrar
                 ],
             ];
 
-            $configs[] = [
-                'name' => $root->collection(),
-                'field' => [
-                    'type' => ['list_of' => $root->type],
-                    'description' => sprintf('Every %s.', $root->type),
-                    'args' => [
-                        'first' => ['type' => 'Int'],
-                        'after' => ['type' => 'String'],
-                    ],
-                ],
-            ];
         }
 
         return $configs;
