@@ -25,15 +25,16 @@ rejects rather than letting the collision surface as a confusing tree.
 
 ---
 
-## 3. `Contract/` nests inside each entity
+## 3. `Contract/` nests inside each entity ✅ RESOLVED 2026-09-06
 
-**Done:** `generated/Item/Contract/ItemPriceVerifier.php`, rather than a top-level
-`Contract/` tree.
+**Settled:** keep it nested, keep the name. "What do I owe this entity?" is the
+question people are actually holding when they open a folder; the project-wide view is
+really "does it boot?", which the boot-time error already answers by listing every
+missing interface at once.
 
-**Why.** It makes "what do I owe this entity?" answerable by listing one directory,
-which is exactly the question the `eleph` skill teaches an agent to ask. The cost is
-that a project-wide "what is unimplemented?" needs a glob — `ls generated/*/Contract/`
-— rather than one listing. That felt like the better trade, but it is a trade.
+Worth restating, since the name invites the wrong reading: `Contract/` holds the
+**generated interfaces**, not your implementations. Those live wherever you like in
+`src/`.
 
 ---
 
