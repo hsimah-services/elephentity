@@ -21,6 +21,10 @@ use Eleph\Schema\Spec\SpecReader;
  */
 final readonly class ConfigResolver
 {
+    public function __construct(private ConfigValues $values = new ConfigValues())
+    {
+    }
+
     /**
      * @param list<PatternDefinition> $patterns The entity's applied patterns.
      * @param list<SpecError>         $errors
@@ -64,29 +68,14 @@ final readonly class ConfigResolver
 
         $supplied = $this->supplied($patterns, $configure, $declaredBy, $entityName, $entityFile, $errors);
 
-        $resolved = [];
-
-        foreach ($declared as $name => $parameter) {
-            if (array_key_exists($name, $supplied)) {
-                $resolved[$name] = $supplied[$name];
-
-                continue;
-            }
-
-            if ($parameter->hasDefault) {
-                $resolved[$name] = $parameter->default;
-
-                continue;
-            }
-
-            if ($parameter->nullable) {
-                $resolved[$name] = null;
-            }
-        }
-
-        ksort($resolved);
-
-        return $resolved;
+        return $this->values->resolve(
+            $declared,
+            $supplied,
+            $entityName,
+            $entityFile,
+            '/configure',
+            $errors,
+        );
     }
 
     /**
@@ -143,43 +132,12 @@ final readonly class ConfigResolver
                 $pointer = sprintf('/configure/%s/%s', $patternName, $key);
                 $parameter = $applied[$patternName]->config[$key] ?? null;
 
-                if (null === $parameter) {
-                    $errors[] = new SpecError(
-                        'config.unknown',
-                        sprintf(
-                            'Pattern %s declares no configuration "%s". It accepts: %s.',
-                            $patternName,
-                            $key,
-                            [] === $applied[$patternName]->config
-                                ? 'nothing'
-                                : implode(', ', array_keys($applied[$patternName]->config)),
-                        ),
-                        $entityFile,
-                        $pointer,
-                    );
-
-                    continue;
-                }
-
-                if ($declaredBy[$key] !== $patternName) {
+                if (null !== $parameter && ($declaredBy[$key] ?? null) !== $patternName) {
                     // Reachable only alongside a collision, which is already reported.
                     continue;
                 }
 
-                if (!$parameter->accepts($value)) {
-                    $errors[] = new SpecError(
-                        'config.invalidValue',
-                        sprintf(
-                            'Configuration "%s" expects %s.',
-                            $key,
-                            $parameter->describeExpectation(),
-                        ),
-                        $entityFile,
-                        $pointer,
-                    );
-
-                    continue;
-                }
+                unset($pointer);
 
                 $supplied[$key] = $value;
             }

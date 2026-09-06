@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Tests;
 
+use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\MutationEntry;
@@ -131,6 +133,48 @@ final class ManifestBuilderTest extends TestCase
         self::assertArrayNotHasKey('status', $publish->inputs);
     }
 
+    public function testOnlyEntitiesThatOptInAppearInTheGraph(): void
+    {
+        // Every fixture entity opts in, so prove the gate the other way: an entity
+        // that says nothing has no type, no root field and no mutations.
+        $manifest = $this->manifest();
+
+        self::assertSame(array_keys($manifest->objects), array_keys($manifest->roots));
+
+        foreach ($manifest->objects as $object) {
+            self::assertNotNull(
+                $this->schema()->entity($object->entity)?->exposedVia(WpGraphQL::NAME),
+                $object->entity,
+            );
+        }
+    }
+
+    public function testRootFieldsAreCamelCasedFromTheSuppliedNames(): void
+    {
+        // The way in. Both names come from the spec: deriving the plural would mean
+        // pluralising, which the generator does nowhere else.
+        $root = $this->manifest()->roots['Post'];
+
+        self::assertSame('post', $root->single());
+        self::assertSame('posts', $root->collection());
+        self::assertSame('Post', $root->entity);
+    }
+
+    public function testTheRealIntegrationStillMatchesWhatTheSharedFixtureAssumes(): void
+    {
+        // packages/schema cannot depend on this package, so its tests restate the
+        // shape of this definition. Adding a required key there would break the
+        // fixture mysteriously; this makes it break here instead.
+        self::assertSame(
+            ['singular', 'plural'],
+            array_keys(WpGraphQL::definition()->entityConfig),
+        );
+
+        foreach (WpGraphQL::definition()->entityConfig as $parameter) {
+            self::assertTrue($parameter->isRequired(), $parameter->name);
+        }
+    }
+
     public function testTheManifestIsDeterministic(): void
     {
         $first = (new ManifestBuilder())->build($this->schema());
@@ -150,7 +194,7 @@ final class ManifestBuilderTest extends TestCase
             return self::$schema;
         }
 
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))->compile(
             new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
         );
 

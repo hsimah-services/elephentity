@@ -8,6 +8,10 @@ configure:
     adminMenu: clog
     label: Item
     pluralLabel: Items
+integrations:
+  wpgraphql:
+    singular: ClogItem
+    plural: ClogItems
 storage:
   table: item
   handle: clog_item

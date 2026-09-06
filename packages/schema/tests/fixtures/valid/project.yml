@@ -1,3 +1,5 @@
 project: Fixture
 storage:
   driver: wordpress
+integrations:
+  wpgraphql: {}

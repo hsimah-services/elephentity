@@ -26,6 +26,9 @@
         "configure": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/configure"
         },
+        "integrations": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/integrations"
+        },
         "storage": {
             "allOf": [
                 {

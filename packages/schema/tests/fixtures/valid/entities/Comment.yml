@@ -1,4 +1,8 @@
 entity: Comment
+integrations:
+  wpgraphql:
+    singular: Comment
+    plural: Comments
 storage:
   table: phe_comment
 fields:

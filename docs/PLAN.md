@@ -120,6 +120,28 @@ makes patterns sealed, and it is recorded here so it stays decided.
 namespaces out of *specs* is load bearing; the division is that `eleph.json` says where
 output goes and `project.yml` says what the project is.
 
+### Integrations
+
+An integration exposes an entity to an external system. It is **not** a pattern, and
+the difference is what they contribute: a pattern is a fragment of an entity spec,
+adding fields and edges and actions; an integration adds no structure, only the
+settings the exposure needs.
+
+**Defined in PHP by the package that provides it.** The keys `wpgraphql` accepts are a
+property of `wpgraphql`, not a choice a project makes, so they are declared as an
+`IntegrationDefinition` and the CLI — the only layer that knows which packages are
+installed — assembles the registry. `packages/schema` validates `singular` against that
+declaration while knowing nothing about GraphQL.
+
+**Opt-in twice.** The project declares what it speaks; each entity declares whether it
+is exposed. Skipping the first would let an entity widen the project's public surface
+on its own; skipping the second would mean adding an entity silently publishes it. The
+extra lines are the feature.
+
+**A parameter with no default and no permission to be null is required.** Applies to
+pattern configuration too. Without it a missing `singular` would resolve to null and
+fail somewhere far from the spec that omitted it.
+
 ### Packaging: a Composer library
 
 Elephentity ships as a Composer library consumed by a thin WordPress plugin — **not** as a
@@ -956,10 +978,6 @@ schema format we have — better than inventing a `Post` example.
 
 ## 16. Open questions
 
-- **Root query fields.** The GraphQL manifest registers object types, enums and
-  mutations, but no entry points — a declared `queries:` block generates an injectable
-  PHP finder that nothing exposes. As it stands there is no way to fetch an entity
-  through the generated API. Found by porting the clog post types.
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.

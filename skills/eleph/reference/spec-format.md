@@ -43,6 +43,40 @@ It is deliberately shallow. It may **not** declare patterns or fields applied to
 entity — that would mean reading an entity spec no longer tells you what that entity
 has, which is the same reasoning that makes patterns sealed.
 
+## Integrations
+
+An integration exposes an entity to an external system. Distinct from a pattern, and
+the difference is what they contribute: a pattern adds fields, edges and actions; an
+integration adds no structure at all, only settings for the exposure.
+
+Its permitted keys are declared **in PHP by the package providing it**, not as user
+YAML — the keys are a property of the integration rather than a choice the project
+makes. `eleph validate` checks against whatever is installed.
+
+Opt-in twice. The project says what it speaks:
+
+```yaml
+# spec/project.yml
+integrations:
+  wpgraphql:            # or with settings: { rootQueries: false }
+```
+
+and each entity says whether it is exposed, and how:
+
+```yaml
+# spec/entities/Post.yml
+integrations:
+  wpgraphql:
+    singular: ClogItem
+    plural: ClogItems
+```
+
+An entity that says nothing is not exposed. Adding an entity should never silently
+widen a public API, so the extra two lines are the point rather than a cost.
+
+`wpgraphql` requires both names because nothing pluralises on your behalf — the same
+rule as edge inverses, and "Inventory Entry" / "Inventory" is why.
+
 ## Entity
 
 ```yaml

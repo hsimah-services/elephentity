@@ -16,10 +16,14 @@ namespace Eleph\Schema\Ir;
  */
 final readonly class ProjectDefinition
 {
+    /**
+     * @param array<string, array<string, mixed>> $integrations Keyed by integration name.
+     */
     public function __construct(
         public string $name,
         public string $driver,
         public string $sourceFile,
+        public array $integrations = [],
         /**
          * Prepended to every entity's table.
          *
@@ -29,5 +33,10 @@ final readonly class ProjectDefinition
         public string $tablePrefix = '',
         public ?string $description = null,
     ) {
+    }
+
+    public function speaks(string $integration): bool
+    {
+        return array_key_exists($integration, $this->integrations);
     }
 }

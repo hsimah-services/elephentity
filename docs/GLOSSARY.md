@@ -49,6 +49,12 @@ reading one file no longer tells you what a field is.
 **Declared type.** A value type in `types/`, aliasing exactly one primitive. Either an
 **enum** (it has `values:`) or a **value type** (it has `processors: true`).
 
+**Integration.** An external system an entity can be exposed to — `wpgraphql` today.
+Unlike a pattern it contributes no structure, only the settings the exposure needs, and
+its permitted keys are declared in PHP by the package providing it rather than in user
+YAML. Opt-in twice: the project declares what it speaks, each entity declares whether
+it is exposed.
+
 **Configuration.** Parameters a pattern declares with `config:` and each entity supplies
 with `configure:`. The compiler validates values against the pattern's own declaration,
 which is what lets a WordPress pattern carry WordPress settings without the core
@@ -169,6 +175,10 @@ code can stand between the two.
 **Contract.** The interfaces *you* implement, in `Item/Contract/`. Generated, but
 deliberately without implementations: the spec declares the obligation, the generator
 states it exactly, and the application does not boot until something discharges it.
+
+**Root field.** The way into the graph — `clogItem(id:)` and `clogItems(…)`. Without
+them every entity would be reachable only by traversing from something else, and
+nothing would be the something else.
 
 **Manifest.** The compiled GraphQL surface — object types, enums, connections and
 mutations — written as PHP that rebuilds it, so it type-checks and its diff reads as a

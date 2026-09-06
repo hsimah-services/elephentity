@@ -401,6 +401,23 @@
             "additionalProperties": {
                 "type": "object"
             }
+        },
+        "integrations": {
+            "type": "object",
+            "description": "Integrations, keyed by name. Their permitted keys are declared by the package providing each one, not here, so this schema cannot check them \u2014 the compiler does.",
+            "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*$"
+            },
+            "additionalProperties": {
+                "type": [
+                    "object",
+                    "null",
+                    "array"
+                ],
+                "maxItems": 0,
+                "description": "Settings for this integration, or nothing to enable it with defaults. An empty mapping is permitted as an array because PHP cannot tell {} from [] \u2014 maxItems keeps that to the empty case."
+            }
         }
     }
 }

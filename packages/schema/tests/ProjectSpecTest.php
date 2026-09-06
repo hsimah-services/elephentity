@@ -8,6 +8,7 @@ use Eleph\Schema\Error\CompilationResult;
 use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Tests\Support\TestIntegrations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -63,7 +64,7 @@ final class ProjectSpecTest extends TestCase
 
     private function compile(string $fixture): CompilationResult
     {
-        return (new SchemaCompiler())->compile(
+        return (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
             new SpecSource(__DIR__ . '/fixtures/' . $fixture),
         );
     }

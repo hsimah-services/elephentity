@@ -7,6 +7,7 @@ namespace Eleph\WordPress\Tests;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Tests\Support\TestIntegrations;
 use Eleph\WordPress\Integrity\OrphanGuard;
 use Eleph\WordPress\Registration\PostTypeRegistrar;
 use Eleph\WordPress\Sql\Naming;
@@ -88,7 +89,7 @@ final class WordPressIntegrationTest extends TestCase
             return self::$schema;
         }
 
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
             new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
         );
 

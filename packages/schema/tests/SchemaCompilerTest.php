@@ -11,6 +11,7 @@ use Eleph\Schema\Ir\RelationKind;
 use Eleph\Schema\Ir\TriggerPhase;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Tests\Support\TestIntegrations;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
@@ -118,7 +119,7 @@ final class SchemaCompilerTest extends TestCase
 
     private function compile(string $fixture): CompilationResult
     {
-        return (new SchemaCompiler())->compile(
+        return (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
             new SpecSource(__DIR__ . '/fixtures/' . $fixture),
         );
     }

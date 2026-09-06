@@ -1,4 +1,8 @@
 entity: Tag
+integrations:
+  wpgraphql:
+    singular: Tag
+    plural: Tags
 storage:
   table: phe_tag
 fields:

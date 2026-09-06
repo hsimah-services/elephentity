@@ -1,0 +1,7 @@
+entity: A
+integrations:
+  wpgraphql:
+    singular: A
+    nope: 1
+storage:
+  table: a

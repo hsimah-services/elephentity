@@ -36,6 +36,9 @@ final readonly class ManifestExporter
                     mutations: [
                 %s
                     ],
+                    roots: [
+                %s
+                    ],
                 );
 
                 PHP,
@@ -43,6 +46,7 @@ final readonly class ManifestExporter
             $this->objects($manifest),
             $this->enums($manifest),
             $this->mutations($manifest),
+            $this->roots($manifest),
         );
     }
 
@@ -149,6 +153,23 @@ final readonly class ManifestExporter
         return [] === $entries
             ? '[]'
             : sprintf("[\n%s\n            ]", implode("\n", $entries));
+    }
+
+    private function roots(Manifest $manifest): string
+    {
+        $lines = [];
+
+        foreach ($manifest->roots as $root) {
+            $lines[] = sprintf(
+                '        %s => new RootFieldEntry(%s, %s, %s),',
+                $this->str($root->type),
+                $this->str($root->type),
+                $this->str($root->plural),
+                $this->str($root->entity),
+            );
+        }
+
+        return implode("\n", $lines);
     }
 
     private function type(GraphQLType $type): string

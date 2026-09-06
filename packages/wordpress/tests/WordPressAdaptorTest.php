@@ -12,6 +12,7 @@ use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Tests\Support\TestIntegrations;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\FieldMap;
 use Eleph\WordPress\Sql\Naming;
@@ -170,7 +171,7 @@ final class WordPressAdaptorTest extends TestCase
 
     private function adaptor(FakeDatabase $database): WordPressAdaptor
     {
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
             new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
         );
 

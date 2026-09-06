@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Tests;
 
+use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\WPGraphQL\Conformance\ConformanceChecker;
+use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
@@ -116,7 +118,7 @@ final class RegistrarAndConformanceTest extends TestCase
             return self::$manifest;
         }
 
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))->compile(
             new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
         );
 

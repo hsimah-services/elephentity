@@ -1,0 +1,7 @@
+entity: Shown
+integrations:
+  wpgraphql:
+    singular: Shown
+    plural: Showns
+storage:
+  table: shown

@@ -9,6 +9,7 @@ use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\GeneratorConfig;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Tests\Support\TestIntegrations;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
@@ -293,7 +294,7 @@ final class CodegenTest extends TestCase
      */
     private function compileAndGenerate(): array
     {
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
             new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
         );
 

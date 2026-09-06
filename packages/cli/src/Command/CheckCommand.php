@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\Cli\Command;
 
 use Closure;
+use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Codegen\GeneratorConfig;
 use Eleph\Codegen\Naming\Names;
@@ -81,7 +82,7 @@ final class CheckCommand extends Command
 
         $config = ProjectConfig::load($directory);
 
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: Integrations::registry()))->compile(
             new SpecSource(rtrim($directory, '/') . '/' . $config->specDirectory),
         );
 

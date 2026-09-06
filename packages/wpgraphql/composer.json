@@ -7,7 +7,8 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "self.version"
+        "elephentity/runtime": "self.version",
+        "elephentity/schema": "self.version"
     },
     "require-dev": {
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0",

@@ -18,11 +18,18 @@ final readonly class Manifest
      * @param array<string, ObjectTypeEntry> $objects
      * @param array<string, EnumTypeEntry>   $enums
      * @param array<string, MutationEntry>   $mutations
+     * @param array<string, RootFieldEntry>  $roots
      */
     public function __construct(
         public array $objects = [],
         public array $enums = [],
         public array $mutations = [],
+        public array $roots = [],
     ) {
+    }
+
+    public function isEmpty(): bool
+    {
+        return [] === $this->objects;
     }
 }

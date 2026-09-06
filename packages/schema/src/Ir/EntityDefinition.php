@@ -16,7 +16,8 @@ final readonly class EntityDefinition
      * @param array<string, QueryDefinition>   $queries
      * @param array<string, ActionDefinition>  $actions
      * @param array<string, TriggerDefinition> $triggers Ordered; declaration order is execution order.
-     * @param array<string, mixed>             $config   Pattern configuration, resolved and defaulted.
+     * @param array<string, mixed>                $config       Pattern configuration, resolved and defaulted.
+     * @param array<string, array<string, mixed>> $integrations Keyed by integration name.
      */
     public function __construct(
         public string $name,
@@ -30,7 +31,21 @@ final readonly class EntityDefinition
         public array $actions = [],
         public array $triggers = [],
         public array $config = [],
+        public array $integrations = [],
     ) {
+    }
+
+    /**
+     * Whether this entity is exposed through an integration, and how.
+     *
+     * Opt-in: an entity says nothing and is not exposed, which is the right default for
+     * anything that widens a public surface.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function exposedVia(string $integration): ?array
+    {
+        return $this->integrations[$integration] ?? null;
     }
 
     public function field(string $name): ?FieldDefinition

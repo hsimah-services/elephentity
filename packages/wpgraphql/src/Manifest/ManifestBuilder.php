@@ -8,6 +8,7 @@ use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
+use Eleph\WPGraphQL\Integration\WpGraphQL;
 
 /**
  * Compiles the schema into everything the GraphQL layer needs to register.
@@ -29,6 +30,7 @@ final readonly class ManifestBuilder
         $objects = [];
         $enums = [];
         $mutations = [];
+        $roots = [];
 
         foreach ($schema->types as $type) {
             if ($type->isEnum()) {
@@ -37,7 +39,18 @@ final readonly class ManifestBuilder
         }
 
         foreach ($schema->entities as $entity) {
-            $objects[$entity->name] = $this->object($schema, $types, $entity);
+            $exposure = $entity->exposedVia(WpGraphQL::NAME);
+
+            // Opt-in: an entity that says nothing is not in the graph at all.
+            if (null === $exposure) {
+                continue;
+            }
+
+            $name = is_string($exposure['singular'] ?? null) ? $exposure['singular'] : $entity->name;
+            $plural = is_string($exposure['plural'] ?? null) ? $exposure['plural'] : $name;
+
+            $objects[$name] = $this->object($schema, $types, $entity, $name);
+            $roots[$name] = new RootFieldEntry($name, $plural, $entity->name);
 
             foreach ($entity->fields as $field) {
                 if (Primitive::Enum !== $field->type->primitive) {
@@ -50,11 +63,11 @@ final readonly class ManifestBuilder
                     continue;
                 }
 
-                $name = (string) $types->enumName($entity, $field);
-                $enums[$name] = $this->enum($name, $enum->inlineValues ?? []);
+                $enumName = (string) $types->enumName($entity, $field);
+                $enums[$enumName] = $this->enum($enumName, $enum->inlineValues ?? []);
             }
 
-            foreach ($this->mutations($types, $entity) as $mutation) {
+            foreach ($this->mutations($types, $entity, $name) as $mutation) {
                 $mutations[$mutation->name] = $mutation;
             }
         }
@@ -62,12 +75,17 @@ final readonly class ManifestBuilder
         ksort($objects);
         ksort($enums);
         ksort($mutations);
+        ksort($roots);
 
-        return new Manifest($objects, $enums, $mutations);
+        return new Manifest($objects, $enums, $mutations, $roots);
     }
 
-    private function object(Schema $schema, TypeMapper $types, EntityDefinition $entity): ObjectTypeEntry
-    {
+    private function object(
+        Schema $schema,
+        TypeMapper $types,
+        EntityDefinition $entity,
+        string $name,
+    ): ObjectTypeEntry {
         // Every entity has an implicit id, and it is exposed as an opaque ID rather
         // than an Int so that a later move to UUIDv7 is invisible to clients.
         $fields = [
@@ -87,15 +105,21 @@ final readonly class ManifestBuilder
 
         foreach ($entity->edges as $edge) {
             $target = $schema->entity($edge->to);
+            $targetExposure = $target?->exposedVia(WpGraphQL::NAME);
 
-            if (null === $target) {
+            // An edge to an entity nobody exposed has nothing to point at.
+            if (null === $target || null === $targetExposure) {
                 continue;
             }
+
+            $targetName = is_string($targetExposure['singular'] ?? null)
+                ? $targetExposure['singular']
+                : $target->name;
 
             if (Cardinality::One === $edge->cardinality) {
                 $fields[$edge->name] = new FieldEntry(
                     $edge->name,
-                    new GraphQLType($target->name),
+                    new GraphQLType($targetName),
                     'get' . ucfirst($edge->name),
                     $edge->description,
                 );
@@ -105,8 +129,8 @@ final readonly class ManifestBuilder
 
             $connections[$edge->name] = new ConnectionEntry(
                 $edge->name,
-                $entity->name,
-                $target->name,
+                $name,
+                $targetName,
                 $edge->name,
                 $edge->name,
                 $edge->description,
@@ -114,7 +138,7 @@ final readonly class ManifestBuilder
         }
 
         return new ObjectTypeEntry(
-            $entity->name,
+            $name,
             $entity->name,
             $fields,
             $connections,
@@ -141,7 +165,7 @@ final readonly class ManifestBuilder
     /**
      * @return list<MutationEntry>
      */
-    private function mutations(TypeMapper $types, EntityDefinition $entity): array
+    private function mutations(TypeMapper $types, EntityDefinition $entity, string $name): array
     {
         $creatable = [];
         $updatable = [];
@@ -162,18 +186,18 @@ final readonly class ManifestBuilder
 
         $mutations = [
             new MutationEntry(
-                'create' . $entity->name,
+                'create' . $name,
                 MutationEntry::CREATE,
                 $entity->name,
                 $creatable,
-                description: sprintf('Create a %s.', $entity->name),
+                description: sprintf('Create a %s.', $name),
             ),
             new MutationEntry(
-                'update' . $entity->name,
+                'update' . $name,
                 MutationEntry::UPDATE,
                 $entity->name,
                 ['id' => new GraphQLType('ID', nonNull: true), ...$updatable],
-                description: sprintf('Update a %s.', $entity->name),
+                description: sprintf('Update a %s.', $name),
             ),
         ];
 
@@ -185,12 +209,12 @@ final readonly class ManifestBuilder
             }
 
             $mutations[] = new MutationEntry(
-                $action->name . $entity->name,
+                $action->name . $name,
                 MutationEntry::ACTION,
                 $entity->name,
                 $inputs,
                 $action->name,
-                $action->description ?? sprintf('Run %s on a %s.', $action->name, $entity->name),
+                $action->description ?? sprintf('Run %s on a %s.', $action->name, $name),
             );
         }
 

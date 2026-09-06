@@ -21,9 +21,9 @@ final readonly class CanonicalOrder
 {
     /** @var array<string, list<string>> */
     private const ORDERS = [
-        'project' => ['project', 'description', 'storage'],
+        'project' => ['project', 'description', 'storage', 'integrations'],
         'projectStorage' => ['driver', 'tablePrefix'],
-        'entity' => ['entity', 'description', 'use', 'configure', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
+        'entity' => ['entity', 'description', 'use', 'configure', 'integrations', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
         'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
         'type' => ['type', 'description', 'primitive', 'processors', 'values'],
         'storage' => ['table', 'handle'],

@@ -8,6 +8,10 @@ configure:
     adminMenu: clog
     label: Location
     pluralLabel: Locations
+integrations:
+  wpgraphql:
+    singular: ClogLocation
+    plural: ClogLocations
 storage:
   table: location
   handle: clog_location

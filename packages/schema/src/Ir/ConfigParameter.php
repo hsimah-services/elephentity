@@ -30,6 +30,18 @@ final readonly class ConfigParameter
     }
 
     /**
+     * A parameter with neither a default nor permission to be null must be supplied.
+     *
+     * Falling back to null in that case would let a missing `singular` reach the
+     * generator as an empty string, and fail somewhere far from the spec that omitted
+     * it.
+     */
+    public function isRequired(): bool
+    {
+        return !$this->hasDefault && !$this->nullable;
+    }
+
+    /**
      * Whether a value is acceptable for this parameter.
      */
     public function accepts(mixed $value): bool

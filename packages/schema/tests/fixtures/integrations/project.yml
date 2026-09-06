@@ -1,6 +1,5 @@
-project: Clog
+project: T
 storage:
   driver: wordpress
-  tablePrefix: clog_
 integrations:
   wpgraphql:

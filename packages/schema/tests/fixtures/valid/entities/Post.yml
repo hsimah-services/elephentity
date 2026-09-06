@@ -7,6 +7,10 @@ configure:
   WordPressPost:
     visibility: public
     supports: [title, editor]
+integrations:
+  wpgraphql:
+    singular: Post
+    plural: Posts
 storage:
   table: phe_post
   handle: post

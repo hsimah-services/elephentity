@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:23fa546b6204c00866f1c8834c6532871e9e2c2e1caa1fc979d21a14df611b65
+ * digest: sha256:4a166e43db6c564716235b9a62bc81af493962a2782cc41ac3812346e8aa969f
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -22,8 +22,8 @@ namespace Eleph\WPGraphQL\Manifest;
  */
 return new Manifest(
     objects: [
-        'Inventory' => new ObjectTypeEntry(
-            'Inventory',
+        'ClogInventory' => new ObjectTypeEntry(
+            'ClogInventory',
             'Inventory',
             [
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
@@ -33,14 +33,14 @@ return new Manifest(
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'Projected to post_title, so the admin list has something to show.'),
                 'dateAdded' => new FieldEntry('dateAdded', new GraphQLType('String', true, false), 'getDateAdded', 'When this instance entered inventory.'),
                 'dateExpiry' => new FieldEntry('dateExpiry', new GraphQLType('String', false, false), 'getDateExpiry', 'When it expires. Absent means it does not.'),
-                'item' => new FieldEntry('item', new GraphQLType('Item', false, false), 'getItem', 'What this entry is an instance of.'),
-                'location' => new FieldEntry('location', new GraphQLType('Location', false, false), 'getLocation', 'Where it is kept.'),
+                'item' => new FieldEntry('item', new GraphQLType('ClogItem', false, false), 'getItem', 'What this entry is an instance of.'),
+                'location' => new FieldEntry('location', new GraphQLType('ClogLocation', false, false), 'getLocation', 'Where it is kept.'),
             ],
             [],
             'One stocked instance of an item, in a location, with its own expiry.',
         ),
-        'Item' => new ObjectTypeEntry(
-            'Item',
+        'ClogItem' => new ObjectTypeEntry(
+            'ClogItem',
             'Item',
             [
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
@@ -56,8 +56,8 @@ return new Manifest(
             [],
             'A thing that can be stocked, identified by its barcode.',
         ),
-        'Location' => new ObjectTypeEntry(
-            'Location',
+        'ClogLocation' => new ObjectTypeEntry(
+            'ClogLocation',
             'Location',
             [
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
@@ -74,8 +74,8 @@ return new Manifest(
         'ExpiryUnit' => new EnumTypeEntry('ExpiryUnit', ['DAYS' => 'days', 'MONTHS' => 'months']),
     ],
     mutations: [
-        'createInventory' => new MutationEntry(
-            'createInventory',
+        'createClogInventory' => new MutationEntry(
+            'createClogInventory',
             'create',
             'Inventory',
             [
@@ -87,10 +87,10 @@ return new Manifest(
                 'dateExpiry' => new GraphQLType('String', false, false),
             ],
             null,
-            'Create a Inventory.',
+            'Create a ClogInventory.',
         ),
-        'createItem' => new MutationEntry(
-            'createItem',
+        'createClogItem' => new MutationEntry(
+            'createClogItem',
             'create',
             'Item',
             [
@@ -103,10 +103,10 @@ return new Manifest(
                 'defaultExpiryValue' => new GraphQLType('Int', false, false),
             ],
             null,
-            'Create a Item.',
+            'Create a ClogItem.',
         ),
-        'createLocation' => new MutationEntry(
-            'createLocation',
+        'createClogLocation' => new MutationEntry(
+            'createClogLocation',
             'create',
             'Location',
             [
@@ -116,10 +116,10 @@ return new Manifest(
                 'name' => new GraphQLType('String', true, false),
             ],
             null,
-            'Create a Location.',
+            'Create a ClogLocation.',
         ),
-        'updateInventory' => new MutationEntry(
-            'updateInventory',
+        'updateClogInventory' => new MutationEntry(
+            'updateClogInventory',
             'update',
             'Inventory',
             [
@@ -131,10 +131,10 @@ return new Manifest(
                 'dateExpiry' => new GraphQLType('String', false, false),
             ],
             null,
-            'Update a Inventory.',
+            'Update a ClogInventory.',
         ),
-        'updateItem' => new MutationEntry(
-            'updateItem',
+        'updateClogItem' => new MutationEntry(
+            'updateClogItem',
             'update',
             'Item',
             [
@@ -147,10 +147,10 @@ return new Manifest(
                 'defaultExpiryValue' => new GraphQLType('Int', false, false),
             ],
             null,
-            'Update a Item.',
+            'Update a ClogItem.',
         ),
-        'updateLocation' => new MutationEntry(
-            'updateLocation',
+        'updateClogLocation' => new MutationEntry(
+            'updateClogLocation',
             'update',
             'Location',
             [
@@ -160,7 +160,12 @@ return new Manifest(
                 'name' => new GraphQLType('String', false, false),
             ],
             null,
-            'Update a Location.',
+            'Update a ClogLocation.',
         ),
+    ],
+    roots: [
+        'ClogInventory' => new RootFieldEntry('ClogInventory', 'ClogInventoryEntries', 'Inventory'),
+        'ClogItem' => new RootFieldEntry('ClogItem', 'ClogItems', 'Item'),
+        'ClogLocation' => new RootFieldEntry('ClogLocation', 'ClogLocations', 'Location'),
     ],
 );

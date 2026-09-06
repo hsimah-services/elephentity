@@ -8,6 +8,10 @@ configure:
     adminMenu: clog
     label: Inventory Entry
     pluralLabel: Inventory
+integrations:
+  wpgraphql:
+    singular: ClogInventory
+    plural: ClogInventoryEntries
 storage:
   table: inventory
   handle: clog_inventory

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Cli\Command;
 
+use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Codegen\Codegen;
 use Eleph\Codegen\GeneratedFile;
@@ -12,6 +13,7 @@ use Eleph\Codegen\Output\Writer;
 use Eleph\Codegen\Output\WriteReport;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\ManifestExporter;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -69,7 +71,7 @@ final class GenerateCommand extends Command
         $config = ProjectConfig::load($directory);
         $root = rtrim($directory, '/');
 
-        $compiled = (new SchemaCompiler())->compile(
+        $compiled = (new SchemaCompiler(integrations: Integrations::registry()))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );
 
@@ -93,10 +95,15 @@ final class GenerateCommand extends Command
 
         // The GraphQL surface is compiled here too, so one build step produces
         // everything and `--check` covers the manifest as well as the classes.
-        $files[] = new GeneratedFile(
-            self::MANIFEST_PATH,
-            (new ManifestExporter())->export((new ManifestBuilder())->build($compiled->schema())),
-        );
+        //
+        // Only when the project speaks GraphQL: a project that does not should not
+        // find a manifest in its tree wondering where it came from.
+        if ($compiled->schema()->project->speaks(WpGraphQL::NAME)) {
+            $files[] = new GeneratedFile(
+                self::MANIFEST_PATH,
+                (new ManifestExporter())->export((new ManifestBuilder())->build($compiled->schema())),
+            );
+        }
 
         $writer = new Writer($outputDirectory);
         $report = $check ? $writer->check($files) : $writer->write($files);

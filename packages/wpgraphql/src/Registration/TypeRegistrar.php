@@ -39,6 +39,10 @@ final readonly class TypeRegistrar
         foreach ($this->connectionConfigs() as $config) {
             register_graphql_connection($config);
         }
+
+        foreach ($this->rootFieldConfigs() as $config) {
+            register_graphql_field('RootQuery', $config['name'], $config['field']);
+        }
     }
 
     /**
@@ -132,6 +136,45 @@ final readonly class TypeRegistrar
         $accessor = $field->accessor;
 
         return static fn (object $source): mixed => $source->{$accessor}();
+    }
+
+    /**
+     * The way in.
+     *
+     * Without these the graph has types and no entry point: every entity would be
+     * reachable only by traversing from something else, and nothing would be the
+     * something else.
+     *
+     * @return list<array{name: string, field: array<string, mixed>}>
+     */
+    public function rootFieldConfigs(): array
+    {
+        $configs = [];
+
+        foreach ($this->manifest->roots as $root) {
+            $configs[] = [
+                'name' => $root->single(),
+                'field' => [
+                    'type' => $root->type,
+                    'description' => sprintf('One %s by id.', $root->type),
+                    'args' => ['id' => ['type' => ['non_null' => 'ID']]],
+                ],
+            ];
+
+            $configs[] = [
+                'name' => $root->collection(),
+                'field' => [
+                    'type' => ['list_of' => $root->type],
+                    'description' => sprintf('Every %s.', $root->type),
+                    'args' => [
+                        'first' => ['type' => 'Int'],
+                        'after' => ['type' => 'String'],
+                    ],
+                ],
+            ];
+        }
+
+        return $configs;
     }
 
     /**

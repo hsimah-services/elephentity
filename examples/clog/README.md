@@ -66,11 +66,11 @@ Under Elephentity, `Item` is built solely from the spec. You get precisely what 
 `defaultExpiryValue`. `createdAt` and `updatedAt` cover what `date` and `modified` did;
 the rest either need declaring or need to go.
 
-**A gap in Elephentity, not in the model.** The manifest today registers object types, enums
-and mutations — and no root query fields. A declared `queries:` block generates an
-injectable PHP finder, but nothing exposes it to GraphQL, so there is currently no way
-to *fetch* an Item through the generated API at all. Entry points are the missing piece
-of the plugin layer, and this port is what surfaced it.
+**A gap this port surfaced, since closed.** The manifest registered object types, enums
+and mutations and no entry points, so nothing could fetch an Item at all. Root fields
+now come from the `wpgraphql` integration, and the type names match the existing API
+exactly — `ClogItem` / `ClogItems`, and `ClogInventory` / `ClogInventoryEntries`,
+supplied rather than derived because nothing here pluralises on your behalf.
 
 **The divergence hazard.** `show_ui: true` with `supports: ['title']` means a human can
 edit the title in wp-admin. Under Elephentity the column is authoritative and `post_title` is

@@ -6,6 +6,8 @@ namespace Eleph\Schema;
 
 use Eleph\Schema\Error\CompilationResult;
 use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\Integration\IntegrationRegistry;
+use Eleph\Schema\Integration\IntegrationResolver;
 use Eleph\Schema\Ir\ConfigParameter;
 use Eleph\Schema\Ir\ConfigType;
 use Eleph\Schema\Ir\EntityDefinition;
@@ -42,6 +44,11 @@ final readonly class SchemaCompiler
         private PatternResolver $resolver = new PatternResolver(),
         private SectionMerger $merger = new SectionMerger(),
         private ConfigResolver $config = new ConfigResolver(),
+        /**
+         * Empty by default: the compiler knows of no integration until a composition
+         * root tells it which packages are installed.
+         */
+        private IntegrationRegistry $integrations = new IntegrationRegistry(),
     ) {
     }
 
@@ -195,6 +202,11 @@ final readonly class SchemaCompiler
                 name: $spec->name(),
                 driver: (string) $storage?->string('driver'),
                 sourceFile: $spec->file,
+                integrations: (new IntegrationResolver($this->integrations))->forProject(
+                    $reader->reader('integrations'),
+                    $spec->file,
+                    $errors,
+                ),
                 tablePrefix: $storage?->optionalString('tablePrefix') ?? '',
                 description: $reader->optionalString('description'),
             );
@@ -352,6 +364,14 @@ final readonly class SchemaCompiler
                 $errors,
             );
 
+            $integrations = (new IntegrationResolver($this->integrations))->forEntity(
+                $reader->reader('integrations'),
+                $project->integrations,
+                $name,
+                $spec->file,
+                $errors,
+            );
+
             $merged = $this->merger->merge($contributions, $name, $spec->file);
 
             foreach ($merged['errors'] as $error) {
@@ -376,6 +396,7 @@ final readonly class SchemaCompiler
                 actions: $sections->actions,
                 triggers: $sections->triggers,
                 config: $configuration,
+                integrations: $integrations,
             );
         }
 

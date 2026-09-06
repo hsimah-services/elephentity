@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Cli\Command;
 
+use Eleph\Cli\Integrations;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -53,7 +54,7 @@ final class ValidateCommand extends Command
             return Command::INVALID;
         }
 
-        $result = (new SchemaCompiler())->compile(new SpecSource($root));
+        $result = (new SchemaCompiler(integrations: Integrations::registry()))->compile(new SpecSource($root));
 
         if (!$result->isSuccess()) {
             $io->error(sprintf('%d problem(s) found in %s', count($result->errors), $root));

@@ -4,14 +4,23 @@
     "title": "Elephentity project specification",
     "description": "Settings true of the whole project. Deliberately shallow: it may not declare patterns, fields or anything else an entity would, because reading an entity spec must tell you what that entity has.",
     "type": "object",
-    "required": ["project", "storage"],
+    "required": [
+        "project",
+        "storage"
+    ],
     "additionalProperties": false,
     "properties": {
-        "project": { "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/typeName" },
-        "description": { "type": "string" },
+        "project": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/typeName"
+        },
+        "description": {
+            "type": "string"
+        },
         "storage": {
             "type": "object",
-            "required": ["driver"],
+            "required": [
+                "driver"
+            ],
             "additionalProperties": false,
             "properties": {
                 "driver": {
@@ -22,9 +31,12 @@
                 "tablePrefix": {
                     "type": "string",
                     "pattern": "^[a-z][a-z0-9_]*_$",
-                    "description": "Prepended to every entity's table. Stacks with any prefix the driver adds of its own — under WordPress the real table is $wpdb->prefix, then this, then the entity's table."
+                    "description": "Prepended to every entity's table. Stacks with any prefix the driver adds of its own \u2014 under WordPress the real table is $wpdb->prefix, then this, then the entity's table."
                 }
             }
+        },
+        "integrations": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/integrations"
         }
     }
 }
