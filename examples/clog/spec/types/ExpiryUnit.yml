@@ -1,0 +1,6 @@
+type: ExpiryUnit
+description: The unit a default expiry duration is counted in.
+primitive: string
+values:
+  - days
+  - months

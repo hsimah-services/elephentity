@@ -1,0 +1,37 @@
+entity: Inventory
+description: One stocked instance of an item, in a location, with its own expiry.
+use:
+  - ClogPost
+storage:
+  driver: wordpress
+  table: clog_inventory
+  handle: clog_inventory
+fields:
+  name:
+    type: string
+    description: Projected to post_title, so the admin list has something to show.
+    required: true
+    maxLength: 200
+  dateAdded:
+    type: datetime
+    description: When this instance entered inventory.
+    required: true
+  dateExpiry:
+    type: datetime
+    description: When it expires. Absent means it does not.
+    nullable: true
+edges:
+  item:
+    to: Item
+    cardinality: one
+    description: What this entry is an instance of.
+    inverse:
+      name: inventoryEntries
+      unique: false
+  location:
+    to: Location
+    cardinality: one
+    description: Where it is kept.
+    inverse:
+      name: inventoryEntries
+      unique: false

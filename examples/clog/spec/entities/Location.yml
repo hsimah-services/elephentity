@@ -1,0 +1,15 @@
+entity: Location
+description: Somewhere inventory can be kept.
+use:
+  - ClogPost
+storage:
+  driver: wordpress
+  table: clog_location
+  handle: clog_location
+fields:
+  name:
+    type: string
+    description: What the location is called. Projected to post_title.
+    required: true
+    unique: true
+    maxLength: 200

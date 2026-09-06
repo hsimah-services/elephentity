@@ -1,0 +1,33 @@
+entity: Item
+description: A thing that can be stocked, identified by one or more barcodes.
+use:
+  - ClogPost
+storage:
+  driver: wordpress
+  table: clog_item
+  handle: clog_item
+fields:
+  name:
+    type: string
+    description: What the item is called. Projected to post_title.
+    required: true
+    indexed: true
+    maxLength: 200
+  barcodes:
+    type: json
+    description: >
+      Barcodes that identify this item. See README: json is a poor fit for what is
+      really a list of scalars, and scanning a barcode to find an item is the query
+      this data exists to serve.
+    nullable: true
+  defaultExpiryUnit:
+    type: enum
+    description: Half of the default expiry; meaningless without the other half.
+    nullable: true
+    values: ExpiryUnit
+    verify: true
+  defaultExpiryValue:
+    type: int
+    description: Half of the default expiry; meaningless without the other half.
+    nullable: true
+    verify: true

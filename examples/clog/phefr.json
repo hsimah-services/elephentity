@@ -1,0 +1,6 @@
+{
+    "spec": "spec",
+    "output": "generated",
+    "namespace": "Clog\\Entity",
+    "typeNamespace": "Clog\\Type"
+}

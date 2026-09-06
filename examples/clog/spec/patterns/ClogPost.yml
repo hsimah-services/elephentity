@@ -1,0 +1,14 @@
+pattern: ClogPost
+description: >
+  Participation in the WordPress post ecosystem, which every Clog type needs: the
+  admin UI lists them, and existing data lives in wp_posts.
+requires:
+  driver: wordpress
+use:
+  - Timestamps
+fields:
+  postId:
+    type: int
+    description: The wp_posts row this entity projects to.
+    unique: true
+    indexed: true

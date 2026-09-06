@@ -1,0 +1,10 @@
+pattern: Timestamps
+description: Creation and modification stamps.
+fields:
+  createdAt:
+    type: datetime
+    required: true
+    immutable: true
+  updatedAt:
+    type: datetime
+    nullable: true
