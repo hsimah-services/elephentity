@@ -4,6 +4,12 @@ The three post types from [clog](https://github.com/hsimah-services/clog) — It
 Location and Inventory — written as PheFr specs, with the generated output committed
 so the two can be compared.
 
+This is a smoke test of the generator against real post types, not a migration plan.
+Clog is unfinished and the point was to find out whether its types produce signed,
+coherent code. They do: 22 files, all gates green. The notes below are what the
+exercise turned up, kept because they are cheap to write down now and expensive to
+rediscover later — not because any of them needs acting on.
+
 All four gates pass:
 
 ```

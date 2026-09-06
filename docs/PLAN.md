@@ -898,6 +898,10 @@ schema format we have — better than inventing a `Post` example.
 
 ## 16. Open questions
 
+- **Root query fields.** The GraphQL manifest registers object types, enums and
+  mutations, but no entry points — a declared `queries:` block generates an injectable
+  PHP finder that nothing exposes. As it stands there is no way to fetch an entity
+  through the generated API. Found by porting the clog post types.
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
 - **Runtime model** — confirm immutable Entity snapshot + Mutator command buffer.
