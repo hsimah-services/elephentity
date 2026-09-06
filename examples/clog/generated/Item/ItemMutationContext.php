@@ -8,21 +8,22 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   LocationMutationContext.php
- * digest: sha256:73dd8ffe9fb4d19a14a573dedc8e0fac5235c5fffd6d3cf625a12b07439277e6
+ * path:   Item/ItemMutationContext.php
+ * digest: sha256:28b034c4023e8254add0469e199cd05b3e2b724d273f35b0f491df303215e3d5
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Item;
 
+use Clog\Entity\Enum\ExpiryUnit;
 use DateTimeImmutable;
 use PheFr\Runtime\Mutation\MutationContext;
 
 /**
- * A pending Location mutation, with exact types.
+ * A pending Item mutation, with exact types.
  */
-final readonly class LocationMutationContext implements MutationContext
+final readonly class ItemMutationContext implements MutationContext
 {
-    public function __construct(
+    private function __construct(
         private MutationContext $context,
     ) {
     }
@@ -122,5 +123,58 @@ final readonly class LocationMutationContext implements MutationContext
         assert(null === $value || is_string($value));
 
         return $value;
+    }
+
+    public function originalBarcode(): ?string
+    {
+        $value = $this->context->original('barcode');
+        assert(null === $value || is_string($value));
+
+        return $value;
+    }
+
+    public function pendingBarcode(): ?string
+    {
+        $value = $this->context->pending('barcode');
+        assert(null === $value || is_string($value));
+
+        return $value;
+    }
+
+    public function originalDefaultExpiryUnit(): ?ExpiryUnit
+    {
+        $value = $this->context->original('defaultExpiryUnit');
+        assert(null === $value || $value instanceof ExpiryUnit);
+
+        return $value;
+    }
+
+    public function pendingDefaultExpiryUnit(): ?ExpiryUnit
+    {
+        $value = $this->context->pending('defaultExpiryUnit');
+        assert(null === $value || $value instanceof ExpiryUnit);
+
+        return $value;
+    }
+
+    public function originalDefaultExpiryValue(): ?int
+    {
+        $value = $this->context->original('defaultExpiryValue');
+        assert(null === $value || is_int($value));
+
+        return $value;
+    }
+
+    public function pendingDefaultExpiryValue(): ?int
+    {
+        $value = $this->context->pending('defaultExpiryValue');
+        assert(null === $value || is_int($value));
+
+        return $value;
+    }
+
+    public static function of(MutationContext $context): self
+    {
+        return new self($context);
     }
 }

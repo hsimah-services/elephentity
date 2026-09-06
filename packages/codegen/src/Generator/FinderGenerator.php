@@ -110,6 +110,8 @@ final readonly class FinderGenerator
             ));
         }
 
+        $this->emitter->namedConstructor($type, $constructor);
+
         return $this->emitter->file($class, $namespace);
     }
 }

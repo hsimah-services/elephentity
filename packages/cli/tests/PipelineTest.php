@@ -91,7 +91,7 @@ final class PipelineTest extends TestCase
     {
         $this->exec(new GenerateCommand());
 
-        $post = $this->project . '/generated/Post.php';
+        $post = $this->project . '/generated/Post/Post.php';
         file_put_contents(
             $post,
             str_replace('return $this->title;', 'return strtoupper($this->title);', (string) file_get_contents($post)),
@@ -109,7 +109,7 @@ final class PipelineTest extends TestCase
         // valid PHP and would load happily, but the API it backs no longer resolves.
         $this->exec(new GenerateCommand());
 
-        $post = $this->project . '/generated/Post.php';
+        $post = $this->project . '/generated/Post/Post.php';
         file_put_contents(
             $post,
             str_replace('function getTitle(', 'function getHeadline(', (string) file_get_contents($post)),
@@ -126,8 +126,8 @@ final class PipelineTest extends TestCase
         $this->exec(new GenerateCommand());
 
         self::assertFileExists($this->project . '/generated/graphql-manifest.php');
-        self::assertFileExists($this->project . '/generated/Bridge/PostHydrator.php');
-        self::assertFileExists($this->project . '/generated/Contract/Verifier/PostPriceVerifier.php');
+        self::assertFileExists($this->project . '/generated/Post/PostHydrator.php');
+        self::assertFileExists($this->project . '/generated/Post/Contract/PostPriceVerifier.php');
     }
 
     /**

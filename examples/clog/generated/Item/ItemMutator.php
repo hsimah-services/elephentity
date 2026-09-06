@@ -8,11 +8,11 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   ItemMutator.php
- * digest: sha256:09e8e8e271085ab1cd90385bcea6a32146921d2622da790154b4f1a5dbea5846
+ * path:   Item/ItemMutator.php
+ * digest: sha256:23fa5278d3b8c9ab719498c5ca08a4c3ac3e2e4ef45199868087c9873b3c7e16
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
 use DateTimeImmutable;
@@ -23,7 +23,7 @@ use PheFr\Runtime\Mutation\MutationBuffer;
  */
 final class ItemMutator
 {
-    public function __construct(
+    private function __construct(
         private readonly MutationBuffer $buffer,
     ) {
     }
@@ -68,5 +68,10 @@ final class ItemMutator
         $this->buffer->set('defaultExpiryValue', $defaultExpiryValue);
 
         return $this;
+    }
+
+    public static function of(MutationBuffer $buffer): self
+    {
+        return new self($buffer);
     }
 }

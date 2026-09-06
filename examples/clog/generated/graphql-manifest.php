@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:738655aeea3c77df4bef9ccaf3dc56cf86e29b39a7e8702189269d6e10a3a99e
+ * digest: sha256:fe4dacf1734b068fda9a621842944c6fcded4a9b27819759e0087512366dba35
  */
 
 namespace PheFr\WPGraphQL\Manifest;
@@ -54,7 +54,7 @@ return new Manifest(
                 'defaultExpiryValue' => new FieldEntry('defaultExpiryValue', new GraphQLType('Int', false, false), 'getDefaultExpiryValue', 'Half of the default expiry; meaningless without the other half.'),
             ],
             [],
-            'A thing that can be stocked, identified by one or more barcodes.',
+            'A thing that can be stocked, identified by its barcode.',
         ),
         'Location' => new ObjectTypeEntry(
             'Location',

@@ -8,11 +8,11 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Item.php
- * digest: sha256:56ac3935f32ca6d493fd9f6165ce0642cdcba56c428d82e3ebde9d01954e5c3c
+ * path:   Item/Item.php
+ * digest: sha256:988a687bdf72766d7ea4735652f8b38e56675dc12d20efbfa3442d9c6e66efde
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
 use DateTimeImmutable;
@@ -20,11 +20,11 @@ use PheFr\Runtime\Identity\EntityId;
 use PheFr\Runtime\Query\EdgeLoader;
 
 /**
- * A thing that can be stocked, identified by one or more barcodes.
+ * A thing that can be stocked, identified by its barcode.
  */
 final class Item
 {
-    public function __construct(
+    private function __construct(
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
@@ -90,5 +90,19 @@ final class Item
     public function getDefaultExpiryValue(): ?int
     {
         return $this->defaultExpiryValue;
+    }
+
+    public static function of(
+        EntityId $id,
+        EdgeLoader $edges,
+        DateTimeImmutable $createdAt,
+        ?DateTimeImmutable $updatedAt,
+        int $postId,
+        string $name,
+        ?string $barcode,
+        ?ExpiryUnit $defaultExpiryUnit,
+        ?int $defaultExpiryValue,
+    ): self {
+        return new self($id, $edges, $createdAt, $updatedAt, $postId, $name, $barcode, $defaultExpiryUnit, $defaultExpiryValue);
     }
 }

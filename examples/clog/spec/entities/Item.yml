@@ -1,5 +1,5 @@
 entity: Item
-description: A thing that can be stocked, identified by one or more barcodes.
+description: A thing that can be stocked, identified by its barcode.
 use:
   - ClogPost
 storage:

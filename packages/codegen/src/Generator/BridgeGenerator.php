@@ -98,6 +98,7 @@ final readonly class BridgeGenerator
 
         if ([] === $verified) {
             $dispatch->setBody('return Verification::ok();');
+            $this->emitter->namedConstructor($type, $constructor);
 
             return $this->emitter->file($class, $namespace);
         }
@@ -134,7 +135,7 @@ final readonly class BridgeGenerator
                 ->setPrivate()
                 ->setReturnType(Verification::class)
                 ->setBody(sprintf(
-                    "assert(%s);\n\nreturn \$this->%sVerifier->verify(\$value, new %s(\$context));",
+                    "assert(%s);\n\nreturn \$this->%sVerifier->verify(\$value, %s::of(\$context));",
                     $this->assertion($valueType),
                     $name,
                     $this->emitter->shortName($context),
@@ -143,6 +144,8 @@ final readonly class BridgeGenerator
             $method->addParameter('value')->setType('mixed');
             $method->addParameter('context')->setType(MutationContext::class);
         }
+
+        $this->emitter->namedConstructor($type, $constructor);
 
         return $this->emitter->file($class, $namespace);
     }
@@ -183,11 +186,12 @@ final readonly class BridgeGenerator
 
         if ([] === $entity->triggers) {
             $dispatch->setBody('');
+            $this->emitter->namedConstructor($type, $constructor);
 
             return $this->emitter->file($class, $namespace);
         }
 
-        $lines = [sprintf('$typed = new %s($context);', $this->emitter->shortName($context)), ''];
+        $lines = [sprintf('$typed = %s::of($context);', $this->emitter->shortName($context)), ''];
 
         foreach ($entity->triggers as $trigger) {
             $events = array_map(
@@ -206,6 +210,7 @@ final readonly class BridgeGenerator
         }
 
         $dispatch->setBody(rtrim(implode("\n", $lines)));
+        $this->emitter->namedConstructor($type, $constructor);
 
         return $this->emitter->file($class, $namespace);
     }

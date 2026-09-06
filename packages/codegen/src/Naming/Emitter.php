@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PheFr\Codegen\Naming;
 
+use Nette\PhpGenerator\ClassType;
+use Nette\PhpGenerator\Method;
 use Nette\PhpGenerator\PhpNamespace;
 use PheFr\Codegen\GeneratedFile;
 
@@ -26,6 +28,46 @@ final readonly class Emitter
     public function shortName(string $fullyQualified): string
     {
         return (new ClassName($fullyQualified))->short;
+    }
+
+    /**
+     * Seal a class behind a named constructor.
+     *
+     * `new Item(...)` next to `Item::of(...)` says nothing about which is intended;
+     * one entry point does. It also matches the house style the runtime already uses —
+     * `EntityId::of()`, `Verification::ok()`, `Cursor::of()` — so generated code reads
+     * like the code it sits beside.
+     *
+     * Promoted properties still declare the shape, so the constructor stays; it simply
+     * becomes private, and the factory mirrors its signature exactly.
+     */
+    public function namedConstructor(ClassType $type, Method $constructor, string $name = 'of'): void
+    {
+        $constructor->setPrivate();
+
+        $factory = $type->addMethod($name)
+            ->setPublic()
+            ->setStatic()
+            ->setReturnType('self');
+
+        $arguments = [];
+
+        foreach ($constructor->getParameters() as $parameter) {
+            $copy = $factory->addParameter($parameter->getName())
+                ->setType($parameter->getType())
+                ->setNullable($parameter->isNullable());
+
+            if ($parameter->hasDefaultValue()) {
+                $copy->setDefaultValue($parameter->getDefaultValue());
+            }
+
+            $arguments[] = '$' . $parameter->getName();
+        }
+
+        $factory->setBody(sprintf(
+            'return new self(%s);',
+            implode(', ', $arguments),
+        ));
     }
 
     public function file(string $fullyQualified, PhpNamespace $namespace): GeneratedFile

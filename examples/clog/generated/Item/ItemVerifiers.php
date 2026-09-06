@@ -8,16 +8,15 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Bridge/ItemVerifiers.php
- * digest: sha256:6acf2598de86ce4852aaa358b8179fa74893af30e22780a1edf2557c2568b356
+ * path:   Item/ItemVerifiers.php
+ * digest: sha256:c5fc7dc9c645d02d2729d6e9604a370c68c565314ec328cc7c61ff4dbaf2dc22
  */
 
-namespace Clog\Entity\Bridge;
+namespace Clog\Entity\Item;
 
-use Clog\Entity\Contract\Verifier\ItemDefaultExpiryUnitVerifier;
-use Clog\Entity\Contract\Verifier\ItemDefaultExpiryValueVerifier;
 use Clog\Entity\Enum\ExpiryUnit;
-use Clog\Entity\ItemMutationContext;
+use Clog\Entity\Item\Contract\ItemDefaultExpiryUnitVerifier;
+use Clog\Entity\Item\Contract\ItemDefaultExpiryValueVerifier;
 use PheFr\Runtime\Mutation\MutationContext;
 use PheFr\Runtime\Verification\EntityVerifiers;
 use PheFr\Runtime\Verification\Verification;
@@ -27,7 +26,7 @@ use PheFr\Runtime\Verification\Verification;
  */
 final readonly class ItemVerifiers implements EntityVerifiers
 {
-    public function __construct(
+    private function __construct(
         private ItemDefaultExpiryUnitVerifier $defaultExpiryUnitVerifier,
         private ItemDefaultExpiryValueVerifier $defaultExpiryValueVerifier,
     ) {
@@ -54,13 +53,20 @@ final readonly class ItemVerifiers implements EntityVerifiers
     {
         assert($value instanceof ExpiryUnit);
 
-        return $this->defaultExpiryUnitVerifier->verify($value, new ItemMutationContext($context));
+        return $this->defaultExpiryUnitVerifier->verify($value, ItemMutationContext::of($context));
     }
 
     private function verifyDefaultExpiryValue(mixed $value, MutationContext $context): Verification
     {
         assert(is_int($value));
 
-        return $this->defaultExpiryValueVerifier->verify($value, new ItemMutationContext($context));
+        return $this->defaultExpiryValueVerifier->verify($value, ItemMutationContext::of($context));
+    }
+
+    public static function of(
+        ItemDefaultExpiryUnitVerifier $defaultExpiryUnitVerifier,
+        ItemDefaultExpiryValueVerifier $defaultExpiryValueVerifier,
+    ): self {
+        return new self($defaultExpiryUnitVerifier, $defaultExpiryValueVerifier);
     }
 }

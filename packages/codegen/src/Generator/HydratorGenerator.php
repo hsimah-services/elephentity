@@ -84,7 +84,7 @@ final readonly class HydratorGenerator
         $hydrate = $type->addMethod('hydrate')
             ->setReturnType($entityClass)
             ->setBody(sprintf(
-                "return new %s(\n    %s,\n);",
+                "return %s::of(\n    %s,\n);",
                 $this->emitter->shortName($entityClass),
                 implode(",\n    ", $arguments),
             ));
@@ -107,6 +107,8 @@ final readonly class HydratorGenerator
 
             $reader->addParameter('record')->setType(Record::class);
         }
+
+        $this->emitter->namedConstructor($type, $constructor);
 
         return $this->emitter->file($class, $namespace);
     }

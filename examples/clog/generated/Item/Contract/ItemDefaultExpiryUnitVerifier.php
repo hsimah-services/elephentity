@@ -8,14 +8,14 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Contract/Verifier/ItemDefaultExpiryUnitVerifier.php
- * digest: sha256:f02bc236c4814fd1cf3ace6ab30e74d2c192d42923156919ed7ca6852f7ee7a2
+ * path:   Item/Contract/ItemDefaultExpiryUnitVerifier.php
+ * digest: sha256:e01c94533e51a0774d43f6f18a79ff3380b0ca45a2f1b0b8d6cfad005d7fd481
  */
 
-namespace Clog\Entity\Contract\Verifier;
+namespace Clog\Entity\Item\Contract;
 
 use Clog\Entity\Enum\ExpiryUnit;
-use Clog\Entity\ItemMutationContext;
+use Clog\Entity\Item\ItemMutationContext;
 use PheFr\Runtime\Verification\Verification;
 
 /**

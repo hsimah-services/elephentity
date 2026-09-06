@@ -8,21 +8,21 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   LocationMutator.php
- * digest: sha256:4a642ea0d750d0efadf24af1c6800193478843f537493c2ecdbc3d24ac5cba99
+ * path:   Inventory/InventoryMutator.php
+ * digest: sha256:1f50bec2ce03ed6263fd68126a5cf123d754151237d8b36c87ce3025930c3ebc
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
 use PheFr\Runtime\Mutation\MutationBuffer;
 
 /**
- * Pending changes to a Location.
+ * Pending changes to a Inventory.
  */
-final class LocationMutator
+final class InventoryMutator
 {
-    public function __construct(
+    private function __construct(
         private readonly MutationBuffer $buffer,
     ) {
     }
@@ -46,5 +46,24 @@ final class LocationMutator
         $this->buffer->set('name', $name);
 
         return $this;
+    }
+
+    public function setDateAdded(DateTimeImmutable $dateAdded): self
+    {
+        $this->buffer->set('dateAdded', $dateAdded);
+
+        return $this;
+    }
+
+    public function setDateExpiry(?DateTimeImmutable $dateExpiry): self
+    {
+        $this->buffer->set('dateExpiry', $dateExpiry);
+
+        return $this;
+    }
+
+    public static function of(MutationBuffer $buffer): self
+    {
+        return new self($buffer);
     }
 }

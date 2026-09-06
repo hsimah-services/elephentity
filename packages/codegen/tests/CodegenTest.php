@@ -25,47 +25,47 @@ final class CodegenTest extends TestCase
         sort($paths);
 
         self::assertSame([
-            'Bridge/CommentHydrator.php',
-            'Bridge/CommentTriggers.php',
-            'Bridge/CommentVerifiers.php',
-            'Bridge/PostHydrator.php',
-            'Bridge/PostTriggers.php',
-            'Bridge/PostVerifiers.php',
-            'Bridge/TagHydrator.php',
-            'Bridge/TagTriggers.php',
-            'Bridge/TagVerifiers.php',
-            'Comment.php',
-            'CommentMutationContext.php',
-            'CommentMutator.php',
-            'Context/PostPublishContext.php',
-            'Contract/Action/PostPublishAction.php',
-            'Contract/Query/PostPublishedQuery.php',
-            'Contract/Trigger/PostAuditTrigger.php',
-            'Contract/Trigger/PostReindexTrigger.php',
-            'Contract/Type/MoneyReadProcessor.php',
-            'Contract/Type/MoneyWriteProcessor.php',
-            'Contract/Verifier/PostPriceVerifier.php',
+            'Comment/Comment.php',
+            'Comment/CommentHydrator.php',
+            'Comment/CommentMutationContext.php',
+            'Comment/CommentMutator.php',
+            'Comment/CommentTriggers.php',
+            'Comment/CommentVerifiers.php',
             'Enum/PostStatus.php',
             'Enum/PostVisibility.php',
-            'Post.php',
-            'PostFinder.php',
-            'PostMutationContext.php',
-            'PostMutator.php',
-            'Tag.php',
-            'TagMutationContext.php',
-            'TagMutator.php',
+            'Post/Contract/PostAuditTrigger.php',
+            'Post/Contract/PostPriceVerifier.php',
+            'Post/Contract/PostPublishAction.php',
+            'Post/Contract/PostPublishedQuery.php',
+            'Post/Contract/PostReindexTrigger.php',
+            'Post/Post.php',
+            'Post/PostFinder.php',
+            'Post/PostHydrator.php',
+            'Post/PostMutationContext.php',
+            'Post/PostMutator.php',
+            'Post/PostPublishContext.php',
+            'Post/PostTriggers.php',
+            'Post/PostVerifiers.php',
+            'Tag/Tag.php',
+            'Tag/TagHydrator.php',
+            'Tag/TagMutationContext.php',
+            'Tag/TagMutator.php',
+            'Tag/TagTriggers.php',
+            'Tag/TagVerifiers.php',
+            'Type/MoneyReadProcessor.php',
+            'Type/MoneyWriteProcessor.php',
         ], $paths);
     }
 
     public function testAnEntityWithNoQueriesGetsNoFinder(): void
     {
-        self::assertArrayNotHasKey('CommentFinder.php', $this->generated());
+        self::assertArrayNotHasKey('Comment/CommentFinder.php', $this->generated());
     }
 
     public function testAnImmutableFieldGetsNoSetter(): void
     {
         // Write-once is enforced by the absence of a method, which nothing can forget.
-        $mutator = $this->file('PostMutator.php');
+        $mutator = $this->file('Post/PostMutator.php');
 
         self::assertStringContainsString('public function setTitle(', $mutator);
         self::assertStringNotContainsString('setCreatedAt', $mutator);
@@ -73,7 +73,7 @@ final class CodegenTest extends TestCase
 
     public function testFieldsFromPatternsAreGeneratedLikeAnyOther(): void
     {
-        $post = $this->file('Post.php');
+        $post = $this->file('Post/Post.php');
 
         // createdAt and updatedAt arrive via Auditable → Timestamps; postId via
         // WordPressPost. Nothing in the generated code distinguishes them.
@@ -83,7 +83,7 @@ final class CodegenTest extends TestCase
 
     public function testToManyEdgesReturnALazyQueryAndToOneReturnsTheEntity(): void
     {
-        $post = $this->file('Post.php');
+        $post = $this->file('Post/Post.php');
 
         self::assertStringContainsString('public function comments(): EntityQuery', $post);
         self::assertStringContainsString('@return EntityQuery<Comment>', $post);
@@ -93,7 +93,7 @@ final class CodegenTest extends TestCase
     public function testAnActionContextExposesOnlyItsDeclaredWrites(): void
     {
         // Post.publish declares writes: fields [status], edges [comments].
-        $context = $this->file('Context/PostPublishContext.php');
+        $context = $this->file('Post/PostPublishContext.php');
 
         self::assertStringContainsString('public function setStatus(PostStatus $status)', $context);
         self::assertStringContainsString('public function comments(): EdgeMutation', $context);
@@ -108,7 +108,7 @@ final class CodegenTest extends TestCase
     {
         self::assertStringContainsString(
             'public function verify(Money $value, PostMutationContext $context): Verification;',
-            $this->file('Contract/Verifier/PostPriceVerifier.php'),
+            $this->file('Post/Contract/PostPriceVerifier.php'),
         );
     }
 
@@ -128,17 +128,17 @@ final class CodegenTest extends TestCase
     {
         self::assertStringContainsString(
             'public function read(mixed $value): Money;',
-            $this->file('Contract/Type/MoneyReadProcessor.php'),
+            $this->file('Type/MoneyReadProcessor.php'),
         );
         self::assertStringContainsString(
             'public function write(mixed $value): int;',
-            $this->file('Contract/Type/MoneyWriteProcessor.php'),
+            $this->file('Type/MoneyWriteProcessor.php'),
         );
     }
 
     public function testTypedContextAccessorsNarrowWhatTheGenericContextReturns(): void
     {
-        $context = $this->file('PostMutationContext.php');
+        $context = $this->file('Post/PostMutationContext.php');
 
         self::assertStringContainsString('public function originalPrice(): ?Money', $context);
         self::assertStringContainsString('assert(null === $value || $value instanceof Money);', $context);
@@ -151,13 +151,13 @@ final class CodegenTest extends TestCase
         // PHP forbids narrowing a parameter type in an implementation, so the runtime
         // cannot call PostPriceVerifier::verify(Money, PostMutationContext) through any
         // shared interface. Generated code is allowed to know both sides.
-        $bridge = $this->file('Bridge/PostVerifiers.php');
+        $bridge = $this->file('Post/PostVerifiers.php');
 
         self::assertStringContainsString('implements EntityVerifiers', $bridge);
         self::assertStringContainsString("return ['price'];", $bridge);
         self::assertStringContainsString('assert($value instanceof Money);', $bridge);
         self::assertStringContainsString(
-            'return $this->priceVerifier->verify($value, new PostMutationContext($context));',
+            'return $this->priceVerifier->verify($value, PostMutationContext::of($context));',
             $bridge,
         );
     }
@@ -165,7 +165,7 @@ final class CodegenTest extends TestCase
     public function testAnEntityWithNoVerifiedFieldsStillGetsABridge(): void
     {
         // The runtime should not have to check whether a bridge exists.
-        $bridge = $this->file('Bridge/TagVerifiers.php');
+        $bridge = $this->file('Tag/TagVerifiers.php');
 
         self::assertStringContainsString('return [];', $bridge);
         self::assertStringContainsString('return Verification::ok();', $bridge);
@@ -173,7 +173,7 @@ final class CodegenTest extends TestCase
 
     public function testTriggersDispatchInDeclarationOrderGuardedByPhaseAndEvent(): void
     {
-        $bridge = $this->file('Bridge/PostTriggers.php');
+        $bridge = $this->file('Post/PostTriggers.php');
 
         self::assertStringContainsString(
             'if (TriggerPhase::PostCommit === $phase && in_array($event, [TriggerEvent::Create, TriggerEvent::Update], true)) {',
@@ -187,9 +187,20 @@ final class CodegenTest extends TestCase
         );
     }
 
+    public function testGeneratedClassesAreSealedBehindANamedConstructor(): void
+    {
+        // One entry point rather than two: `new Post(...)` beside `Post::of(...)` says
+        // nothing about which is intended, and it matches the runtime's own style.
+        $post = $this->file('Post/Post.php');
+
+        self::assertStringContainsString('private function __construct(', $post);
+        self::assertStringContainsString('public static function of(', $post);
+        self::assertStringContainsString('return new self($id, $edges,', $post);
+    }
+
     public function testTheHydratorCallsTheGeneratedConstructorWithExactTypes(): void
     {
-        $hydrator = $this->file('Bridge/PostHydrator.php');
+        $hydrator = $this->file('Post/PostHydrator.php');
 
         self::assertStringContainsString('public function hydrate(Record $record, EdgeLoader $edges): Post', $hydrator);
         self::assertStringContainsString('private function title(Record $record): string', $hydrator);
@@ -199,7 +210,7 @@ final class CodegenTest extends TestCase
 
     public function testTheHydratorShortCircuitsNullAndRunsProcessorsOnDeclaredTypes(): void
     {
-        $hydrator = $this->file('Bridge/PostHydrator.php');
+        $hydrator = $this->file('Post/PostHydrator.php');
 
         // Null never reaches a processor, on the way up as on the way down.
         self::assertStringContainsString(
@@ -217,7 +228,7 @@ final class CodegenTest extends TestCase
     public function testTheHydratorTakesOnlyTheProcessorsItsFieldsNeed(): void
     {
         // Tag has no declared types, so its hydrator takes the decoder and nothing else.
-        self::assertStringNotContainsString('Reader', $this->file('Bridge/TagHydrator.php'));
+        self::assertStringNotContainsString('Reader', $this->file('Tag/TagHydrator.php'));
     }
 
     public function testGenerationIsDeterministic(): void

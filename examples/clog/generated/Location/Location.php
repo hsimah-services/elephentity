@@ -8,30 +8,28 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Inventory.php
- * digest: sha256:fa2ba893f19b100e1a82afb106bb63cca867d4cfbd27e3cf1090ccfd1c7d138e
+ * path:   Location/Location.php
+ * digest: sha256:cc5b894b76d4168eac4fad5f3ea97b8f32c013e204b50bad682fefbfec604249
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Location;
 
 use DateTimeImmutable;
 use PheFr\Runtime\Identity\EntityId;
 use PheFr\Runtime\Query\EdgeLoader;
 
 /**
- * One stocked instance of an item, in a location, with its own expiry.
+ * Somewhere inventory can be kept.
  */
-final class Inventory
+final class Location
 {
-    public function __construct(
+    private function __construct(
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
         private readonly ?DateTimeImmutable $updatedAt,
         private readonly int $postId,
         private readonly string $name,
-        private readonly DateTimeImmutable $dateAdded,
-        private readonly ?DateTimeImmutable $dateExpiry,
     ) {
     }
 
@@ -59,42 +57,21 @@ final class Inventory
     }
 
     /**
-     * Projected to post_title, so the admin list has something to show.
+     * What the location is called. Projected to post_title.
      */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * When this instance entered inventory.
-     */
-    public function getDateAdded(): DateTimeImmutable
-    {
-        return $this->dateAdded;
-    }
-
-    /**
-     * When it expires. Absent means it does not.
-     */
-    public function getDateExpiry(): ?DateTimeImmutable
-    {
-        return $this->dateExpiry;
-    }
-
-    /**
-     * @return Item|null
-     */
-    public function getItem(): ?Item
-    {
-        return $this->edges->toOne('Inventory', $this->id, 'item');
-    }
-
-    /**
-     * @return Location|null
-     */
-    public function getLocation(): ?Location
-    {
-        return $this->edges->toOne('Inventory', $this->id, 'location');
+    public static function of(
+        EntityId $id,
+        EdgeLoader $edges,
+        DateTimeImmutable $createdAt,
+        ?DateTimeImmutable $updatedAt,
+        int $postId,
+        string $name,
+    ): self {
+        return new self($id, $edges, $createdAt, $updatedAt, $postId, $name);
     }
 }

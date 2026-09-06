@@ -771,6 +771,18 @@ no sidecar manifest is needed to track the tree's contents.
 **Paths in the digest are relative.** An absolute path would make every signature
 depend on where the project happens to be checked out.
 
+**Everything for one entity lives in one folder.** `Item/` holds the entity, mutator,
+finder and bridges, and `Item/Contract/` holds exactly the interfaces someone must
+implement before the application boots — so "what do I owe this entity?" is answered by
+listing a directory. Enums stay in `Enum/` regardless of whether they were declared or
+inline, because that shared placement is what makes promoting an inline enum a no-op;
+type processors stay in `Type/`, since Money belongs to no single entity.
+
+**Generated classes are sealed behind a named constructor.** `Item::of(...)`, with the
+constructor private. `new Item(...)` beside `Item::of(...)` says nothing about which is
+intended, and the runtime already reads this way — `EntityId::of()`,
+`Verification::ok()`, `Cursor::of()`.
+
 **Interfaces extend nothing.** PHP forbids narrowing a parameter type in an
 implementation, so a common base declaring `verify(mixed, MutationContext)` would make
 `PostPriceVerifier::verify(Money, PostMutationContext)` illegal. Generated callers know

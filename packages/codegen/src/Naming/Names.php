@@ -24,93 +24,87 @@ final readonly class Names
     {
     }
 
+    /**
+     * Everything belonging to one entity lives under a folder named after it.
+     *
+     * Navigating an unfamiliar codebase is the point: `Item/` holds the entity, its
+     * mutator, its finder, its bridges, and — in `Item/Contract/` — precisely the
+     * interfaces someone has to implement before the application will boot. Answering
+     * "what do I owe this entity?" becomes listing one directory.
+     */
     public function entity(EntityDefinition $entity): string
     {
-        return $this->config->namespaceFor($entity->name);
+        return $this->config->namespaceFor($entity->name, $entity->name);
     }
 
     public function mutator(EntityDefinition $entity): string
     {
-        return $this->config->namespaceFor($entity->name . 'Mutator');
+        return $this->member($entity, 'Mutator');
     }
 
     public function finder(EntityDefinition $entity): string
     {
-        return $this->config->namespaceFor($entity->name . 'Finder');
-    }
-
-    public function verifiers(EntityDefinition $entity): string
-    {
-        return $this->config->namespaceFor('Bridge', $entity->name . 'Verifiers');
-    }
-
-    public function triggers(EntityDefinition $entity): string
-    {
-        return $this->config->namespaceFor('Bridge', $entity->name . 'Triggers');
-    }
-
-    public function hydrator(EntityDefinition $entity): string
-    {
-        return $this->config->namespaceFor('Bridge', $entity->name . 'Hydrator');
+        return $this->member($entity, 'Finder');
     }
 
     public function mutationContext(EntityDefinition $entity): string
     {
-        return $this->config->namespaceFor($entity->name . 'MutationContext');
+        return $this->member($entity, 'MutationContext');
+    }
+
+    public function verifiers(EntityDefinition $entity): string
+    {
+        return $this->member($entity, 'Verifiers');
+    }
+
+    public function triggers(EntityDefinition $entity): string
+    {
+        return $this->member($entity, 'Triggers');
+    }
+
+    public function hydrator(EntityDefinition $entity): string
+    {
+        return $this->member($entity, 'Hydrator');
     }
 
     public function actionContext(EntityDefinition $entity, string $action): string
     {
-        return $this->config->namespaceFor(
-            'Context',
-            $entity->name . ucfirst($action) . 'Context',
-        );
+        return $this->member($entity, ucfirst($action) . 'Context');
     }
 
     public function queryHandler(EntityDefinition $entity, string $query): string
     {
-        return $this->config->namespaceFor(
-            self::CONTRACT,
-            'Query',
-            $entity->name . ucfirst($query) . 'Query',
-        );
+        return $this->contract($entity, ucfirst($query) . 'Query');
     }
 
     public function actionHandler(EntityDefinition $entity, string $action): string
     {
-        return $this->config->namespaceFor(
-            self::CONTRACT,
-            'Action',
-            $entity->name . ucfirst($action) . 'Action',
-        );
+        return $this->contract($entity, ucfirst($action) . 'Action');
     }
 
     public function triggerHandler(EntityDefinition $entity, string $trigger): string
     {
-        return $this->config->namespaceFor(
-            self::CONTRACT,
-            'Trigger',
-            $entity->name . ucfirst($trigger) . 'Trigger',
-        );
+        return $this->contract($entity, ucfirst($trigger) . 'Trigger');
     }
 
     public function fieldVerifier(EntityDefinition $entity, FieldDefinition $field): string
     {
-        return $this->config->namespaceFor(
-            self::CONTRACT,
-            'Verifier',
-            $entity->name . ucfirst($field->name) . 'Verifier',
-        );
+        return $this->contract($entity, ucfirst($field->name) . 'Verifier');
     }
 
+    /**
+     * Type processors belong to a type rather than an entity, so they sit outside the
+     * entity folders — Money is shared, and filing it under whichever entity happened
+     * to use it first would be arbitrary.
+     */
     public function readProcessor(string $type): string
     {
-        return $this->config->namespaceFor(self::CONTRACT, 'Type', $type . 'ReadProcessor');
+        return $this->config->namespaceFor('Type', $type . 'ReadProcessor');
     }
 
     public function writeProcessor(string $type): string
     {
-        return $this->config->namespaceFor(self::CONTRACT, 'Type', $type . 'WriteProcessor');
+        return $this->config->namespaceFor('Type', $type . 'WriteProcessor');
     }
 
     /**
@@ -124,8 +118,9 @@ final readonly class Names
     /**
      * An enum's class, whether declared in types/ or written inline on a field.
      *
-     * Both forms resolve here, which is what makes promoting an inline enum to a
-     * declared type a no-op in the generated code.
+     * Both live in Enum/, outside the entity folders, and that placement is load
+     * bearing: it is what makes promoting an inline enum into types/ a no-op in the
+     * generated code. Filing inline enums under their entity would break that.
      */
     public function enum(string $name): string
     {
@@ -135,6 +130,20 @@ final readonly class Names
     public function inlineEnum(EntityDefinition $entity, FieldDefinition $field): string
     {
         return $this->enum($entity->name . ucfirst($field->name));
+    }
+
+    private function member(EntityDefinition $entity, string $suffix): string
+    {
+        return $this->config->namespaceFor($entity->name, $entity->name . $suffix);
+    }
+
+    private function contract(EntityDefinition $entity, string $suffix): string
+    {
+        return $this->config->namespaceFor(
+            $entity->name,
+            self::CONTRACT,
+            $entity->name . $suffix,
+        );
     }
 
     public function getter(string $field): string

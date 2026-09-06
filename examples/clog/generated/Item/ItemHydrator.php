@@ -8,14 +8,13 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Bridge/ItemHydrator.php
- * digest: sha256:97a320b9722740de9f212a72d51901a4f22e4fe49ede287d79d556620f5fb4ca
+ * path:   Item/ItemHydrator.php
+ * digest: sha256:4d1863ae410dbf9159336ef1dcf40f3eb92459ca7a92d9b9d5e3da7a16e70cda
  */
 
-namespace Clog\Entity\Bridge;
+namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
-use Clog\Entity\Item;
 use DateTimeImmutable;
 use PheFr\Runtime\Query\EdgeLoader;
 use PheFr\Runtime\Query\Hydrator;
@@ -29,14 +28,14 @@ use PheFr\Runtime\Storage\Record;
  */
 final readonly class ItemHydrator implements Hydrator
 {
-    public function __construct(
+    private function __construct(
         private ValueDecoder $decode,
     ) {
     }
 
     public function hydrate(Record $record, EdgeLoader $edges): Item
     {
-        return new Item(
+        return Item::of(
             $record->id,
             $edges,
             $this->createdAt($record),
@@ -96,5 +95,10 @@ final readonly class ItemHydrator implements Hydrator
         $value = $record->value('defaultExpiryValue');
 
         return null === $value ? null : $this->decode->int($value, 'Item.defaultExpiryValue');
+    }
+
+    public static function of(ValueDecoder $decode): self
+    {
+        return new self($decode);
     }
 }

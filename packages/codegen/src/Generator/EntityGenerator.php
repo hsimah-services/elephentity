@@ -91,6 +91,8 @@ final readonly class EntityGenerator
             $this->addEdge($namespace, $type, $entity, $edge);
         }
 
+        $this->emitter->namedConstructor($type, $constructor);
+
         return $this->emitter->file($class, $namespace);
     }
 

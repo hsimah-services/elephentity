@@ -8,28 +8,32 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Bridge/ItemTriggers.php
- * digest: sha256:3d1dbd4dba8ad792e04ce2f9af0fe8c54bb1b236b28b55455b9fbce0eeeef71b
+ * path:   Inventory/InventoryTriggers.php
+ * digest: sha256:9f3ca71622bf989a455214dcba3f53192ae690ff9d5678f2f4bb6a3ad5b9dad5
  */
 
-namespace Clog\Entity\Bridge;
+namespace Clog\Entity\Inventory;
 
-use Clog\Entity\ItemMutationContext;
 use PheFr\Runtime\Mutation\EntityTriggers;
 use PheFr\Runtime\Mutation\MutationContext;
 use PheFr\Runtime\Trigger\TriggerEvent;
 use PheFr\Runtime\Trigger\TriggerPhase;
 
 /**
- * Runs Item's triggers, in the order the spec declares them.
+ * Runs Inventory's triggers, in the order the spec declares them.
  */
-final readonly class ItemTriggers implements EntityTriggers
+final readonly class InventoryTriggers implements EntityTriggers
 {
-    public function __construct()
+    private function __construct()
     {
     }
 
     public function dispatch(TriggerPhase $phase, TriggerEvent $event, MutationContext $context): void
     {
+    }
+
+    public static function of(): self
+    {
+        return new self();
     }
 }

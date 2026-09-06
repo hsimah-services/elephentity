@@ -8,13 +8,13 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Contract/Verifier/ItemDefaultExpiryValueVerifier.php
- * digest: sha256:99c52846b5d97c5c7bb1c4b3e1df5038470b162b108b2d154d3feb80784c3795
+ * path:   Item/Contract/ItemDefaultExpiryValueVerifier.php
+ * digest: sha256:26d656e3ee9946cf4bbfd20f495a9eb610d85f87fc60a5243bc5089354b48e5a
  */
 
-namespace Clog\Entity\Contract\Verifier;
+namespace Clog\Entity\Item\Contract;
 
-use Clog\Entity\ItemMutationContext;
+use Clog\Entity\Item\ItemMutationContext;
 use PheFr\Runtime\Verification\Verification;
 
 /**

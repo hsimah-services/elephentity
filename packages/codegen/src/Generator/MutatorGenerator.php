@@ -111,7 +111,7 @@ final readonly class MutatorGenerator
             }
 
             $method->setBody(sprintf(
-                '$this->%sAction->handle(new %s($this->buffer)%s);',
+                '$this->%sAction->handle(%s::of($this->buffer)%s);',
                 $action->name,
                 $this->emitter->shortName($context),
                 [] === $arguments ? '' : ', ' . implode(', ', $arguments),
@@ -121,6 +121,8 @@ final readonly class MutatorGenerator
                 $method->addComment($action->description);
             }
         }
+
+        $this->emitter->namedConstructor($type, $constructor);
 
         return $this->emitter->file($class, $namespace);
     }

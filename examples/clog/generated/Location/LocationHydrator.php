@@ -8,13 +8,12 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Bridge/LocationHydrator.php
- * digest: sha256:bed0a9399d2ed8f9ce809c8897b7752f287267e62bf4eebf94690ba9ae218ede
+ * path:   Location/LocationHydrator.php
+ * digest: sha256:4da69d988ad00369cfecc2356e2bf3c7bc66249effe84535bbb946af4f54ffd4
  */
 
-namespace Clog\Entity\Bridge;
+namespace Clog\Entity\Location;
 
-use Clog\Entity\Location;
 use DateTimeImmutable;
 use PheFr\Runtime\Query\EdgeLoader;
 use PheFr\Runtime\Query\Hydrator;
@@ -28,14 +27,14 @@ use PheFr\Runtime\Storage\Record;
  */
 final readonly class LocationHydrator implements Hydrator
 {
-    public function __construct(
+    private function __construct(
         private ValueDecoder $decode,
     ) {
     }
 
     public function hydrate(Record $record, EdgeLoader $edges): Location
     {
-        return new Location(
+        return Location::of(
             $record->id,
             $edges,
             $this->createdAt($record),
@@ -71,5 +70,10 @@ final readonly class LocationHydrator implements Hydrator
         $value = $record->value('name');
 
         return $this->decode->string($value, 'Location.name');
+    }
+
+    public static function of(ValueDecoder $decode): self
+    {
+        return new self($decode);
     }
 }

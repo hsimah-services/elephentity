@@ -6,6 +6,8 @@ namespace PheFr\Cli\Command;
 
 use Closure;
 use PheFr\Cli\ProjectConfig;
+use PheFr\Codegen\GeneratorConfig;
+use PheFr\Codegen\Naming\Names;
 use PheFr\Schema\SchemaCompiler;
 use PheFr\Schema\SpecSource;
 use PheFr\WPGraphQL\Conformance\ConformanceChecker;
@@ -93,17 +95,29 @@ final class CheckCommand extends Command
             return Command::FAILURE;
         }
 
-        $manifest = (new ManifestBuilder())->build($compiled->schema());
+        $schema = $compiled->schema();
+        $manifest = (new ManifestBuilder())->build($schema);
 
-        $root = trim($config->rootNamespace, '\\');
+        $outputDirectory = rtrim($directory, '/') . '/' . $config->outputDirectory;
 
-        $this->autoloadGenerated(
-            $root,
-            rtrim($directory, '/') . '/' . $config->outputDirectory,
-        );
+        $this->autoloadGenerated(trim($config->rootNamespace, '\\'), $outputDirectory);
+
+        // Ask the generator where it put things rather than restating the convention:
+        // a second copy of the layout rule is a second thing to forget to update.
+        $names = new Names(new GeneratorConfig(
+            $config->rootNamespace,
+            $outputDirectory,
+            $config->typeNamespace,
+        ));
+
         $classFor = Closure::fromCallable(
-            static fn (string $entity): string => $root . '\\' . $entity,
+            static function (string $entity) use ($names, $schema): string {
+                $definition = $schema->entity($entity);
+
+                return null === $definition ? $entity : $names->entity($definition);
+            },
         );
+
 
         $problems = (new ConformanceChecker($manifest, $classFor))->check();
 

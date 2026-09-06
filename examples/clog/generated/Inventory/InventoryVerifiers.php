@@ -8,23 +8,22 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Bridge/LocationVerifiers.php
- * digest: sha256:6ce3fbbbbc9c704ea62ba2ae3c34959716e26ae26a42a9e6f3f072f104e22205
+ * path:   Inventory/InventoryVerifiers.php
+ * digest: sha256:4bc6ec56f4ec1a4b8656894f311b7ee3f53bf3b94a2063d6cad4100893e89dca
  */
 
-namespace Clog\Entity\Bridge;
+namespace Clog\Entity\Inventory;
 
-use Clog\Entity\LocationMutationContext;
 use PheFr\Runtime\Mutation\MutationContext;
 use PheFr\Runtime\Verification\EntityVerifiers;
 use PheFr\Runtime\Verification\Verification;
 
 /**
- * Dispatches to Location's field verifiers.
+ * Dispatches to Inventory's field verifiers.
  */
-final readonly class LocationVerifiers implements EntityVerifiers
+final readonly class InventoryVerifiers implements EntityVerifiers
 {
-    public function __construct()
+    private function __construct()
     {
     }
 
@@ -39,5 +38,10 @@ final readonly class LocationVerifiers implements EntityVerifiers
     public function verify(string $field, mixed $value, MutationContext $context): Verification
     {
         return Verification::ok();
+    }
+
+    public static function of(): self
+    {
+        return new self();
     }
 }

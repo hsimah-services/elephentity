@@ -54,8 +54,8 @@ final readonly class ContextGenerator
                 $action->name,
             ));
 
-            $type->addMethod('__construct')
-                ->addPromotedParameter('buffer')
+            $constructor = $type->addMethod('__construct');
+            $constructor->addPromotedParameter('buffer')
                 ->setType(MutationBuffer::class)
                 ->setPrivate()
                 ->setReadOnly();
@@ -94,6 +94,8 @@ final readonly class ContextGenerator
                     ->setBody(sprintf('return $this->buffer->edge(%s);', var_export($name, true)));
             }
 
+            $this->emitter->namedConstructor($type, $constructor);
+
             $files[] = $this->emitter->file($class, $namespace);
         }
 
@@ -120,8 +122,8 @@ final readonly class ContextGenerator
         $type->addImplement(MutationContext::class);
         $type->addComment(sprintf('A pending %s mutation, with exact types.', $entity->name));
 
-        $type->addMethod('__construct')
-            ->addPromotedParameter('context')
+        $constructor = $type->addMethod('__construct');
+        $constructor->addPromotedParameter('context')
             ->setType(MutationContext::class)
             ->setPrivate();
 
@@ -164,6 +166,8 @@ final readonly class ContextGenerator
                     ->setBody($this->narrowingBody($side, $field, $phpType));
             }
         }
+
+        $this->emitter->namedConstructor($type, $constructor);
 
         return $this->emitter->file($class, $namespace);
     }

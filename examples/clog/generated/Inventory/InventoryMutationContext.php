@@ -8,11 +8,11 @@ declare(strict_types=1);
  * Regenerate with `phefr generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   InventoryMutationContext.php
- * digest: sha256:59aee701820ce24a01fe40ebdef4aed28cf325d33a29376f40512446443770d4
+ * path:   Inventory/InventoryMutationContext.php
+ * digest: sha256:8896cb1f196c1712ca81a7e66fb0926ffeda74e7668cab2b04d2d0b02ec7ce02
  */
 
-namespace Clog\Entity;
+namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
 use PheFr\Runtime\Mutation\MutationContext;
@@ -22,7 +22,7 @@ use PheFr\Runtime\Mutation\MutationContext;
  */
 final readonly class InventoryMutationContext implements MutationContext
 {
-    public function __construct(
+    private function __construct(
         private MutationContext $context,
     ) {
     }
@@ -154,5 +154,10 @@ final readonly class InventoryMutationContext implements MutationContext
         assert(null === $value || $value instanceof DateTimeImmutable);
 
         return $value;
+    }
+
+    public static function of(MutationContext $context): self
+    {
+        return new self($context);
     }
 }
