@@ -28,9 +28,10 @@ require_once __DIR__ . '/vendor/autoload.php';
  *
  * Three hooks, and the order matters:
  *
- *   activation     create or migrate the tables, before anything can query them
- *   init           register the post types, which WordPress requires on this hook
- *   plugins_loaded assemble the runtime and hand it to whatever speaks a protocol
+ *   activation         create or migrate the tables, before anything can query them
+ *   init               register the post types, which WordPress requires on this hook
+ *   before_delete_post clean up rows whose post row went behind the framework's back
+ *   plugins_loaded     assemble the runtime and hand it to whatever speaks a protocol
  */
 function bootstrap(): Bootstrap
 {
@@ -59,6 +60,17 @@ register_activation_hook(__FILE__, static function (): void {
             implode("\n", array_map(static fn ($refusal): string => $refusal->describe(), $plan->refusals)),
         )));
     }
+});
+
+add_action('init', static function (): void {
+    // WordPress requires post type registration on this hook and no earlier.
+    bootstrap()->postTypes()->register();
+});
+
+add_action('before_delete_post', static function (int $postId): void {
+    // The out-of-band case framework enforcement cannot see: someone emptying the
+    // trash, or another plugin calling wp_delete_post().
+    bootstrap()->orphanGuard()->onPostDeleted($postId);
 });
 
 add_action('plugins_loaded', static function (): void {

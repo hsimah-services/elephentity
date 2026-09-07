@@ -6,6 +6,8 @@ declare(strict_types=1);
 use Eleph\Schema\Wire\BuilderEnvelope;
 use Eleph\Schema\Wire\IrCodec;
 use Eleph\Schema\Wire\WireException;
+use Eleph\WordPress\Manifest\PostTypeManifestBuilder;
+use Eleph\WordPress\Manifest\PostTypeManifestExporter;
 use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Manifest\StorageManifestExporter;
 
@@ -54,9 +56,17 @@ try {
     // project does not use, and beats silence, which looks exactly like a builder that
     // ran and had nothing to do.
     $files = DRIVER === $schema->project->driver
-        ? ['storage-manifest.php' => (new StorageManifestExporter())->export(
-            (new StorageManifestBuilder())->build($schema),
-        )]
+        ? [
+            'storage-manifest.php' => (new StorageManifestExporter())->export(
+                (new StorageManifestBuilder())->build($schema),
+            ),
+            // Registration arguments, compiled rather than derived per request. An
+            // entity with no `handle` contributes nothing, so a project registering no
+            // post types still gets the file — empty, and saying so.
+            'post-types.php' => (new PostTypeManifestExporter())->export(
+                (new PostTypeManifestBuilder())->build($schema),
+            ),
+        ]
         : [];
 
     $errors = DRIVER === $schema->project->driver ? [] : [sprintf(

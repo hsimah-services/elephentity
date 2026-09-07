@@ -860,6 +860,18 @@ The manifest carries **join tables** as well as entity tables. Keyed by entity, 
 many-to-many link table belonged to nobody and was dropped, so an edge compiled to a
 placement pointing at a table nothing would ever create.
 
+### Registration is compiled, like everything else
+
+`register_post_type()`'s arguments are derived from the spec at build time and written
+to `post-types.php`, beside the storage manifest. They were once derived at *run* time
+from the compiled `Schema` — which meant a plugin that registered post types shipped the
+spec compiler and parsed YAML on every request, the one cost every manifest here exists
+to remove, and a dev-only package in production besides.
+
+`OrphanGuard` was the same shape and is fixed the same way, without needing anything new
+compiled: the storage manifest already carries a field-to-column map per entity, which
+answers "does this entity project to a post row" directly.
+
 ### Post-row divergence
 
 When a post type is registered, the custom table row and the post row are two records

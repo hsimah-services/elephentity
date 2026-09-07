@@ -29,9 +29,11 @@ use Eleph\Runtime\Gateway\UnitOfWorkFactory;
 use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Query\ValueDecoder;
 use Eleph\WordPress\Database\Database;
+use Eleph\WordPress\Integrity\OrphanGuard;
 use Eleph\WordPress\Manifest\StorageManifest;
 use Eleph\WordPress\Migration\MigrationPlan;
 use Eleph\WordPress\Migration\SchemaInstaller;
+use Eleph\WordPress\Registration\PostTypeRegistrar;
 use Eleph\WordPress\WordPress;
 use Eleph\WPGraphQL\Plugin;
 
@@ -74,6 +76,8 @@ final class Bootstrap
     private const STORAGE_MANIFEST = self::GENERATED . '/wordpress/storage-manifest.php';
 
     private const GRAPHQL_MANIFEST = self::GENERATED . '/wpgraphql/graphql-manifest.php';
+
+    private const POST_TYPES = self::GENERATED . '/wordpress/post-types.php';
 
     private ?Runtime $runtime = null;
 
@@ -122,6 +126,29 @@ final class Bootstrap
             $this->runtime(),
             new NoProcessors(),
         );
+    }
+
+    /**
+     * The post types the spec compiled to. Hook `register()` on `init`.
+     *
+     * Compiled, not derived: this used to need the build-time `Schema`, so registering
+     * post types meant shipping the spec compiler and parsing YAML on every request.
+     */
+    public function postTypes(): PostTypeRegistrar
+    {
+        return PostTypeRegistrar::fromManifest(self::POST_TYPES);
+    }
+
+    /**
+     * Hook `onPostDeleted()` on `before_delete_post`.
+     *
+     * Nothing in the framework sees someone empty the trash in wp-admin or another
+     * plugin call `wp_delete_post()`. Without this the post row goes and the custom
+     * table row survives, pointing at nothing.
+     */
+    public function orphanGuard(): OrphanGuard
+    {
+        return new OrphanGuard($this->manifest()->withPrefix($this->database->prefix()), $this->database);
     }
 
     /**

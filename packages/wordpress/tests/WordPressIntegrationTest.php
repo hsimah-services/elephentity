@@ -9,15 +9,16 @@ use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
 use Eleph\WordPress\Integrity\OrphanGuard;
-use Eleph\WordPress\Registration\PostTypeRegistrar;
-use Eleph\WordPress\Sql\Naming;
+use Eleph\WordPress\Manifest\PostTypeManifestBuilder;
+use Eleph\WordPress\Manifest\StorageManifest;
+use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * The two places Elephentity has to meet WordPress on its own terms.
  */
-#[CoversClass(PostTypeRegistrar::class)]
+#[CoversClass(PostTypeManifestBuilder::class)]
 #[CoversClass(OrphanGuard::class)]
 final class WordPressIntegrationTest extends TestCase
 {
@@ -26,7 +27,7 @@ final class WordPressIntegrationTest extends TestCase
     public function testOnlyEntitiesDeclaringAHandleGetAPostType(): void
     {
         // A post type exists where the WP ecosystem needs one, not for every entity.
-        $types = (new PostTypeRegistrar($this->schema()))->arguments();
+        $types = $this->postTypes();
 
         self::assertSame(['post'], array_keys($types));
         self::assertSame('A published article.', $types['post']['description']);
@@ -37,7 +38,7 @@ final class WordPressIntegrationTest extends TestCase
         // The fixture's WordPressPost pattern declares visibility and supports; Post
         // configures them. Nothing here is hardcoded, and packages/schema validated
         // the values without knowing what any of them mean.
-        $types = (new PostTypeRegistrar($this->schema()))->arguments();
+        $types = $this->postTypes();
 
         self::assertTrue($types['post']['public']);
         self::assertTrue($types['post']['publicly_queryable']);
@@ -48,7 +49,7 @@ final class WordPressIntegrationTest extends TestCase
     public function testLabelsAreDerivedFromTheEntityName(): void
     {
         // Nine labels is exactly the boilerplate this framework exists to delete.
-        $labels = (new PostTypeRegistrar($this->schema()))->arguments()['post']['labels'];
+        $labels = $this->postTypes()['post']['labels'];
 
         self::assertIsArray($labels);
 
@@ -60,7 +61,7 @@ final class WordPressIntegrationTest extends TestCase
 
     public function testTheOrphanGuardWatchesOnlyTablesThatTrackPosts(): void
     {
-        $guard = new OrphanGuard($this->schema(), new FakeDatabase(), new Naming('wp_'));
+        $guard = new OrphanGuard($this->manifest(), new FakeDatabase());
 
         // Only Post carries the WordPressPost pattern's postId.
         self::assertSame(['wp_phe_post'], $guard->tablesTrackingPosts());
@@ -73,7 +74,7 @@ final class WordPressIntegrationTest extends TestCase
         // nothing.
         $database = new FakeDatabase();
 
-        (new OrphanGuard($this->schema(), $database, new Naming('wp_')))->onPostDeleted(99);
+        (new OrphanGuard($this->manifest(), $database))->onPostDeleted(99);
 
         self::assertCount(1, $database->statements);
         self::assertSame(
@@ -81,6 +82,25 @@ final class WordPressIntegrationTest extends TestCase
             $database->statements[0]['sql'],
         );
         self::assertSame([99], $database->statements[0]['bindings']);
+    }
+
+    /**
+     * The compiled post types, the way a plugin gets them: through the manifest.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function postTypes(): array
+    {
+        return (new PostTypeManifestBuilder())->build($this->schema());
+    }
+
+    /**
+     * Prefixed the way `$wpdb` prefixes it at boot, since that is where the guard's
+     * table names have to come from.
+     */
+    private function manifest(): StorageManifest
+    {
+        return (new StorageManifestBuilder())->build($this->schema())->withPrefix('wp_');
     }
 
     private function schema(): Schema
