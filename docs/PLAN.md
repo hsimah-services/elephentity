@@ -171,6 +171,34 @@ because we are the only consumer; the fix, if Elephentity is ever distributed wi
 [php-scoper](https://github.com/humbug/php-scoper) to rewrite dependencies under a
 private namespace prefix at build time.
 
+### The shipped packages are schema-free
+
+`elephentity/schema` parses YAML to produce the IR. It is dev-only, and §15's split
+made that a distribution fact rather than a convention — so a shipped class naming one
+of its types is how "dev packages never reach production" stops being true.
+
+It had. `EdgePlacement` typed a property as `Schema\Ir\RelationKind`, and a compiled
+storage manifest contains `RelationKind::OneToMany` as a literal — so *loading* the
+manifest pulled the spec compiler into every request of every WordPress project.
+`RelationKind` is now mirrored into `Runtime\Storage` alongside `Managed` and
+`TriggerPhase`, with the IR's own enum owning the correspondence.
+
+Two classes were loaded at run time while carrying build-time signatures, which is the
+same leak one call away from happening. `Naming` took `EntityDefinition` and now takes
+strings — the rules are the same, what they need to know is less — and `FieldMap`'s
+`fromSchema()` had one caller, a test, for a map the real path builds from the manifest.
+
+`tools/check-architecture.php` enforces it, with an explicit allowlist of the classes
+that turn a compiled spec into something the runtime loads later. A list of files rather
+than a namespace convention, so adding one takes a moment's thought; when those move to
+packages of their own the list empties and the rule stays.
+
+**What this does not yet do is change the Composer declaration.** `packages/wordpress`
+still requires `elephentity/schema`, because it still contains its own builder — the bin
+and the four classes behind it. Splitting those out, as `codegen-php` was split out, is
+what would let the requirement become a dev one. The boundary is now enforced, which is
+the precondition; the move is mechanical after it.
+
 ### Storage port
 
 The storage port is defined **now**, with exactly one adapter, rather than retrofitted

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Sql;
 
-use Eleph\Schema\Ir\Schema;
-
 /**
  * Translates between the spec's field names and the database's column names.
  *
@@ -37,22 +35,6 @@ final readonly class FieldMap
 
         $this->toColumn = $columns;
         $this->toField = $toField;
-    }
-
-    /**
-     * Built from the spec at build time; from the manifest at run time.
-     */
-    public static function fromSchema(Schema $schema, Naming $naming = new Naming()): self
-    {
-        $columns = [];
-
-        foreach ($schema->entities as $entity) {
-            foreach ($entity->fields as $field) {
-                $columns[$entity->name][$field->name] = $naming->column($field->name);
-            }
-        }
-
-        return new self($columns);
     }
 
     public function column(string $entity, string $field): string

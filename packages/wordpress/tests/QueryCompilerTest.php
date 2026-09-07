@@ -13,7 +13,7 @@ use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Order;
-use Eleph\Schema\Ir\RelationKind;
+use Eleph\Runtime\Storage\RelationKind;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\CompiledQuery;
 use Eleph\WordPress\Sql\EdgePlacement;
