@@ -944,10 +944,14 @@ Cheapest first, each catching a distinct class of failure:
 
 ---
 
-## 15. Pluggable code generation **[proposed]**
+## 15. Pluggable code generation **[landed; split into its own repositories]**
 
-One spec should produce the backend *and* the frontend. Today `packages/codegen` emits
-PHP and only PHP, and the assumption is not in one place: `Codegen::generate()` hardwires
+> Written when the generator was `packages/codegen` in this repository. It is now two
+> separate programs — see "The split happened, for a different reason" below — so the
+> problem statement that follows is history rather than a description of the tree.
+
+One spec should produce the backend *and* the frontend. At the time, `packages/codegen`
+emitted PHP and only PHP, and the assumption is not in one place: `Codegen::generate()` hardwires
 eleven generators in sequence; `Emitter` and `Printer` are built on `nette/php-generator`,
 so a generator's implicit contract is "return a `PhpNamespace`"; `Names` produces PHP
 FQCNs and `GeneratorConfig` is a pair of namespaces; `TypeMapper` maps the primitive set
@@ -1182,9 +1186,14 @@ section already accepted when it declined to promise compatibility before 1.0.
 
 #### Landed so far
 
-**Step 1 is complete: the protocol is real.** A target is either built into the
+> Class names in this subsection are where things were when the protocol landed. The
+> protocol is unchanged; the code moved. `Eleph\Codegen\*` is now `elephentity-codegen`,
+> and `packages/codegen-php` is `elephentity-codegen-php`.
+
+**Step 1 is complete: the protocol is real.** A target was either built into the
 installation and called in process, or an external program reached over a pipe — the
-same `Target` interface either way, so `GenerateCommand` cannot tell them apart.
+same `Target` interface either way, so `GenerateCommand` could not tell them apart. The
+in-process half is gone now, and with it the interface.
 
 - `Eleph\Schema\Wire\IrCodec` is the IR as JSON. Reflection over the constructors
   rather than a hand-written encoder per class: the IR is 18 plain value objects, so a
@@ -1276,7 +1285,7 @@ reserved word, and while PHP permits it as a method name it reads badly at the c
 site. `pending()` falls back to the original for untouched fields, so a verifier always
 sees what the row will actually hold.
 
-### Step 3 — `packages/codegen`
+### Step 3 — code generation *(now `elephentity-codegen` and `elephentity-codegen-php`)*
 - Entity, Mutator, Finder, action contexts, typed mutation contexts, enums
 - Handler interfaces: queries, actions, triggers, field verifiers, type processors
 - Header + hash signing, with the single shared verifier
