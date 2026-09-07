@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:7ff0301770c9c95010dbd14712956cef026fc7949b2b21419ab2949f20cff8b8
+ * digest: sha256:37f9e2b963815a80afeddc71d73202dcaf12e50b041ac0498fc4426d692ee126
  */
 
 namespace Clog\Entity\Inventory;
@@ -34,7 +34,7 @@ final class InventoryMutator
         return $this;
     }
 
-    public function setPostId(int $postId): self
+    public function setPostId(?int $postId): self
     {
         $this->buffer->set('postId', $postId);
 

@@ -41,29 +41,52 @@ final readonly class TriggerDispatcher
     public function dispatch(TriggerPhase $phase, array $mutations): void
     {
         foreach ($mutations as $mutation) {
-            $triggers = $this->triggers[$mutation->entity()] ?? null;
+            $this->run(
+                $phase,
+                $mutation->isCreate() ? TriggerEvent::Create : TriggerEvent::Update,
+                $mutation,
+            );
+        }
+    }
 
-            if (null === $triggers) {
-                continue;
-            }
+    /**
+     * Delete events, for every row the commit removes.
+     *
+     * Separate because the event cannot be derived from the context: a deletion has no
+     * pending values to inspect, and a Mutation standing in for one is indistinguishable
+     * from an update that happens to change nothing.
+     *
+     * @param list<Mutation> $deleted One per planned removal, cascades included.
+     */
+    public function dispatchDeletions(TriggerPhase $phase, array $deleted): void
+    {
+        foreach ($deleted as $context) {
+            $this->run($phase, TriggerEvent::Delete, $context);
+        }
+    }
 
-            $event = $mutation->isCreate() ? TriggerEvent::Create : TriggerEvent::Update;
+    private function run(TriggerPhase $phase, TriggerEvent $event, Mutation $context): void
+    {
+        $triggers = $this->triggers[$context->entity()] ?? null;
 
-            if (TriggerPhase::PreCommit === $phase) {
-                $triggers->dispatch($phase, $event, $mutation);
+        if (null === $triggers) {
+            return;
+        }
 
-                continue;
-            }
+        if (TriggerPhase::PreCommit === $phase) {
+            $triggers->dispatch($phase, $event, $context);
 
-            try {
-                $triggers->dispatch($phase, $event, $mutation);
-            } catch (Throwable $exception) {
-                $this->logger->error('A postCommit trigger failed after the data was committed.', [
-                    'entity' => $mutation->entity(),
-                    'event' => $event->value,
-                    'exception' => $exception,
-                ]);
-            }
+            return;
+        }
+
+        try {
+            $triggers->dispatch($phase, $event, $context);
+        } catch (Throwable $exception) {
+            $this->logger->error('A postCommit trigger failed after the data was committed.', [
+                'entity' => $context->entity(),
+                'event' => $event->value,
+                'exception' => $exception,
+            ]);
         }
     }
 }

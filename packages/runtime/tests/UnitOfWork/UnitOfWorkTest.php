@@ -6,11 +6,17 @@ namespace Eleph\Runtime\Tests\UnitOfWork;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\Storage\DeletionPolicy;
+use Eleph\Runtime\Storage\DeletionRule;
+use Eleph\Runtime\Storage\DeletionRules;
+use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\Write\Insert;
 use Eleph\Runtime\Storage\Write\Link;
 use Eleph\Runtime\Trigger\TriggerPhase;
 use Eleph\Runtime\Type\WriteProcessor;
+use Eleph\Runtime\UnitOfWork\DeletionPlanner;
 use Eleph\Runtime\UnitOfWork\DependencySorter;
 use Eleph\Runtime\UnitOfWork\TriggerDispatcher;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
@@ -308,6 +314,78 @@ final class UnitOfWorkTest extends TestCase
         self::assertNotContains('rollback', $storage->log);
     }
 
+    public function testEveryPlannedRemovalIsAnnouncedBeforeItHappens(): void
+    {
+        // An audit trail or an external projection needs to read the row it is being
+        // told about, and after the DELETE there is nothing to read.
+        $storage = new FakeStorage();
+        $triggers = new RecordingTriggers();
+
+        $work = $this->unitOfWork(
+            $storage,
+            triggers: ['Tag' => $triggers],
+            planner: $this->planner($storage, []),
+        );
+
+        $work->delete(new Deletion('Tag', EntityId::of(7)));
+        $work->commit();
+
+        self::assertSame(['preCommit:delete:Tag', 'postCommit:delete:Tag'], $triggers->calls);
+        self::assertSame(['begin', 'delete Tag', 'commit'], $storage->log);
+    }
+
+    public function testACascadedRowIsAnnouncedToo(): void
+    {
+        // Hearing only about the row someone asked to delete would leave a projection
+        // silently incomplete, which is the failure mode that is hardest to notice.
+        $storage = new FakeStorage();
+        $storage->records = ['Comment' => [new Record('Comment', EntityId::of(10), [])]];
+
+        $posts = new RecordingTriggers();
+        $comments = new RecordingTriggers();
+
+        $work = $this->unitOfWork(
+            $storage,
+            triggers: ['Post' => $posts, 'Comment' => $comments],
+            planner: $this->planner($storage, [
+                'Post' => [new DeletionRule('Comment', 'comments', 'Post', DeletionPolicy::Cascade)],
+            ]),
+        );
+
+        $work->delete(new Deletion('Post', EntityId::of(1)));
+        $work->commit();
+
+        self::assertSame(['preCommit:delete:Comment', 'postCommit:delete:Comment'], $comments->calls);
+        self::assertSame(['preCommit:delete:Post', 'postCommit:delete:Post'], $posts->calls);
+    }
+
+    public function testADeleteTriggerThrowingRollsBackTheDeletion(): void
+    {
+        $storage = new FakeStorage();
+        $triggers = new RecordingTriggers();
+        $triggers->failOn(TriggerPhase::PreCommit, static function (): void {
+            throw new RuntimeException('that tag is still referenced elsewhere');
+        });
+
+        $work = $this->unitOfWork(
+            $storage,
+            triggers: ['Tag' => $triggers],
+            planner: $this->planner($storage, []),
+        );
+
+        $work->delete(new Deletion('Tag', EntityId::of(7)));
+
+        try {
+            $work->commit();
+            self::fail('the trigger should have aborted the commit');
+        } catch (RuntimeException $exception) {
+            self::assertSame('that tag is still referenced elsewhere', $exception->getMessage());
+        }
+
+        self::assertContains('rollback', $storage->log);
+        self::assertNotContains('delete Tag', $storage->log);
+    }
+
     public function testCommittingClearsTheUnitOfWork(): void
     {
         $storage = new FakeStorage();
@@ -333,6 +411,7 @@ final class UnitOfWorkTest extends TestCase
         array $fieldTypes = [],
         ?StubProcessors $processors = null,
         array $triggers = [],
+        ?DeletionPlanner $planner = null,
     ): UnitOfWork {
         $processors ??= new StubProcessors();
 
@@ -342,7 +421,26 @@ final class UnitOfWorkTest extends TestCase
             new ValueEncoder($fieldTypes, $processors),
             new TriggerDispatcher($triggers),
             new DependencySorter(),
+            $planner,
         );
+    }
+
+    /**
+     * @param array<string, list<DeletionRule>> $rules
+     */
+    private function planner(FakeStorage $storage, array $rules): DeletionPlanner
+    {
+        return new DeletionPlanner($storage, new class ($rules) implements DeletionRules {
+            /** @param array<string, list<DeletionRule>> $rules */
+            public function __construct(private readonly array $rules)
+            {
+            }
+
+            public function for(string $entity): array
+            {
+                return $this->rules[$entity] ?? [];
+            }
+        });
     }
 
     /**

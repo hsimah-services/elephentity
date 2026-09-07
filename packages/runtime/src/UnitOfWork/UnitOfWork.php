@@ -10,6 +10,7 @@ use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
 use Eleph\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Storage\Write\Delete;
 use Eleph\Runtime\Storage\Write\Insert;
 use Eleph\Runtime\Storage\Write\Link;
 use Eleph\Runtime\Storage\Write\Unlink;
@@ -35,6 +36,11 @@ use RuntimeException;
  *   4. Still inside the transaction, run preCommit triggers. After the flush, so ids
  *      are real; before COMMIT, so a throw still rolls everything back.
  *   5. After COMMIT, run postCommit triggers, where writes are a new unit of work.
+ *
+ * Delete events are the one place the ordering is reversed: a preCommit delete trigger
+ * runs *before* the rows go, because a trigger told about a deletion it can no longer
+ * read is no use for an audit trail or an external projection. It still runs inside the
+ * transaction, so a throw still undoes everything.
  */
 final class UnitOfWork
 {
@@ -92,7 +98,10 @@ final class UnitOfWork
 
         $ordered = $this->sorter->sort($mutations);
 
-        $result = $this->storage->transaction(function () use ($ordered, $deletions): WriteResult {
+        /** @var list<Mutation> $removed */
+        $removed = [];
+
+        $result = $this->storage->transaction(function () use ($ordered, $deletions, &$removed): WriteResult {
             $result = $this->storage->write(new WriteBatch(...$this->rowOperations($ordered)));
 
             $links = $this->linkOperations($ordered, $result);
@@ -104,6 +113,12 @@ final class UnitOfWork
             // Deletions last: a cascade counts and reads dependents, and doing that
             // before the writes in this same commit would see a stale graph.
             $removals = $this->deletionOperations($deletions);
+            $removed = $this->deletionContexts($removals);
+
+            // Before the rows go, so a trigger can still read what it is being told
+            // about. Every planned removal is announced, cascades included — which is
+            // the only way an application maintaining its own projection can keep up.
+            $this->triggers->dispatchDeletions(TriggerPhase::PreCommit, $removed);
 
             if ([] !== $removals) {
                 $this->storage->write(new WriteBatch(...$removals));
@@ -119,8 +134,39 @@ final class UnitOfWork
         $this->deletions = [];
 
         $this->triggers->dispatch(TriggerPhase::PostCommit, $ordered);
+        $this->triggers->dispatchDeletions(TriggerPhase::PostCommit, $removed);
 
         return $result;
+    }
+
+    /**
+     * One context per row the plan removes, in the order the plan removes them.
+     *
+     * A deletion carries no pending values, so the context holds identity and nothing
+     * else. A trigger that needs the row reads it — which is why the preCommit pass
+     * runs before the DELETE rather than after.
+     *
+     * @param list<WriteOperation> $removals
+     *
+     * @return list<Mutation>
+     */
+    private function deletionContexts(array $removals): array
+    {
+        $contexts = [];
+
+        foreach ($removals as $operation) {
+            if (!$operation instanceof Delete) {
+                continue;
+            }
+
+            $target = $operation->target();
+
+            if ($target instanceof EntityId) {
+                $contexts[] = new Mutation($operation->entity(), $target);
+            }
+        }
+
+        return $contexts;
     }
 
     /**

@@ -17,5 +17,6 @@ config:
 fields:
   postId:
     type: int
+    nullable: true
     unique: true
     indexed: true

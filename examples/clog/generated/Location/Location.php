@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:793fe8fe7c017398dfbd16c1584f2da6debd17af0b8cfea96f5f107b759c1b5b
+ * digest: sha256:ffe4c4f0526d92506fb54feda4ba880e1f282b60ff87219cde0eaafa1744bf7d
  */
 
 namespace Clog\Entity\Location;
@@ -28,7 +28,7 @@ final class Location
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
         private readonly ?DateTimeImmutable $updatedAt,
-        private readonly int $postId,
+        private readonly ?int $postId,
         private readonly string $name,
     ) {
     }
@@ -49,9 +49,9 @@ final class Location
     }
 
     /**
-     * The wp_posts row this entity projects to.
+     * The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
      */
-    public function getPostId(): int
+    public function getPostId(): ?int
     {
         return $this->postId;
     }
@@ -69,7 +69,7 @@ final class Location
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $updatedAt,
-        int $postId,
+        ?int $postId,
         string $name,
     ): self {
         return new self($id, $edges, $createdAt, $updatedAt, $postId, $name);

@@ -72,36 +72,38 @@ now come from the `wpgraphql` integration, and the type names match the existing
 exactly — `ClogItem` / `ClogItems`, and `ClogInventory` / `ClogInventoryEntries`,
 supplied rather than derived because nothing here pluralises on your behalf.
 
-**The divergence hazard.** `show_ui: true` with `supports: ['title']` means a human can
-edit the title in wp-admin. Under Elephentity the column is authoritative and `post_title` is
-written by the Mutator as part of the same unit of work — so an admin edit changes the
-projection and not the truth, and nothing notices. `OrphanGuard` catches deletes;
-nothing catches edits.
+**Nothing writes the post row, and that is now said out loud.** `postId` is a nullable
+column like any other; registering the post type does not create a `wp_posts` row, and
+neither does a commit. An application that wants the projection writes it in a
+`postCommit` trigger, which is where a WordPress-shaped side effect of a commit
+belongs — the unit of work has no business knowing what a post is. Delete events fire
+for cascaded rows too, so such a trigger can keep up with a cascade rather than
+leaving orphans behind it.
 
-Three ways out, and only one of them is honest:
+The divergence hazard is unchanged and worth restating. `show_ui: true` with
+`supports: ['title']` would let a human edit the title in wp-admin, where the custom
+table is authoritative — an admin edit changes the copy and nothing notices. Three ways
+out, and only one of them is honest:
 
 - **Stop supporting `title` on the post type.** The post row becomes what the design
   says it is — an anchor for the ecosystem, holding nothing. Given Clog has its own
-  React client, losing the wp-admin title column costs little.
+  React client, losing the wp-admin title column costs little. This is now the default:
+  `supports` is empty unless an entity asks for something.
 - **Sync `post_title` back on `post_updated`.** Makes the projection bidirectional,
-  which contradicts "the custom table is authoritative" and invites write loops
-  between the hook and the Mutator.
+  which contradicts "the custom table is authoritative" and invites write loops.
 - **Let them diverge** until the next write re-projects. Silently wrong, which is the
   worst of the three.
 
-Worth noting that Elephentity's own `PostTypeRegistrar` currently emits `supports: ['title']`,
-so it ships the same hazard. That wants changing.
+### Post type registration, since resolved
 
-### Post type registration is not in the spec
-
-Related, and blocking for this port: `PostTypeRegistrar` hardcodes `public: true`,
-`show_in_rest: false` and `supports: ['title']`. Clog needs `public: false`,
+This was blocking for the port: `PostTypeRegistrar` hardcoded `public: true`,
+`show_in_rest: false` and `supports: ['title']`, where Clog needs `public: false`,
 `show_ui: true`, `show_in_menu: 'clog'`, `exclude_from_search: true` and a full label
-set. None of that is expressible today.
+set.
 
-The `ClogPost` pattern is the natural home for it — it is already the thing that says
-"this entity participates in the WordPress admin", and a pattern can carry storage
-configuration.
+The `ClogPost` pattern is the home for it, and now is: registration arguments come from
+pattern configuration, which the entity supplies with `configure:` and the compiler
+validates against the pattern's own declaration.
 
 ## What this exercise confirmed
 

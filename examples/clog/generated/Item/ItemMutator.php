@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutator.php
- * digest: sha256:84dbda89fd31b2ebf4ca265f27e0f6bd7d2fa83d058f5adc1c39b33d60472d8e
+ * digest: sha256:81dcc08481917f7a79933d7c328fd95793ce73e30e903fb7d27e5564e93969e5
  */
 
 namespace Clog\Entity\Item;
@@ -35,7 +35,7 @@ final class ItemMutator
         return $this;
     }
 
-    public function setPostId(int $postId): self
+    public function setPostId(?int $postId): self
     {
         $this->buffer->set('postId', $postId);
 

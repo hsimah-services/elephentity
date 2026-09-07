@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:a681d17d0cfb45d43798ef60adec4d763d27bfcce49b531e042eefd99c5cd074
+ * digest: sha256:b5f7d3aae29cf9f07b1026e7c80e19d510cb82fafac105adb39f563d3350cb04
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -34,7 +34,7 @@ return new StorageManifest(
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
                 'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
-                'post_id' => new Column('post_id', 'BIGINT', false, false, null),
+                'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
                 'date_added' => new Column('date_added', 'DATETIME', false, false, null),
                 'date_expiry' => new Column('date_expiry', 'DATETIME', true, false, null),
@@ -54,7 +54,7 @@ return new StorageManifest(
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
                 'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
-                'post_id' => new Column('post_id', 'BIGINT', false, false, null),
+                'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
                 'barcode' => new Column('barcode', 'VARCHAR(64)', true, false, null),
                 'default_expiry_unit' => new Column('default_expiry_unit', 'VARCHAR(6)', true, false, null),
@@ -73,7 +73,7 @@ return new StorageManifest(
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
                 'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
-                'post_id' => new Column('post_id', 'BIGINT', false, false, null),
+                'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
             ],
             [

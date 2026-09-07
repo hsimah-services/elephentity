@@ -86,7 +86,7 @@ final class PhpTargetTest extends TestCase
         // createdAt and updatedAt arrive via Auditable → Timestamps; postId via
         // WordPressPost. Nothing in the generated code distinguishes them.
         self::assertStringContainsString('public function getCreatedAt(): DateTimeImmutable', $post);
-        self::assertStringContainsString('public function getPostId(): int', $post);
+        self::assertStringContainsString('public function getPostId(): ?int', $post);
     }
 
     public function testToManyEdgesReturnALazyQueryAndToOneReturnsTheEntity(): void

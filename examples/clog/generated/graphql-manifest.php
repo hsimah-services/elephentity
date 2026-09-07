@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:bbebb304026faf2dab3c29185050fb2558db09f65fd174fc8c147f3c9ef3e32e
+ * digest: sha256:477900654a1df02ba0e978e02974d29c78364a4742e939a2e3ac47d86f74c2b3
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -29,7 +29,8 @@ return new Manifest(
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
+', FieldEncoding::Value, null),
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'Projected to post_title, so the admin list has something to show.', FieldEncoding::Value, null),
                 'dateAdded' => new FieldEntry('dateAdded', new GraphQLType('String', true, false), 'getDateAdded', 'When this instance entered inventory.', FieldEncoding::Datetime, null),
                 'dateExpiry' => new FieldEntry('dateExpiry', new GraphQLType('String', false, false), 'getDateExpiry', 'When it expires. Absent means it does not.', FieldEncoding::Datetime, null),
@@ -46,7 +47,8 @@ return new Manifest(
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
+', FieldEncoding::Value, null),
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the item is called. Projected to post_title.', FieldEncoding::Value, null),
                 'barcode' => new FieldEntry('barcode', new GraphQLType('String', false, false), 'getBarcode', 'The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.
 ', FieldEncoding::Value, null),
@@ -63,7 +65,8 @@ return new Manifest(
                 'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
+', FieldEncoding::Value, null),
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the location is called. Projected to post_title.', FieldEncoding::Value, null),
             ],
             [],

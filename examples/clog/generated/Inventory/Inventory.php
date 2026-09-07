@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/Inventory.php
- * digest: sha256:83ebbe86f59537b9007c3bb4252983b93d5ee0d96f9273fdb85e13a5d6c79fd7
+ * digest: sha256:61eba42267b7d59633b10de05771ccb0f08acf34584f9fc3fa75d7f89e6997a4
  */
 
 namespace Clog\Entity\Inventory;
@@ -30,7 +30,7 @@ final class Inventory
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
         private readonly ?DateTimeImmutable $updatedAt,
-        private readonly int $postId,
+        private readonly ?int $postId,
         private readonly string $name,
         private readonly DateTimeImmutable $dateAdded,
         private readonly ?DateTimeImmutable $dateExpiry,
@@ -53,9 +53,9 @@ final class Inventory
     }
 
     /**
-     * The wp_posts row this entity projects to.
+     * The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
      */
-    public function getPostId(): int
+    public function getPostId(): ?int
     {
         return $this->postId;
     }
@@ -105,7 +105,7 @@ final class Inventory
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $updatedAt,
-        int $postId,
+        ?int $postId,
         string $name,
         DateTimeImmutable $dateAdded,
         ?DateTimeImmutable $dateExpiry,

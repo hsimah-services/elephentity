@@ -14,19 +14,25 @@ use Eleph\Schema\Ir\Schema;
  * the compiler validated — so this reads keys like `visibility` and `supports` without
  * the core ever learning what they mean.
  *
- * Where a post type exists the custom table row and the post row are two records that
- * can diverge, so the custom table is authoritative and the post row is a projection
- * the mutator writes as part of the same unit of work.
+ * Registering the type is all this does. **Nothing here creates or maintains a post
+ * row** — the custom table is the entity, and a `postId` field is a column like any
+ * other, filled by whatever the application decides fills it (a `postCommit` trigger
+ * calling `wp_insert_post()` is the obvious shape).
+ *
+ * Said plainly because the opposite was once written here: where both records exist
+ * they can diverge, the custom table is authoritative, and keeping the projection in
+ * step is the application's job. Delete events are dispatched for cascades too, so
+ * that job is at least possible to do.
  */
 final readonly class PostTypeRegistrar
 {
     /**
      * Nothing by default.
      *
-     * The post row exists so the ecosystem has something to hold on to, not to be
-     * edited: a post editor that can change the title would be editing a copy of data
-     * the custom table owns, and nothing would notice. An entity that genuinely wants
-     * the admin to edit something says so with `supports:`.
+     * A post row, where one exists, is there so the ecosystem has something to hold on
+     * to, not to be edited: a post editor that can change the title would be editing a
+     * copy of data the custom table owns, and nothing would notice. An entity that
+     * genuinely wants the admin to edit something says so with `supports:`.
      */
     private const NO_SUPPORTS = [];
 

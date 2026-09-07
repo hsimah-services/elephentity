@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/Item.php
- * digest: sha256:0bd5d04d0fdd78ba515813352a6f8f6d858478e38cadb5b0602d99daa30a21e5
+ * digest: sha256:49a1a911464e96b5b1d091de4fbd3230a95fa0e5386610ce50e7011821569ad9
  */
 
 namespace Clog\Entity\Item;
@@ -29,7 +29,7 @@ final class Item
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
         private readonly ?DateTimeImmutable $updatedAt,
-        private readonly int $postId,
+        private readonly ?int $postId,
         private readonly string $name,
         private readonly ?string $barcode,
         private readonly ?ExpiryUnit $defaultExpiryUnit,
@@ -53,9 +53,9 @@ final class Item
     }
 
     /**
-     * The wp_posts row this entity projects to.
+     * The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
      */
-    public function getPostId(): int
+    public function getPostId(): ?int
     {
         return $this->postId;
     }
@@ -97,7 +97,7 @@ final class Item
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $updatedAt,
-        int $postId,
+        ?int $postId,
         string $name,
         ?string $barcode,
         ?ExpiryUnit $defaultExpiryUnit,

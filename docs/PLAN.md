@@ -691,6 +691,17 @@ pattern carries the trigger.
 IDs a create trigger that ran earlier would have no ID to work with. This way the row
 exists, the ID is real, and a throw still rolls everything back.
 
+**A `delete` event is the exception, and runs before its DELETE.** The argument above
+is about a row that does not exist yet; a deletion is the mirror case, where waiting
+means the row is gone and the trigger has nothing to read. Both orderings put the
+trigger where the data is, and both stay inside the transaction, so a throw undoes
+everything either way. Every planned removal is announced — cascaded rows included,
+since an audit trail or an external projection that only heard about the row someone
+asked to delete would be silently incomplete.
+
+A delete context carries identity and nothing else: there are no pending values, and
+the original row is still there to be read for as long as the trigger is running.
+
 Anything slow or external (email, HTTP, search indexing) belongs in `postCommit` —
 holding DB locks while calling a third party is how transactions die.
 
@@ -761,8 +772,29 @@ Our own migration runner, not `dbDelta()`.
 ### Post-row divergence
 
 When a post type is registered, the custom table row and the post row are two records
-that can diverge. The **custom table is authoritative**; the post row is a projection
-the Mutator writes as part of the same unit of work.
+that can diverge. The **custom table is authoritative**.
+
+**Nothing in the framework writes the post row.** This was once stated the other way
+round — "a projection the Mutator writes as part of the same unit of work" — and no
+such code ever existed, which is worse than the gap itself: an entity declaring a
+`postId` looked like it would be filled and silently was not.
+
+The projection stays the application's, for a reason that outlives the missing code. A
+post row is a WordPress-shaped side effect of a commit, and side effects on commit are
+already a thing the framework has: a `postCommit` trigger. Building a second,
+adaptor-level mechanism for the one platform that needs it would put a WordPress
+concept inside the unit of work, which is exactly what the storage port exists to
+prevent.
+
+Two consequences, both deliberate:
+
+- **`postId` is nullable**, in the example pattern and anywhere else. A non-null column
+  nothing fills is a create that either fails or stores zero, depending on the
+  installation's SQL mode.
+- **Delete events fire for cascades.** An application maintaining a projection has to
+  see every row that goes, not only the one it asked to delete, so the unit of work
+  announces every planned removal — and announces it *before* the DELETE, since a
+  trigger that cannot read the row it is being told about cannot project it.
 
 ---
 
