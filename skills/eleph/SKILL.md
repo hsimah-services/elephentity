@@ -104,9 +104,12 @@ Say so plainly rather than working around it:
   values as a child entity (indexable, changes the model).
 - **Composite value objects.** A declared type aliases exactly one primitive, so a
   two-field value object has to be two fields.
-- **GraphQL root queries.** The manifest registers types and mutations but no entry
-  points yet.
-- **Post type registration arguments.** `PostTypeRegistrar` hardcodes them.
+- **Field visibility and access rules.** Every exposed field is readable and every
+  settable one is writable by anyone who can reach the API. Authorisation belongs in
+  the layer above.
+- **The WordPress post row's contents.** A `handle:` registers the post type, and
+  `postId` is a column like any other — nothing creates or maintains the `wp_posts`
+  row, so an application that wants one writes it in a `postCommit` trigger.
 
 ## Reference
 
