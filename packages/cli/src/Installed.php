@@ -40,7 +40,20 @@ final readonly class Installed
 
     public static function describedBy(Codegen $codegen, string $projectRoot): self
     {
-        return self::fromJson($codegen->capture(['describe', '--project', $projectRoot]));
+        try {
+            return self::fromJson($codegen->capture(['describe', '--project', $projectRoot]));
+        } catch (RuntimeException $exception) {
+            // The upgrade path runs through here. A generator installed before describe
+            // existed reports only that the subcommand is unknown, which says nothing
+            // about what to do — and it is the first thing every existing project will
+            // hit, because the handshake is what a stale one cannot answer.
+            throw new RuntimeException(sprintf(
+                "Could not ask the code generator what this project's builders provide.\n%s\n"
+                . 'If that says the "describe" command is not defined, eleph-codegen predates '
+                . 'the handshake: update it, and the builders with it.',
+                $exception->getMessage(),
+            ), previous: $exception);
+        }
     }
 
     /**
