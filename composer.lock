@@ -1401,12 +1401,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah/elephentity-codegen.git",
-                "reference": "f92989b0be719621d23ed58280284d4d9b3114c5"
+                "reference": "78a0261e4313b99bdb43e3d205a8310049c79d24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah/elephentity-codegen/zipball/f92989b0be719621d23ed58280284d4d9b3114c5",
-                "reference": "f92989b0be719621d23ed58280284d4d9b3114c5",
+                "url": "https://api.github.com/repos/hsimah/elephentity-codegen/zipball/78a0261e4313b99bdb43e3d205a8310049c79d24",
+                "reference": "78a0261e4313b99bdb43e3d205a8310049c79d24",
                 "shasum": ""
             },
             "require": {
@@ -1460,7 +1460,7 @@
                 "source": "https://github.com/hsimah/elephentity-codegen/tree/main",
                 "issues": "https://github.com/hsimah/elephentity-codegen/issues"
             },
-            "time": "2026-09-07T17:15:45+00:00"
+            "time": "2026-09-07T17:36:02+00:00"
         },
         {
             "name": "elephentity/codegen-php",
