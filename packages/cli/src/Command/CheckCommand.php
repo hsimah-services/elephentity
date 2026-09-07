@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Eleph\Cli\Command;
 
-use Closure;
+use Eleph\Cli\ClassMap;
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
-use Eleph\Codegen\Php\Naming\Names;
-use Eleph\Codegen\Php\PhpConfig;
-use Eleph\Codegen\Php\PhpTarget;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\WPGraphQL\Conformance\ConformanceChecker;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,6 +33,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 final class CheckCommand extends Command
 {
+    /**
+     * Conformance is a statement about generated PHP classes, so it names the PHP
+     * target specifically: a project generating only TypeScript has no classes for the
+     * GraphQL surface to resolve against.
+     */
+    private const PHP_TARGET = 'php';
+
     protected function configure(): void
     {
         $this->addOption(
@@ -44,30 +49,6 @@ final class CheckCommand extends Command
             'Directory holding eleph.json.',
             '.',
         );
-    }
-
-    /**
-     * Load generated classes without depending on the project's autoloader.
-     *
-     * Elephentity owns the layout of this tree — the namespace below the root mirrors the
-     * directory exactly — so it can always find its own output. Relying on the
-     * project's Composer configuration would make the gate silently pass whenever that
-     * configuration was wrong, which is precisely when it should fail.
-     */
-    private function autoloadGenerated(string $root, string $directory): void
-    {
-        spl_autoload_register(static function (string $class) use ($root, $directory): void {
-            if (!str_starts_with($class, $root . '\\')) {
-                return;
-            }
-
-            $relative = substr($class, strlen($root) + 1);
-            $path = rtrim($directory, '/') . '/' . str_replace('\\', '/', $relative) . '.php';
-
-            if (is_file($path)) {
-                require_once $path;
-            }
-        });
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -100,52 +81,32 @@ final class CheckCommand extends Command
         $schema = $compiled->schema();
         $manifest = (new ManifestBuilder())->build($schema);
 
-        // Conformance is a statement about generated PHP classes, so it needs the PHP
-        // target specifically — a project generating only TypeScript has no classes for
-        // the GraphQL surface to resolve against.
-        $php = $config->target(PhpTarget::NAME);
+        $php = $config->target(self::PHP_TARGET);
 
         if (null === $php) {
             $io->error(sprintf(
                 'No "%s" target in %s; there are no generated classes to check against.',
-                PhpTarget::NAME,
+                self::PHP_TARGET,
                 ProjectConfig::FILENAME,
             ));
 
             return Command::FAILURE;
         }
 
-        $problems = PhpConfig::problemsIn($php->settings);
-
-        if ([] !== $problems) {
-            $io->error(sprintf('The %s target is misconfigured.', PhpTarget::NAME));
-
-            foreach ($problems as $problem) {
-                $io->writeln('  ' . $problem);
-            }
+        // The tree says what it contains. Asking the generator instead would mean this
+        // gate could only run where the PHP generator is installed, which is exactly
+        // the coupling a builder is meant not to have.
+        try {
+            $classes = ClassMap::load(rtrim($directory, '/') . '/' . $php->outputDirectory);
+        } catch (RuntimeException $exception) {
+            $io->error($exception->getMessage());
 
             return Command::FAILURE;
         }
 
-        $phpConfig = PhpConfig::from($php->settings);
-        $outputDirectory = rtrim($directory, '/') . '/' . $php->outputDirectory;
+        $classes->autoload();
 
-        $this->autoloadGenerated(trim($phpConfig->rootNamespace, '\\'), $outputDirectory);
-
-        // Ask the generator where it put things rather than restating the convention:
-        // a second copy of the layout rule is a second thing to forget to update.
-        $names = new Names($phpConfig);
-
-        $classFor = Closure::fromCallable(
-            static function (string $entity) use ($names, $schema): string {
-                $definition = $schema->entity($entity);
-
-                return null === $definition ? $entity : $names->entity($definition);
-            },
-        );
-
-
-        $problems = (new ConformanceChecker($manifest, $classFor))->check();
+        $problems = (new ConformanceChecker($manifest, $classes->classFor(...)))->check();
 
         if ([] !== $problems) {
             $io->error(sprintf('%d conformance problem(s).', count($problems)));

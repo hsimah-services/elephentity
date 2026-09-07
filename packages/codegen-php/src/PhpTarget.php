@@ -7,6 +7,7 @@ namespace Eleph\Codegen\Php;
 use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\Php\Generator\BridgeGenerator;
 use Eleph\Codegen\Php\Generator\CatalogueGenerator;
+use Eleph\Codegen\Php\Generator\ClassMapGenerator;
 use Eleph\Codegen\Php\Generator\ContextGenerator;
 use Eleph\Codegen\Php\Generator\ContractGenerator;
 use Eleph\Codegen\Php\Generator\DeleterGenerator;
@@ -99,6 +100,9 @@ final readonly class PhpTarget
         }
 
         $files[] = (new CatalogueGenerator($schema, $names, $emitter))->generate();
+
+        // Last, and over the finished list: it is an index of everything above it.
+        $files[] = (new ClassMapGenerator($schema, $config, $names))->generate($files);
 
         usort($files, static fn (GeneratedFile $a, GeneratedFile $b) => strcmp($a->relativePath, $b->relativePath));
 

@@ -26,8 +26,8 @@ typed, so an exception here undermines the product.
 | Package | Ships? | Holds |
 |---|---|---|
 | `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR, its wire format |
-| `codegen/` | dev | the target contract, the builder protocol, signing, writing |
-| `codegen-php/` | dev | the PHP target: IR → locked PHP, in process or as `eleph-gen-php` |
+| `codegen/` | dev | the builder protocol, signing, writing — forwards an IR it never reads |
+| `codegen-php/` | dev | the PHP builder: IR → locked PHP, run as `eleph-gen-php` |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `wordpress/` | yes | the one adaptor — the only package that may name `WP_*` |
 | `wpgraphql/` | yes | IR → compiled GraphQL manifest |
@@ -49,8 +49,10 @@ fine and a real call is not.
 - **Generated code is grouped by entity.** `Item/` holds everything for Item, and
   `Item/Contract/` holds exactly what a consumer must implement.
 - **One source of truth per decision.** `EdgePlanner` decides edge placement for both
-  the schema builder and the query compiler; `Names` decides class names for both the
-  generator and the conformance checker. Both of those were bugs before they were
+  the schema builder and the query compiler. `Names` decides class names, and the
+  conformance checker reads them out of the generated `class-map.php` rather than
+  calling `Names` itself — the generator is a separate program and one day another
+  language, so the tree carries its own index. Both of those were bugs before they were
   rules.
 
 ## Testing

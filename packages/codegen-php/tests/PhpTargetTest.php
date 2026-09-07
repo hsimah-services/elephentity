@@ -70,6 +70,7 @@ final class PhpTargetTest extends TestCase
             'Tag/TagVerifiers.php',
             'Type/MoneyReadProcessor.php',
             'Type/MoneyWriteProcessor.php',
+            'class-map.php',
         ], $paths);
     }
 
@@ -451,6 +452,60 @@ final class PhpTargetTest extends TestCase
         self::assertArrayHasKey($path, $generated);
 
         return $generated[$path];
+    }
+
+    public function testTheClassMapAddressesEveryClassTheTreeContains(): void
+    {
+        // `eleph check` loads the tree through this map and has no other way to find a
+        // class, so a map that misses a file is a gate that silently stops checking it.
+        $map = $this->classMap();
+        $expected = array_values(array_filter(
+            array_keys($this->generated()),
+            static fn (string $path): bool => 'class-map.php' !== $path,
+        ));
+
+        sort($expected);
+        $actual = array_values($map['classes']);
+        sort($actual);
+
+        self::assertSame($expected, $actual);
+    }
+
+    public function testTheClassMapResolvesEverySpecNameToItsEntityClass(): void
+    {
+        $map = $this->classMap();
+
+        self::assertSame([
+            'Author' => 'App\\Elephentity\\Author\\Author',
+            'Comment' => 'App\\Elephentity\\Comment\\Comment',
+            'Post' => 'App\\Elephentity\\Post\\Post',
+            'Tag' => 'App\\Elephentity\\Tag\\Tag',
+        ], $map['entities']);
+
+        // Every entity class it names is one the tree actually holds.
+        foreach ($map['entities'] as $class) {
+            self::assertArrayHasKey($class, $map['classes']);
+        }
+    }
+
+    /**
+     * @return array{entities: array<string, string>, classes: array<string, string>}
+     */
+    private function classMap(): array
+    {
+        $body = $this->generated()['class-map.php'] ?? null;
+
+        self::assertIsString($body);
+
+        /** @var mixed $map */
+        $map = eval($body);
+
+        self::assertIsArray($map);
+        self::assertIsArray($map['entities'] ?? null);
+        self::assertIsArray($map['classes'] ?? null);
+
+        /** @var array{entities: array<string, string>, classes: array<string, string>} $map */
+        return $map;
     }
 
     /**
