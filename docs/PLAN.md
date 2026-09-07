@@ -821,7 +821,165 @@ Cheapest first, each catching a distinct class of failure:
 
 ---
 
-## 15. Implementation steps
+## 15. Pluggable code generation **[proposed]**
+
+One spec should produce the backend *and* the frontend. Today `packages/codegen` emits
+PHP and only PHP, and the assumption is not in one place: `Codegen::generate()` hardwires
+eleven generators in sequence; `Emitter` and `Printer` are built on `nette/php-generator`,
+so a generator's implicit contract is "return a `PhpNamespace`"; `Names` produces PHP
+FQCNs and `GeneratorConfig` is a pair of namespaces; `TypeMapper` maps the primitive set
+onto PHP types and imports `DateTimeImmutable` and `EntityId`; and `Signer`'s header is a
+PHP block comment fixed at fourteen lines.
+
+The IR is the exception, and the reason this is tractable at all: 26 pure value objects
+with no PHP anywhere in them. It was already the seam described in §3 — "the Schema IR
+sits between the spec and every consumer" — and this section makes that literal.
+
+### A target is an external program
+
+A **target** is a code generator for one output language. Targets are separate programs,
+and the IR serialised as JSON is the contract between core and target.
+
+**A target brings its own dependencies.** A TypeScript generator wants `ts-morph` and
+prettier; those are npm packages, and no PHP process is going to host them. The rejected
+alternative was targets as PHP classes emitting TypeScript *text* — much cheaper, no
+subprocess, no wire format — but it means a TypeScript contributor has to write PHP and
+work without the tooling of the language they are generating. That defeats the point, so
+the cost is accepted.
+
+This is `protoc`'s design: compile once, pipe a request to `protoc-gen-go` or
+`protoc-gen-ts` on stdin, read files back on stdout. Twenty years of a compiler in one
+language hosting generators in any language.
+
+```
+eleph generate
+  ├─ compile specs to IR                        core
+  ├─ for each target: spawn plugin,             core → plugin
+  │    write request JSON to stdin,
+  │    read response JSON from stdout
+  ├─ merge every target's errors, report together, write nothing if any
+  └─ sign, write, diff every returned file      core
+```
+
+### Plugins return bytes; core signs and writes
+
+**A plugin never touches the filesystem.** It returns a path and a body per file; core
+signs, writes and diffs. Two things follow. The `Signer` stays the single authority on
+locking — the framework's actual product claim — rather than every third-party plugin
+reimplementing it and one of them getting it subtly wrong. And `--check` keeps working
+across all targets for free, because the compare-against-disk logic never moves.
+
+**`HEADER_LINES` becomes a property of a header style, not a global.** A `//` comment in
+TypeScript will not land on fourteen lines, and the digest excludes the header by
+position. The plugin declares its style; core renders the header and owns the count per
+style. §4's "one shared verifier owns the line count" still holds — it now owns several.
+
+**Plugins own their own formatting.** They return formatted bytes, so `elephentity-ts`
+runs prettier internally and core never learns what prettier is.
+
+### The envelope
+
+The request wraps the IR in an **envelope** — metadata *about* the payload, carried
+outside it:
+
+```json
+{
+  "elephentity": 1,
+  "irVersion": "1.0",
+  "target": "ts",
+  "config": { "style": "esm" },
+  "outputDirectory": "web/src/generated",
+  "schema": { }
+}
+```
+
+Everything but `schema` is envelope. **The version must sit outside the payload**, or a
+plugin has to parse the IR to discover whether it can parse the IR. A plugin reads
+`irVersion`, refuses what it does not understand, and never looks at an entity.
+
+That gives the envelope one rule: **its own shape is frozen and only ever gains optional
+fields.** It is what both sides must agree on before anything else can be negotiated, so
+it cannot itself be negotiable. The payload underneath stays free to change.
+
+### Targets are configured in `eleph.json`
+
+```json
+{
+  "spec": "spec",
+  "targets": {
+    "php": { "plugin": "vendor/bin/eleph-gen-php", "output": "generated",
+             "namespace": "Clog\\Entity", "typeNamespace": "Clog\\Type" },
+    "ts":  { "plugin": "node_modules/.bin/eleph-gen-ts", "output": "web/src/generated",
+             "style": "esm" }
+  }
+}
+```
+
+**Core validates `plugin` and `output` and nothing else.** The rest of a target's config
+is opaque, passed through for the plugin to validate and reject. If core ever learns what
+`typeNamespace` means, the coupling has only moved house. This is the same division §3
+already draws between `eleph.json` and `project.yml`, extended one level down.
+
+**The two hardcoded manifests become targets.** `GenerateCommand`'s `if` branches for the
+WordPress storage manifest and the WPGraphQL manifest are the same shape as a plugin, and
+folding them in is the test that the abstraction fits something that already exists.
+
+### Stability: none promised before 1.0
+
+**There is no long-term support guarantee for the IR.** With a single user, a compatibility
+promise costs more than it returns: it would mean maintaining a stable wire projection
+alongside the internal IR — a second parallel set of 26 classes — purely so that a
+refactor is invisible to a plugin nobody else is running yet. Not worth it. The IR is
+serialised directly, and when it changes, targets change with it.
+
+What is promised instead is that **the source always remains**, so anyone can build against
+an old version. For that to be true rather than nominal, releases are tagged and a
+compatibility table records which IR version each core release emits; otherwise the code
+is all present and nobody can tell which commit speaks IR 1.
+
+**The version gate is a hard refusal, and it survives the lack of an LTS promise — the
+lack is why it matters.** A plugin declares one IR version; core sends one; a mismatch
+fails the build. The alternative is a stale plugin reading an IR it half-understands,
+generating subtly wrong code that core then *signs*. A signed file carrying the
+framework's correctness guarantee, produced from a misread IR, is the worst failure this
+system can have. Not building is strictly better.
+
+Two mechanisms were considered and dropped as consequences of the same decision: **capability
+negotiation** (a `--eleph-capabilities` handshake picking the highest mutually supported
+version) and **N-1 support windows**, both of which only pay for themselves when
+compatibility is being promised.
+
+**`examples/clog` becomes the compatibility test.** It is already regenerated and committed
+per repo convention; with no compat promise, its diff is the only signal that an IR change
+altered generated output.
+
+### Explicit non-goal: a shell orchestrator
+
+The obvious shape is a script that reads the targets and shells out to each. It is the
+wrong seam. `eleph generate` already loads config, compiles specs, accumulates errors and
+owns `--check`; a wrapper around it re-implements config parsing and target discovery in a
+second place, and loses both the single accumulated error report and the whole-tree diff.
+`eleph generate` stays the one entry point and spawns targets itself.
+
+### Staging
+
+Split the protocol from the repository split; they are independent decisions.
+
+1. **Define the protocol in-repo.** `elephentity-php` becomes a target speaking JSON, still
+   under `packages/`. The protocol is proven against a real generator before anything
+   external depends on it.
+2. **Build `elephentity-ts` out of repo.** The honest test of whether an external plugin can
+   work without reaching into core.
+3. **Split the PHP target out only if it needs its own release cadence.** It may never.
+
+The reason not to split immediately is `packages/cli/tests/PipelineTest.php`, which is what
+proves the layers are wired together at all. Move the PHP generator to another repository
+and no single CI run proves the pipeline end to end, and regenerating `examples/clog`
+crosses a repo boundary. That is a permanent tax; pay it when it buys something.
+
+---
+
+## 16. Implementation steps
 
 ### Step 0 — Foundations
 Repo layout, Composer packages and autoloading, CI skeleton, PHPStan config.
@@ -1056,7 +1214,7 @@ schema format we have — better than inventing a `Post` example.
 
 ---
 
-## 16. Open questions
+## 17. Open questions
 
 - **Cascade guard for `postCommit` mutations** — depth limit, cycle detection, or
   documented-and-your-problem?
@@ -1066,7 +1224,7 @@ schema format we have — better than inventing a `Post` example.
 
 ---
 
-## 17. Deferred work
+## 18. Deferred work
 
 Not questions — decided, just not built.
 
