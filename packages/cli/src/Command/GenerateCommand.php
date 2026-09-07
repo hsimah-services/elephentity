@@ -8,14 +8,11 @@ use Eleph\Cli\Builders;
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Cli\TargetConfig;
-use Eleph\Cli\Targets;
 use Eleph\Codegen\External\ExternalTarget;
 use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\Output\Writer;
 use Eleph\Codegen\Output\WriteReport;
-use Eleph\Codegen\Php\PhpTarget;
 use Eleph\Codegen\Signing\Signer;
-use Eleph\Codegen\Target;
 use Eleph\Codegen\TargetRequest;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
@@ -53,6 +50,15 @@ final class GenerateCommand extends Command
     public const MANIFEST_PATH = 'graphql-manifest.php';
 
     public const STORAGE_MANIFEST_PATH = 'storage-manifest.php';
+
+    /**
+     * The target the manifests are written alongside.
+     *
+     * A bare string rather than a constant borrowed from the generator: the manifests
+     * are PHP that the WordPress adaptor loads by path at boot, so what this names is
+     * the target whose output directory they belong in, not a generator the core knows.
+     */
+    private const PHP_TARGET = 'php';
 
     protected function configure(): void
     {
@@ -109,7 +115,6 @@ final class GenerateCommand extends Command
         }
 
         $schema = $compiled->schema();
-        $registry = Targets::registry();
 
         try {
             $selected = $this->selected($input, $config);
@@ -127,7 +132,7 @@ final class GenerateCommand extends Command
 
         foreach ($selected as $name => $targetConfig) {
             try {
-                $target = $this->target($name, $targetConfig, $registry, $builders);
+                $target = new ExternalTarget($name, $builders->resolve($targetConfig));
             } catch (RuntimeException $exception) {
                 $errors[] = $exception->getMessage();
 
@@ -150,7 +155,7 @@ final class GenerateCommand extends Command
 
             $files = $response->files;
 
-            if (PhpTarget::NAME === $name) {
+            if (self::PHP_TARGET === $name) {
                 foreach ($this->manifests($schema) as $manifest) {
                     $files[] = $manifest;
                 }
@@ -184,35 +189,6 @@ final class GenerateCommand extends Command
         return $check
             ? $this->reportCheck($io, $reports)
             : $this->reportWrite($io, $reports, $plan);
-    }
-
-    /**
-     * The program that generates one target.
-     *
-     * A declared builder is an external program and always wins: someone who named one
-     * meant it, and silently preferring a built-in of the same name would make the
-     * config a suggestion. Without one, the target has to be built into this
-     * installation.
-     *
-     * @param array<string, Target> $registry
-     */
-    private function target(string $name, TargetConfig $config, array $registry, Builders $builders): Target
-    {
-        if (null !== $config->builder) {
-            return new ExternalTarget($name, $builders->resolve($config));
-        }
-
-        $target = $registry[$name] ?? null;
-
-        if (null === $target) {
-            throw new RuntimeException(sprintf(
-                'Target "%s" is not built into this installation (it offers: %s) and declares no "builder".',
-                $name,
-                implode(', ', array_keys($registry)),
-            ));
-        }
-
-        return $target;
     }
 
     /**

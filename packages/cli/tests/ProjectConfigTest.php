@@ -42,7 +42,11 @@ final class ProjectConfigTest extends TestCase
         $config = $this->load([
             'spec' => 'spec',
             'targets' => [
-                'php' => ['output' => 'generated', 'namespace' => 'App\\Entity'],
+                'php' => [
+                    'output' => 'generated',
+                    'builder' => 'eleph-gen-php',
+                    'namespace' => 'App\\Entity',
+                ],
             ],
         ]);
 
@@ -65,8 +69,8 @@ final class ProjectConfigTest extends TestCase
         $this->load([
             'spec' => 'spec',
             'targets' => [
-                'php' => ['output' => 'generated'],
-                'ts' => ['output' => 'generated/'],
+                'php' => ['output' => 'generated', 'builder' => 'eleph-gen-php'],
+                'ts' => ['output' => 'generated/', 'builder' => 'eleph-gen-ts'],
             ],
         ]);
     }
@@ -83,6 +87,20 @@ final class ProjectConfigTest extends TestCase
         }
 
         self::fail('A config missing both "spec" and a usable output should not load.');
+    }
+
+    public function testATargetWithNoBuilderIsRefused(): void
+    {
+        // Elephentity generates nothing itself. A target with no builder used to mean
+        // "built in"; there is no built-in target any more, so it now means nothing at
+        // all, and the config is the cheapest place to say so.
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Target "php" must set "builder"/');
+
+        $this->load([
+            'spec' => 'spec',
+            'targets' => ['php' => ['output' => 'generated']],
+        ]);
     }
 
     public function testAProjectWithNoTargetsIsRefused(): void

@@ -37,11 +37,6 @@ final readonly class Builders
     public function resolve(TargetConfig $target): array
     {
         $builder = $target->builder;
-
-        if (null === $builder) {
-            throw new RuntimeException(sprintf('Target "%s" declares no builder.', $target->name));
-        }
-
         $looked = [];
 
         // An explicit path is taken at its word: someone who wrote a path meant that

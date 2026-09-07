@@ -116,15 +116,17 @@ Add the target to `eleph.json`:
 {
   "spec": "spec",
   "targets": {
-    "php": { "output": "generated", "namespace": "App\\Entity", "typeNamespace": "App\\Type" },
+    "php": { "output": "generated", "builder": "eleph-gen-php",
+             "namespace": "App\\Entity", "typeNamespace": "App\\Type" },
     "ts":  { "output": "web/generated", "builder": "eleph-gen-ts", "style": "esm" }
   }
 }
 ```
 
-`builder` is what makes a target external; without it, the target must be built into the
-installation. Every target needs **its own output directory** — two targets sharing one
-is refused, because generating either would delete the other's files.
+**Every target names a `builder`.** Elephentity compiles the spec and generates nothing
+itself, so a target without one is a target nothing can produce; `eleph.json` refuses it
+when it loads. Every target also needs **its own output directory** — two targets sharing
+one is refused, because generating either would delete the other's files.
 
 **Elephentity resolves builders and never fetches them.** It looks in three places, in
 order:
@@ -140,10 +142,9 @@ executable — a non-executable file at the right path is the most common failur
 ## A reference implementation
 
 `packages/codegen-php/bin/eleph-gen-php` is the PHP target running as a builder, and it
-is short. Elephentity generates PHP through the same `PhpTarget` either in process or
-over this protocol, and two tests generate the same spec both ways and diff the bytes —
-so the reference implementation is verified to be a faithful use of the contract rather
-than merely a plausible one.
+is short. It is also how Elephentity generates its own worked example: `examples/clog` is
+regenerated over this protocol and its tree is committed, so the reference implementation
+is exercised by every build rather than merely being plausible.
 
 ## Trying it by hand
 

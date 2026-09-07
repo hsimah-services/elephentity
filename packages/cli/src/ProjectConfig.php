@@ -13,7 +13,7 @@ use RuntimeException;
  * Configuration, deliberately separate from specification. Namespaces live here so
  * that renaming one is a config change rather than an edit to every entity yaml.
  *
- * The file names its targets and nothing more about them than where their output goes;
+ * The file names its targets, where their output goes and which program produces it;
  * each target reads and validates its own settings. Problems are accumulated and
  * reported together, so a file missing three keys takes one run to fix rather than
  * three.
@@ -137,8 +137,13 @@ final readonly class ProjectConfig
 
             $builder = $settings['builder'] ?? null;
 
-            if (null !== $builder && (!is_string($builder) || '' === $builder)) {
-                $problems[] = sprintf('Target "%s" has a "builder" that is not a non-empty string.', $name);
+            if (!is_string($builder) || '' === $builder) {
+                $problems[] = sprintf(
+                    'Target "%s" must set "builder" to the program that generates it. '
+                    . 'Elephentity compiles the spec and generates nothing itself, so a target '
+                    . 'with no builder is one nothing can produce.',
+                    $name,
+                );
 
                 continue;
             }
