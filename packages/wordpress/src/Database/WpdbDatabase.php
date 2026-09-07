@@ -16,8 +16,22 @@ use wpdb;
  */
 final readonly class WpdbDatabase implements Database
 {
+    /**
+     * How much of a failing statement the exception quotes.
+     *
+     * Enough to say which table and which kind of write; not the whole INSERT. The
+     * message can reach a response body, and a driver error with the statement
+     * attached tells a caller nothing they can act on while telling everyone else more
+     * than they should see.
+     */
+    private const STATEMENT_EXCERPT = 60;
+
     public function __construct(private wpdb $wpdb)
     {
+        // wpdb prints errors as HTML the moment they happen, straight into whatever
+        // response is being built — including a JSON one. We report failures by
+        // throwing, so its own reporting is noise at best and a leak at worst.
+        $this->wpdb->hide_errors();
     }
 
     public function prefix(): string
@@ -136,6 +150,19 @@ final readonly class WpdbDatabase implements Database
             return;
         }
 
-        throw new RuntimeException(sprintf('%s (running: %s)', $this->wpdb->last_error, $sql));
+        throw new RuntimeException(sprintf(
+            '%s (running: %s)',
+            $this->wpdb->last_error,
+            $this->excerpt($sql),
+        ));
+    }
+
+    private function excerpt(string $sql): string
+    {
+        $collapsed = trim((string) preg_replace('/\s+/', ' ', $sql));
+
+        return strlen($collapsed) <= self::STATEMENT_EXCERPT
+            ? $collapsed
+            : substr($collapsed, 0, self::STATEMENT_EXCERPT) . '…';
     }
 }

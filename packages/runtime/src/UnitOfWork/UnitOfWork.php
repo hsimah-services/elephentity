@@ -69,6 +69,11 @@ final class UnitOfWork
          * required because it needs the edge graph, which not every caller has.
          */
         private readonly ?DeletionPlanner $planner = null,
+        /**
+         * Absent when nothing is unique, and when a caller does not want the extra
+         * read. The index remains the guarantee either way.
+         */
+        private readonly ?UniquenessCheck $unique = null,
     ) {
     }
 
@@ -196,6 +201,10 @@ final class UnitOfWork
 
         foreach ($mutations as $mutation) {
             foreach ($this->verification->verify($mutation) as $violation) {
+                $violations[] = $violation;
+            }
+
+            foreach ($this->unique?->check($mutation) ?? [] as $violation) {
                 $violations[] = $violation;
             }
         }

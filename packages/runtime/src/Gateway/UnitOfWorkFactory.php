@@ -12,6 +12,7 @@ use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
 use Eleph\Runtime\UnitOfWork\ManagedFields;
 use Eleph\Runtime\UnitOfWork\TriggerDispatcher;
+use Eleph\Runtime\UnitOfWork\UniquenessCheck;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use Eleph\Runtime\UnitOfWork\VerificationPipeline;
@@ -53,14 +54,16 @@ final readonly class UnitOfWorkFactory implements DeletionRules
         }
 
         $fieldTypes = $this->catalogue->fieldTypes();
+        $encoder = new ValueEncoder($fieldTypes, $this->processors);
 
         return new UnitOfWork(
             $this->storage,
             new VerificationPipeline($verifiers, $fieldTypes, $this->processors, $required),
-            new ValueEncoder($fieldTypes, $this->processors),
+            $encoder,
             new TriggerDispatcher($triggers, $this->logger),
             planner: new DeletionPlanner($this->storage, $this),
             managed: new ManagedFields($this->catalogue->managedFields()),
+            unique: new UniquenessCheck($this->storage, $encoder, $unique),
         );
     }
 

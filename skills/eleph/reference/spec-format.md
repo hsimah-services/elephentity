@@ -129,6 +129,11 @@ conflating them is the most common mistake in a first spec.
 `required` is enforced at commit, as a violation with a field path, before any SQL
 runs. A field with a `default:` is exempt — the column answers for it.
 
+`unique` is checked the same way, so a duplicate is a violation rather than a driver
+exception. The index is still the guarantee: the check runs before the transaction, so
+a race is settled by the constraint. Nulls are never checked, which is what makes a
+nullable unique column mean "at most one, if any".
+
 **`managed` means the framework fills it.** `created` stamps the field when the row is
 inserted; `modified` stamps it on every write. Either way there is no setter, no input
 branch, and no GraphQL input field, so a machine-managed timestamp never becomes

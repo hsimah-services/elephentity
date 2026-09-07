@@ -489,6 +489,19 @@ puts it alongside the deletion rules rather than in the driver.
 
 A field with a `default:` is exempt, because the column already answers for it.
 
+**`unique:` is checked the same way, and for the same reason.** A duplicate used to
+arrive as the driver's own exception — the message, the statement that produced it, and
+an index name no caller has heard of — where `onDelete: restrict` in the same commit
+produces "Cannot delete Location#1: 1 Inventory still depends on it". Both are facts
+about the row being written, and both belong in the same list of violations.
+
+The index remains the guarantee. The check reads before the transaction opens, so two
+concurrent creates can both pass it and one will still fail on the constraint. That is
+the right division of labour: the check makes the ordinary case a good error, the
+database keeps being right about the race, and nothing pretends otherwise. A null is
+never checked — NULL does not collide with NULL, and a nullable unique column is how
+"at most one, if any" is spelled.
+
 ### Managed fields
 
 ```yaml
