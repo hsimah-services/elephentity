@@ -14,8 +14,10 @@ use Eleph\Codegen\Target;
  * present — so it assembles the registry and hands it down, exactly as it already does
  * for integrations. `packages/codegen` runs whatever arrives without naming one.
  *
- * Today every target is in-process. When a target becomes an external program, this is
- * the one place that learns how to find it.
+ * These are the built-ins, run in process. A target that declares a `builder` in
+ * eleph.json is an external program instead, found by `Builders` and reached over the
+ * protocol — `GenerateCommand` picks between the two and nothing downstream can tell
+ * which it got.
  */
 final readonly class Targets
 {
