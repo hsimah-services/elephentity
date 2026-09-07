@@ -10,6 +10,7 @@ use Eleph\Schema\Ir\ArgumentDefinition;
 use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\Ir\TriggerDefinition;
@@ -18,6 +19,7 @@ use Eleph\Schema\Ir\TypeDefinition;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+use stdClass;
 use UnitEnum;
 
 /**
@@ -77,6 +79,40 @@ final readonly class IrCodec
     ];
 
     /**
+     * Array parameters that are string-keyed maps rather than lists.
+     *
+     * JSON tells them apart and PHP does not: an empty map and an empty list are both
+     * `[]`, and `json_encode` picks the wrong one half the time. A builder in another
+     * language then gets `[]` where its types say object, which is exactly the kind of
+     * papercut that makes a format hostile to the languages it exists to serve.
+     *
+     * Every collection in COLLECTIONS is a map except one — a trigger's `events` is a
+     * list — so this is declared separately rather than derived.
+     *
+     * @var array<class-string, list<string>>
+     */
+    private const MAPS = [
+        Schema::class => ['entities', 'types'],
+        EntityDefinition::class => ['fields', 'edges', 'queries', 'actions', 'triggers', 'config'],
+        ActionDefinition::class => ['arguments'],
+        QueryDefinition::class => ['arguments'],
+    ];
+
+    /**
+     * Maps whose values are themselves maps of settings the core never interprets.
+     *
+     * An integration declared with no settings is the common case, and it is precisely
+     * the one that misencodes.
+     *
+     * @var array<class-string, list<string>>
+     */
+    private const MAP_OF_MAPS = [
+        EntityDefinition::class => ['integrations'],
+        QueryDefinition::class => ['integrations'],
+        ProjectDefinition::class => ['integrations'],
+    ];
+
+    /**
      * @return array<string, mixed>
      */
     public static function encode(Schema $schema): array
@@ -111,10 +147,33 @@ final readonly class IrCodec
             /** @var mixed $value */
             $value = $subject->{$name};
 
-            $encoded[$name] = self::encodeValue($value);
+            $encoded[$name] = self::shape(self::encodeValue($value), $subject::class, $name);
         }
 
         return $encoded;
+    }
+
+    /**
+     * @param class-string $owner
+     */
+    private static function shape(mixed $encoded, string $owner, string $property): mixed
+    {
+        if (!is_array($encoded)) {
+            return $encoded;
+        }
+
+        if (in_array($property, self::MAP_OF_MAPS[$owner] ?? [], true)) {
+            $settings = [];
+
+            /** @var mixed $value */
+            foreach ($encoded as $key => $value) {
+                $settings[$key] = is_array($value) ? (object) $value : $value;
+            }
+
+            return (object) $settings;
+        }
+
+        return in_array($property, self::MAPS[$owner] ?? [], true) ? (object) $encoded : $encoded;
     }
 
     private static function encodeValue(mixed $value): mixed
@@ -200,6 +259,12 @@ final readonly class IrCodec
             return null;
         }
 
+        // encode() emits stdClass for map-shaped fields, and json_decode with assoc
+        // gives arrays, so decoding has to accept both forms of the same thing.
+        if ($value instanceof stdClass) {
+            $value = (array) $value;
+        }
+
         $type = $parameter->getType();
 
         if (!$type instanceof ReflectionNamedType) {
@@ -221,7 +286,10 @@ final readonly class IrCodec
             $element = self::COLLECTIONS[$owner][$parameter->getName()] ?? null;
 
             if (null === $element) {
-                return $value;
+                // Config and integration settings are arbitrary data the core never
+                // interprets, but encode() may have shaped maps inside them as objects,
+                // so they still have to come back as plain arrays throughout.
+                return self::plain($value);
             }
 
             $decoded = [];
@@ -256,6 +324,29 @@ final readonly class IrCodec
     }
 
     /**
+     * Arbitrary data, with every stdClass encode() produced turned back into an array.
+     */
+    private static function plain(mixed $value): mixed
+    {
+        if ($value instanceof stdClass) {
+            $value = (array) $value;
+        }
+
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        $plain = [];
+
+        /** @var mixed $item */
+        foreach ($value as $key => $item) {
+            $plain[$key] = self::plain($item);
+        }
+
+        return $plain;
+    }
+
+    /**
      * @param class-string $element
      * @param class-string $owner
      */
@@ -263,6 +354,10 @@ final readonly class IrCodec
     {
         if (enum_exists($element)) {
             return self::decodeEnum($element, $item, $owner, $property);
+        }
+
+        if ($item instanceof stdClass) {
+            $item = (array) $item;
         }
 
         if (!is_array($item)) {

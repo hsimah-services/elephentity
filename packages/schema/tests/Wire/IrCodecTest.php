@@ -44,9 +44,7 @@ final class IrCodecTest extends TestCase
 
     public function testBackedEnumsTravelAsTheirValue(): void
     {
-        $encoded = IrCodec::encode($this->schema());
-
-        foreach ($this->postEdges($encoded) as $edge) {
+        foreach ($this->postEdges($this->wire()) as $edge) {
             // Readable on the wire, and readable by a builder that has never heard of
             // PHP: "many", not an ordinal or a class name.
             self::assertContains($edge['cardinality'], ['one', 'many']);
@@ -56,7 +54,7 @@ final class IrCodecTest extends TestCase
 
     public function testAnUnknownEnumCaseIsRefused(): void
     {
-        $encoded = IrCodec::encode($this->schema());
+        $encoded = $this->wire();
 
         /** @var array<string, mixed> $entities */
         $entities = $encoded['entities'];
@@ -83,7 +81,7 @@ final class IrCodecTest extends TestCase
 
     public function testAMissingRequiredFieldIsRefused(): void
     {
-        $encoded = IrCodec::encode($this->schema());
+        $encoded = $this->wire();
 
         /** @var array<string, mixed> $project */
         $project = $encoded['project'];
@@ -94,6 +92,27 @@ final class IrCodecTest extends TestCase
         $this->expectExceptionMessageMatches('/missing required field "driver"/');
 
         IrCodec::decode($encoded);
+    }
+
+    /**
+     * The schema exactly as a builder receives it: encoded, serialised, parsed back.
+     *
+     * Tests index this rather than the raw encode() output because encode() emits
+     * stdClass for map-shaped fields, and a builder never sees those — it sees JSON.
+     *
+     * @return array<string, mixed>
+     */
+    private function wire(): array
+    {
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode(
+            json_encode(IrCodec::encode($this->schema()), JSON_THROW_ON_ERROR),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        return $decoded;
     }
 
     /**

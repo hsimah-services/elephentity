@@ -3,7 +3,8 @@
 An AI-native PHP framework that compiles human-readable specs into locked, signed
 business logic. Read [docs/PLAN.md](docs/PLAN.md) first — it carries every design
 decision and the reasoning behind it, and this file assumes it.
-[docs/GLOSSARY.md](docs/GLOSSARY.md) defines the vocabulary.
+[docs/GLOSSARY.md](docs/GLOSSARY.md) defines the vocabulary, and
+[docs/BUILDERS.md](docs/BUILDERS.md) is the contract a code generator implements.
 
 ## Working in this repository
 
