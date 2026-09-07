@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Tests;
 
+use DateTimeImmutable;
 use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
@@ -14,6 +15,8 @@ use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
 #[CoversClass(TypeRegistrar::class)]
 #[CoversClass(ConformanceChecker::class)]
@@ -54,6 +57,111 @@ final class RegistrarAndConformanceTest extends TestCase
         };
 
         self::assertSame('Hello', $resolve($source));
+    }
+
+    public function testADatetimeIsFormattedRatherThanHandedOverAsAnObject(): void
+    {
+        // The manifest says String and the accessor returns DateTimeImmutable. Without
+        // an encoding step every query selecting a timestamp fails outright, which is
+        // every entity using the shipped Timestamps pattern.
+        $resolve = $this->postFields()['createdAt']['resolve'];
+
+        self::assertIsCallable($resolve);
+
+        $source = new class () {
+            public function getCreatedAt(): DateTimeImmutable
+            {
+                return new DateTimeImmutable('2026-09-07T11:17:00+00:00');
+            }
+        };
+
+        self::assertSame('2026-09-07T11:17:00+00:00', $resolve($source));
+    }
+
+    public function testABackedEnumTravelsAsTheValueTheEnumTypeMaps(): void
+    {
+        // register_graphql_enum_type maps DRAFT => 'draft'. Handing it the case object
+        // matches nothing.
+        $resolve = $this->postFields()['status']['resolve'];
+
+        self::assertIsCallable($resolve);
+
+        $source = new class () {
+            public function getStatus(): FixtureStatus
+            {
+                return FixtureStatus::Draft;
+            }
+        };
+
+        self::assertSame('draft', $resolve($source));
+    }
+
+    public function testNullShortCircuitsBeforeAnyEncoding(): void
+    {
+        $resolve = $this->postFields()['updatedAt']['resolve'];
+
+        self::assertIsCallable($resolve);
+
+        $source = new class () {
+            public function getUpdatedAt(): mixed
+            {
+                return null;
+            }
+        };
+
+        self::assertNull($resolve($source));
+    }
+
+    public function testADeclaredValueTypeIsUnwoundByItsWriteProcessor(): void
+    {
+        // Money is a Money on the entity and an Int over the wire. The processor that
+        // already owns that conversion for writes owns it here too.
+        $registrar = new TypeRegistrar(
+            $this->manifest(),
+            new FakeGateway(),
+            processors: new FakeProcessors(),
+        );
+
+        $config = $registrar->objectConfigs()['Post'];
+        self::assertIsArray($config['fields']);
+
+        /** @var array<string, array<string, mixed>> $fields */
+        $fields = $config['fields'];
+        $resolve = $fields['price']['resolve'];
+
+        self::assertIsCallable($resolve);
+
+        $source = new class () {
+            public function getPrice(): object
+            {
+                return new class () {
+                    public int $cents = 1250;
+                };
+            }
+        };
+
+        self::assertSame(1250, $resolve($source));
+    }
+
+    public function testAValueTypeWithNoRegistrySaysWhichFieldNeedsOne(): void
+    {
+        // Silently handing WPGraphQL an object it cannot serialise would surface as a
+        // scalar error naming the type, not the field. Name the field.
+        $resolve = $this->postFields()['price']['resolve'];
+
+        self::assertIsCallable($resolve);
+
+        $source = new class () {
+            public function getPrice(): object
+            {
+                return new stdClass();
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/"price".*Money/');
+
+        $resolve($source);
     }
 
     public function testConnectionsAreRegisteredFromAndToTheRightTypes(): void

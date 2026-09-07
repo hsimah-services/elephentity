@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:14313a4cfebe6a90c5e7961f2657d44f0afd51c176b2304e2c007a0ab3738d0d
+ * digest: sha256:bbebb304026faf2dab3c29185050fb2558db09f65fd174fc8c147f3c9ef3e32e
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -26,15 +26,15 @@ return new Manifest(
             'ClogInventory',
             'Inventory',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
-                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null),
-                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.'),
-                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'Projected to post_title, so the admin list has something to show.'),
-                'dateAdded' => new FieldEntry('dateAdded', new GraphQLType('String', true, false), 'getDateAdded', 'When this instance entered inventory.'),
-                'dateExpiry' => new FieldEntry('dateExpiry', new GraphQLType('String', false, false), 'getDateExpiry', 'When it expires. Absent means it does not.'),
-                'item' => new FieldEntry('item', new GraphQLType('ClogItem', false, false), 'getItem', 'What this entry is an instance of.'),
-                'location' => new FieldEntry('location', new GraphQLType('ClogLocation', false, false), 'getLocation', 'Where it is kept.'),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
+                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'Projected to post_title, so the admin list has something to show.', FieldEncoding::Value, null),
+                'dateAdded' => new FieldEntry('dateAdded', new GraphQLType('String', true, false), 'getDateAdded', 'When this instance entered inventory.', FieldEncoding::Datetime, null),
+                'dateExpiry' => new FieldEntry('dateExpiry', new GraphQLType('String', false, false), 'getDateExpiry', 'When it expires. Absent means it does not.', FieldEncoding::Datetime, null),
+                'item' => new FieldEntry('item', new GraphQLType('ClogItem', false, false), 'getItem', 'What this entry is an instance of.', FieldEncoding::Value, null),
+                'location' => new FieldEntry('location', new GraphQLType('ClogLocation', false, false), 'getLocation', 'Where it is kept.', FieldEncoding::Value, null),
             ],
             [],
             'One stocked instance of an item, in a location, with its own expiry.',
@@ -43,15 +43,15 @@ return new Manifest(
             'ClogItem',
             'Item',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
-                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null),
-                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.'),
-                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the item is called. Projected to post_title.'),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
+                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the item is called. Projected to post_title.', FieldEncoding::Value, null),
                 'barcode' => new FieldEntry('barcode', new GraphQLType('String', false, false), 'getBarcode', 'The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.
-'),
-                'defaultExpiryUnit' => new FieldEntry('defaultExpiryUnit', new GraphQLType('ExpiryUnit', false, false), 'getDefaultExpiryUnit', 'Half of the default expiry; meaningless without the other half.'),
-                'defaultExpiryValue' => new FieldEntry('defaultExpiryValue', new GraphQLType('Int', false, false), 'getDefaultExpiryValue', 'Half of the default expiry; meaningless without the other half.'),
+', FieldEncoding::Value, null),
+                'defaultExpiryUnit' => new FieldEntry('defaultExpiryUnit', new GraphQLType('ExpiryUnit', false, false), 'getDefaultExpiryUnit', 'Half of the default expiry; meaningless without the other half.', FieldEncoding::BackedEnum, null),
+                'defaultExpiryValue' => new FieldEntry('defaultExpiryValue', new GraphQLType('Int', false, false), 'getDefaultExpiryValue', 'Half of the default expiry; meaningless without the other half.', FieldEncoding::Value, null),
             ],
             [],
             'A thing that can be stocked, identified by its barcode.',
@@ -60,11 +60,11 @@ return new Manifest(
             'ClogLocation',
             'Location',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null),
-                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null),
-                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null),
-                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.'),
-                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the location is called. Projected to post_title.'),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', null, FieldEncoding::Datetime, null),
+                'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', false, false), 'getUpdatedAt', null, FieldEncoding::Datetime, null),
+                'postId' => new FieldEntry('postId', new GraphQLType('Int', true, false), 'getPostId', 'The wp_posts row this entity projects to.', FieldEncoding::Value, null),
+                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the location is called. Projected to post_title.', FieldEncoding::Value, null),
             ],
             [],
             'Somewhere inventory can be kept.',

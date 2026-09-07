@@ -6,6 +6,7 @@ namespace Eleph\WPGraphQL\Manifest;
 
 use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
@@ -105,6 +106,8 @@ final readonly class ManifestBuilder
                 $types->forField($entity, $field),
                 'get' . ucfirst($field->name),
                 $field->description,
+                $this->encoding($schema, $field),
+                $this->valueType($schema, $field),
             );
         }
 
@@ -151,6 +154,55 @@ final readonly class ManifestBuilder
             $connections,
             $entity->description,
         );
+    }
+
+    /**
+     * How the accessor's return value reaches the wire.
+     *
+     * Derived from the same field the wire type was derived from, so the two are
+     * decided together: a datetime is declared String and formatted, an enum is
+     * declared as its enum type and travels as its backing value, and a declared value
+     * type travels as whatever it is stored as.
+     */
+    private function encoding(Schema $schema, FieldDefinition $field): FieldEncoding
+    {
+        $primitive = $field->type->primitive;
+
+        if (null === $primitive) {
+            $declared = $schema->type((string) $field->type->declaredType);
+
+            if (null !== $declared && $declared->isEnum()) {
+                return FieldEncoding::BackedEnum;
+            }
+
+            // A value type with no processors is an alias for its primitive, and the
+            // generator types the accessor as the primitive, so nothing has to happen.
+            return true === $declared?->hasProcessors
+                ? FieldEncoding::Processor
+                : $this->forPrimitive($declared->primitive ?? Primitive::String);
+        }
+
+        return $this->forPrimitive($primitive);
+    }
+
+    private function forPrimitive(Primitive $primitive): FieldEncoding
+    {
+        return match ($primitive) {
+            Primitive::Datetime => FieldEncoding::Datetime,
+            Primitive::Enum => FieldEncoding::BackedEnum,
+            Primitive::Json => FieldEncoding::Json,
+            default => FieldEncoding::Value,
+        };
+    }
+
+    /**
+     * The type whose processor unwinds the value, for the one encoding that needs one.
+     */
+    private function valueType(Schema $schema, FieldDefinition $field): ?string
+    {
+        return FieldEncoding::Processor === $this->encoding($schema, $field)
+            ? (string) $field->type->declaredType
+            : null;
     }
 
     /**
