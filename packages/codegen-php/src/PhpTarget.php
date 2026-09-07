@@ -108,6 +108,6 @@ final readonly class PhpTarget implements Target
 
         usort($files, static fn (GeneratedFile $a, GeneratedFile $b) => strcmp($a->relativePath, $b->relativePath));
 
-        return TargetResponse::ok($files, HeaderStyle::Php);
+        return TargetResponse::ok($files, HeaderStyle::Php, ['php']);
     }
 }

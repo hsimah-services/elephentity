@@ -139,6 +139,24 @@ final class PipelineTest extends TestCase
         self::assertFileExists($this->project . '/generated/Post/Contract/PostPriceVerifier.php');
     }
 
+    public function testNarrowingToAConfiguredTargetStillGeneratesIt(): void
+    {
+        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand(), ['--targets' => 'php']));
+        self::assertFileExists($this->project . '/generated/Post/Post.php');
+    }
+
+    public function testAnUnknownTargetIsRefusedRatherThanIgnored(): void
+    {
+        // Silently generating nothing looks exactly like a target with nothing to do,
+        // so a typo has to fail loudly and say what the project actually configures.
+        $tester = $this->tester(new GenerateCommand(), ['--targets' => 'rust']);
+
+        self::assertSame(Command::INVALID, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown target(s): rust', $tester->getDisplay());
+        self::assertStringContainsString('php', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->project . '/generated/Post/Post.php');
+    }
+
     /**
      * @param array<string, mixed> $input
      */

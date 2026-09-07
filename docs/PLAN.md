@@ -924,6 +924,37 @@ already draws between `eleph.json` and `project.yml`, extended one level down.
 WordPress storage manifest and the WPGraphQL manifest are the same shape as a plugin, and
 folding them in is the test that the abstraction fits something that already exists.
 
+### One directory per target, and `--targets` to narrow
+
+`--targets php,ts` runs a subset; omitting it runs everything. It is for iterating on one
+generator without waiting for the rest, and **CI passes no `--targets` at all** — a check
+that skips a target is a check that has stopped noticing that target has drifted. An
+unknown name is refused rather than ignored, because silently generating nothing looks
+exactly like a target that had nothing to do.
+
+Narrowing is only safe because **no two targets may share an output directory**, refused
+when `eleph.json` loads. Writing a tree means deleting whatever the schema no longer
+produces, so a shared directory is one where `--targets php` sweeps away the TypeScript.
+This is also what decides the manifests question above: if `wpgraphql` becomes a target it
+needs its own directory, or it stays part of the PHP target.
+
+Deletion is further scoped to **the file extensions a target declares it owns**, returned
+with its files. Sweeping the whole directory would be defensible — it is machine-owned —
+but it turns a mistyped `output` into data loss, and deleting is the one thing worth being
+timid about.
+
+### Explicitly not a package manager
+
+A target's builder has to be present locally; `eleph` resolves it and fails hard when it is
+absent. It does **not** fetch, pin, checksum, authenticate or cache — that is composer, npm
+and cargo's job, and reimplementing them badly is not the product. Builders land in a
+directory by whatever means suits: checked out, symlinked, downloaded by a script, copied
+in by hand. The framework's only interest is that the executable is there.
+
+If acquisition is ever automated, it slots in front of resolution and changes nothing
+downstream, and *that* is when a lockfile — resolved versions and checksums, separate from
+the declaration in `eleph.json` — starts to earn its place.
+
 ### Stability: none promised before 1.0
 
 **There is no long-term support guarantee for the IR.** With a single user, a compatibility

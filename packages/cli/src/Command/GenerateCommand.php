@@ -6,6 +6,7 @@ namespace Eleph\Cli\Command;
 
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
+use Eleph\Cli\TargetConfig;
 use Eleph\Cli\Targets;
 use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\Output\Writer;
@@ -21,6 +22,7 @@ use Eleph\WordPress\Manifest\StorageManifestExporter;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\ManifestExporter;
+use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -64,6 +66,13 @@ final class GenerateCommand extends Command
             'Directory holding eleph.json.',
             '.',
         );
+
+        $this->addOption(
+            'targets',
+            't',
+            InputOption::VALUE_REQUIRED,
+            'Comma-separated targets to generate. Every configured target if omitted.',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -98,11 +107,19 @@ final class GenerateCommand extends Command
         $schema = $compiled->schema();
         $registry = Targets::registry();
 
+        try {
+            $selected = $this->selected($input, $config);
+        } catch (InvalidArgumentException $exception) {
+            $io->error($exception->getMessage());
+
+            return Command::INVALID;
+        }
+
         $errors = [];
-        /** @var array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer}> $plan */
+        /** @var array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer, extensions: list<string>}> $plan */
         $plan = [];
 
-        foreach ($config->targets as $name => $targetConfig) {
+        foreach ($selected as $name => $targetConfig) {
             $target = $registry[$name] ?? null;
 
             if (null === $target) {
@@ -141,6 +158,7 @@ final class GenerateCommand extends Command
                 'directory' => $outputDirectory,
                 'files' => $files,
                 'signer' => new Signer($response->headerStyle),
+                'extensions' => $response->extensions,
             ];
         }
 
@@ -157,13 +175,67 @@ final class GenerateCommand extends Command
         $reports = [];
 
         foreach ($plan as $name => $step) {
-            $writer = new Writer($step['directory'], $step['signer']);
+            $writer = new Writer($step['directory'], $step['signer'], $step['extensions']);
             $reports[$name] = $check ? $writer->check($step['files']) : $writer->write($step['files']);
         }
 
         return $check
             ? $this->reportCheck($io, $reports)
             : $this->reportWrite($io, $reports, $plan);
+    }
+
+    /**
+     * The targets this run covers, in the order eleph.json declares them.
+     *
+     * Narrowing is for iterating on one generator without waiting for the rest; CI
+     * should pass no --targets at all, because a check that skips a target is a check
+     * that stops noticing it has drifted.
+     *
+     * An unknown name is refused rather than ignored. A typo that silently generates
+     * nothing looks exactly like a target that had nothing to do.
+     *
+     * @return array<string, TargetConfig>
+     */
+    private function selected(InputInterface $input, ProjectConfig $config): array
+    {
+        $requested = $input->getOption('targets');
+
+        if (null === $requested) {
+            return $config->targets;
+        }
+
+        if (!is_string($requested) || '' === trim($requested)) {
+            throw new InvalidArgumentException('--targets needs at least one target name.');
+        }
+
+        $names = array_values(array_filter(
+            array_map(trim(...), explode(',', $requested)),
+            static fn (string $name): bool => '' !== $name,
+        ));
+        $selected = [];
+        $unknown = [];
+
+        foreach ($names as $name) {
+            $target = $config->target($name);
+
+            if (null === $target) {
+                $unknown[] = $name;
+
+                continue;
+            }
+
+            $selected[$name] = $target;
+        }
+
+        if ([] !== $unknown) {
+            throw new InvalidArgumentException(sprintf(
+                'Unknown target(s): %s. This project configures: %s.',
+                implode(', ', $unknown),
+                implode(', ', array_keys($config->targets)),
+            ));
+        }
+
+        return $selected;
     }
 
     /**
@@ -247,7 +319,7 @@ final class GenerateCommand extends Command
 
     /**
      * @param array<string, WriteReport>                                                       $reports
-     * @param array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer}> $plan
+     * @param array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer, extensions: list<string>}> $plan
      */
     private function reportWrite(SymfonyStyle $io, array $reports, array $plan): int
     {

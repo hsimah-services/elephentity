@@ -23,9 +23,13 @@ use SplFileInfo;
  */
 final readonly class Writer
 {
+    /**
+     * @param list<string> $ownedExtensions Extensions this target may delete, no dot.
+     */
     public function __construct(
         private string $outputDirectory,
         private Signer $signer = new Signer(),
+        private array $ownedExtensions = ['php'],
     ) {
     }
 
@@ -100,6 +104,11 @@ final readonly class Writer
     /**
      * Files present in the output tree that the schema no longer produces.
      *
+     * Restricted to the extensions the target declared. Sweeping everything would be
+     * simpler and is arguably justified — an output directory is machine-owned — but it
+     * turns a mistyped `output` into data loss, and deleting is the one thing worth
+     * being timid about.
+     *
      * @param array<string, true> $expected
      *
      * @return list<string>
@@ -118,7 +127,7 @@ final readonly class Writer
         );
 
         foreach ($iterator as $entry) {
-            if (!$entry instanceof SplFileInfo || 'php' !== $entry->getExtension()) {
+            if (!$entry instanceof SplFileInfo || !in_array($entry->getExtension(), $this->ownedExtensions, true)) {
                 continue;
             }
 

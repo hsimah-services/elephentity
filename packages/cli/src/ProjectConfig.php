@@ -17,6 +17,11 @@ use RuntimeException;
  * each target reads and validates its own settings. Problems are accumulated and
  * reported together, so a file missing three keys takes one run to fix rather than
  * three.
+ *
+ * **One directory per target, never shared.** Writing a tree means deleting what the
+ * schema no longer produces, so a directory two targets write into is one where
+ * generating a single target deletes the other's work. Refusing it here is what makes
+ * `--targets` safe to narrow with.
  */
 final readonly class ProjectConfig
 {
@@ -127,6 +132,31 @@ final readonly class ProjectConfig
             $targets[$name] = new TargetConfig($name, $output, $settings);
         }
 
+        foreach (self::sharedDirectories($targets) as $directory => $sharing) {
+            $problems[] = sprintf(
+                'Targets %s all write to "%s". Each target needs its own output directory, '
+                . 'because generating one deletes whatever it does not produce.',
+                implode(' and ', $sharing),
+                $directory,
+            );
+        }
+
         return $targets;
+    }
+
+    /**
+     * @param array<string, TargetConfig> $targets
+     *
+     * @return array<string, list<string>> Directory => the targets claiming it.
+     */
+    private static function sharedDirectories(array $targets): array
+    {
+        $byDirectory = [];
+
+        foreach ($targets as $name => $target) {
+            $byDirectory[rtrim($target->outputDirectory, '/')][] = $name;
+        }
+
+        return array_filter($byDirectory, static fn (array $sharing) => count($sharing) > 1);
     }
 }
