@@ -944,10 +944,14 @@ Cheapest first, each catching a distinct class of failure:
 
 ---
 
-## 15. Pluggable code generation **[proposed]**
+## 15. Pluggable code generation **[landed; split into its own repositories]**
 
-One spec should produce the backend *and* the frontend. Today `packages/codegen` emits
-PHP and only PHP, and the assumption is not in one place: `Codegen::generate()` hardwires
+> Written when the generator was `packages/codegen` in this repository. It is now two
+> separate programs — see "The split happened, for a different reason" below — so the
+> problem statement that follows is history rather than a description of the tree.
+
+One spec should produce the backend *and* the frontend. At the time, `packages/codegen`
+emitted PHP and only PHP, and the assumption is not in one place: `Codegen::generate()` hardwires
 eleven generators in sequence; `Emitter` and `Printer` are built on `nette/php-generator`,
 so a generator's implicit contract is "return a `PhpNamespace`"; `Names` produces PHP
 FQCNs and `GeneratorConfig` is a pair of namespaces; `TypeMapper` maps the primitive set
@@ -1131,11 +1135,65 @@ proves the layers are wired together at all. Move the PHP generator to another r
 and no single CI run proves the pipeline end to end, and regenerating `examples/clog`
 crosses a repo boundary. That is a permanent tax; pay it when it buys something.
 
+#### The split happened, for a different reason
+
+Step 3 said to split only for release cadence. That is not what bought it. **The code
+generator's rewrite target is a different language from the framework's**: Elephentity
+stays PHP, and the generator becomes Rust. A rewrite cannot happen inside a repository
+whose CI, autoloader and package boundaries are all PHP, so the split is a precondition
+rather than a tidy-up, and the tax above is paid knowingly.
+
+Three programs now:
+
+| Repository | Holds |
+|---|---|
+| `elephentity` | the spec format, compiler, IR, runtime and adaptors |
+| `elephentity-codegen` | the orchestrator: resolves builders, runs them, signs and writes |
+| `elephentity-codegen-php` | the PHP builder: IR → locked PHP |
+
+`eleph generate` compiles the specs and pipes the IR to `eleph-codegen`, which resolves
+each configured builder, runs it, and signs and writes what comes back. The manifests
+travel with that request in a `files` block, addressed to the PHP target: they are
+compiled by code that knows what WordPress is, which is exactly what the generator is
+built not to know.
+
+Three consequences worth recording, because each removed something this plan had argued
+for keeping:
+
+**The in-process path is gone, and with it the `Target` interface.** It existed so a
+built-in target and an external one could be called identically; with no built-in
+targets, every target is a builder and the abstraction had one implementation.
+`ExternalEquivalenceTest` went too — it diffed the two paths, and there is only one.
+
+**`eleph check` no longer calls `Names`.** §3's "one source of truth per decision" said
+`Names` decides class names for both the generator and the conformance checker. That
+could not survive the split: it made a gate about generated output depend on having one
+particular generator on the classpath, which a TypeScript builder could never satisfy.
+The PHP builder now writes `class-map.php` into the tree and the checker reads it. This
+is a stronger form of the same rule rather than an exception to it — the map is
+generated and signed, so one that disagreed with the files beside it is one the drift
+gate rewrites.
+
+**The IR is now opaque to everything between the compiler and the builders.**
+`Envelope::encodeRequest()` takes an already-encoded schema and forwards it. The
+optimisation noted below — not encoding a schema nobody would decode — died with the
+in-process path, and it was the right thing to lose: it was the last place the
+orchestration layer had an opinion about what an entity is.
+
+What the tax actually costs: `PipelineTest` needs both other repositories installed to
+run, and an IR change is now a three-repository change. The second is the cost this
+section already accepted when it declined to promise compatibility before 1.0.
+
 #### Landed so far
 
-**Step 1 is complete: the protocol is real.** A target is either built into the
+> Class names in this subsection are where things were when the protocol landed. The
+> protocol is unchanged; the code moved. `Eleph\Codegen\*` is now `elephentity-codegen`,
+> and `packages/codegen-php` is `elephentity-codegen-php`.
+
+**Step 1 is complete: the protocol is real.** A target was either built into the
 installation and called in process, or an external program reached over a pipe — the
-same `Target` interface either way, so `GenerateCommand` cannot tell them apart.
+same `Target` interface either way, so `GenerateCommand` could not tell them apart. The
+in-process half is gone now, and with it the interface.
 
 - `Eleph\Schema\Wire\IrCodec` is the IR as JSON. Reflection over the constructors
   rather than a hand-written encoder per class: the IR is 18 plain value objects, so a
@@ -1227,7 +1285,7 @@ reserved word, and while PHP permits it as a method name it reads badly at the c
 site. `pending()` falls back to the original for untouched fields, so a verifier always
 sees what the row will actually hold.
 
-### Step 3 — `packages/codegen`
+### Step 3 — code generation *(now `elephentity-codegen` and `elephentity-codegen-php`)*
 - Entity, Mutator, Finder, action contexts, typed mutation contexts, enums
 - Handler interfaces: queries, actions, triggers, field verifiers, type processors
 - Header + hash signing, with the single shared verifier

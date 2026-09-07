@@ -25,6 +25,11 @@ use Symfony\Component\Console\Tester\CommandTester;
  * order a project would — fmt, validate, generate, check — and then asserts the
  * gates are stable: regenerating changes nothing, and conformance holds against the
  * classes actually on disk.
+ *
+ * Since the generator moved out, `generate` here spans three programs and two process
+ * boundaries: this compiles, `eleph-codegen` orchestrates, `eleph-gen-php` builds. That
+ * makes this a better assertion than it was and a more expensive one — it needs both
+ * dev dependencies installed, which is exactly how a real project has them.
  */
 #[CoversNothing]
 final class PipelineTest extends TestCase
@@ -148,25 +153,6 @@ final class PipelineTest extends TestCase
         self::assertFileDoesNotExist($this->project . '/generated/Post/Post.php');
     }
 
-    public function testTheSameTargetRunAsAnExternalBuilderProducesTheSameTree(): void
-    {
-        // The whole point of the protocol: a generator the core reaches over a pipe
-        // rather than by calling it. Running the PHP target both ways and diffing the
-        // trees is what proves the wire path is not a second, subtly different build.
-        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand()));
-
-        $inProcess = $this->tree();
-
-        $this->remove($this->project . '/generated');
-        $this->useExternalBuilder();
-
-        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand()));
-        self::assertSame($inProcess, $this->tree());
-
-        // And the signatures still verify, which they only can if the bytes match.
-        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand(), ['--check' => true]));
-    }
-
     public function testAMissingBuilderFailsTheBuildAndSaysWhereItLooked(): void
     {
         $this->writeConfig(['builder' => 'eleph-gen-nowhere']);
@@ -178,11 +164,6 @@ final class PipelineTest extends TestCase
         self::assertFileDoesNotExist($this->project . '/generated/Post/Post.php');
     }
 
-    private function useExternalBuilder(): void
-    {
-        $this->writeConfig(['builder' => dirname(__DIR__, 2) . '/codegen-php/bin/eleph-gen-php']);
-    }
-
     /**
      * @param array<string, string> $extra
      */
@@ -192,6 +173,7 @@ final class PipelineTest extends TestCase
             'spec' => 'spec',
             'targets' => [
                 'php' => [
+                    'builder' => dirname(__DIR__, 3) . '/vendor/bin/eleph-gen-php',
                     'output' => 'generated',
                     'namespace' => $this->namespace,
                     'typeNamespace' => 'PipelineFixture\\Type',
@@ -199,31 +181,6 @@ final class PipelineTest extends TestCase
                 ],
             ],
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function tree(): array
-    {
-        $files = [];
-        $root = $this->project . '/generated';
-
-        $entries = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
-        );
-
-        foreach ($entries as $entry) {
-            if ($entry instanceof SplFileInfo && $entry->isFile()) {
-                $files[substr($entry->getPathname(), strlen($root) + 1)] = (string) file_get_contents(
-                    $entry->getPathname(),
-                );
-            }
-        }
-
-        ksort($files);
-
-        return $files;
     }
 
     /**

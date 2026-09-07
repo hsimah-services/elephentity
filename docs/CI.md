@@ -31,6 +31,11 @@ accumulate, so one run reports everything.
 ways it drifts: a hand-edited file (its digest no longer matches), a stale file the
 spec no longer produces, and a deleted one.
 
+It needs the code generator and at least one builder installed, because Elephentity
+compiles the spec and generates nothing itself. Both are dev dependencies, so a
+`composer install` in CI is enough; `vendor/bin/eleph-codegen doctor` says whether they
+are where the config expects, without running a build.
+
 **`check`** — a different question. `generate --check` asks whether the tree matches
 the spec; this asks whether it is *coherent*: every field the GraphQL layer exposes
 must resolve to a method that exists. A renamed accessor still parses, still loads, and

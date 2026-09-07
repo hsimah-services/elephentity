@@ -7,8 +7,7 @@ declare(strict_types=1);
  * Architecture rules that static analysis cannot express yet.
  *
  * Rule 1 — the platform-free core.
- *   packages/schema, codegen, codegen-php, runtime and cli must not reference
- *   WordPress at all.
+ *   packages/schema, runtime and cli must not reference WordPress at all.
  *   Only packages/wordpress and packages/wpgraphql may.
  *
  *   This is what keeps the storage abstraction honest. WordPress concepts leak
@@ -18,11 +17,11 @@ declare(strict_types=1);
  * Uses the tokenizer rather than grep, so prose in a doc comment discussing WordPress
  * is not mistaken for a dependency on it — and neither is a string literal.
  *
- * TODO once codegen lands: "Entity never writes" and "Mutator never returns an Entity".
- * Those want a PHPStan custom rule, not this.
+ * The code generator used to be checked here too. It lives in its own repository now
+ * and has no WordPress stubs to reach for even by accident, so the rule went with it.
  */
 
-const CORE_PACKAGES = ['schema', 'codegen', 'codegen-php', 'runtime', 'cli'];
+const CORE_PACKAGES = ['schema', 'runtime', 'cli'];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */
 const WORDPRESS_FUNCTIONS = [
