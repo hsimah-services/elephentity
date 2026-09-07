@@ -26,6 +26,14 @@ final class PhpTargetTest extends TestCase
         sort($paths);
 
         self::assertSame([
+            'Author/Author.php',
+            'Author/AuthorDeleter.php',
+            'Author/AuthorHydrator.php',
+            'Author/AuthorInput.php',
+            'Author/AuthorMutationContext.php',
+            'Author/AuthorMutator.php',
+            'Author/AuthorTriggers.php',
+            'Author/AuthorVerifiers.php',
             'Catalogue.php',
             'Comment/Comment.php',
             'Comment/CommentDeleter.php',
@@ -77,6 +85,59 @@ final class PhpTargetTest extends TestCase
 
         self::assertStringContainsString('public function setTitle(', $mutator);
         self::assertStringNotContainsString('setCreatedAt', $mutator);
+    }
+
+    public function testAnEdgeIsWritableAndItsShapeMirrorsTheReadModel(): void
+    {
+        // Reading an edge worked and writing one had no generated path: an "item" key
+        // handed to the gateway was silently dropped and the row landed with a null
+        // foreign key.
+        $mutator = $this->file('Post/PostMutator.php');
+
+        // To-many: the same EdgeMutation an action context exposes, so add, remove and
+        // replace all exist without three method names per edge.
+        self::assertStringContainsString('public function comments(): EdgeMutation', $mutator);
+        self::assertStringContainsString("return \$this->buffer->edge('comments');", $mutator);
+
+        // To-one: a signature that cannot express two targets.
+        $comment = $this->file('Comment/CommentMutator.php');
+
+        self::assertStringContainsString('public function setAuthor(?Identifier $author): self', $comment);
+        self::assertStringContainsString(
+            "\$this->buffer->edge('author')->set(null === \$author ? [] : [\$author]);",
+            $comment,
+        );
+    }
+
+    public function testAnEdgeKeyInInputIsAppliedRatherThanDropped(): void
+    {
+        $input = $this->file('Post/PostInput.php');
+
+        self::assertStringContainsString("if (array_key_exists('comments', \$input)) {", $input);
+        self::assertStringContainsString("\$buffer->edge('comments')->set(\$this->comments(\$input['comments']))", $input);
+        self::assertStringContainsString("\$this->decode->id(\$id, 'Post.comments')", $input);
+    }
+
+    public function testAnInverseGetsAnAccessorOnTheEntityItPointsAt(): void
+    {
+        // `inverse:` was accepted and generated nothing, which removed the query the
+        // data existed to serve. Nothing is stored for it — the loader reads the
+        // declaring entity's own edge backwards.
+        $comment = $this->file('Comment/Comment.php');
+
+        self::assertStringContainsString('public function getPost(): ?Post', $comment);
+        self::assertStringContainsString("inverseToOne('Post', 'comments', \$this->id)", $comment);
+
+        $author = $this->file('Author/Author.php');
+
+        self::assertStringContainsString('public function comments(): EntityQuery', $author);
+        self::assertStringContainsString("inverseToMany('Comment', 'author', \$this->id)", $author);
+
+        // A non-unique reverse is a to-many, so it is a lazy query like any other.
+        $tag = $this->file('Tag/Tag.php');
+
+        self::assertStringContainsString('public function posts(): EntityQuery', $tag);
+        self::assertStringContainsString("inverseToMany('Post', 'tags', \$this->id)", $tag);
     }
 
     public function testAManagedFieldIsSettableByNobody(): void

@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:e26fa5276abdb8cab8c595e014883827ae769c9f2f508f48e7da0d0f40632b31
+ * digest: sha256:545db6bff4f8e94b009aa7a31edc9c8d6a776e83078a9435cf440ae4d23c7f98
  */
 
 namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -51,6 +52,26 @@ final class InventoryMutator
     public function setDateExpiry(?DateTimeImmutable $dateExpiry): self
     {
         $this->buffer->set('dateExpiry', $dateExpiry);
+
+        return $this;
+    }
+
+    /**
+     * Point this at one Item, or at nothing.
+     */
+    public function setItem(?Identifier $item): self
+    {
+        $this->buffer->edge('item')->set(null === $item ? [] : [$item]);
+
+        return $this;
+    }
+
+    /**
+     * Point this at one Location, or at nothing.
+     */
+    public function setLocation(?Identifier $location): self
+    {
+        $this->buffer->edge('location')->set(null === $location ? [] : [$location]);
 
         return $this;
     }

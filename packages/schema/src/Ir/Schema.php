@@ -38,4 +38,36 @@ final readonly class Schema
     {
         return isset($this->entities[$name]);
     }
+
+    /**
+     * The reverse accessors an entity gets from edges declared elsewhere.
+     *
+     * Answering it means reading every *other* entity's edges, which is a build-time
+     * walk and exactly the sort of thing the IR exists to do once. Declaration order is
+     * preserved, so generated output stays stable as entities are added.
+     *
+     * @return list<InverseEdge>
+     */
+    public function inversesOf(string $entity): array
+    {
+        $inverses = [];
+
+        foreach ($this->entities as $declaring) {
+            foreach ($declaring->edges as $edge) {
+                if ($edge->to !== $entity || null === $edge->inverse) {
+                    continue;
+                }
+
+                $inverses[] = new InverseEdge(
+                    $declaring->name,
+                    $edge->name,
+                    $edge->inverse->nameFor($declaring->name),
+                    $edge->inverse->unique,
+                    $edge->description,
+                );
+            }
+        }
+
+        return $inverses;
+    }
 }

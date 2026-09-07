@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:18ad46d8f1f2bf3d3f991cb8322713e7133a204f091778518561020228715743
+ * digest: sha256:7a882dccdf5e7250624eb39033d52af941175ccbdf3e68fbf01deb6902abd86f
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -55,7 +55,9 @@ return new Manifest(
                 'defaultExpiryUnit' => new FieldEntry('defaultExpiryUnit', new GraphQLType('ExpiryUnit', false, false), 'getDefaultExpiryUnit', 'Half of the default expiry; meaningless without the other half.', FieldEncoding::BackedEnum, null),
                 'defaultExpiryValue' => new FieldEntry('defaultExpiryValue', new GraphQLType('Int', false, false), 'getDefaultExpiryValue', 'Half of the default expiry; meaningless without the other half.', FieldEncoding::Value, null),
             ],
-            [],
+            [
+                'inventoryEntries' => new ConnectionEntry('inventoryEntries', 'ClogItem', 'ClogInventory', 'inventoryEntries', 'item', 'The Inventory pointing here through "item".'),
+            ],
             'A thing that can be stocked, identified by its barcode.',
         ),
         'ClogLocation' => new ObjectTypeEntry(
@@ -69,7 +71,9 @@ return new Manifest(
 ', FieldEncoding::Value, null),
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the location is called. Projected to post_title.', FieldEncoding::Value, null),
             ],
-            [],
+            [
+                'inventoryEntries' => new ConnectionEntry('inventoryEntries', 'ClogLocation', 'ClogInventory', 'inventoryEntries', 'location', 'The Inventory pointing here through "location".'),
+            ],
             'Somewhere inventory can be kept.',
         ),
     ],
@@ -86,6 +90,8 @@ return new Manifest(
                 'name' => new GraphQLType('String', true, false),
                 'dateAdded' => new GraphQLType('String', true, false),
                 'dateExpiry' => new GraphQLType('String', false, false),
+                'item' => new GraphQLType('ID', false, false),
+                'location' => new GraphQLType('ID', false, false),
             ],
             null,
             'Create a ClogInventory.',
@@ -125,6 +131,8 @@ return new Manifest(
                 'name' => new GraphQLType('String', false, false),
                 'dateAdded' => new GraphQLType('String', false, false),
                 'dateExpiry' => new GraphQLType('String', false, false),
+                'item' => new GraphQLType('ID', false, false),
+                'location' => new GraphQLType('ID', false, false),
             ],
             null,
             'Update a ClogInventory.',

@@ -26,7 +26,7 @@ final class StorageManifestTest extends TestCase
     {
         $manifest = $this->manifest();
 
-        self::assertSame(['Comment', 'Post', 'Tag'], array_keys($manifest->tables));
+        self::assertSame(['Author', 'Comment', 'Post', 'Tag'], array_keys($manifest->tables));
         self::assertSame('phe_post', $manifest->tables['Post']->name);
         self::assertSame('created_at', $manifest->columns['Post']['createdAt']);
         self::assertArrayHasKey('Post.comments', $manifest->placements);

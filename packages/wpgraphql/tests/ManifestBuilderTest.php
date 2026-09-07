@@ -27,7 +27,7 @@ final class ManifestBuilderTest extends TestCase
 
     public function testEveryEntityBecomesAnObjectType(): void
     {
-        self::assertSame(['Comment', 'Post', 'Tag'], array_keys($this->manifest()->objects));
+        self::assertSame(['Author', 'Comment', 'Post', 'Tag'], array_keys($this->manifest()->objects));
     }
 
     public function testASpecFieldMapsToAGetterByConvention(): void

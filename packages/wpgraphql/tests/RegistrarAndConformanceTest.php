@@ -166,7 +166,7 @@ final class RegistrarAndConformanceTest extends TestCase
 
     public function testConnectionsAreRegisteredFromAndToTheRightTypes(): void
     {
-        $comments = $this->connection('comments');
+        $comments = $this->connection('comments', 'Post');
 
         self::assertSame('Post', $comments['fromType']);
         self::assertSame('Comment', $comments['toType']);
@@ -186,8 +186,8 @@ final class RegistrarAndConformanceTest extends TestCase
     {
         // WPGraphQL supplies pageInfo, edges and nodes; not this. The lazy query counts
         // without hydrating, so it costs one query rather than the whole set.
-        foreach (['posts', 'comments'] as $field) {
-            $fields = $this->connection($field)['connectionFields'];
+        foreach ([['posts', 'RootQuery'], ['comments', 'Post']] as [$field, $from]) {
+            $fields = $this->connection($field, $from)['connectionFields'];
 
             self::assertIsArray($fields);
             self::assertArrayHasKey('totalCount', $fields);
@@ -205,15 +205,17 @@ final class RegistrarAndConformanceTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function connection(string $field): array
+    private function connection(string $field, string $from = 'RootQuery'): array
     {
         foreach ((new TypeRegistrar($this->manifest(), new FakeGateway()))->connectionConfigs() as $config) {
-            if ($field === $config['fromFieldName']) {
+            // Qualified by the type it hangs off: an inverse can give an entity a
+            // connection of the same name as a root one.
+            if ($field === $config['fromFieldName'] && $from === $config['fromType']) {
                 return $config;
             }
         }
 
-        self::fail(sprintf('No connection registered for "%s".', $field));
+        self::fail(sprintf('No connection registered for %s.%s.', $from, $field));
     }
 
     public function testConformanceFailsLoudlyWhenTheEntityClassIsMissing(): void

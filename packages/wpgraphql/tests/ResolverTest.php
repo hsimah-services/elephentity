@@ -185,15 +185,17 @@ final class ResolverTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function connection(FakeGateway $gateway, string $field): array
+    private function connection(FakeGateway $gateway, string $field, string $from = 'RootQuery'): array
     {
         foreach ((new TypeRegistrar($this->manifest(), $gateway))->connectionConfigs() as $config) {
-            if ($field === $config['fromFieldName']) {
+            // Qualified by the type it hangs off: an inverse can give an entity a
+            // connection of the same name as a root one.
+            if ($field === $config['fromFieldName'] && $from === $config['fromType']) {
                 return $config;
             }
         }
 
-        self::fail(sprintf('No connection "%s".', $field));
+        self::fail(sprintf('No connection "%s" on %s.', $field, $from));
     }
 
     private function manifest(): Manifest

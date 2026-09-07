@@ -70,7 +70,7 @@ final readonly class ManifestBuilder
                 $enums[$enumName] = $this->enum($enumName, $enum->inlineValues ?? []);
             }
 
-            foreach ($this->mutations($types, $entity, $name) as $mutation) {
+            foreach ($this->mutations($schema, $types, $entity, $name) as $mutation) {
                 $mutations[$mutation->name] = $mutation;
             }
 
@@ -147,6 +147,44 @@ final readonly class ManifestBuilder
             );
         }
 
+        // An inverse is the same edge read backwards, so it appears here for the same
+        // reason the forward direction does — and appeared nowhere at all before, which
+        // removed the query the data existed to serve.
+        foreach ($schema->inversesOf($entity->name) as $inverse) {
+            $declaring = $schema->entity($inverse->declaredBy);
+            $exposure = $declaring?->exposedVia(WpGraphQL::NAME);
+
+            if (null === $declaring || null === $exposure) {
+                continue;
+            }
+
+            $declaringName = is_string($exposure['singular'] ?? null)
+                ? $exposure['singular']
+                : $declaring->name;
+
+            $description = sprintf('The %s pointing here through "%s".', $declaring->name, $inverse->edge);
+
+            if ($inverse->unique) {
+                $fields[$inverse->name] = new FieldEntry(
+                    $inverse->name,
+                    new GraphQLType($declaringName),
+                    'get' . ucfirst($inverse->name),
+                    $description,
+                );
+
+                continue;
+            }
+
+            $connections[$inverse->name] = new ConnectionEntry(
+                $inverse->name,
+                $name,
+                $declaringName,
+                $inverse->name,
+                $inverse->edge,
+                $description,
+            );
+        }
+
         return new ObjectTypeEntry(
             $name,
             $entity->name,
@@ -154,6 +192,11 @@ final readonly class ManifestBuilder
             $connections,
             $entity->description,
         );
+    }
+
+    private function isExposed(Schema $schema, string $entity): bool
+    {
+        return null !== $schema->entity($entity)?->exposedVia(WpGraphQL::NAME);
     }
 
     /**
@@ -275,7 +318,7 @@ final readonly class ManifestBuilder
     /**
      * @return list<MutationEntry>
      */
-    private function mutations(TypeMapper $types, EntityDefinition $entity, string $name): array
+    private function mutations(Schema $schema, TypeMapper $types, EntityDefinition $entity, string $name): array
     {
         $creatable = [];
         $updatable = [];
@@ -298,6 +341,21 @@ final readonly class ManifestBuilder
             $updatable[$field->name] = new GraphQLType(
                 $types->forField($entity, $field)->name,
             );
+        }
+
+        // Edges are settable on both, and were on neither: the mutation listed fields
+        // only, so there was no argument through which an edge could be written at all.
+        foreach ($entity->edges as $edge) {
+            if (!$this->isExposed($schema, $edge->to)) {
+                continue;
+            }
+
+            $type = Cardinality::One === $edge->cardinality
+                ? new GraphQLType('ID')
+                : new GraphQLType('ID', list: true);
+
+            $creatable[$edge->name] = $type;
+            $updatable[$edge->name] = $type;
         }
 
         $mutations = [

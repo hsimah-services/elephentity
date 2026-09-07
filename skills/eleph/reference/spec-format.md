@@ -179,6 +179,26 @@ entity, lowercased — legal only when the reverse is unique, because the derive
 singular and **the generator never pluralises**. For a non-unique reverse, name it:
 `inverse: { name: posts, unique: false }`.
 
+Declaring one generates the accessor on the target entity — `Comment::getPost()`, or
+`Tag::posts()` returning a lazy query for a non-unique reverse — and exposes it in the
+GraphQL manifest. Nothing is stored for it: an inverse is the same edge read from the
+far end, so `Post.comments` remains the only relationship in the schema.
+
+### Writing an edge
+
+Reading and writing are symmetric, and the cardinality is in the signature:
+
+```php
+$inventory->setItem($itemId);          // cardinality: one — one identifier, or null
+$post->comments()->add($commentId);    // cardinality: many
+$post->comments()->set([$a, $b]);      // replace what it holds
+```
+
+Through the API an edge is a key in the input like any other — an id for a to-one edge,
+a list of ids for a to-many one — and it **replaces** what the edge holds. Null or the
+empty list clears it. Writing is always from the side that declares the edge; an
+inverse is a read.
+
 ## Queries
 
 ```yaml

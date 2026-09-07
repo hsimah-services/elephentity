@@ -8,6 +8,7 @@ use BackedEnum;
 use DateTimeInterface;
 use Eleph\Runtime\Gateway\EntityGateway;
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\WPGraphQL\Manifest\ConnectionEntry;
 use Eleph\WPGraphQL\Manifest\FieldEncoding;
@@ -127,6 +128,7 @@ final readonly class TypeRegistrar
                     $connection->toType,
                     $connection->name,
                     $connection->description ?? '',
+                    $this->edgeResolver($connection),
                 );
             }
         }
@@ -165,6 +167,36 @@ final readonly class TypeRegistrar
         }
 
         return $configs;
+    }
+
+    /**
+     * An edge connection resolves by calling the accessor and paging the lazy query it
+     * returns.
+     *
+     * WPGraphQL's own connection resolvers know how to page posts and terms, and an
+     * entity is neither. Supplying one is also what makes an inverse work at all: the
+     * accessor is the only thing that knows the edge is being read backwards.
+     */
+    private function edgeResolver(ConnectionEntry $connection): callable
+    {
+        $accessor = $connection->accessor;
+
+        return function (mixed $source, array $args) use ($accessor): array {
+            if (!is_object($source) || !method_exists($source, $accessor)) {
+                throw new RuntimeException(sprintf(
+                    'A connection resolved against something with no %s(). The manifest and the generated entities have drifted; run `eleph generate`.',
+                    $accessor,
+                ));
+            }
+
+            $query = $source->{$accessor}();
+
+            if (!$query instanceof EntityQuery) {
+                throw new RuntimeException(sprintf('%s() did not return an EntityQuery.', $accessor));
+            }
+
+            return $this->connections->resolve($query, $args);
+        };
     }
 
     /**

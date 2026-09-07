@@ -9,15 +9,17 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/Item.php
- * digest: sha256:18f866691ecdc7ccf86078876f176169b1d0be964b05c8e5a03d4390e1ad8c49
+ * digest: sha256:cca14709960b7b7362d4f34d07ea2d12bdc0a30f813b6b9813eb34842af48fd3
  */
 
 namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
+use Clog\Entity\Inventory\Inventory;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EdgeLoader;
+use Eleph\Runtime\Query\EntityQuery;
 
 /**
  * A thing that can be stocked, identified by its barcode.
@@ -96,6 +98,16 @@ final class Item
     public function getDefaultExpiryValue(): ?int
     {
         return $this->defaultExpiryValue;
+    }
+
+    /**
+     * Every Inventory whose "item" points here.
+     *
+     * @return EntityQuery<Inventory>
+     */
+    public function inventoryEntries(): EntityQuery
+    {
+        return $this->edges->inverseToMany('Inventory', 'item', $this->id);
     }
 
     public static function of(

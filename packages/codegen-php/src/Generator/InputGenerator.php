@@ -8,12 +8,16 @@ use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\Php\Naming\Emitter;
 use Eleph\Codegen\Php\Naming\Names;
 use Eleph\Codegen\Php\Naming\TypeMapper;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
+use InvalidArgumentException;
 
 /**
  * Emits the bridge between untyped input and a typed mutation.
@@ -21,6 +25,12 @@ use Eleph\Schema\Ir\Schema;
  * A protocol layer is handed `['dateAdded' => '2026-09-06']` and a setter wants a
  * DateTimeImmutable. Only generated code knows both ends, so the conversion happens
  * here and the gateway stays untyped only at its very edge.
+ *
+ * Edges arrive the same way and were previously dropped on the floor: `apply()` walked
+ * fields only, so `['name' => 'x', 'item' => 1]` created a row with a null foreign key
+ * and no error. An edge key is a replacement — an id for a to-one edge, a list of them
+ * for a to-many one — because that is what "here is what this edge holds" means when
+ * it arrives as a whole value.
  *
  * Immutable fields are settable on create and absent from update, which the mutation
  * itself decides — it knows whether it is creating.
@@ -44,6 +54,10 @@ final readonly class InputGenerator
 
         $namespace->addUse(MutationBuffer::class);
         $namespace->addUse(ValueDecoder::class);
+
+        if ([] !== $entity->edges) {
+            $namespace->addUse(InvalidArgumentException::class);
+        }
 
         $type = $namespace->addClass($this->emitter->shortName($class));
         $type->setFinal();
@@ -91,6 +105,25 @@ final readonly class InputGenerator
             $reader->addParameter('value')->setType('mixed');
         }
 
+        foreach ($entity->edges as $edge) {
+            $key = var_export($edge->name, true);
+
+            $lines[] = sprintf('if (array_key_exists(%s, $input)) {', $key);
+            $lines[] = sprintf('    $buffer->edge(%s)->set($this->%s($input[%s]));', $key, $edge->name, $key);
+            $lines[] = '}';
+            $lines[] = '';
+
+            $namespace->addUse(Identifier::class);
+
+            $reader = $type->addMethod($edge->name)
+                ->setPrivate()
+                ->setReturnType('array')
+                ->setBody($this->edgeConversion($entity, $edge))
+                ->addComment('@return list<Identifier>');
+
+            $reader->addParameter('value')->setType('mixed');
+        }
+
         $apply = $type->addMethod('apply')
             ->setReturnType('void')
             ->setBody([] === $lines ? '' : rtrim(implode("\n", $lines)))
@@ -103,6 +136,35 @@ final readonly class InputGenerator
         $apply->addParameter('input')->setType('array');
 
         return $this->emitter->file($class, $namespace);
+    }
+
+    /**
+     * An edge key, as the identifiers the buffer wants.
+     *
+     * Null and the empty list both mean "holds nothing", which is how an edge is
+     * cleared through a protocol that has no other way to say it.
+     */
+    private function edgeConversion(EntityDefinition $entity, EdgeDefinition $edge): string
+    {
+        $label = var_export(sprintf('%s.%s', $entity->name, $edge->name), true);
+
+        if (Cardinality::One === $edge->cardinality) {
+            return sprintf(
+                "if (null === \$value) {\n    return [];\n}\n\nreturn [\$this->decode->id(\$value, %s)];",
+                $label,
+            );
+        }
+
+        return sprintf(
+            "if (null === \$value) {\n    return [];\n}\n\n"
+                . "if (!is_array(\$value)) {\n"
+                . "    throw new InvalidArgumentException(sprintf('%%s takes a list of ids.', %s));\n}\n\n"
+                . "\$ids = [];\n\n"
+                . "foreach (\$value as \$id) {\n    \$ids[] = \$this->decode->id(\$id, %s);\n}\n\n"
+                . 'return $ids;',
+            $label,
+            $label,
+        );
     }
 
     private function conversion(EntityDefinition $entity, FieldDefinition $field, string $phpType): string

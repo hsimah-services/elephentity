@@ -9,3 +9,12 @@ fields:
   body:
     type: text
     required: true
+edges:
+  author:
+    to: Author
+    cardinality: one
+    description: Who wrote it.
+    inverse:
+      name: comments
+      unique: false
+    onDelete: nullify

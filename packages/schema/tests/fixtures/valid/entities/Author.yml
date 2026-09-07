@@ -1,0 +1,13 @@
+entity: Author
+description: Someone who writes comments.
+integrations:
+  wpgraphql:
+    singular: Author
+    plural: Authors
+storage:
+  table: phe_author
+fields:
+  name:
+    type: string
+    required: true
+    maxLength: 120

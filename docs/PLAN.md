@@ -592,6 +592,35 @@ The generator never pluralises. English inflection quietly produces `Categorys` 
 different libraries disagree; that is not acceptable in a framework whose selling
 point is predictable output.
 
+An inverse **stores nothing of its own**. `Item.inventoryEntries` is `Inventory.item`
+read from the far end, so the placement table above answers for both directions and the
+adaptor reads it backwards. There is one relationship in the schema and one place that
+decides where it lives, which is the same rule that makes `EdgePlanner` the only thing
+allowed an opinion about placement.
+
+### Writing an edge
+
+The write side mirrors the read side, and its shape is chosen so cardinality cannot be
+got wrong:
+
+```php
+$inventory->setItem($itemId);          // cardinality: one — one argument, or null
+$post->comments()->add($commentId);    // cardinality: many — the EdgeMutation
+$post->comments()->set([$a, $b]);
+```
+
+A to-one edge is a setter taking one identifier, because a signature that cannot
+express two targets is the cheapest possible enforcement of `cardinality: one`. A
+to-many edge hands back the same `EdgeMutation` an action context exposes, so add,
+remove and replace all exist without inventing three method names per edge.
+
+Identifiers rather than entities, so a commit can link a row that does not exist yet.
+
+Through a protocol, an edge is a key in the input like any other — an id, or a list of
+them — and it is a **replacement**: "here is what this edge holds" is what a whole
+value arriving at once means. Null and the empty list both clear it, which is how an
+edge is emptied through a protocol with no other way to say so.
+
 ### To-many returns a lazy edge query, not an array
 
 ```php

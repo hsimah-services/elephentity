@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Tests;
 
+use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Cursor;
 use Eleph\Runtime\Storage\Direction;
+use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Order;
+use Eleph\Schema\Ir\RelationKind;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\CompiledQuery;
+use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\QueryCompiler;
 use Eleph\WordPress\Sql\TableSchema;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -166,6 +170,133 @@ final class QueryCompilerTest extends TestCase
             'SELECT COUNT(*) FROM `wp_phe_post` WHERE `wp_phe_post`.`title` = %s',
             $compiled->sql,
         );
+    }
+
+    public function testAForwardEdgeWithTheKeyOnThisTableNeedsNoJoin(): void
+    {
+        // Post.comments puts post_id on the comment table, so asking for a post's
+        // comments is a filter on the table already being read.
+        $compiled = $this->compileFor(
+            $this->commentTable(),
+            (new Criteria('Comment'))->linkedTo(EdgeFilter::along('Post', 'comments', EntityId::of(1))),
+        );
+
+        self::assertSame(
+            'SELECT `wp_phe_comment`.* FROM `wp_phe_comment` WHERE `wp_phe_comment`.`post_id` IN (%d)',
+            $compiled->sql,
+        );
+    }
+
+    public function testTheSameEdgeReadBackwardsJoinsInstead(): void
+    {
+        // "Which post is this comment on" is not a second edge; it is Post.comments
+        // from the far end, and the key has not moved.
+        $compiled = $this->compileFor(
+            $this->table(),
+            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'comments', EntityId::of(10))),
+        );
+
+        self::assertSame(
+            'SELECT `wp_phe_post`.* FROM `wp_phe_post`'
+                . ' INNER JOIN `wp_phe_comment` `l1` ON `l1`.`post_id` = `wp_phe_post`.`id`'
+                . ' WHERE `l1`.`id` IN (%d)',
+            $compiled->sql,
+        );
+        self::assertSame(['10'], $compiled->bindings);
+    }
+
+    public function testAManyToOneReadBackwardsNeedsNoJoinEither(): void
+    {
+        // Inventory.item keeps item_id local, so "which entries are for this item" is
+        // a filter on the inventory table — the mirror of the first case.
+        $compiled = $this->compileFor(
+            $this->commentTable(),
+            (new Criteria('Comment'))->linkedTo(EdgeFilter::back('Comment', 'post', EntityId::of(1))),
+        );
+
+        self::assertSame(
+            'SELECT `wp_phe_comment`.* FROM `wp_phe_comment` WHERE `wp_phe_comment`.`post_id` IN (%d)',
+            $compiled->sql,
+        );
+    }
+
+    public function testAJoinTableSwapsItsTwoColumnsWhenReadBackwards(): void
+    {
+        $forward = $this->compileFor(
+            $this->tagTable(),
+            (new Criteria('Tag'))->linkedTo(EdgeFilter::along('Post', 'tags', EntityId::of(1))),
+        );
+
+        $backward = $this->compileFor(
+            $this->table(),
+            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'tags', EntityId::of(7))),
+        );
+
+        self::assertStringContainsString('ON `l1`.`tag_id` = `wp_phe_tag`.`id`', $forward->sql);
+        self::assertStringContainsString('WHERE `l1`.`post_id` IN (%d)', $forward->sql);
+
+        self::assertStringContainsString('ON `l1`.`post_id` = `wp_phe_post`.`id`', $backward->sql);
+        self::assertStringContainsString('WHERE `l1`.`tag_id` IN (%d)', $backward->sql);
+    }
+
+    private function compileFor(TableSchema $table, Criteria $criteria): CompiledQuery
+    {
+        return (new QueryCompiler(placements: $this->placements()))->select($table, $criteria);
+    }
+
+    /**
+     * @return array<string, EdgePlacement>
+     */
+    private function placements(): array
+    {
+        return [
+            // One-to-many: the key sits on the far side.
+            'Post.comments' => new EdgePlacement(
+                'Post',
+                'comments',
+                'Comment',
+                RelationKind::OneToMany,
+                'wp_phe_comment',
+                'post_id',
+                targetTable: 'wp_phe_comment',
+            ),
+            // Many-to-one: the key is local.
+            'Comment.post' => new EdgePlacement(
+                'Comment',
+                'post',
+                'Post',
+                RelationKind::ManyToOne,
+                'wp_phe_comment',
+                'post_id',
+                targetTable: 'wp_phe_post',
+            ),
+            'Post.tags' => new EdgePlacement(
+                'Post',
+                'tags',
+                'Tag',
+                RelationKind::ManyToMany,
+                'wp_phe_post_tags',
+                'post_id',
+                'tag_id',
+                'wp_phe_tag',
+            ),
+        ];
+    }
+
+    private function commentTable(): TableSchema
+    {
+        return new TableSchema('wp_phe_comment', [
+            'id' => new Column('id', 'BIGINT UNSIGNED', autoIncrement: true),
+            'post_id' => new Column('post_id', 'BIGINT UNSIGNED', nullable: true),
+        ]);
+    }
+
+    private function tagTable(): TableSchema
+    {
+        return new TableSchema('wp_phe_tag', [
+            'id' => new Column('id', 'BIGINT UNSIGNED', autoIncrement: true),
+            'label' => new Column('label', 'VARCHAR(255)'),
+        ]);
     }
 
     private function compile(Criteria $criteria): CompiledQuery
