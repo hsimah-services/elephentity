@@ -60,12 +60,7 @@ final class PipelineTest extends TestCase
             $this->project . '/spec/project.yml',
         );
 
-        file_put_contents($this->project . '/eleph.json', json_encode([
-            'spec' => 'spec',
-            'output' => 'generated',
-            'namespace' => $this->namespace,
-            'typeNamespace' => 'PipelineFixture\\Type',
-        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+        $this->writeConfig();
     }
 
     protected function tearDown(): void
@@ -133,6 +128,102 @@ final class PipelineTest extends TestCase
         self::assertFileExists($this->project . '/generated/graphql-manifest.php');
         self::assertFileExists($this->project . '/generated/Post/PostHydrator.php');
         self::assertFileExists($this->project . '/generated/Post/Contract/PostPriceVerifier.php');
+    }
+
+    public function testNarrowingToAConfiguredTargetStillGeneratesIt(): void
+    {
+        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand(), ['--targets' => 'php']));
+        self::assertFileExists($this->project . '/generated/Post/Post.php');
+    }
+
+    public function testAnUnknownTargetIsRefusedRatherThanIgnored(): void
+    {
+        // Silently generating nothing looks exactly like a target with nothing to do,
+        // so a typo has to fail loudly and say what the project actually configures.
+        $tester = $this->tester(new GenerateCommand(), ['--targets' => 'rust']);
+
+        self::assertSame(Command::INVALID, $tester->getStatusCode());
+        self::assertStringContainsString('Unknown target(s): rust', $tester->getDisplay());
+        self::assertStringContainsString('php', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->project . '/generated/Post/Post.php');
+    }
+
+    public function testTheSameTargetRunAsAnExternalBuilderProducesTheSameTree(): void
+    {
+        // The whole point of the protocol: a generator the core reaches over a pipe
+        // rather than by calling it. Running the PHP target both ways and diffing the
+        // trees is what proves the wire path is not a second, subtly different build.
+        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand()));
+
+        $inProcess = $this->tree();
+
+        $this->remove($this->project . '/generated');
+        $this->useExternalBuilder();
+
+        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand()));
+        self::assertSame($inProcess, $this->tree());
+
+        // And the signatures still verify, which they only can if the bytes match.
+        self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand(), ['--check' => true]));
+    }
+
+    public function testAMissingBuilderFailsTheBuildAndSaysWhereItLooked(): void
+    {
+        $this->writeConfig(['builder' => 'eleph-gen-nowhere']);
+
+        $tester = $this->tester(new GenerateCommand());
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('No builder "eleph-gen-nowhere"', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->project . '/generated/Post/Post.php');
+    }
+
+    private function useExternalBuilder(): void
+    {
+        $this->writeConfig(['builder' => dirname(__DIR__, 2) . '/codegen-php/bin/eleph-gen-php']);
+    }
+
+    /**
+     * @param array<string, string> $extra
+     */
+    private function writeConfig(array $extra = []): void
+    {
+        file_put_contents($this->project . '/eleph.json', json_encode([
+            'spec' => 'spec',
+            'targets' => [
+                'php' => [
+                    'output' => 'generated',
+                    'namespace' => $this->namespace,
+                    'typeNamespace' => 'PipelineFixture\\Type',
+                    ...$extra,
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function tree(): array
+    {
+        $files = [];
+        $root = $this->project . '/generated';
+
+        $entries = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($entries as $entry) {
+            if ($entry instanceof SplFileInfo && $entry->isFile()) {
+                $files[substr($entry->getPathname(), strlen($root) + 1)] = (string) file_get_contents(
+                    $entry->getPathname(),
+                );
+            }
+        }
+
+        ksort($files);
+
+        return $files;
     }
 
     /**

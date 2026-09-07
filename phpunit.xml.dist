@@ -12,6 +12,7 @@
         <testsuite name="eleph">
             <directory>packages/schema/tests</directory>
             <directory>packages/codegen/tests</directory>
+            <directory>packages/codegen-php/tests</directory>
             <directory>packages/runtime/tests</directory>
             <directory>packages/wordpress/tests</directory>
             <directory>packages/wpgraphql/tests</directory>
@@ -22,6 +23,7 @@
         <include>
             <directory>packages/schema/src</directory>
             <directory>packages/codegen/src</directory>
+            <directory>packages/codegen-php/src</directory>
             <directory>packages/runtime/src</directory>
             <directory>packages/wordpress/src</directory>
             <directory>packages/wpgraphql/src</directory>

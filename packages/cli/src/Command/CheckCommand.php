@@ -7,8 +7,9 @@ namespace Eleph\Cli\Command;
 use Closure;
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
-use Eleph\Codegen\GeneratorConfig;
-use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Php\Naming\Names;
+use Eleph\Codegen\Php\PhpConfig;
+use Eleph\Codegen\Php\PhpTarget;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\WPGraphQL\Conformance\ConformanceChecker;
@@ -99,17 +100,41 @@ final class CheckCommand extends Command
         $schema = $compiled->schema();
         $manifest = (new ManifestBuilder())->build($schema);
 
-        $outputDirectory = rtrim($directory, '/') . '/' . $config->outputDirectory;
+        // Conformance is a statement about generated PHP classes, so it needs the PHP
+        // target specifically — a project generating only TypeScript has no classes for
+        // the GraphQL surface to resolve against.
+        $php = $config->target(PhpTarget::NAME);
 
-        $this->autoloadGenerated(trim($config->rootNamespace, '\\'), $outputDirectory);
+        if (null === $php) {
+            $io->error(sprintf(
+                'No "%s" target in %s; there are no generated classes to check against.',
+                PhpTarget::NAME,
+                ProjectConfig::FILENAME,
+            ));
+
+            return Command::FAILURE;
+        }
+
+        $problems = PhpConfig::problemsIn($php->settings);
+
+        if ([] !== $problems) {
+            $io->error(sprintf('The %s target is misconfigured.', PhpTarget::NAME));
+
+            foreach ($problems as $problem) {
+                $io->writeln('  ' . $problem);
+            }
+
+            return Command::FAILURE;
+        }
+
+        $phpConfig = PhpConfig::from($php->settings);
+        $outputDirectory = rtrim($directory, '/') . '/' . $php->outputDirectory;
+
+        $this->autoloadGenerated(trim($phpConfig->rootNamespace, '\\'), $outputDirectory);
 
         // Ask the generator where it put things rather than restating the convention:
         // a second copy of the layout rule is a second thing to forget to update.
-        $names = new Names(new GeneratorConfig(
-            $config->rootNamespace,
-            $outputDirectory,
-            $config->typeNamespace,
-        ));
+        $names = new Names($phpConfig);
 
         $classFor = Closure::fromCallable(
             static function (string $entity) use ($names, $schema): string {

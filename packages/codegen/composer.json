@@ -1,15 +1,13 @@
 {
     "name": "elephentity/codegen",
-    "description": "Compiles the Elephentity IR into locked, signed PHP. Build-time only.",
+    "description": "The target contract, signing and writing. Language-neutral; build-time only.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "nette/php-generator": "^4.1",
-        "elephentity/schema": "self.version",
-        "elephentity/runtime": "self.version"
+        "elephentity/schema": "self.version"
     },
     "autoload": {
         "psr-4": {

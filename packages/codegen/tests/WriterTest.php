@@ -135,4 +135,36 @@ final class WriterTest extends TestCase
     {
         return [new GeneratedFile('Post.php', "namespace App;\n\nfinal class Post\n{\n}\n")];
     }
+
+    public function testAFileTheTargetDoesNotOwnIsLeftAlone(): void
+    {
+        // Deleting is scoped to the extensions a target declared, so a target that owns
+        // `php` cannot sweep away a neighbour's output — or, if `output` was mistyped,
+        // somebody's notes.
+        $writer = new Writer($this->directory, ownedExtensions: ['php']);
+        $writer->write($this->files());
+
+        $foreign = $this->directory . '/notes.md';
+        file_put_contents($foreign, "not mine\n");
+
+        $report = $writer->write($this->files());
+
+        self::assertSame([], $report->deleted);
+        self::assertFileExists($foreign);
+    }
+
+    public function testAStaleFileTheTargetDoesOwnIsSwept(): void
+    {
+        $writer = new Writer($this->directory, ownedExtensions: ['php']);
+        $writer->write($this->files());
+
+        $stale = $this->directory . '/Gone.php';
+        file_put_contents($stale, "<?php\n");
+
+        $report = $writer->write($this->files());
+
+        self::assertSame(['Gone.php'], $report->deleted);
+        self::assertFileDoesNotExist($stale);
+    }
+
 }

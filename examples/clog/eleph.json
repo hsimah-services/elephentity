@@ -1,6 +1,10 @@
 {
     "spec": "spec",
-    "output": "generated",
-    "namespace": "Clog\\Entity",
-    "typeNamespace": "Clog\\Type"
+    "targets": {
+        "php": {
+            "output": "generated",
+            "namespace": "Clog\\Entity",
+            "typeNamespace": "Clog\\Type"
+        }
+    }
 }

@@ -23,6 +23,7 @@
         "psr-4": {
             "Eleph\\Schema\\": "packages/schema/src/",
             "Eleph\\Codegen\\": "packages/codegen/src/",
+            "Eleph\\Codegen\\Php\\": "packages/codegen-php/src/",
             "Eleph\\Runtime\\": "packages/runtime/src/",
             "Eleph\\WordPress\\": "packages/wordpress/src/",
             "Eleph\\WPGraphQL\\": "packages/wpgraphql/src/",
@@ -33,6 +34,7 @@
         "psr-4": {
             "Eleph\\Schema\\Tests\\": "packages/schema/tests/",
             "Eleph\\Codegen\\Tests\\": "packages/codegen/tests/",
+            "Eleph\\Codegen\\Php\\Tests\\": "packages/codegen-php/tests/",
             "Eleph\\Runtime\\Tests\\": "packages/runtime/tests/",
             "Eleph\\WordPress\\Tests\\": "packages/wordpress/tests/",
             "Eleph\\WPGraphQL\\Tests\\": "packages/wpgraphql/tests/",

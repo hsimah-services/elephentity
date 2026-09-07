@@ -1,0 +1,28 @@
+{
+    "name": "elephentity/codegen-php",
+    "description": "The PHP target: compiles the Elephentity IR into locked PHP. Build-time only.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.3",
+        "nette/php-generator": "^4.1",
+        "elephentity/codegen": "self.version",
+        "elephentity/schema": "self.version",
+        "elephentity/runtime": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eleph\\Codegen\\Php\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Eleph\\Codegen\\Php\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/eleph-gen-php"
+    ]
+}
