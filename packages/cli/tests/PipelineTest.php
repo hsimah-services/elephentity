@@ -25,6 +25,11 @@ use Symfony\Component\Console\Tester\CommandTester;
  * order a project would — fmt, validate, generate, check — and then asserts the
  * gates are stable: regenerating changes nothing, and conformance holds against the
  * classes actually on disk.
+ *
+ * Since the generator moved out, `generate` here spans three programs and two process
+ * boundaries: this compiles, `eleph-codegen` orchestrates, `eleph-gen-php` builds. That
+ * makes this a better assertion than it was and a more expensive one — it needs both
+ * dev dependencies installed, which is exactly how a real project has them.
  */
 #[CoversNothing]
 final class PipelineTest extends TestCase
@@ -168,7 +173,7 @@ final class PipelineTest extends TestCase
             'spec' => 'spec',
             'targets' => [
                 'php' => [
-                    'builder' => dirname(__DIR__, 2) . '/codegen-php/bin/eleph-gen-php',
+                    'builder' => dirname(__DIR__, 3) . '/vendor/bin/eleph-gen-php',
                     'output' => 'generated',
                     'namespace' => $this->namespace,
                     'typeNamespace' => 'PipelineFixture\\Type',

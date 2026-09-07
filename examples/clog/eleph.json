@@ -2,7 +2,7 @@
     "spec": "spec",
     "targets": {
         "php": {
-            "builder": "../../packages/codegen-php/bin/eleph-gen-php",
+            "builder": "../../vendor/bin/eleph-gen-php",
             "output": "generated",
             "namespace": "Clog\\Entity",
             "typeNamespace": "Clog\\Type"

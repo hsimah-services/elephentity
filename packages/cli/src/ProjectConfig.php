@@ -8,32 +8,25 @@ use JsonException;
 use RuntimeException;
 
 /**
- * eleph.json — where the specs are and which targets the project generates.
+ * eleph.json, as far as Elephentity is concerned: where the specs are.
  *
- * Configuration, deliberately separate from specification. Namespaces live here so
- * that renaming one is a config change rather than an edit to every entity yaml.
+ * The file has more in it than this — a `targets` block saying what a project generates
+ * and which builder produces each one — and none of that is read here. Generating is a
+ * separate program's job, and it is the only thing that parses those keys. Two parsers
+ * would eventually disagree about something small, like whether a trailing slash on
+ * `output` matters, and the disagreement would surface as a tree written to the wrong
+ * place.
  *
- * The file names its targets, where their output goes and which program produces it;
- * each target reads and validates its own settings. Problems are accumulated and
- * reported together, so a file missing three keys takes one run to fix rather than
- * three.
- *
- * **One directory per target, never shared.** Writing a tree means deleting what the
- * schema no longer produces, so a directory two targets write into is one where
- * generating a single target deletes the other's work. Refusing it here is what makes
- * `--targets` safe to narrow with.
+ * So this reads `spec`, and `codegen` when a project needs to say where its generator
+ * is. Anything it does not recognise it leaves alone, because the file is not only its.
  */
 final readonly class ProjectConfig
 {
     public const FILENAME = 'eleph.json';
 
-    /**
-     * @param array<string, TargetConfig> $targets
-     */
     public function __construct(
         public string $specDirectory,
-        public array $targets,
-        public string $buildersDirectory = Builders::DEFAULT_DIRECTORY,
+        public ?string $codegen = null,
     ) {
     }
 
@@ -62,121 +55,17 @@ final readonly class ProjectConfig
             throw new RuntimeException(sprintf('%s is not valid JSON: %s', $path, $exception->getMessage()));
         }
 
-        $problems = [];
-
         $spec = $data['spec'] ?? null;
 
         if (!is_string($spec) || '' === $spec) {
-            $problems[] = '"spec" must be a non-empty string.';
-        }
-
-        $targets = self::targetsIn($data, $problems);
-
-        if ([] !== $problems) {
             throw new RuntimeException(sprintf(
-                "%s is not usable:\n  %s",
+                "%s is not usable:\n  \"spec\" must be a non-empty string.",
                 $path,
-                implode("\n  ", $problems),
             ));
         }
 
-        $builders = $data['builders'] ?? null;
+        $codegen = $data['codegen'] ?? null;
 
-        /** @var string $spec */
-        return new self(
-            $spec,
-            $targets,
-            is_string($builders) && '' !== $builders ? $builders : Builders::DEFAULT_DIRECTORY,
-        );
-    }
-
-    public function target(string $name): ?TargetConfig
-    {
-        return $this->targets[$name] ?? null;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     * @param list<string>         $problems
-     *
-     * @return array<string, TargetConfig>
-     */
-    private static function targetsIn(array $data, array &$problems): array
-    {
-        $block = $data['targets'] ?? null;
-
-        if (!is_array($block) || [] === $block) {
-            $problems[] = '"targets" must be an object with at least one target in it.';
-
-            return [];
-        }
-
-        $targets = [];
-
-        /** @var mixed $settings */
-        foreach ($block as $name => $settings) {
-            if (!is_string($name)) {
-                $problems[] = 'Every target must be keyed by name.';
-
-                continue;
-            }
-
-            if (!is_array($settings)) {
-                $problems[] = sprintf('Target "%s" must be an object.', $name);
-
-                continue;
-            }
-
-            $output = $settings['output'] ?? null;
-
-            if (!is_string($output) || '' === $output) {
-                $problems[] = sprintf('Target "%s" must set "output" to a non-empty string.', $name);
-
-                continue;
-            }
-
-            $builder = $settings['builder'] ?? null;
-
-            if (!is_string($builder) || '' === $builder) {
-                $problems[] = sprintf(
-                    'Target "%s" must set "builder" to the program that generates it. '
-                    . 'Elephentity compiles the spec and generates nothing itself, so a target '
-                    . 'with no builder is one nothing can produce.',
-                    $name,
-                );
-
-                continue;
-            }
-
-            /** @var array<string, mixed> $settings */
-            $targets[$name] = new TargetConfig($name, $output, $settings, $builder);
-        }
-
-        foreach (self::sharedDirectories($targets) as $directory => $sharing) {
-            $problems[] = sprintf(
-                'Targets %s all write to "%s". Each target needs its own output directory, '
-                . 'because generating one deletes whatever it does not produce.',
-                implode(' and ', $sharing),
-                $directory,
-            );
-        }
-
-        return $targets;
-    }
-
-    /**
-     * @param array<string, TargetConfig> $targets
-     *
-     * @return array<string, list<string>> Directory => the targets claiming it.
-     */
-    private static function sharedDirectories(array $targets): array
-    {
-        $byDirectory = [];
-
-        foreach ($targets as $name => $target) {
-            $byDirectory[rtrim($target->outputDirectory, '/')][] = $name;
-        }
-
-        return array_filter($byDirectory, static fn (array $sharing) => count($sharing) > 1);
+        return new self($spec, is_string($codegen) && '' !== $codegen ? $codegen : null);
     }
 }

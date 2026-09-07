@@ -10,8 +10,11 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * eleph.json is the first thing every command reads, so a bad one has to fail with a
- * list of what is wrong rather than the first thing noticed.
+ * eleph.json is the first thing every command reads, and Elephentity reads two keys of
+ * it: where the specs are, and where the generator is if it is somewhere unusual.
+ *
+ * The `targets` block is deliberately not validated here. `eleph-codegen` owns it, and
+ * a second parser would eventually disagree with the first about something small.
  */
 #[CoversClass(ProjectConfig::class)]
 final class ProjectConfigTest extends TestCase
@@ -37,78 +40,57 @@ final class ProjectConfigTest extends TestCase
         }
     }
 
-    public function testATargetsBlockIsRead(): void
+    public function testTheSpecDirectoryIsRead(): void
     {
         $config = $this->load([
             'spec' => 'spec',
-            'targets' => [
-                'php' => [
-                    'output' => 'generated',
-                    'builder' => 'eleph-gen-php',
-                    'namespace' => 'App\\Entity',
-                ],
-            ],
+            'targets' => ['php' => ['output' => 'generated', 'builder' => 'eleph-gen-php']],
         ]);
 
         self::assertSame('spec', $config->specDirectory);
-        self::assertSame('generated', $config->target('php')?->outputDirectory);
-        self::assertNull($config->target('ts'));
-
-        // Everything but "output" reaches the target untouched, including "output"
-        // itself: the core reads it but has no business stripping it.
-        self::assertSame('App\\Entity', $config->target('php')?->settings['namespace'] ?? null);
+        self::assertNull($config->codegen);
     }
 
-    public function testTwoTargetsSharingAnOutputDirectoryAreRefused(): void
+    public function testAProjectCanSayWhereItsGeneratorIs(): void
     {
-        // Generating one target deletes what it does not produce, so a shared directory
-        // means `--targets php` would sweep away the ts tree.
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/php and ts all write to "generated"/');
+        $config = $this->load(['spec' => 'spec', 'codegen' => 'tools/eleph-codegen']);
 
-        $this->load([
-            'spec' => 'spec',
-            'targets' => [
-                'php' => ['output' => 'generated', 'builder' => 'eleph-gen-php'],
-                'ts' => ['output' => 'generated/', 'builder' => 'eleph-gen-ts'],
-            ],
-        ]);
+        self::assertSame('tools/eleph-codegen', $config->codegen);
     }
 
-    public function testEveryProblemIsReportedTogether(): void
-    {
-        try {
-            $this->load(['targets' => ['php' => ['output' => '']]]);
-        } catch (RuntimeException $exception) {
-            self::assertStringContainsString('"spec" must be a non-empty string', $exception->getMessage());
-            self::assertStringContainsString('Target "php" must set "output"', $exception->getMessage());
-
-            return;
-        }
-
-        self::fail('A config missing both "spec" and a usable output should not load.');
-    }
-
-    public function testATargetWithNoBuilderIsRefused(): void
-    {
-        // Elephentity generates nothing itself. A target with no builder used to mean
-        // "built in"; there is no built-in target any more, so it now means nothing at
-        // all, and the config is the cheapest place to say so.
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Target "php" must set "builder"/');
-
-        $this->load([
-            'spec' => 'spec',
-            'targets' => ['php' => ['output' => 'generated']],
-        ]);
-    }
-
-    public function testAProjectWithNoTargetsIsRefused(): void
+    public function testAConfigWithNoSpecIsRefused(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/"targets" must be an object/');
+        $this->expectExceptionMessageMatches('/"spec" must be a non-empty string/');
 
-        $this->load(['spec' => 'spec', 'targets' => []]);
+        $this->load(['targets' => ['php' => ['output' => 'generated']]]);
+    }
+
+    public function testATargetsBlockIsCarriedPastWithoutBeingJudged(): void
+    {
+        // Nonsense to Elephentity, and not Elephentity's to reject: the generator
+        // parses this block and reports on it, which is why there is only one parser.
+        $config = $this->load(['spec' => 'spec', 'targets' => 'not even an object']);
+
+        self::assertSame('spec', $config->specDirectory);
+    }
+
+    public function testAFileThatIsNotJsonSaysSo(): void
+    {
+        file_put_contents($this->directory . '/' . ProjectConfig::FILENAME, '{ nope');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/is not valid JSON/');
+
+        ProjectConfig::load($this->directory);
+    }
+
+    public function testAMissingFileNamesWhatItNeeded(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/It needs "spec" and a "targets" block/');
+
+        ProjectConfig::load($this->directory);
     }
 
     /**

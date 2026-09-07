@@ -15,6 +15,7 @@ There is no local PHP. Everything runs in a container:
 ./tools/php composer style:fix
 ./tools/php vendor/bin/phpunit --filter SomeTest
 ./tools/php packages/cli/bin/eleph generate --project examples/clog
+./tools/php vendor/bin/eleph-codegen doctor --project examples/clog   # builders installed?
 ```
 
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are
@@ -26,16 +27,22 @@ typed, so an exception here undermines the product.
 | Package | Ships? | Holds |
 |---|---|---|
 | `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR, its wire format |
-| `codegen/` | dev | the builder protocol, signing, writing — forwards an IR it never reads |
-| `codegen-php/` | dev | the PHP builder: IR → locked PHP, run as `eleph-gen-php` |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `wordpress/` | yes | the one adaptor — the only package that may name `WP_*` |
 | `wpgraphql/` | yes | IR → compiled GraphQL manifest |
 | `cli/` | dev | the `eleph` command |
 
-`tools/check-architecture.php` enforces that `schema`, `codegen`, `codegen-php`,
-`runtime` and `cli` reference no WordPress symbol. It uses the tokenizer, so prose in a doc comment is
-fine and a real call is not.
+`tools/check-architecture.php` enforces that `schema`, `runtime` and `cli` reference no
+WordPress symbol. It uses the tokenizer, so prose in a doc comment is fine and a real
+call is not.
+
+**The code generator is not in this repository.** `eleph generate` compiles the specs and
+pipes the IR to [`eleph-codegen`](https://github.com/hsimah/elephentity-codegen), which
+resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah/elephentity-codegen-php)
+and any others — runs them, and signs and writes what they return. Both are dev
+dependencies here so that `PipelineTest` and `examples/clog` can run; a project installs
+them itself. The generator is going to be rewritten in Rust, which is why it is a
+separate program rather than a package.
 
 ## Conventions that are load bearing
 
@@ -49,11 +56,12 @@ fine and a real call is not.
 - **Generated code is grouped by entity.** `Item/` holds everything for Item, and
   `Item/Contract/` holds exactly what a consumer must implement.
 - **One source of truth per decision.** `EdgePlanner` decides edge placement for both
-  the schema builder and the query compiler. `Names` decides class names, and the
-  conformance checker reads them out of the generated `class-map.php` rather than
-  calling `Names` itself — the generator is a separate program and one day another
-  language, so the tree carries its own index. Both of those were bugs before they were
-  rules.
+  the schema builder and the query compiler. `Names` — now in the PHP builder — decides
+  class names, and `eleph check` reads them out of the generated `class-map.php` rather
+  than calling `Names` itself: the generator is a separate program and one day another
+  language, so the tree carries its own index. The `targets` block of `eleph.json` has
+  one parser too, and it is `eleph-codegen`'s; `eleph check` asks it rather than reading
+  the file again. All three were bugs before they were rules.
 
 ## Testing
 
@@ -67,6 +75,8 @@ construct. Most tests compile it.
 ## Before you commit
 
 - `./tools/php composer ci`
-- If you changed the generator, regenerate `examples/clog/` and commit the result
+- If you changed anything the generator reads, regenerate `examples/clog/` and commit the
+  result. If the change was to the generator itself, it is in another repository and
+  `composer update elephentity/codegen-php` comes first
 - If you made a decision the plan does not cover, add it to `docs/PLAN.md` — the
   reasoning is the artifact, not the code

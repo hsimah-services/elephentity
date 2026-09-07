@@ -2,15 +2,21 @@
 
 ## Install
 
-> Not on Packagist yet. Until it is, add this repository as a Composer `path` or `vcs`
-> repository — the package names below are what it will publish as.
+> Not on Packagist yet. Until it is, add the repositories as Composer `vcs` repositories
+> — the package names below are what they will publish as.
 
 ```bash
 composer require elephentity/runtime elephentity/wordpress elephentity/wpgraphql
-composer require --dev elephentity/schema elephentity/codegen elephentity/cli
+composer require --dev elephentity/schema elephentity/cli
+composer require --dev elephentity/codegen elephentity/codegen-php
 ```
 
 The dev packages run at build time and never ship. The others do.
+
+The second dev line is the code generator, which is separate software: `elephentity/codegen`
+runs your builders and writes the tree, `elephentity/codegen-php` is the builder that emits
+PHP. If you later want TypeScript types from the same spec, you add a builder for it and a
+target in `eleph.json` — nothing else changes.
 
 ## Lay out the project
 
@@ -28,11 +34,21 @@ generated/           machine-owned, committed, never edited
 ```json
 {
     "spec": "spec",
-    "output": "generated",
-    "namespace": "App\\Entity",
-    "typeNamespace": "App\\Type"
+    "targets": {
+        "php": {
+            "builder": "vendor/bin/eleph-gen-php",
+            "output": "generated",
+            "namespace": "App\\Entity",
+            "typeNamespace": "App\\Type"
+        }
+    }
 }
 ```
+
+Every target names the program that produces it. Elephentity generates nothing itself, so
+a target without a `builder` is one nothing can produce and `eleph.json` refuses it.
+`vendor/bin/eleph-gen-php` is where Composer put the one you installed above; check with
+`vendor/bin/eleph-codegen doctor`.
 
 Add both namespaces to Composer's PSR-4 autoload map:
 

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Eleph\Cli\Command;
 
 use Eleph\Cli\ClassMap;
+use Eleph\Cli\Codegen;
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\WPGraphQL\Conformance\ConformanceChecker;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use JsonException;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -51,6 +53,39 @@ final class CheckCommand extends Command
         );
     }
 
+    /**
+     * Where the PHP target writes, according to the program that writes it.
+     *
+     * @throws RuntimeException When the generator cannot be found or cannot answer.
+     */
+    private function outputDirectory(string $root, ProjectConfig $config): ?string
+    {
+        $json = (new Codegen($root, $config->codegen))->capture(['targets', '--project', $root]);
+
+        try {
+            /** @var mixed $decoded */
+            $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new RuntimeException(sprintf(
+                'The generator did not describe its targets: %s',
+                $exception->getMessage(),
+            ));
+        }
+
+        $targets = is_array($decoded) ? ($decoded['targets'] ?? null) : null;
+        $php = is_array($targets) ? ($targets[self::PHP_TARGET] ?? null) : null;
+        $output = is_array($php) ? ($php['output'] ?? null) : null;
+
+        if (null !== $php && (!is_string($output) || '' === $output)) {
+            throw new RuntimeException(sprintf(
+                'The generator described the "%s" target without an output directory.',
+                self::PHP_TARGET,
+            ));
+        }
+
+        return is_string($output) ? $output : null;
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -63,9 +98,10 @@ final class CheckCommand extends Command
         }
 
         $config = ProjectConfig::load($directory);
+        $root = rtrim($directory, '/');
 
         $compiled = (new SchemaCompiler(integrations: Integrations::registry()))->compile(
-            new SpecSource(rtrim($directory, '/') . '/' . $config->specDirectory),
+            new SpecSource($root . '/' . $config->specDirectory),
         );
 
         if (!$compiled->isSuccess()) {
@@ -81,9 +117,18 @@ final class CheckCommand extends Command
         $schema = $compiled->schema();
         $manifest = (new ManifestBuilder())->build($schema);
 
-        $php = $config->target(self::PHP_TARGET);
+        // The generator parses the targets block, so it is asked rather than second
+        // guessed. Two parsers of one file eventually disagree about something small,
+        // and the disagreement surfaces as a gate checking the wrong directory.
+        try {
+            $outputDirectory = $this->outputDirectory($root, $config);
+        } catch (RuntimeException $exception) {
+            $io->error($exception->getMessage());
 
-        if (null === $php) {
+            return Command::FAILURE;
+        }
+
+        if (null === $outputDirectory) {
             $io->error(sprintf(
                 'No "%s" target in %s; there are no generated classes to check against.',
                 self::PHP_TARGET,
@@ -93,11 +138,11 @@ final class CheckCommand extends Command
             return Command::FAILURE;
         }
 
-        // The tree says what it contains. Asking the generator instead would mean this
-        // gate could only run where the PHP generator is installed, which is exactly
+        // The tree says what it contains. Asking the generator for that too would mean
+        // this gate could only run where the PHP builder is installed, which is exactly
         // the coupling a builder is meant not to have.
         try {
-            $classes = ClassMap::load(rtrim($directory, '/') . '/' . $php->outputDirectory);
+            $classes = ClassMap::load($root . '/' . $outputDirectory);
         } catch (RuntimeException $exception) {
             $io->error($exception->getMessage());
 
