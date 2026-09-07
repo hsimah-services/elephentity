@@ -32,7 +32,7 @@ final readonly class StorageManifestBuilder
         $claimed = [];
 
         foreach ($schema->entities as $entity) {
-            $table = $this->naming->table($entity);
+            $table = $this->naming->table($entity->storage->table);
             $claimed[$table] = true;
 
             if (isset($byTable[$table])) {

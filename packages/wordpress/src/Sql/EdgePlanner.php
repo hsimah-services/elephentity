@@ -35,7 +35,10 @@ final readonly class EdgePlanner
                     continue;
                 }
 
-                $relation = $edge->relation();
+                // Translated once, here. Everything downstream — the placement, the
+                // manifest, the adaptor — sees storage's enum, so nothing at run time
+                // has to load the spec compiler to know what a relation is.
+                $relation = $edge->relation()->forStorage();
                 $key = $entity->name . '.' . $edge->name;
 
                 if ($relation->needsJoinTable()) {
@@ -44,10 +47,10 @@ final readonly class EdgePlanner
                         edge: $edge->name,
                         target: $target->name,
                         relation: $relation,
-                        table: $this->naming->joinTable($entity, $edge),
+                        table: $this->naming->joinTable($entity->storage->table, $edge->name),
                         localColumn: $this->naming->joinColumn($entity->name),
                         targetColumn: $this->naming->joinColumn($target->name),
-                        targetTable: $this->naming->table($target),
+                        targetTable: $this->naming->table($target->storage->table),
                     );
 
                     continue;
@@ -59,18 +62,18 @@ final readonly class EdgePlanner
                         edge: $edge->name,
                         target: $target->name,
                         relation: $relation,
-                        table: $this->naming->table($entity),
+                        table: $this->naming->table($entity->storage->table),
                         localColumn: $this->naming->column($edge->name) . '_id',
-                        targetTable: $this->naming->table($target),
+                        targetTable: $this->naming->table($target->storage->table),
                     )
                     : new EdgePlacement(
                         entity: $entity->name,
                         edge: $edge->name,
                         target: $target->name,
                         relation: $relation,
-                        table: $this->naming->table($target),
-                        localColumn: $this->naming->foreignKeyColumn($entity, $edge),
-                        targetTable: $this->naming->table($target),
+                        table: $this->naming->table($target->storage->table),
+                        localColumn: $this->naming->foreignKeyColumn($edge->inverse?->nameFor($entity->name) ?? lcfirst($entity->name)),
+                        targetTable: $this->naming->table($target->storage->table),
                     );
             }
         }

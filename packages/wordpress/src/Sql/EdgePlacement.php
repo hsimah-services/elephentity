@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Sql;
 
-use Eleph\Schema\Ir\RelationKind;
+use Eleph\Runtime\Storage\RelationKind;
 
 /**
  * Where one edge physically lives.
