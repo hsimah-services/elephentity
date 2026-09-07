@@ -6,10 +6,8 @@ namespace Eleph\Codegen\External;
 
 use Eleph\Codegen\Protocol\Envelope;
 use Eleph\Codegen\Protocol\ProtocolException;
-use Eleph\Codegen\Target;
 use Eleph\Codegen\TargetRequest;
 use Eleph\Codegen\TargetResponse;
-use Eleph\Schema\Ir\Schema;
 use JsonException;
 use RuntimeException;
 
@@ -21,13 +19,16 @@ use RuntimeException;
  * core cares about — signing, writing, drift detection — happens on this side of the
  * pipe, so a builder is only ever trusted to produce bytes.
  *
+ * The IR passes through encoded and is never decoded here. What an entity means is the
+ * builder's problem; this class only has to get the bytes to it and the files back.
+ *
  * **stdin and stderr are temporary files rather than pipes.** With three pipes, a
  * builder that writes more to stdout than the pipe buffer holds before it has finished
  * reading stdin deadlocks, and it does so only on large schemas, which is the worst
  * possible time to discover it. Files cannot deadlock, and the builder cannot tell the
  * difference: stdin is still stdin.
  */
-final readonly class ExternalTarget implements Target
+final readonly class ExternalTarget
 {
     /**
      * @param list<string> $command Executable and its arguments, unescaped.
@@ -39,12 +40,10 @@ final readonly class ExternalTarget implements Target
     ) {
     }
 
-    public function name(): string
-    {
-        return $this->name;
-    }
-
-    public function generate(TargetRequest $request, Schema $schema): TargetResponse
+    /**
+     * @param array<string, mixed> $schema The IR, encoded, and never read here.
+     */
+    public function generate(TargetRequest $request, array $schema): TargetResponse
     {
         try {
             $payload = Envelope::toJson(Envelope::encodeRequest($this->name, $request, $schema));

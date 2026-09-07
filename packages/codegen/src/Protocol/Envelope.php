@@ -38,17 +38,36 @@ final readonly class Envelope
     public const VERSION = 1;
 
     /**
+     * The IR version this side of the exchange speaks.
+     *
+     * Declared here rather than read from the compiler, because the host does not have
+     * a compiler: it forwards an IR it never decodes, and the only thing it can honestly
+     * say is which version it was built to carry. `EnvelopeTest` asserts this still
+     * matches `IrCodec::VERSION` while both live in one repository — after that, a
+     * mismatch is what the gate below exists to catch.
+     */
+    public const IR_VERSION = '1.0';
+
+    /**
+     * Wrap an already-encoded IR for one target.
+     *
+     * The schema arrives encoded and leaves untouched. Nothing between the compiler and
+     * the builder needs to understand an entity, and a host that decoded one would have
+     * to be released every time the IR gained a field.
+     *
+     * @param array<string, mixed> $schema The IR as `IrCodec::encode()` left it.
+     *
      * @return array<string, mixed>
      */
-    public static function encodeRequest(string $target, TargetRequest $request, Schema $schema): array
+    public static function encodeRequest(string $target, TargetRequest $request, array $schema): array
     {
         return [
             'elephentity' => self::VERSION,
-            'irVersion' => IrCodec::VERSION,
+            'irVersion' => self::IR_VERSION,
             'target' => $target,
             'config' => (object) $request->config,
             'outputDirectory' => $request->outputDirectory,
-            'schema' => IrCodec::encode($schema),
+            'schema' => $schema,
         ];
     }
 
@@ -103,7 +122,7 @@ final readonly class Envelope
     {
         return [
             'elephentity' => self::VERSION,
-            'irVersion' => IrCodec::VERSION,
+            'irVersion' => self::IR_VERSION,
             'headerStyle' => $response->headerStyle->value,
             'extensions' => $response->extensions,
             'files' => array_map(
@@ -223,11 +242,11 @@ final readonly class Envelope
 
         $ir = $data['irVersion'] ?? null;
 
-        if (IrCodec::VERSION !== $ir) {
+        if (self::IR_VERSION !== $ir) {
             throw new ProtocolException(sprintf(
                 'IR version mismatch: this build emits %s, the other side speaks %s. '
                 . 'There is no compatibility guarantee before 1.0; upgrade whichever side is behind.',
-                IrCodec::VERSION,
+                self::IR_VERSION,
                 is_scalar($ir) ? (string) $ir : get_debug_type($ir),
             ));
         }

@@ -17,6 +17,7 @@ use Eleph\Codegen\TargetRequest;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Wire\IrCodec;
 use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Manifest\StorageManifestExporter;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
@@ -116,6 +117,10 @@ final class GenerateCommand extends Command
 
         $schema = $compiled->schema();
 
+        // Encoded once, forwarded to every builder untouched. Nothing between here and
+        // the builder reads an entity, so this is the last point the IR is a PHP object.
+        $encoded = IrCodec::encode($schema);
+
         try {
             $selected = $this->selected($input, $config);
         } catch (InvalidArgumentException $exception) {
@@ -142,7 +147,7 @@ final class GenerateCommand extends Command
             $outputDirectory = $root . '/' . $targetConfig->outputDirectory;
             $response = $target->generate(
                 TargetRequest::of($outputDirectory, $targetConfig->settings),
-                $schema,
+                $encoded,
             );
 
             foreach ($response->errors as $problem) {

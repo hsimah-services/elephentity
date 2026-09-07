@@ -29,7 +29,7 @@ final class EnvelopeTest extends TestCase
         $request = TargetRequest::of('generated', ['namespace' => 'App']);
 
         $incoming = Envelope::decodeRequest(
-            Envelope::fromJson(Envelope::toJson(Envelope::encodeRequest('php', $request, $schema))),
+            Envelope::fromJson(Envelope::toJson(Envelope::encodeRequest('php', $request, IrCodec::encode($schema)))),
         );
 
         self::assertSame('php', $incoming->target);
@@ -44,10 +44,19 @@ final class EnvelopeTest extends TestCase
         // would then fail the "config must be an object" check on the far side.
         $schema = new Schema(new ProjectDefinition('Demo', 'wordpress', 'project.yml'));
 
-        $json = Envelope::toJson(Envelope::encodeRequest('php', TargetRequest::of('generated', []), $schema));
+        $json = Envelope::toJson(Envelope::encodeRequest('php', TargetRequest::of('generated', []), IrCodec::encode($schema)));
 
         self::assertStringContainsString('"config":{}', $json);
         self::assertSame([], Envelope::decodeRequest(Envelope::fromJson($json))->request->config);
+    }
+
+    public function testTheHostSpeaksTheIrVersionTheCompilerEmits(): void
+    {
+        // The host declares its own IR version because it forwards an IR it never
+        // decodes. While the compiler and the protocol live in one repository that
+        // declaration can be checked; once they are separate repositories, a drift here
+        // is exactly what the version gate turns into a build failure.
+        self::assertSame(IrCodec::VERSION, Envelope::IR_VERSION);
     }
 
     public function testARequestFromAnotherProtocolVersionIsRefused(): void
@@ -55,7 +64,7 @@ final class EnvelopeTest extends TestCase
         $this->expectException(ProtocolException::class);
         $this->expectExceptionMessageMatches('/Protocol version mismatch/');
 
-        Envelope::decodeRequest(['elephentity' => 99, 'irVersion' => IrCodec::VERSION]);
+        Envelope::decodeRequest(['elephentity' => 99, 'irVersion' => Envelope::IR_VERSION]);
     }
 
     public function testARequestFromAnotherIrVersionIsRefused(): void

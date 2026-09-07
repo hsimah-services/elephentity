@@ -20,7 +20,6 @@ use Eleph\Codegen\Php\Naming\Emitter;
 use Eleph\Codegen\Php\Naming\Names;
 use Eleph\Codegen\Php\Naming\TypeMapper;
 use Eleph\Codegen\Signing\HeaderStyle;
-use Eleph\Codegen\Target;
 use Eleph\Codegen\TargetRequest;
 use Eleph\Codegen\TargetResponse;
 use Eleph\Schema\Ir\Schema;
@@ -37,14 +36,9 @@ use Eleph\Schema\Ir\Schema;
  * core, so that one Signer decides how every generated file in every language is
  * locked. See docs/PLAN.md §15.
  */
-final readonly class PhpTarget implements Target
+final readonly class PhpTarget
 {
     public const NAME = 'php';
-
-    public function name(): string
-    {
-        return self::NAME;
-    }
 
     public function generate(TargetRequest $request, Schema $schema): TargetResponse
     {
