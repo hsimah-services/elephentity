@@ -23,5 +23,8 @@
         "psr-4": {
             "Eleph\\WPGraphQL\\Tests\\": "tests/"
         }
-    }
+    },
+    "bin": [
+        "bin/eleph-gen-wpgraphql"
+    ]
 }

@@ -40,6 +40,14 @@ generated/           machine-owned, committed, never edited
             "output": "generated",
             "namespace": "App\\Entity",
             "typeNamespace": "App\\Type"
+        },
+        "wordpress": {
+            "builder": "vendor/bin/eleph-gen-wordpress",
+            "output": "generated/wordpress"
+        },
+        "wpgraphql": {
+            "builder": "vendor/bin/eleph-gen-wpgraphql",
+            "output": "generated/wpgraphql"
         }
     }
 }
@@ -49,6 +57,18 @@ Every target names the program that produces it. Elephentity generates nothing i
 a target without a `builder` is one nothing can produce and `eleph.json` refuses it.
 `vendor/bin/eleph-gen-php` is where Composer put the one you installed above; check with
 `vendor/bin/eleph-codegen doctor`.
+
+**Configure a target for your driver, and one per integration you use.** They are what
+declares those things exist: `eleph generate` asks every configured builder what it
+provides *before* it reads a spec, so `driver: wordpress` with no wordpress target is an
+error naming the drivers that are installed, and `integrations: { wpgraphql: … }` with
+no wpgraphql target is an unknown integration. A project on another driver configures
+neither and installs neither.
+
+They write **inside** the PHP tree, each in its own directory. The manifests are PHP the
+runtime loads by path, so that is where they belong — but the PHP builder cannot produce
+them, since compiling a storage schema needs code that knows what a table is. Each
+target sweeps only its own directory, so nesting is safe.
 
 Add both namespaces to Composer's PSR-4 autoload map:
 
@@ -129,7 +149,7 @@ reference that no longer compiles is a build failure rather than a surprise.
 In outline:
 
 ```php
-$storage   = WordPress::adaptor($database, WordPress::manifest('generated/storage-manifest.php'));
+$storage   = WordPress::adaptor($database, WordPress::manifest('generated/wordpress/storage-manifest.php'));
 $container = /* your PSR-11 container, holding the generated classes and your contracts */;
 $catalogue = new Catalogue($container);
 
@@ -146,7 +166,7 @@ $runtime = new Runtime(
 GraphQL layer takes it directly:
 
 ```php
-Plugin::fromManifest('generated/graphql-manifest.php', $runtime, $processors)->boot();
+Plugin::fromManifest('generated/wpgraphql/graphql-manifest.php', $runtime, $processors)->boot();
 ```
 
 ## Create the tables

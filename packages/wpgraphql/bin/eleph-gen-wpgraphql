@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Schema\Wire\BuilderEnvelope;
+use Eleph\Schema\Wire\IntegrationCodec;
+use Eleph\Schema\Wire\IrCodec;
+use Eleph\Schema\Wire\WireException;
+use Eleph\WPGraphQL\Integration\WpGraphQL;
+use Eleph\WPGraphQL\Manifest\ManifestBuilder;
+use Eleph\WPGraphQL\Manifest\ManifestExporter;
+
+/**
+ * The WPGraphQL builder: the integration's declaration, and the manifest it compiles to.
+ *
+ * Both halves belong to this package and to nothing else. The keys `integrations:
+ * wpgraphql` accepts are a property of WPGraphQL, and so is what an exposed entity
+ * compiles to — so the same program answers both, and a project that never installs
+ * this package can neither name the integration nor find its manifest.
+ *
+ * That is the whole point of it being a builder. Before, the compiler hardcoded both,
+ * which meant installing the Elephentity CLI installed GraphQL support whether the
+ * project wanted it or not.
+ *
+ * See PROTOCOL.md in elephentity-codegen for the contract this implements.
+ */
+
+// Works both when this is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+try {
+    $request = BuilderEnvelope::read((string) file_get_contents('php://stdin'));
+
+    BuilderEnvelope::assertVersions($request);
+
+    if (BuilderEnvelope::REQUEST_DESCRIBE === BuilderEnvelope::kindOf($request)) {
+        fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description([
+            'integrations' => [WpGraphQL::NAME => IntegrationCodec::encode(WpGraphQL::definition())],
+        ])));
+
+        exit(0);
+    }
+
+    $schema = IrCodec::decode(BuilderEnvelope::schemaOf($request));
+
+    // A project that speaks no GraphQL gets no files rather than an empty manifest.
+    // Finding one in the tree and wondering where it came from is worse than not
+    // configuring the target at all.
+    $files = $schema->project->speaks(WpGraphQL::NAME)
+        ? ['graphql-manifest.php' => (new ManifestExporter())->export((new ManifestBuilder())->build($schema))]
+        : [];
+
+    fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response($files)));
+} catch (WireException $exception) {
+    fwrite(STDERR, 'eleph-gen-wpgraphql: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+} catch (RuntimeException $exception) {
+    // A published query returning an unexposed type, and anything else the manifest
+    // builder refuses. A response with errors rather than a crash, so the orchestrator
+    // pools it with whatever else went wrong in the same run.
+    fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response([], [$exception->getMessage()])));
+}
+
+exit(0);

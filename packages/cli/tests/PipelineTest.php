@@ -76,7 +76,13 @@ final class PipelineTest extends TestCase
     public function testTheFourGatesPassInOrderOnACleanProject(): void
     {
         self::assertSame(Command::SUCCESS, $this->exec(new FmtCommand()));
-        self::assertSame(Command::SUCCESS, $this->exec(new ValidateCommand(), ['spec' => $this->project . '/spec']));
+        // --project as well as the spec path: what a spec may say depends on what the
+        // project's builders provide, so validating needs to find eleph.json. Running
+        // from the project root, which is the normal case, the default covers it.
+        self::assertSame(Command::SUCCESS, $this->exec(new ValidateCommand(), [
+            'spec' => $this->project . '/spec',
+            '--project' => $this->project,
+        ]));
         self::assertSame(Command::SUCCESS, $this->exec(new GenerateCommand()));
 
         // Conformance needs the classes to exist, so it runs after generation.
@@ -130,7 +136,7 @@ final class PipelineTest extends TestCase
     {
         $this->exec(new GenerateCommand());
 
-        self::assertFileExists($this->project . '/generated/graphql-manifest.php');
+        self::assertFileExists($this->project . '/generated/wpgraphql/graphql-manifest.php');
         self::assertFileExists($this->project . '/generated/Post/PostHydrator.php');
         self::assertFileExists($this->project . '/generated/Post/Contract/PostPriceVerifier.php');
     }
@@ -169,15 +175,29 @@ final class PipelineTest extends TestCase
      */
     private function writeConfig(array $extra = []): void
     {
+        $root = dirname(__DIR__, 3);
+
         file_put_contents($this->project . '/eleph.json', json_encode([
             'spec' => 'spec',
             'targets' => [
                 'php' => [
-                    'builder' => dirname(__DIR__, 3) . '/vendor/bin/eleph-gen-php',
+                    'builder' => $root . '/vendor/bin/eleph-gen-php',
                     'output' => 'generated',
                     'namespace' => $this->namespace,
                     'typeNamespace' => 'PipelineFixture\\Type',
                     ...$extra,
+                ],
+                // The fixture spec declares `driver: wordpress` and exposes entities to
+                // wpgraphql, so both have to be configured or the spec names things
+                // nothing installed provides — which is now a compile error, and the
+                // whole point of the handshake.
+                'wordpress' => [
+                    'builder' => $root . '/packages/wordpress/bin/eleph-gen-wordpress',
+                    'output' => 'generated/wordpress',
+                ],
+                'wpgraphql' => [
+                    'builder' => $root . '/packages/wpgraphql/bin/eleph-gen-wpgraphql',
+                    'output' => 'generated/wpgraphql',
                 ],
             ],
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));

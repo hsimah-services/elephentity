@@ -860,6 +860,18 @@ The manifest carries **join tables** as well as entity tables. Keyed by entity, 
 many-to-many link table belonged to nobody and was dropped, so an edge compiled to a
 placement pointing at a table nothing would ever create.
 
+### Registration is compiled, like everything else
+
+`register_post_type()`'s arguments are derived from the spec at build time and written
+to `post-types.php`, beside the storage manifest. They were once derived at *run* time
+from the compiled `Schema` — which meant a plugin that registered post types shipped the
+spec compiler and parsed YAML on every request, the one cost every manifest here exists
+to remove, and a dev-only package in production besides.
+
+`OrphanGuard` was the same shape and is fixed the same way, without needing anything new
+compiled: the storage manifest already carries a field-to-column map per entity, which
+answers "does this entity project to a post row" directly.
+
 ### Post-row divergence
 
 When a post type is registered, the custom table row and the post row are two records
@@ -1050,6 +1062,26 @@ already draws between `eleph.json` and `project.yml`, extended one level down.
 **The two hardcoded manifests become targets.** `GenerateCommand`'s `if` branches for the
 WordPress storage manifest and the WPGraphQL manifest are the same shape as a plugin, and
 folding them in is the test that the abstraction fits something that already exists.
+
+> **Landed.** `eleph-gen-wordpress` and `eleph-gen-wpgraphql` are builders like any
+> other, and the `if` branches are gone. Two things the abstraction needed in order to
+> fit:
+>
+> - **A builder declares what it provides**, asked for over the same pipe before a spec
+>   is compiled. The compiler cannot validate `integrations: { wpgraphql: … }` until it
+>   knows what keys that accepts, and the package that owns the answer is the one that
+>   also generates the manifest. Without this the manifests could move and the hardcoded
+>   `IntegrationRegistry` could not, which is half the coupling.
+> - **A target may write inside another's directory.** The manifests are PHP the runtime
+>   loads by path, so they belong in the PHP tree; the alternative was moving every
+>   project's generated tree down a level to keep the directories siblings. Each target
+>   sweeps only what no other target owns, computed from every *configured* target so
+>   narrowing with `--targets` cannot delete the tree it left out.
+>
+> What this buys is the thing §15 was for: a project on another driver configures
+> neither target, installs neither package, and gets a different set of artifacts. The
+> driver is checked against what is installed, so choosing one nothing provides is an
+> error naming the alternatives rather than a spec that compiles to nothing.
 
 ### One directory per target, and `--targets` to narrow
 

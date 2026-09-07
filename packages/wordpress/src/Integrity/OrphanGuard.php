@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Integrity;
 
-use Eleph\Schema\Ir\Schema;
 use Eleph\WordPress\Database\Database;
-use Eleph\WordPress\Sql\Naming;
+use Eleph\WordPress\Manifest\StorageManifest;
 
 /**
  * Keeps custom tables in step when WordPress deletes a post behind our back.
@@ -22,10 +21,17 @@ use Eleph\WordPress\Sql\Naming;
  */
 final readonly class OrphanGuard
 {
+    /**
+     * The compiled manifest rather than the spec, so this works at run time.
+     *
+     * It carries a field-to-column map per entity, which already answers the only
+     * question here — which entities project to a post row — so nothing new had to be
+     * compiled for it. Taking the `Schema` meant shipping the spec compiler to
+     * production and parsing YAML to answer it.
+     */
     public function __construct(
-        private Schema $schema,
+        private StorageManifest $manifest,
         private Database $database,
-        private Naming $naming = new Naming(),
     ) {
     }
 
@@ -51,17 +57,15 @@ final readonly class OrphanGuard
     {
         $tables = [];
 
-        foreach ($this->schema->entities as $entity) {
-            if ('wordpress' !== $entity->storage->driver) {
+        foreach ($this->manifest->columns as $entity => $columns) {
+            if (!isset($columns['postId'], $this->manifest->tables[$entity])) {
                 continue;
             }
 
-            if (null === $entity->field('postId')) {
-                continue;
-            }
-
-            $tables[] = $this->naming->table($entity);
+            $tables[] = $this->manifest->tables[$entity]->name;
         }
+
+        sort($tables);
 
         return $tables;
     }

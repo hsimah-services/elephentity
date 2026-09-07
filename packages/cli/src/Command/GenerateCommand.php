@@ -5,17 +5,12 @@ declare(strict_types=1);
 namespace Eleph\Cli\Command;
 
 use Eleph\Cli\Codegen;
-use Eleph\Cli\Integrations;
+use Eleph\Cli\Installed;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Wire\IrCodec;
-use Eleph\WordPress\Manifest\StorageManifestBuilder;
-use Eleph\WordPress\Manifest\StorageManifestExporter;
-use Eleph\WPGraphQL\Integration\WpGraphQL;
-use Eleph\WPGraphQL\Manifest\ManifestBuilder;
-use Eleph\WPGraphQL\Manifest\ManifestExporter;
 use JsonException;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -37,6 +32,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * a missing builder, a target that rejected its config, a tree that has drifted — is
  * reported by the generator, and its output is forwarded rather than re-rendered.
  * `--check` and `--targets` are passed straight through for the same reason.
+ *
+ * The generator is asked *twice*: once to describe what the project's builders provide,
+ * before the specs can be read, and again to generate once they have been. What a spec
+ * may say depends on what is installed — which integrations it may name, which driver
+ * it may declare — and this half knows neither until it asks.
  */
 #[AsCommand(
     name: 'generate',
@@ -44,18 +44,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 final class GenerateCommand extends Command
 {
-    public const MANIFEST_PATH = 'graphql-manifest.php';
-
-    public const STORAGE_MANIFEST_PATH = 'storage-manifest.php';
-
-    /**
-     * The target the manifests are written alongside.
-     *
-     * They are PHP the WordPress adaptor loads by path at boot, so what this names is
-     * the target whose output directory they belong in — not a generator this knows.
-     */
-    private const PHP_TARGET = 'php';
-
     protected function configure(): void
     {
         $this->addOption(
@@ -94,8 +82,19 @@ final class GenerateCommand extends Command
 
         $config = ProjectConfig::load($directory);
         $root = rtrim($directory, '/');
+        $codegen = new Codegen($root, $config->codegen);
 
-        $compiled = (new SchemaCompiler(integrations: Integrations::registry()))->compile(
+        try {
+            // Before the specs are read, because what it answers is what they are read
+            // against: which integrations may be named, which drivers exist.
+            $installed = Installed::describedBy($codegen, $root);
+        } catch (RuntimeException $exception) {
+            $io->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        $compiled = (new SchemaCompiler(integrations: $installed->integrations))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );
 
@@ -111,6 +110,17 @@ final class GenerateCommand extends Command
 
         $schema = $compiled->schema();
 
+        if (!$installed->provides($schema->project->driver)) {
+            $io->error(sprintf(
+                'No installed builder generates for storage driver "%s" (available: %s). '
+                . 'Add a target for it in eleph.json, or change the driver in project.yml.',
+                $schema->project->driver,
+                $installed->describeDrivers(),
+            ));
+
+            return Command::FAILURE;
+        }
+
         try {
             $request = $this->request($schema);
         } catch (JsonException $exception) {
@@ -120,7 +130,7 @@ final class GenerateCommand extends Command
         }
 
         try {
-            return (new Codegen($root, $config->codegen))->run($this->arguments($input, $root), $request, $output);
+            return $codegen->run($this->arguments($input, $root), $request, $output);
         } catch (RuntimeException $exception) {
             $io->error($exception->getMessage());
 
@@ -154,55 +164,13 @@ final class GenerateCommand extends Command
      */
     private function request(Schema $schema): string
     {
-        $files = [];
-
-        foreach ($this->manifests($schema) as $path => $body) {
-            $files[] = ['path' => $path, 'body' => $body];
-        }
-
         return json_encode([
             'elephentity' => 1,
             'irVersion' => IrCodec::VERSION,
             'schema' => IrCodec::encode($schema),
-            'files' => (object) ([] === $files ? [] : [self::PHP_TARGET => $files]),
+            // Nothing any more. The manifests are produced by the wordpress and
+            // wpgraphql builders, which is what lets a project install neither.
+            'files' => (object) [],
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
-    }
-
-    /**
-     * The manifests the runtime needs at boot, which the IR that produced them does not
-     * survive to answer.
-     *
-     * They are compiled here rather than by a builder because building them needs code
-     * that knows what WordPress is, which is exactly what the generator is built not to
-     * know. So they travel with the request, addressed to the PHP target, and are signed
-     * and written with it — nothing on disk says which side of the pipe they came from.
-     *
-     * docs/PLAN.md §15 has them becoming targets of their own eventually. That would move
-     * them to new directories the WordPress plugin loads by path at boot, so it is a
-     * change with a runtime consequence rather than a tidy-up.
-     *
-     * @return array<string, string>
-     */
-    private function manifests(Schema $schema): array
-    {
-        $files = [];
-
-        // The physical schema, for whichever driver the project declared. The adaptor
-        // needs it at run time.
-        if ('wordpress' === $schema->project->driver) {
-            $files[self::STORAGE_MANIFEST_PATH] = (new StorageManifestExporter())->export(
-                (new StorageManifestBuilder())->build($schema),
-            );
-        }
-
-        // Only when the project speaks GraphQL: a project that does not should not find
-        // a manifest in its tree wondering where it came from.
-        if ($schema->project->speaks(WpGraphQL::NAME)) {
-            $files[self::MANIFEST_PATH] = (new ManifestExporter())->export(
-                (new ManifestBuilder())->build($schema),
-            );
-        }
-
-        return $files;
     }
 }
