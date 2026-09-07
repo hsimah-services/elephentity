@@ -43,7 +43,41 @@ is ordered cheapest-first, so the fastest gate reports the most common mistake.
 
 ## Advisory: spec versus description
 
-`.github/workflows/spec-alignment.yml` in this repository is a working example of the
-md/yaml drift check described in [PLAN.md](PLAN.md) §2. It is advisory on purpose —
-documentation drift is not a solved problem, and a blocking gate that is wrong half the
-time gets disabled within a week.
+The five gates above check that the spec and the code agree. Nothing checks that the
+spec and the *description of it* agree, and that is the drift described in
+[PLAN.md](PLAN.md) §2: the `.md` says what an entity is for, the `.yml` is what actually
+compiles, and they part company quietly.
+
+`.github/workflows/spec-alignment.yml` is a reusable workflow you can call:
+
+```yaml
+name: Spec alignment
+on:
+  pull_request:
+    paths: ['spec/**']
+
+jobs:
+  alignment:
+    uses: hsimah/elephentity/.github/workflows/spec-alignment.yml@main
+    with:
+      specs: spec          # where your specs and their descriptions live
+    secrets: inherit       # needs ANTHROPIC_API_KEY; skips silently without it
+```
+
+Or copy the file and change `workflow_call` back to `pull_request`. Copying is the
+better option if your specs are spread across more than one directory, or if you want to
+change what the agent is asked — it is a short file and it is yours to own.
+
+**It does not run in the Elephentity repository itself.** This is a project gate: specs
+live in projects that use the framework, and the framework has none — only the worked
+example and the compiler's test fixtures, several of them deliberately malformed. Wired
+to `pull_request` it fired on any markdown edit and had nothing valid to compare.
+
+It is advisory on purpose, and the workflow sets `continue-on-error` to keep it that way.
+Documentation drift is not a solved problem, and a blocking gate that is wrong half the
+time gets switched off within a week.
+
+**The prompt asks for two enumerations, not a verdict** — members in the yaml with no
+counterpart in the md, and behaviour described in the md that the yaml does not declare.
+"Are these aligned?" produces an opinion nobody can check; a list is something you can
+scan and dismiss in seconds when it is wrong. If you adapt the prompt, keep that shape.
