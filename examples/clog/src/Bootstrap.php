@@ -63,6 +63,18 @@ final class Bootstrap
 {
     private const GENERATED = __DIR__ . '/../generated';
 
+    /**
+     * Each manifest sits in its own target's directory, inside the PHP tree.
+     *
+     * They are PHP the runtime loads by path, so they belong here — but the PHP builder
+     * cannot produce them, since compiling a storage schema needs code that knows what
+     * a table is. So they come from targets of their own, and a project that installs
+     * neither the driver nor the integration has neither directory.
+     */
+    private const STORAGE_MANIFEST = self::GENERATED . '/wordpress/storage-manifest.php';
+
+    private const GRAPHQL_MANIFEST = self::GENERATED . '/wpgraphql/graphql-manifest.php';
+
     private ?Runtime $runtime = null;
 
     public function __construct(private readonly Database $database)
@@ -106,7 +118,7 @@ final class Bootstrap
     public function graphql(): Plugin
     {
         return Plugin::fromManifest(
-            self::GENERATED . '/graphql-manifest.php',
+            self::GRAPHQL_MANIFEST,
             $this->runtime(),
             new NoProcessors(),
         );
@@ -178,6 +190,6 @@ final class Bootstrap
 
     private function manifest(): StorageManifest
     {
-        return WordPress::manifest(self::GENERATED . '/storage-manifest.php');
+        return WordPress::manifest(self::STORAGE_MANIFEST);
     }
 }

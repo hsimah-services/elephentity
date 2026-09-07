@@ -9,9 +9,7 @@
         "php": ">=8.3",
         "symfony/console": "^7.0 || ^8.0",
         "elephentity/schema": "self.version",
-        "elephentity/codegen": "self.version",
-        "elephentity/wpgraphql": "self.version",
-        "elephentity/wordpress": "self.version"
+        "elephentity/codegen": "self.version"
     },
     "autoload": {
         "psr-4": {

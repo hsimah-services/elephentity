@@ -6,7 +6,7 @@ namespace Eleph\Cli\Command;
 
 use Eleph\Cli\ClassMap;
 use Eleph\Cli\Codegen;
-use Eleph\Cli\Integrations;
+use Eleph\Cli\Installed;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
@@ -86,6 +86,17 @@ final class CheckCommand extends Command
         return is_string($output) ? $output : null;
     }
 
+    /**
+     * What the project's builders provide, so the specs are read against the same
+     * declarations `generate` reads them against.
+     *
+     * @throws RuntimeException When the generator cannot be found or cannot answer.
+     */
+    private function installed(string $root, ProjectConfig $config): Installed
+    {
+        return Installed::describedBy(new Codegen($root, $config->codegen), $root);
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -100,7 +111,7 @@ final class CheckCommand extends Command
         $config = ProjectConfig::load($directory);
         $root = rtrim($directory, '/');
 
-        $compiled = (new SchemaCompiler(integrations: Integrations::registry()))->compile(
+        $compiled = (new SchemaCompiler(integrations: $this->installed($root, $config)->integrations))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );
 

@@ -6,6 +6,14 @@
             "output": "generated",
             "namespace": "Clog\\Entity",
             "typeNamespace": "Clog\\Type"
+        },
+        "wordpress": {
+            "builder": "../../packages/wordpress/bin/eleph-gen-wordpress",
+            "output": "generated/wordpress"
+        },
+        "wpgraphql": {
+            "builder": "../../packages/wpgraphql/bin/eleph-gen-wpgraphql",
+            "output": "generated/wpgraphql"
         }
     }
 }

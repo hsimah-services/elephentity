@@ -1,0 +1,77 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Schema\Wire\BuilderEnvelope;
+use Eleph\Schema\Wire\IrCodec;
+use Eleph\Schema\Wire\WireException;
+use Eleph\WordPress\Manifest\StorageManifestBuilder;
+use Eleph\WordPress\Manifest\StorageManifestExporter;
+
+/**
+ * The WordPress builder: the driver's declaration, and the physical schema it compiles to.
+ *
+ * A driver rather than an integration, and the difference is where it is chosen. An
+ * integration is opt-in per entity; a driver is named once in `project.yml` and decides
+ * what every entity's storage means. Declaring it here is what lets the compiler say
+ * "no installed builder provides driver X" instead of compiling a spec nothing can
+ * store.
+ *
+ * The manifest is PHP, loaded by the adaptor at boot, and it lands inside the PHP
+ * target's tree because that is where the runtime looks for it — see the nesting rule
+ * in PROTOCOL.md. What it cannot be is produced by the PHP builder, which knows what a
+ * class is and nothing about what a table is.
+ *
+ * See PROTOCOL.md in elephentity-codegen for the contract this implements.
+ */
+
+// Works both when this is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+const DRIVER = 'wordpress';
+
+try {
+    $request = BuilderEnvelope::read((string) file_get_contents('php://stdin'));
+
+    BuilderEnvelope::assertVersions($request);
+
+    if (BuilderEnvelope::REQUEST_DESCRIBE === BuilderEnvelope::kindOf($request)) {
+        fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description(['drivers' => [DRIVER]])));
+
+        exit(0);
+    }
+
+    $schema = IrCodec::decode(BuilderEnvelope::schemaOf($request));
+
+    // Configured but not chosen. Saying so beats writing a manifest for a driver the
+    // project does not use, and beats silence, which looks exactly like a builder that
+    // ran and had nothing to do.
+    $files = DRIVER === $schema->project->driver
+        ? ['storage-manifest.php' => (new StorageManifestExporter())->export(
+            (new StorageManifestBuilder())->build($schema),
+        )]
+        : [];
+
+    $errors = DRIVER === $schema->project->driver ? [] : [sprintf(
+        'This project declares driver "%s", so the wordpress target has nothing to generate. '
+        . 'Remove it from eleph.json, or change the driver in project.yml.',
+        $schema->project->driver,
+    )];
+
+    fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response($files, $errors)));
+} catch (WireException $exception) {
+    fwrite(STDERR, 'eleph-gen-wordpress: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+} catch (RuntimeException $exception) {
+    fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response([], [$exception->getMessage()])));
+}
+
+exit(0);

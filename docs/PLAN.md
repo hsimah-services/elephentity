@@ -1051,6 +1051,26 @@ already draws between `eleph.json` and `project.yml`, extended one level down.
 WordPress storage manifest and the WPGraphQL manifest are the same shape as a plugin, and
 folding them in is the test that the abstraction fits something that already exists.
 
+> **Landed.** `eleph-gen-wordpress` and `eleph-gen-wpgraphql` are builders like any
+> other, and the `if` branches are gone. Two things the abstraction needed in order to
+> fit:
+>
+> - **A builder declares what it provides**, asked for over the same pipe before a spec
+>   is compiled. The compiler cannot validate `integrations: { wpgraphql: … }` until it
+>   knows what keys that accepts, and the package that owns the answer is the one that
+>   also generates the manifest. Without this the manifests could move and the hardcoded
+>   `IntegrationRegistry` could not, which is half the coupling.
+> - **A target may write inside another's directory.** The manifests are PHP the runtime
+>   loads by path, so they belong in the PHP tree; the alternative was moving every
+>   project's generated tree down a level to keep the directories siblings. Each target
+>   sweeps only what no other target owns, computed from every *configured* target so
+>   narrowing with `--targets` cannot delete the tree it left out.
+>
+> What this buys is the thing §15 was for: a project on another driver configures
+> neither target, installs neither package, and gets a different set of artifacts. The
+> driver is checked against what is installed, so choosing one nothing provides is an
+> error naming the alternatives rather than a spec that compiles to nothing.
+
 ### One directory per target, and `--targets` to narrow
 
 `--targets php,ts` runs a subset; omitting it runs everything. It is for iterating on one

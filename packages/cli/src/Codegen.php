@@ -145,24 +145,42 @@ final readonly class Codegen
     public function capture(array $arguments): string
     {
         $command = [$this->resolve(), ...$arguments];
-        $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => STDERR];
+
+        // stderr is captured rather than inherited, because for these subcommands it
+        // carries the answer to "why not" — which builder could not be found, and where
+        // it looked. Letting it escape to the terminal leaves the exception saying only
+        // that something failed, and leaves a test harness with nothing at all.
+        $stderr = $this->stage('');
+        $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $stderr, 'w']];
         $pipes = [];
         $process = @proc_open($command, $descriptors, $pipes);
 
         if (!is_resource($process)) {
+            @unlink($stderr);
+
             throw new RuntimeException(sprintf('Could not run %s.', implode(' ', $command)));
         }
 
-        fclose($pipes[0]);
+        try {
+            fclose($pipes[0]);
 
-        $stdout = stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
+            $stdout = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
 
-        if (0 !== proc_close($process)) {
-            throw new RuntimeException(sprintf('%s failed.', implode(' ', $command)));
+            if (0 !== proc_close($process)) {
+                $reported = trim((string) file_get_contents($stderr));
+
+                throw new RuntimeException(
+                    '' === $reported
+                        ? sprintf('%s failed and said nothing.', implode(' ', $command))
+                        : $reported,
+                );
+            }
+
+            return is_string($stdout) ? $stdout : '';
+        } finally {
+            @unlink($stderr);
         }
-
-        return is_string($stdout) ? $stdout : '';
     }
 
     private function resolve(): string
