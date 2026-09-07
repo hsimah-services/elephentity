@@ -41,7 +41,9 @@
         }
     },
     "bin": [
-        "packages/cli/bin/eleph"
+        "packages/cli/bin/eleph",
+        "packages/wordpress/bin/eleph-gen-wordpress",
+        "packages/wpgraphql/bin/eleph-gen-wpgraphql"
     ],
     "scripts": {
         "test": "phpunit",
@@ -60,15 +62,5 @@
         "sort-packages": true
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/hsimah/elephentity-codegen"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/hsimah/elephentity-codegen-php"
-        }
-    ]
+    "prefer-stable": true
 }

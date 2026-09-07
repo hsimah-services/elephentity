@@ -5,7 +5,7 @@ the spec; your builder decides what the output looks like. It can be written in 
 that can read JSON on stdin and write JSON on stdout.
 
 **The contract lives with the program that implements it.** It is
-[`docs/PROTOCOL.md` in elephentity-codegen](https://github.com/hsimah/elephentity-codegen/blob/main/docs/PROTOCOL.md),
+[`docs/PROTOCOL.md` in elephentity-codegen](https://github.com/hsimah-services/elephentity-codegen/blob/main/docs/PROTOCOL.md),
 which is what runs your builder, signs what it returns and writes the tree. Two copies of
 a protocol description is one copy too many, and the one that drifts is always the copy
 that lives away from the code.
@@ -35,7 +35,7 @@ Three rules, and they are the whole of it:
 
 ## A reference implementation
 
-[`elephentity-codegen-php`](https://github.com/hsimah/elephentity-codegen-php) is the PHP
+[`elephentity-codegen-php`](https://github.com/hsimah-services/elephentity-codegen-php) is the PHP
 builder. Two things about it are worth copying rather than just reading:
 
 **It depends on nothing of Elephentity's.** The IR value objects are a copy, and the

@@ -37,8 +37,8 @@ WordPress symbol. It uses the tokenizer, so prose in a doc comment is fine and a
 call is not.
 
 **The code generator is not in this repository.** `eleph generate` compiles the specs and
-pipes the IR to [`eleph-codegen`](https://github.com/hsimah/elephentity-codegen), which
-resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah/elephentity-codegen-php)
+pipes the IR to [`eleph-codegen`](https://github.com/hsimah-services/elephentity-codegen), which
+resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah-services/elephentity-codegen-php)
 and any others — runs them, and signs and writes what they return. Both are dev
 dependencies here so that `PipelineTest` and `examples/clog` can run; a project installs
 them itself. The generator is going to be rewritten in Rust, which is why it is a
@@ -71,6 +71,18 @@ to end and is what proves the layers are wired together at all.
 
 `packages/schema/tests/fixtures/valid/` is the canonical spec exercising every
 construct. Most tests compile it.
+
+## Before you commit anything that crosses a repository boundary
+
+Elephentity is three published programs that talk over a wire format, not a shared
+classpath — so nothing type-checks across the gap, and a builder that falls behind the
+compiler fails at run time rather than at build time.
+
+**[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If
+you changed something on it, open an issue on each repository it reaches, before or with
+the push. [`.llms/README.md`](.llms/README.md) has the rule and
+[`.llms/issue-template.md`](.llms/issue-template.md) the shape. Everything depends on
+`dev-main`, so a contract change that lands alone breaks somebody's build that afternoon.
 
 ## Before you commit
 

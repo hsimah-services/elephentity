@@ -22,7 +22,7 @@ name: Spec alignment
 #
 #     jobs:
 #       alignment:
-#         uses: hsimah/elephentity/.github/workflows/spec-alignment.yml@main
+#         uses: hsimah-services/elephentity/.github/workflows/spec-alignment.yml@main
 #         with:
 #           specs: spec
 #         secrets: inherit
