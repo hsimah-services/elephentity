@@ -480,6 +480,40 @@ fields:
 `required` and `nullable` are deliberately separate facts; all four combinations are
 meaningful.
 
+**`required` is checked, at commit, before any SQL runs.** It was once a word in the
+spec that changed nothing: nothing verified it and the catalogue did not expose which
+fields carried it, so a missing value reached the database and the outcome depended on
+the installation — a strict MySQL raised an error, and WordPress's default session
+quietly stored `0000-00-00 00:00:00`. It is now a `Violation` with a field path, which
+puts it alongside the deletion rules rather than in the driver.
+
+A field with a `default:` is exempt, because the column already answers for it.
+
+### Managed fields
+
+```yaml
+createdAt: { type: datetime, managed: created }    # stamped once, at insert
+updatedAt: { type: datetime, managed: modified }   # stamped on every write
+```
+
+A managed field is settable by nobody: no mutator setter, no input applier branch, and
+absent from the generated create and update inputs. The unit of work stamps it before
+verification, with one instant per commit.
+
+This exists because the shipped `Timestamps` pattern got it exactly backwards. Declared
+`required: true, immutable: true`, `createdAt` became `String!` on every create
+mutation — so every client had to invent a creation time, and `immutable` meant it
+could never be corrected afterwards. The constraint was enforced in the one place it
+should not have been, and ignored where it mattered.
+
+`managed` and `required` together are a compile error, and so are `managed` and
+`immutable`. Both combinations read as if they mean something and both say who fills a
+field twice, which is two chances to disagree.
+
+**A closed set of policies, not a `default: now` expression.** The framework has to
+implement each one. A value the spec can name and the runtime cannot produce is the
+same failure this replaces.
+
 ### Identity
 
 Every entity has an `id`, implicitly — no pattern needed, no way to override.

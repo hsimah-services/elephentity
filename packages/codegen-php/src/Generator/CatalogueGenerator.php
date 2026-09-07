@@ -9,6 +9,7 @@ use Eleph\Codegen\Php\Naming\Emitter;
 use Eleph\Codegen\Php\Naming\Names;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Storage\DeletionRule;
@@ -79,6 +80,9 @@ final readonly class CatalogueGenerator
         $this->addMap($type, 'fieldTypes', $this->fieldTypes(), '"Entity.field" => declared type');
 
         $this->addPerEntityList($type, 'fieldNames', $this->fieldNames());
+        $this->addPerEntityList($type, 'requiredFields', $this->requiredFields());
+        $this->addPerEntityList($type, 'uniqueFields', $this->uniqueFields());
+        $this->addManagedFields($type, $namespace);
         $this->addDeletionRules($type, $namespace);
         $this->addFinder($type, $namespace);
         $this->addMutatorFactory($type, $namespace);
@@ -178,6 +182,86 @@ final readonly class CatalogueGenerator
         }
 
         return $names;
+    }
+
+    /**
+     * Fields a create must supply.
+     *
+     * A field with a default is left out: the column already answers for it, and
+     * demanding one anyway would make `default:` unusable. Managed fields are left out
+     * too — the framework stamps them before this is consulted.
+     *
+     * @return array<string, list<string>>
+     */
+    private function requiredFields(): array
+    {
+        $required = [];
+
+        foreach ($this->schema->entities as $entity) {
+            $names = [];
+
+            foreach ($entity->fields as $field) {
+                if ($field->required && !$field->hasDefault && null === $field->managed) {
+                    $names[] = $field->name;
+                }
+            }
+
+            $required[$entity->name] = $names;
+        }
+
+        return $required;
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function uniqueFields(): array
+    {
+        $unique = [];
+
+        foreach ($this->schema->entities as $entity) {
+            $names = [];
+
+            foreach ($entity->fields as $field) {
+                if ($field->unique) {
+                    $names[] = $field->name;
+                }
+            }
+
+            $unique[$entity->name] = $names;
+        }
+
+        return $unique;
+    }
+
+    private function addManagedFields(\Nette\PhpGenerator\ClassType $type, \Nette\PhpGenerator\PhpNamespace $namespace): void
+    {
+        $lines = [];
+
+        foreach ($this->schema->entities as $entity) {
+            foreach ($entity->fields as $field) {
+                if (null === $field->managed) {
+                    continue;
+                }
+
+                $lines[] = sprintf(
+                    '    %s => Managed::%s,',
+                    var_export($entity->name . '.' . $field->name, true),
+                    ucfirst($field->managed->value),
+                );
+            }
+        }
+
+        if ([] !== $lines) {
+            $namespace->addUse(Managed::class);
+        }
+
+        sort($lines);
+
+        $type->addMethod('managedFields')
+            ->setReturnType('array')
+            ->setBody([] === $lines ? 'return [];' : sprintf("return [\n%s\n];", implode("\n", $lines)))
+            ->addComment('@return array<string, Managed> "Entity.field" => policy');
     }
 
     private function addDeletionRules(\Nette\PhpGenerator\ClassType $type, \Nette\PhpGenerator\PhpNamespace $namespace): void

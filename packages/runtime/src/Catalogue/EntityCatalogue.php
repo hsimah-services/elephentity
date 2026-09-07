@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\Runtime\Catalogue;
 
 use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Storage\DeletionRule;
@@ -57,6 +58,32 @@ interface EntityCatalogue
      * @return list<string>
      */
     public function fieldNames(string $entity): array;
+
+    /**
+     * Fields that must be supplied when the row is created.
+     *
+     * Exposed because nothing downstream could work it out: the runtime has no schema,
+     * so without this `required: true` is a word in the spec that changes nothing.
+     * A field with a default is not listed — the column supplies one.
+     *
+     * @return list<string>
+     */
+    public function requiredFields(string $entity): array;
+
+    /**
+     * Fields carrying a uniqueness constraint, so the commit can check one before the
+     * database does and report it as a violation rather than a SQL exception.
+     *
+     * @return list<string>
+     */
+    public function uniqueFields(string $entity): array;
+
+    /**
+     * Fields the framework fills, and when.
+     *
+     * @return array<string, Managed> "Entity.field" => policy
+     */
+    public function managedFields(): array;
 
     /**
      * Build a mutator bound to this mutation.

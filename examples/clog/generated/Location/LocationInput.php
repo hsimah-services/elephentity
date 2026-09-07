@@ -9,12 +9,11 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationInput.php
- * digest: sha256:9a925632d1f4033cffa2e3cfeca17d24328c6ce3039cd7a9dc2ab15656774118
+ * digest: sha256:e2b13b6e68fd14f6a5a5f1bdad6b987defd1ce1c22a0c5974d2dacc86f2e8c51
  */
 
 namespace Clog\Entity\Location;
 
-use DateTimeImmutable;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
 
@@ -26,24 +25,6 @@ final readonly class LocationInput
     public function __construct(
         private ValueDecoder $decode,
     ) {
-    }
-
-    private function createdAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Location.createdAt');
-    }
-
-    private function updatedAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Location.updatedAt');
     }
 
     private function postId(mixed $value): ?int
@@ -72,14 +53,6 @@ final readonly class LocationInput
      */
     public function apply(MutationBuffer $buffer, array $input): void
     {
-        if (array_key_exists('createdAt', $input)) {
-            $buffer->set('createdAt', $this->createdAt($input['createdAt']));
-        }
-
-        if (array_key_exists('updatedAt', $input)) {
-            $buffer->set('updatedAt', $this->updatedAt($input['updatedAt']));
-        }
-
         if (array_key_exists('postId', $input)) {
             $buffer->set('postId', $this->postId($input['postId']));
         }

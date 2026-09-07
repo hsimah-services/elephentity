@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:37f9e2b963815a80afeddc71d73202dcaf12e50b041ac0498fc4426d692ee126
+ * digest: sha256:e26fa5276abdb8cab8c595e014883827ae769c9f2f508f48e7da0d0f40632b31
  */
 
 namespace Clog\Entity\Inventory;
@@ -25,13 +25,6 @@ final class InventoryMutator
     public function __construct(
         private readonly MutationBuffer $buffer,
     ) {
-    }
-
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
-    {
-        $this->buffer->set('updatedAt', $updatedAt);
-
-        return $this;
     }
 
     public function setPostId(?int $postId): self

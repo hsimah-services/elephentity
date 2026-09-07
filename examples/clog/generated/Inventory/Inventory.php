@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/Inventory.php
- * digest: sha256:61eba42267b7d59633b10de05771ccb0f08acf34584f9fc3fa75d7f89e6997a4
+ * digest: sha256:fd6fe795d7db8ff7f2538b4e291dbfc5c63a4872a9617cc6889a00dcbaf730f7
  */
 
 namespace Clog\Entity\Inventory;
@@ -29,7 +29,7 @@ final class Inventory
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?DateTimeImmutable $updatedAt,
+        private readonly DateTimeImmutable $updatedAt,
         private readonly ?int $postId,
         private readonly string $name,
         private readonly DateTimeImmutable $dateAdded,
@@ -42,12 +42,18 @@ final class Inventory
         return $this->id;
     }
 
+    /**
+     * When the row was first written. Filled by the framework.
+     */
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    /**
+     * When the row was last written. Filled by the framework.
+     */
+    public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
     }
@@ -104,7 +110,7 @@ final class Inventory
         EntityId $id,
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $updatedAt,
+        DateTimeImmutable $updatedAt,
         ?int $postId,
         string $name,
         DateTimeImmutable $dateAdded,

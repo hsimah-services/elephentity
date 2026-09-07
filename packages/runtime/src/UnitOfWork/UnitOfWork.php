@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\UnitOfWork;
 
+use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Identity\PendingId;
@@ -27,6 +28,8 @@ use RuntimeException;
  *
  * The sequence is deliberate.
  *
+ *   0. Stamp the fields the framework owns, before anything looks at them. A managed
+ *      timestamp is part of the row from here on, so verification sees a complete one.
  *   1. Verify every mutation before writing anything, so a rejected commit leaves no
  *      partial state and reports every violation at once.
  *   2. Sort by dependency, because server-generated ids mean a Post must be inserted
@@ -56,6 +59,11 @@ final class UnitOfWork
         private readonly ValueEncoder $encoder,
         private readonly TriggerDispatcher $triggers,
         private readonly DependencySorter $sorter = new DependencySorter(),
+        /**
+         * Empty by default: a project declaring no managed field needs nothing here,
+         * and an empty map costs one array lookup per commit.
+         */
+        private readonly ManagedFields $managed = new ManagedFields(),
         /**
          * Absent when a project has no deletions to plan. Optional rather than
          * required because it needs the edge graph, which not every caller has.
@@ -92,6 +100,14 @@ final class UnitOfWork
 
         if ([] === $mutations && [] === $deletions) {
             return new WriteResult();
+        }
+
+        // First, so a required field the framework fills is present by the time
+        // anything asks whether it was supplied. One instant for the whole commit.
+        $now = new DateTimeImmutable();
+
+        foreach ($mutations as $mutation) {
+            $this->managed->stamp($mutation, $now);
         }
 
         $this->verify($mutations);

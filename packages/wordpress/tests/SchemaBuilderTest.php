@@ -64,9 +64,10 @@ final class SchemaBuilderTest extends TestCase
         self::assertSame('LONGTEXT', $body->type);
 
         // required and nullable are separate facts, and only the second shapes the
-        // column.
+        // column. A managed field is never null, because the framework fills it.
         self::assertFalse($createdAt->nullable);
-        self::assertTrue($updatedAt->nullable);
+        self::assertFalse($updatedAt->nullable);
+        self::assertTrue($post->column('published_at')?->nullable);
     }
 
     public function testEnumColumnsAreSizedToTheirLongestMember(): void

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryInput.php
- * digest: sha256:e88d07661140a8c098280dcbacce4ac6fb383c99d6682cceec336e3d43881df0
+ * digest: sha256:38445c1b388e7ba978124d0d258fce25cdeb845f3e4037e80c3789d26b7272ee
  */
 
 namespace Clog\Entity\Inventory;
@@ -26,24 +26,6 @@ final readonly class InventoryInput
     public function __construct(
         private ValueDecoder $decode,
     ) {
-    }
-
-    private function createdAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Inventory.createdAt');
-    }
-
-    private function updatedAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Inventory.updatedAt');
     }
 
     private function postId(mixed $value): ?int
@@ -90,14 +72,6 @@ final readonly class InventoryInput
      */
     public function apply(MutationBuffer $buffer, array $input): void
     {
-        if (array_key_exists('createdAt', $input)) {
-            $buffer->set('createdAt', $this->createdAt($input['createdAt']));
-        }
-
-        if (array_key_exists('updatedAt', $input)) {
-            $buffer->set('updatedAt', $this->updatedAt($input['updatedAt']));
-        }
-
         if (array_key_exists('postId', $input)) {
             $buffer->set('postId', $this->postId($input['postId']));
         }

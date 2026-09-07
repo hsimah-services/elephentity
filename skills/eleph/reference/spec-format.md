@@ -116,6 +116,7 @@ fields:
     unique: false
     indexed: true
     immutable: false    # settable on create, no setter afterwards
+    managed: created    # datetime only; the framework fills it — see below
     maxLength: 200      # string only; default 255
     values: [a, b]      # enum only — a list, or the name of a declared enum
     verify: true        # generate an entity-specific verifier interface
@@ -124,6 +125,15 @@ fields:
 **`required` and `nullable` are different facts.** `required` is about creating a row;
 `nullable` is about what the column can hold. All four combinations are meaningful, and
 conflating them is the most common mistake in a first spec.
+
+`required` is enforced at commit, as a violation with a field path, before any SQL
+runs. A field with a `default:` is exempt — the column answers for it.
+
+**`managed` means the framework fills it.** `created` stamps the field when the row is
+inserted; `modified` stamps it on every write. Either way there is no setter, no input
+branch, and no GraphQL input field, so a machine-managed timestamp never becomes
+something an API client has to invent. Datetime only, and a compile error alongside
+`required` or `immutable` — both would be a second answer to "who fills this".
 
 Primitives: `string` `text` `int` `float` `bool` `datetime` `id` `enum` `json`.
 

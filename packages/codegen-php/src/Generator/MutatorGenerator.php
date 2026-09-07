@@ -17,7 +17,8 @@ use Eleph\Schema\Ir\EntityDefinition;
  * Setters record intent rather than writing, so verification can run over the complete
  * pending state at commit and report every violation at once. Immutable fields get no
  * setter at all — write-once is enforced by the absence of a method, which no amount
- * of discipline can forget.
+ * of discipline can forget — and neither do managed fields, which nobody sets because
+ * the framework stamps them.
  *
  * Actions do not receive the buffer. They receive a narrow context generated from
  * their declared writes, so an action physically cannot touch a field the spec does
@@ -59,7 +60,9 @@ final readonly class MutatorGenerator
         }
 
         foreach ($entity->fields as $field) {
-            if ($field->immutable) {
+            // Write-once and machine-owned both come out as an absent method. Nothing
+            // can forget a setter that was never emitted.
+            if ($field->immutable || null !== $field->managed) {
                 continue;
             }
 

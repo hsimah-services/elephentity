@@ -21,6 +21,8 @@ final readonly class FieldDefinition implements Contributed
         public bool $indexed = false,
         /** Write-once: settable on create, no setter afterwards. */
         public bool $immutable = false,
+        /** Filled by the framework, and settable by nobody. */
+        public ?Managed $managed = null,
         /** VARCHAR width for string fields; null means the default applies. */
         public ?int $maxLength = null,
         public ?EnumSource $enum = null,

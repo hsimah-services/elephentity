@@ -28,7 +28,7 @@ final readonly class CanonicalOrder
         'type' => ['type', 'description', 'primitive', 'processors', 'values'],
         'storage' => ['table', 'handle'],
         'requires' => ['driver'],
-        'field' => ['type', 'description', 'required', 'nullable', 'default', 'unique', 'indexed', 'immutable', 'maxLength', 'values', 'verify'],
+        'field' => ['type', 'description', 'required', 'nullable', 'default', 'unique', 'indexed', 'immutable', 'managed', 'maxLength', 'values', 'verify'],
         'edge' => ['to', 'cardinality', 'description', 'inverse', 'onDelete'],
         'inverse' => ['name', 'unique'],
         'query' => ['description', 'args', 'returns', 'integrations', 'handler'],

@@ -108,7 +108,19 @@ final class ManifestBuilderTest extends TestCase
         // The same rule the mutator enforces by generating no setter.
         $mutations = $this->manifest()->mutations;
 
-        self::assertArrayHasKey('createdAt', $mutations['createPost']->inputs);
+        self::assertArrayHasKey('slug', $mutations['createPost']->inputs);
+        self::assertArrayNotHasKey('slug', $mutations['updatePost']->inputs);
+    }
+
+    public function testAManagedFieldIsOnNeitherInput(): void
+    {
+        // Filled at commit, so asking a client for one means asking it to invent a
+        // value the server is about to overwrite — and `createdAt` being required as
+        // well made it mandatory.
+        $mutations = $this->manifest()->mutations;
+
+        self::assertArrayNotHasKey('createdAt', $mutations['createPost']->inputs);
+        self::assertArrayNotHasKey('updatedAt', $mutations['createPost']->inputs);
         self::assertArrayNotHasKey('createdAt', $mutations['updatePost']->inputs);
     }
 

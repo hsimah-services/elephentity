@@ -65,6 +65,12 @@ final readonly class InputGenerator
         $lines = [];
 
         foreach ($entity->fields as $field) {
+            // Managed fields never arrive as input: the framework stamps them, and a
+            // reader for one would be a way to overwrite what it stamped.
+            if (null !== $field->managed) {
+                continue;
+            }
+
             $phpType = $this->types->forField($entity, $field);
 
             if (!in_array($phpType, self::SCALARS, true)) {
@@ -149,7 +155,7 @@ final readonly class InputGenerator
         foreach ($entity->fields as $field) {
             $name = $field->type->declaredType;
 
-            if (null === $name) {
+            if (null === $name || null !== $field->managed) {
                 continue;
             }
 

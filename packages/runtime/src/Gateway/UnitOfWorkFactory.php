@@ -10,6 +10,7 @@ use Eleph\Runtime\Storage\DeletionRules;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
+use Eleph\Runtime\UnitOfWork\ManagedFields;
 use Eleph\Runtime\UnitOfWork\TriggerDispatcher;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
@@ -41,20 +42,25 @@ final readonly class UnitOfWorkFactory implements DeletionRules
     {
         $verifiers = [];
         $triggers = [];
+        $required = [];
+        $unique = [];
 
         foreach ($this->catalogue->entities() as $entity) {
             $verifiers[$entity] = $this->catalogue->verifiers($entity);
             $triggers[$entity] = $this->catalogue->triggers($entity);
+            $required[$entity] = $this->catalogue->requiredFields($entity);
+            $unique[$entity] = $this->catalogue->uniqueFields($entity);
         }
 
         $fieldTypes = $this->catalogue->fieldTypes();
 
         return new UnitOfWork(
             $this->storage,
-            new VerificationPipeline($verifiers, $fieldTypes, $this->processors),
+            new VerificationPipeline($verifiers, $fieldTypes, $this->processors, $required),
             new ValueEncoder($fieldTypes, $this->processors),
             new TriggerDispatcher($triggers, $this->logger),
             planner: new DeletionPlanner($this->storage, $this),
+            managed: new ManagedFields($this->catalogue->managedFields()),
         );
     }
 

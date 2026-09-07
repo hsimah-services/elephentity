@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:ffe4c4f0526d92506fb54feda4ba880e1f282b60ff87219cde0eaafa1744bf7d
+ * digest: sha256:2893b6a631832e66d969217593d8c22a7730a92682722bdc690935a29696bb96
  */
 
 namespace Clog\Entity\Location;
@@ -27,7 +27,7 @@ final class Location
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?DateTimeImmutable $updatedAt,
+        private readonly DateTimeImmutable $updatedAt,
         private readonly ?int $postId,
         private readonly string $name,
     ) {
@@ -38,12 +38,18 @@ final class Location
         return $this->id;
     }
 
+    /**
+     * When the row was first written. Filled by the framework.
+     */
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    /**
+     * When the row was last written. Filled by the framework.
+     */
+    public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
     }
@@ -68,7 +74,7 @@ final class Location
         EntityId $id,
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $updatedAt,
+        DateTimeImmutable $updatedAt,
         ?int $postId,
         string $name,
     ): self {

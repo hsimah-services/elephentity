@@ -79,6 +79,33 @@ final class PhpTargetTest extends TestCase
         self::assertStringNotContainsString('setCreatedAt', $mutator);
     }
 
+    public function testAManagedFieldIsSettableByNobody(): void
+    {
+        // The framework stamps it, so a setter or an input branch would be a way to
+        // overwrite what it stamped — and on the GraphQL side it is what made a
+        // machine-managed timestamp mandatory API input.
+        self::assertStringNotContainsString('setCreatedAt', $this->file('Post/PostMutator.php'));
+        self::assertStringNotContainsString('setUpdatedAt', $this->file('Post/PostMutator.php'));
+
+        $input = $this->file('Post/PostInput.php');
+
+        self::assertStringNotContainsString("'createdAt'", $input);
+        self::assertStringNotContainsString("'updatedAt'", $input);
+    }
+
+    public function testTheCatalogueCarriesWhatTheRuntimeCannotWorkOut(): void
+    {
+        // The runtime has no schema, so `required`, `unique` and `managed` change
+        // nothing unless the generator writes them down.
+        $catalogue = $this->file('Catalogue.php');
+
+        // required, minus the managed fields the framework fills for itself.
+        self::assertStringContainsString("'Post' => ['title', 'status'],", $catalogue);
+        self::assertStringContainsString("'Post' => ['postId'],", $catalogue);
+        self::assertStringContainsString("'Post.createdAt' => Managed::Created,", $catalogue);
+        self::assertStringContainsString("'Post.updatedAt' => Managed::Modified,", $catalogue);
+    }
+
     public function testFieldsFromPatternsAreGeneratedLikeAnyOther(): void
     {
         $post = $this->file('Post/Post.php');
@@ -331,8 +358,8 @@ final class PhpTargetTest extends TestCase
         // DateTimeImmutable, and only generated code knows both ends.
         $input = $this->file('Post/PostInput.php');
 
-        self::assertStringContainsString('private function createdAt(mixed $value): ?DateTimeImmutable', $input);
-        self::assertStringContainsString("\$this->decode->datetime(\$value, 'Post.createdAt')", $input);
+        self::assertStringContainsString('private function publishedAt(mixed $value): ?DateTimeImmutable', $input);
+        self::assertStringContainsString("\$this->decode->datetime(\$value, 'Post.publishedAt')", $input);
         self::assertStringContainsString('$this->moneyReader->read(', $input);
     }
 

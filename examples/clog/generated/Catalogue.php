@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:26459752c8bf536837bcccef85d59e92974ea86924d0ef1ad527e12d21c3cf35
+ * digest: sha256:329f4ba0f62e50eb5c52220e2ac6eeba481f293d6d11e9f79fd326e875272f2a
  */
 
 namespace Clog\Entity;
@@ -35,6 +35,7 @@ use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Storage\DeletionRule;
@@ -135,6 +136,47 @@ final readonly class Catalogue implements EntityCatalogue
             'Location' => ['createdAt', 'updatedAt', 'postId', 'name'],
             default => [],
         };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function requiredFields(string $entity): array
+    {
+        return match ($entity) {
+            'Inventory' => ['name', 'dateAdded'],
+            'Item' => ['name'],
+            'Location' => ['name'],
+            default => [],
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function uniqueFields(string $entity): array
+    {
+        return match ($entity) {
+            'Inventory' => ['postId'],
+            'Item' => ['postId', 'barcode'],
+            'Location' => ['postId', 'name'],
+            default => [],
+        };
+    }
+
+    /**
+     * @return array<string, Managed> "Entity.field" => policy
+     */
+    public function managedFields(): array
+    {
+        return [
+            'Inventory.createdAt' => Managed::Created,
+            'Inventory.updatedAt' => Managed::Modified,
+            'Item.createdAt' => Managed::Created,
+            'Item.updatedAt' => Managed::Modified,
+            'Location.createdAt' => Managed::Created,
+            'Location.updatedAt' => Managed::Modified,
+        ];
     }
 
     /**

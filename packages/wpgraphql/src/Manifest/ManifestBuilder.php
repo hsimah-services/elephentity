@@ -281,6 +281,12 @@ final readonly class ManifestBuilder
         $updatable = [];
 
         foreach ($entity->fields as $field) {
+            // A managed field is filled at commit, so putting it on the input would
+            // make every client invent a value the server is about to overwrite.
+            if (null !== $field->managed) {
+                continue;
+            }
+
             $creatable[$field->name] = $types->forInput($entity, $field);
 
             if ($field->immutable) {

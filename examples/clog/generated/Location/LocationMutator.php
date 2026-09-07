@@ -9,12 +9,11 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationMutator.php
- * digest: sha256:5539885c1fefaabdc52d330fe8bd35fc60012d528078a340ca383ef46933dabf
+ * digest: sha256:aeee10b2e8f56189109a882183a24ee0a2c85069e79352289a8d2e64c6b04056
  */
 
 namespace Clog\Entity\Location;
 
-use DateTimeImmutable;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -25,13 +24,6 @@ final class LocationMutator
     public function __construct(
         private readonly MutationBuffer $buffer,
     ) {
-    }
-
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
-    {
-        $this->buffer->set('updatedAt', $updatedAt);
-
-        return $this;
     }
 
     public function setPostId(?int $postId): self

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:b5f7d3aae29cf9f07b1026e7c80e19d510cb82fafac105adb39f563d3350cb04
+ * digest: sha256:b11840d9630535aa2f5cf94cb2ff675ceee8a7bb4f03167a5f4998ec76a7a7c8
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -33,7 +33,7 @@ return new StorageManifest(
             [
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
-                'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
+                'updated_at' => new Column('updated_at', 'DATETIME', false, false, null),
                 'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
                 'date_added' => new Column('date_added', 'DATETIME', false, false, null),
@@ -53,7 +53,7 @@ return new StorageManifest(
             [
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
-                'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
+                'updated_at' => new Column('updated_at', 'DATETIME', false, false, null),
                 'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
                 'barcode' => new Column('barcode', 'VARCHAR(64)', true, false, null),
@@ -72,7 +72,7 @@ return new StorageManifest(
             [
                 'id' => new Column('id', 'BIGINT UNSIGNED', false, true, null),
                 'created_at' => new Column('created_at', 'DATETIME', false, false, null),
-                'updated_at' => new Column('updated_at', 'DATETIME', true, false, null),
+                'updated_at' => new Column('updated_at', 'DATETIME', false, false, null),
                 'post_id' => new Column('post_id', 'BIGINT', true, false, null),
                 'name' => new Column('name', 'VARCHAR(200)', false, false, null),
             ],

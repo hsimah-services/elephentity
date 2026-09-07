@@ -108,6 +108,13 @@
                 "immutable": {
                     "type": "boolean"
                 },
+                "managed": {
+                    "enum": [
+                        "created",
+                        "modified"
+                    ],
+                    "description": "The framework fills this field: `created` stamps it once at insert, `modified` on every write. Managed fields are settable by nobody and absent from every generated input."
+                },
                 "maxLength": {
                     "type": "integer",
                     "minimum": 1,

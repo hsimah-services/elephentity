@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/Item.php
- * digest: sha256:49a1a911464e96b5b1d091de4fbd3230a95fa0e5386610ce50e7011821569ad9
+ * digest: sha256:18f866691ecdc7ccf86078876f176169b1d0be964b05c8e5a03d4390e1ad8c49
  */
 
 namespace Clog\Entity\Item;
@@ -28,7 +28,7 @@ final class Item
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?DateTimeImmutable $updatedAt,
+        private readonly DateTimeImmutable $updatedAt,
         private readonly ?int $postId,
         private readonly string $name,
         private readonly ?string $barcode,
@@ -42,12 +42,18 @@ final class Item
         return $this->id;
     }
 
+    /**
+     * When the row was first written. Filled by the framework.
+     */
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    /**
+     * When the row was last written. Filled by the framework.
+     */
+    public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
     }
@@ -96,7 +102,7 @@ final class Item
         EntityId $id,
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $updatedAt,
+        DateTimeImmutable $updatedAt,
         ?int $postId,
         string $name,
         ?string $barcode,

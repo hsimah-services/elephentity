@@ -65,6 +65,13 @@ final class CompilationFailureTest extends TestCase
         self::assertContains('query.unknownReturn', $codes);
         // An action cannot declare it writes a field the entity lacks.
         self::assertContains('action.unknownWrite', $codes);
+        // Nor one the framework fills on every commit, this one included.
+        self::assertContains('action.managedWrite', $codes);
+        // Managed says who fills a field, so nothing else may also say.
+        self::assertContains('field.managedAndRequired', $codes);
+        self::assertContains('field.managedAndImmutable', $codes);
+        // The framework only knows how to fill a datetime.
+        self::assertContains('field.managedNotSupported', $codes);
     }
 
     public function testAnEntityCannotTakeANameTheGeneratedTreeAlreadyUses(): void
