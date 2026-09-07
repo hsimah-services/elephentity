@@ -62,9 +62,13 @@ final class PipelineTest extends TestCase
 
         file_put_contents($this->project . '/eleph.json', json_encode([
             'spec' => 'spec',
-            'output' => 'generated',
-            'namespace' => $this->namespace,
-            'typeNamespace' => 'PipelineFixture\\Type',
+            'targets' => [
+                'php' => [
+                    'output' => 'generated',
+                    'namespace' => $this->namespace,
+                    'typeNamespace' => 'PipelineFixture\\Type',
+                ],
+            ],
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
     }
 

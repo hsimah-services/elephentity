@@ -4,30 +4,67 @@ declare(strict_types=1);
 
 namespace Eleph\Codegen\Tests;
 
+use Eleph\Codegen\Signing\HeaderStyle;
 use Eleph\Codegen\Signing\SignatureStatus;
 use Eleph\Codegen\Signing\Signer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Signer::class)]
+#[CoversClass(HeaderStyle::class)]
 final class SignerTest extends TestCase
 {
     private const BODY = "namespace App;\n\nfinal class Post\n{\n}\n";
 
-    public function testTheHeaderOccupiesExactlyTheDeclaredNumberOfLines(): void
+    public function testThePhpHeaderOccupiesExactlyTheDeclaredNumberOfLines(): void
     {
-        // The digest covers everything after HEADER_LINES, so an off-by-one here would
+        // The digest covers everything after the header, so an off-by-one here would
         // silently shift what is signed. This is the invariant that keeps the
         // no-sidecar-manifest decision safe.
-        $signed = (new Signer())->sign('Post.php', self::BODY);
+        $signer = new Signer(HeaderStyle::Php);
+        $signed = $signer->sign('Post.php', self::BODY);
 
         $lines = explode("\n", $signed);
-        $header = array_slice($lines, 0, Signer::HEADER_LINES);
+        $header = array_slice($lines, 0, HeaderStyle::Php->lines());
 
         self::assertSame('<?php', $header[0]);
         self::assertSame('declare(strict_types=1);', $header[2]);
-        self::assertSame('', $header[Signer::HEADER_LINES - 1]);
-        self::assertSame(self::BODY, Signer::bodyOf($signed));
+        self::assertSame('', $header[HeaderStyle::Php->lines() - 1]);
+        self::assertSame(self::BODY, $signer->bodyOf($signed));
+    }
+
+    /**
+     * The same invariant, for every style there is.
+     *
+     * A style whose rendered header is one line longer than it claims signs the wrong
+     * bytes, and does so silently. Asserting it per case is what lets a new language be
+     * added without re-deriving the reasoning.
+     */
+    public function testEveryHeaderStyleRendersExactlyTheLinesItClaims(): void
+    {
+        foreach (HeaderStyle::cases() as $style) {
+            $header = $style->render('Post.src', 'sha256:abc');
+
+            self::assertSame(
+                $style->lines(),
+                count(explode("\n", $header)) - 1,
+                sprintf('%s renders a different number of lines than it declares.', $style->name),
+            );
+
+            $signer = new Signer($style);
+
+            self::assertSame(
+                self::BODY,
+                $signer->bodyOf($signer->sign('Post.src', self::BODY)),
+                sprintf('%s does not round-trip a body.', $style->name),
+            );
+
+            self::assertSame(
+                SignatureStatus::Valid,
+                $signer->verify('Post.src', $signer->sign('Post.src', self::BODY)),
+                sprintf('%s does not verify its own signature.', $style->name),
+            );
+        }
     }
 
     public function testAFreshlySignedFileVerifies(): void

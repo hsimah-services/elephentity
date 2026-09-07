@@ -6,11 +6,14 @@ namespace Eleph\Cli\Command;
 
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
-use Eleph\Codegen\Codegen;
+use Eleph\Cli\Targets;
 use Eleph\Codegen\GeneratedFile;
-use Eleph\Codegen\GeneratorConfig;
 use Eleph\Codegen\Output\Writer;
 use Eleph\Codegen\Output\WriteReport;
+use Eleph\Codegen\Php\PhpTarget;
+use Eleph\Codegen\Signing\Signer;
+use Eleph\Codegen\TargetRequest;
+use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\WordPress\Manifest\StorageManifestBuilder;
@@ -26,15 +29,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Compiles the specs and writes the generated tree.
+ * Compiles the specs and writes each configured target's tree.
  *
- * With --check nothing is written: the tree is regenerated in memory and compared
- * against disk. That is the CI gate, and it catches all three ways the tree can drift
- * — a hand-edited file, a stale file the schema no longer produces, and a deleted one.
+ * With --check nothing is written: every tree is regenerated in memory and compared
+ * against disk. That is the CI gate, and it catches all three ways a tree can drift —
+ * a hand-edited file, a stale file the schema no longer produces, and a deleted one.
+ *
+ * Targets run before anything is written, and their problems are pooled with the
+ * config's, so a project with two misconfigured targets is told about both at once.
  */
 #[AsCommand(
     name: 'generate',
-    description: 'Generate PHP from the specs. Use --check to verify without writing.',
+    description: 'Generate every configured target from the specs. Use --check to verify without writing.',
 )]
 final class GenerateCommand extends Command
 {
@@ -89,80 +95,181 @@ final class GenerateCommand extends Command
             return Command::FAILURE;
         }
 
-        $outputDirectory = $root . '/' . $config->outputDirectory;
+        $schema = $compiled->schema();
+        $registry = Targets::registry();
 
-        $files = (new Codegen(new GeneratorConfig(
-            $config->rootNamespace,
-            $outputDirectory,
-            $config->typeNamespace,
-        )))->generate($compiled->schema());
+        $errors = [];
+        /** @var array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer}> $plan */
+        $plan = [];
 
-        // The GraphQL surface is compiled here too, so one build step produces
-        // everything and `--check` covers the manifest as well as the classes.
-        //
-        // Only when the project speaks GraphQL: a project that does not should not
-        // find a manifest in its tree wondering where it came from.
-        // The physical schema, for whichever driver the project declared. Emitted the
-        // same way and for the same reason: the adaptor needs it at run time and the
-        // IR that produces it does not survive the build.
-        if ('wordpress' === $compiled->schema()->project->driver) {
+        foreach ($config->targets as $name => $targetConfig) {
+            $target = $registry[$name] ?? null;
+
+            if (null === $target) {
+                $errors[] = sprintf(
+                    'Unknown target "%s". This installation offers: %s.',
+                    $name,
+                    implode(', ', array_keys($registry)),
+                );
+
+                continue;
+            }
+
+            $outputDirectory = $root . '/' . $targetConfig->outputDirectory;
+            $response = $target->generate(
+                TargetRequest::of($outputDirectory, $targetConfig->settings),
+                $schema,
+            );
+
+            foreach ($response->errors as $problem) {
+                $errors[] = sprintf('[%s] %s', $name, $problem);
+            }
+
+            if (!$response->isSuccess()) {
+                continue;
+            }
+
+            $files = $response->files;
+
+            if (PhpTarget::NAME === $name) {
+                foreach ($this->manifests($schema) as $manifest) {
+                    $files[] = $manifest;
+                }
+            }
+
+            $plan[$name] = [
+                'directory' => $outputDirectory,
+                'files' => $files,
+                'signer' => new Signer($response->headerStyle),
+            ];
+        }
+
+        if ([] !== $errors) {
+            $io->error(sprintf('%d problem(s) with the targets; nothing was generated.', count($errors)));
+
+            foreach ($errors as $error) {
+                $io->writeln('  ' . $error);
+            }
+
+            return Command::FAILURE;
+        }
+
+        $reports = [];
+
+        foreach ($plan as $name => $step) {
+            $writer = new Writer($step['directory'], $step['signer']);
+            $reports[$name] = $check ? $writer->check($step['files']) : $writer->write($step['files']);
+        }
+
+        return $check
+            ? $this->reportCheck($io, $reports)
+            : $this->reportWrite($io, $reports, $plan);
+    }
+
+    /**
+     * The manifests the runtime needs at boot, which the IR that produced them does not
+     * survive to answer.
+     *
+     * Still emitted alongside the PHP target rather than as targets of their own, which
+     * is where docs/PLAN.md §15 says they end up. Folding them in is a separate change
+     * from moving the generator, and doing both at once would make the diff unreadable.
+     *
+     * @return list<GeneratedFile>
+     */
+    private function manifests(Schema $schema): array
+    {
+        $files = [];
+
+        // The physical schema, for whichever driver the project declared. The adaptor
+        // needs it at run time.
+        if ('wordpress' === $schema->project->driver) {
             $files[] = new GeneratedFile(
                 self::STORAGE_MANIFEST_PATH,
                 (new StorageManifestExporter())->export(
-                    (new StorageManifestBuilder())->build($compiled->schema()),
+                    (new StorageManifestBuilder())->build($schema),
                 ),
             );
         }
 
-        if ($compiled->schema()->project->speaks(WpGraphQL::NAME)) {
+        // Only when the project speaks GraphQL: a project that does not should not find
+        // a manifest in its tree wondering where it came from.
+        if ($schema->project->speaks(WpGraphQL::NAME)) {
             $files[] = new GeneratedFile(
                 self::MANIFEST_PATH,
-                (new ManifestExporter())->export((new ManifestBuilder())->build($compiled->schema())),
+                (new ManifestExporter())->export((new ManifestBuilder())->build($schema)),
             );
         }
 
-        $writer = new Writer($outputDirectory);
-        $report = $check ? $writer->check($files) : $writer->write($files);
-
-        return $check
-            ? $this->reportCheck($io, $report)
-            : $this->reportWrite($io, $report, count($files));
+        return $files;
     }
 
-    private function reportCheck(SymfonyStyle $io, WriteReport $report): int
+    /**
+     * @param array<string, WriteReport> $reports
+     */
+    private function reportCheck(SymfonyStyle $io, array $reports): int
     {
-        if ($report->isClean()) {
-            $io->success(sprintf('Generated tree is up to date (%d files).', count($report->unchanged)));
+        $dirty = array_filter($reports, static fn (WriteReport $report) => !$report->isClean());
+
+        if ([] === $dirty) {
+            $unchanged = array_sum(array_map(
+                static fn (WriteReport $report) => count($report->unchanged),
+                $reports,
+            ));
+
+            $io->success(sprintf(
+                'Every target is up to date (%d target(s), %d files).',
+                count($reports),
+                $unchanged,
+            ));
 
             return Command::SUCCESS;
         }
 
-        $io->error(sprintf('Generated tree is out of date: %d file(s) differ.', $report->changeCount()));
+        $io->error(sprintf(
+            '%d of %d target(s) are out of date.',
+            count($dirty),
+            count($reports),
+        ));
 
-        $this->list($io, 'Hand-edited', $report->tampered);
-        $this->list($io, 'Would be created', $report->created);
-        $this->list($io, 'Would be updated', $report->updated);
-        $this->list($io, 'No longer produced by the schema', $report->deleted);
+        foreach ($dirty as $name => $report) {
+            $io->section(sprintf('%s — %d file(s) differ', $name, $report->changeCount()));
+
+            $this->list($io, 'Hand-edited', $report->tampered);
+            $this->list($io, 'Would be created', $report->created);
+            $this->list($io, 'Would be updated', $report->updated);
+            $this->list($io, 'No longer produced by the schema', $report->deleted);
+        }
 
         $io->writeln('Run <info>eleph generate</info> and commit the result.');
 
         return Command::FAILURE;
     }
 
-    private function reportWrite(SymfonyStyle $io, WriteReport $report, int $total): int
+    /**
+     * @param array<string, WriteReport>                                                       $reports
+     * @param array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer}> $plan
+     */
+    private function reportWrite(SymfonyStyle $io, array $reports, array $plan): int
     {
-        foreach ($report->tampered as $path) {
-            $io->warning(sprintf('%s had been edited by hand; it has been regenerated.', $path));
+        foreach ($reports as $name => $report) {
+            foreach ($report->tampered as $path) {
+                $io->warning(sprintf('[%s] %s had been edited by hand; it has been regenerated.', $name, $path));
+            }
         }
 
-        $io->success(sprintf(
-            '%d file(s): %d created, %d updated, %d unchanged, %d removed.',
-            $total,
-            count($report->created),
-            count($report->updated),
-            count($report->unchanged),
-            count($report->deleted),
-        ));
+        foreach ($reports as $name => $report) {
+            $io->writeln(sprintf(
+                '<info>%s</info>: %d file(s): %d created, %d updated, %d unchanged, %d removed.',
+                $name,
+                count($plan[$name]['files']),
+                count($report->created),
+                count($report->updated),
+                count($report->unchanged),
+                count($report->deleted),
+            ));
+        }
+
+        $io->success(sprintf('%d target(s) generated.', count($reports)));
 
         return Command::SUCCESS;
     }

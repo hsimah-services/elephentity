@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Generator;
+namespace Eleph\Codegen\Php\Generator;
 
 use Eleph\Codegen\GeneratedFile;
-use Eleph\Codegen\Naming\Emitter;
-use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Php\Naming\Emitter;
+use Eleph\Codegen\Php\Naming\Names;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Storage\DeletionPolicy;

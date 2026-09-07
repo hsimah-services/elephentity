@@ -25,14 +25,15 @@ typed, so an exception here undermines the product.
 | Package | Ships? | Holds |
 |---|---|---|
 | `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR |
-| `codegen/` | dev | IR → locked, signed PHP |
+| `codegen/` | dev | the target contract, signing, writing — language-neutral |
+| `codegen-php/` | dev | the PHP target: IR → locked PHP |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `wordpress/` | yes | the one adaptor — the only package that may name `WP_*` |
 | `wpgraphql/` | yes | IR → compiled GraphQL manifest |
 | `cli/` | dev | the `eleph` command |
 
-`tools/check-architecture.php` enforces that `schema`, `codegen`, `runtime` and `cli`
-reference no WordPress symbol. It uses the tokenizer, so prose in a doc comment is
+`tools/check-architecture.php` enforces that `schema`, `codegen`, `codegen-php`,
+`runtime` and `cli` reference no WordPress symbol. It uses the tokenizer, so prose in a doc comment is
 fine and a real call is not.
 
 ## Conventions that are load bearing

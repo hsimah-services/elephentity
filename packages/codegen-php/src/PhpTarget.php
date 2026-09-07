@@ -2,43 +2,61 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen;
+namespace Eleph\Codegen\Php;
 
-use Eleph\Codegen\Generator\BridgeGenerator;
-use Eleph\Codegen\Generator\CatalogueGenerator;
-use Eleph\Codegen\Generator\ContextGenerator;
-use Eleph\Codegen\Generator\ContractGenerator;
-use Eleph\Codegen\Generator\DeleterGenerator;
-use Eleph\Codegen\Generator\EntityGenerator;
-use Eleph\Codegen\Generator\EnumGenerator;
-use Eleph\Codegen\Generator\FinderGenerator;
-use Eleph\Codegen\Generator\HydratorGenerator;
-use Eleph\Codegen\Generator\InputGenerator;
-use Eleph\Codegen\Generator\MutatorGenerator;
-use Eleph\Codegen\Naming\Emitter;
-use Eleph\Codegen\Naming\Names;
-use Eleph\Codegen\Naming\TypeMapper;
+use Eleph\Codegen\GeneratedFile;
+use Eleph\Codegen\Php\Generator\BridgeGenerator;
+use Eleph\Codegen\Php\Generator\CatalogueGenerator;
+use Eleph\Codegen\Php\Generator\ContextGenerator;
+use Eleph\Codegen\Php\Generator\ContractGenerator;
+use Eleph\Codegen\Php\Generator\DeleterGenerator;
+use Eleph\Codegen\Php\Generator\EntityGenerator;
+use Eleph\Codegen\Php\Generator\EnumGenerator;
+use Eleph\Codegen\Php\Generator\FinderGenerator;
+use Eleph\Codegen\Php\Generator\HydratorGenerator;
+use Eleph\Codegen\Php\Generator\InputGenerator;
+use Eleph\Codegen\Php\Generator\MutatorGenerator;
+use Eleph\Codegen\Php\Naming\Emitter;
+use Eleph\Codegen\Php\Naming\Names;
+use Eleph\Codegen\Php\Naming\TypeMapper;
+use Eleph\Codegen\Signing\HeaderStyle;
+use Eleph\Codegen\Target;
+use Eleph\Codegen\TargetRequest;
+use Eleph\Codegen\TargetResponse;
 use Eleph\Schema\Ir\Schema;
 
 /**
- * Turns a compiled schema into the complete set of files the generator owns.
+ * The PHP target: a compiled schema in, the complete set of PHP files out.
  *
- * A pure function of the schema: same input, same output, every time. Nothing here
- * reads the application's source, which is why a missing handler is a boot failure
- * rather than a generation failure — codegen has no opinion about what exists.
+ * A pure function of the schema and its config: same input, same output, every time.
+ * Nothing here reads the application's source, which is why a missing handler is a
+ * boot failure rather than a generation failure — the target has no opinion about
+ * what exists.
+ *
+ * It returns file bodies and never writes them; signing and writing belong to the
+ * core, so that one Signer decides how every generated file in every language is
+ * locked. See docs/PLAN.md §15.
  */
-final readonly class Codegen
+final readonly class PhpTarget implements Target
 {
-    public function __construct(private GeneratorConfig $config)
+    public const NAME = 'php';
+
+    public function name(): string
     {
+        return self::NAME;
     }
 
-    /**
-     * @return list<GeneratedFile>
-     */
-    public function generate(Schema $schema): array
+    public function generate(TargetRequest $request, Schema $schema): TargetResponse
     {
-        $names = new Names($this->config);
+        $problems = PhpConfig::problemsIn($request->config);
+
+        if ([] !== $problems) {
+            return TargetResponse::failed($problems, HeaderStyle::Php);
+        }
+
+        $config = PhpConfig::from($request->config);
+
+        $names = new Names($config);
         $emitter = new Emitter($names);
         $types = new TypeMapper($schema, $names);
 
@@ -90,6 +108,6 @@ final readonly class Codegen
 
         usort($files, static fn (GeneratedFile $a, GeneratedFile $b) => strcmp($a->relativePath, $b->relativePath));
 
-        return $files;
+        return TargetResponse::ok($files, HeaderStyle::Php);
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Naming;
+namespace Eleph\Codegen\Php\Naming;
 
 /**
  * A class name, split where every generator needs it split.

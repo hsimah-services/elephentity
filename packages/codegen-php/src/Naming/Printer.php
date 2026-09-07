@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Naming;
+namespace Eleph\Codegen\Php\Naming;
 
 use Nette\PhpGenerator\PhpNamespace;
 use Nette\PhpGenerator\PsrPrinter;

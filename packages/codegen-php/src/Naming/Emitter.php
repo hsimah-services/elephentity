@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Naming;
+namespace Eleph\Codegen\Php\Naming;
 
 use Eleph\Codegen\GeneratedFile;
 use Nette\PhpGenerator\ClassType;

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Generator;
+namespace Eleph\Codegen\Php\Generator;
 
 use Eleph\Codegen\GeneratedFile;
-use Eleph\Codegen\Naming\Emitter;
-use Eleph\Codegen\Naming\Names;
+use Eleph\Codegen\Php\Naming\Emitter;
+use Eleph\Codegen\Php\Naming\Names;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
 use Eleph\Runtime\Mutation\MutationBuffer;

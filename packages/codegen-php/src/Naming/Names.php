@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Naming;
+namespace Eleph\Codegen\Php\Naming;
 
-use Eleph\Codegen\GeneratorConfig;
+use Eleph\Codegen\Php\PhpConfig;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 
@@ -20,7 +20,7 @@ final readonly class Names
 {
     private const CONTRACT = 'Contract';
 
-    public function __construct(private GeneratorConfig $config)
+    public function __construct(private PhpConfig $config)
     {
     }
 

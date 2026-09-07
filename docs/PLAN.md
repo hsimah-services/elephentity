@@ -977,6 +977,27 @@ proves the layers are wired together at all. Move the PHP generator to another r
 and no single CI run proves the pipeline end to end, and regenerating `examples/clog`
 crosses a repo boundary. That is a permanent tax; pay it when it buys something.
 
+#### Landed so far
+
+Step 1, with one deviation worth recording: **the contract is in-process, not yet JSON.**
+`Target` is a PHP interface taking a `TargetRequest` and returning a `TargetResponse`, and
+`PhpTarget` implements it. The shape is the wire protocol's — a request in, a response
+out, no shared state, no callbacks, the header style travelling with the files — so
+serialising it later changes how a target is *reached* and nothing about what it is
+handed. Introducing the boundary and the subprocess machinery in one change would have
+made a 3,000-line diff impossible to review, and the boundary is the part that needed
+agreeing.
+
+The IR is passed alongside the request rather than inside it, because in-process there is
+nothing to serialise and pretending otherwise would mean encoding and decoding the schema
+on every build for no benefit. When it becomes JSON it moves into the envelope as
+`schema`.
+
+`packages/cli/src/Targets.php` is the registry, mirroring `Integrations` — the CLI is
+still the only layer that knows which packages are installed. The WordPress and WPGraphQL
+manifests are still appended to the PHP target's file list rather than being targets of
+their own; folding them in is a separate change.
+
 ---
 
 ## 16. Implementation steps

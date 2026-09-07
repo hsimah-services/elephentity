@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Codegen\Tests;
+namespace Eleph\Codegen\Php\Tests;
 
-use Eleph\Codegen\Codegen;
 use Eleph\Codegen\GeneratedFile;
-use Eleph\Codegen\GeneratorConfig;
+use Eleph\Codegen\Php\PhpTarget;
+use Eleph\Codegen\TargetRequest;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 #[CoversNothing]
-final class CodegenTest extends TestCase
+final class PhpTargetTest extends TestCase
 {
     /** @var array<string, string>|null */
     private static ?array $generated = null;
@@ -384,11 +384,17 @@ final class CodegenTest extends TestCase
 
         self::assertTrue($compiled->isSuccess());
 
-        $files = (new Codegen(new GeneratorConfig(
-            'App\\Elephentity',
-            '/tmp/eleph-not-written',
-            'App\\Type',
-        )))->generate($compiled->schema());
+        $response = (new PhpTarget())->generate(
+            TargetRequest::of('/tmp/eleph-not-written', [
+                'namespace' => 'App\\Elephentity',
+                'typeNamespace' => 'App\\Type',
+            ]),
+            $compiled->schema(),
+        );
+
+        self::assertSame([], $response->errors);
+
+        $files = $response->files;
 
         $byPath = [];
 

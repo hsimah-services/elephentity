@@ -7,7 +7,8 @@ declare(strict_types=1);
  * Architecture rules that static analysis cannot express yet.
  *
  * Rule 1 — the platform-free core.
- *   packages/schema, codegen, runtime and cli must not reference WordPress at all.
+ *   packages/schema, codegen, codegen-php, runtime and cli must not reference
+ *   WordPress at all.
  *   Only packages/wordpress and packages/wpgraphql may.
  *
  *   This is what keeps the storage abstraction honest. WordPress concepts leak
@@ -21,7 +22,7 @@ declare(strict_types=1);
  * Those want a PHPStan custom rule, not this.
  */
 
-const CORE_PACKAGES = ['schema', 'codegen', 'runtime', 'cli'];
+const CORE_PACKAGES = ['schema', 'codegen', 'codegen-php', 'runtime', 'cli'];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */
 const WORDPRESS_FUNCTIONS = [
