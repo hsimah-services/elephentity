@@ -7,10 +7,12 @@ namespace Eleph\Cli;
 /**
  * One target's block from eleph.json.
  *
- * `output` is read here because the core has to know where to write and what to diff.
- * Everything else stays in `settings`, uninspected: what `typeNamespace` means is a
- * property of the PHP target, and a core that learned it would have moved the coupling
- * rather than removed it. See docs/PLAN.md §15.
+ * `output` and `builder` are read here because the core has to know where to write, what
+ * to diff, and which program to run. Everything else stays in `settings`, uninspected:
+ * what `typeNamespace` means is a property of the PHP target, and a core that learned it
+ * would have moved the coupling rather than removed it. See docs/PLAN.md §15.
+ *
+ * No builder means a target built into this installation, run in process.
  */
 final readonly class TargetConfig
 {
@@ -21,6 +23,7 @@ final readonly class TargetConfig
         public string $name,
         public string $outputDirectory,
         public array $settings,
+        public ?string $builder = null,
     ) {
     }
 }

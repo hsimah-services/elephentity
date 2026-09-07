@@ -1010,24 +1010,44 @@ crosses a repo boundary. That is a permanent tax; pay it when it buys something.
 
 #### Landed so far
 
-Step 1, with one deviation worth recording: **the contract is in-process, not yet JSON.**
-`Target` is a PHP interface taking a `TargetRequest` and returning a `TargetResponse`, and
-`PhpTarget` implements it. The shape is the wire protocol's — a request in, a response
-out, no shared state, no callbacks, the header style travelling with the files — so
-serialising it later changes how a target is *reached* and nothing about what it is
-handed. Introducing the boundary and the subprocess machinery in one change would have
-made a 3,000-line diff impossible to review, and the boundary is the part that needed
-agreeing.
+**Step 1 is complete: the protocol is real.** A target is either built into the
+installation and called in process, or an external program reached over a pipe — the
+same `Target` interface either way, so `GenerateCommand` cannot tell them apart.
 
-The IR is passed alongside the request rather than inside it, because in-process there is
-nothing to serialise and pretending otherwise would mean encoding and decoding the schema
-on every build for no benefit. When it becomes JSON it moves into the envelope as
-`schema`.
+- `Eleph\Schema\Wire\IrCodec` is the IR as JSON. Reflection over the constructors
+  rather than a hand-written encoder per class: the IR is 18 plain value objects, so a
+  generic walk is shorter and impossible to leave half-updated when a field is added.
+  The one thing reflection cannot see is what a collection holds, which is why the codec
+  carries an explicit `COLLECTIONS` map. Enums travel as their backing value, or their
+  case name when they have none.
+- `Eleph\Codegen\Protocol\Envelope` is the exchange, with the versions checked in both
+  directions and a refusal to accept a file path containing `..` — a builder may not name
+  its way out of the directory it was given, and nothing downstream would notice.
+- `Eleph\Codegen\External\ExternalTarget` runs a builder. **stdin and stderr are
+  temporary files rather than pipes**: with three pipes, a builder that writes more to
+  stdout than the buffer holds before finishing with stdin deadlocks, and only on large
+  schemas — the worst possible time to find out. Files cannot deadlock and the builder
+  cannot tell the difference.
+- `packages/codegen-php/bin/eleph-gen-php` is the PHP target as a builder. It exists to
+  keep the two paths honest: `ExternalEquivalenceTest` and `PipelineTest` both generate
+  the same spec in process and over the wire and diff the bytes, so the wire path can
+  never quietly become a second, different generator.
 
-`packages/cli/src/Targets.php` is the registry, mirroring `Integrations` — the CLI is
-still the only layer that knows which packages are installed. The WordPress and WPGraphQL
-manifests are still appended to the PHP target's file list rather than being targets of
-their own; folding them in is a separate change.
+**Builders are resolved, never fetched.** `Builders` looks at an explicit path, then the
+project's builders directory (`tools/builders` by default, overridable with a top-level
+`"builders"` key), then `PATH`, and when it finds nothing it names all three. A target
+with no `builder` must be built into the installation.
+
+The IR is still passed to `Target::generate()` alongside the request rather than inside
+it. In process there is nothing to serialise, and the envelope's `schema` field is
+assembled only when a request actually crosses a process boundary — so an in-process
+build never pays for encoding a schema nobody is going to decode.
+
+`packages/cli/src/Targets.php` is the built-in registry, mirroring `Integrations`. The
+WordPress and WPGraphQL manifests are still appended to the PHP target's file list rather
+than being targets of their own; with one directory per target now enforced, promoting
+them would move those files to new locations that the WordPress plugin loads by path at
+boot, so it is a change with a runtime consequence rather than a tidy-up.
 
 ---
 

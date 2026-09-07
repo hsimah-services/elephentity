@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Eleph\Cli\Command;
 
+use Eleph\Cli\Builders;
 use Eleph\Cli\Integrations;
 use Eleph\Cli\ProjectConfig;
 use Eleph\Cli\TargetConfig;
 use Eleph\Cli\Targets;
+use Eleph\Codegen\External\ExternalTarget;
 use Eleph\Codegen\GeneratedFile;
 use Eleph\Codegen\Output\Writer;
 use Eleph\Codegen\Output\WriteReport;
 use Eleph\Codegen\Php\PhpTarget;
 use Eleph\Codegen\Signing\Signer;
+use Eleph\Codegen\Target;
 use Eleph\Codegen\TargetRequest;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
@@ -23,6 +26,7 @@ use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\ManifestExporter;
 use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -119,15 +123,13 @@ final class GenerateCommand extends Command
         /** @var array<string, array{directory: string, files: list<GeneratedFile>, signer: Signer, extensions: list<string>}> $plan */
         $plan = [];
 
-        foreach ($selected as $name => $targetConfig) {
-            $target = $registry[$name] ?? null;
+        $builders = new Builders($root, $config->buildersDirectory);
 
-            if (null === $target) {
-                $errors[] = sprintf(
-                    'Unknown target "%s". This installation offers: %s.',
-                    $name,
-                    implode(', ', array_keys($registry)),
-                );
+        foreach ($selected as $name => $targetConfig) {
+            try {
+                $target = $this->target($name, $targetConfig, $registry, $builders);
+            } catch (RuntimeException $exception) {
+                $errors[] = $exception->getMessage();
 
                 continue;
             }
@@ -182,6 +184,35 @@ final class GenerateCommand extends Command
         return $check
             ? $this->reportCheck($io, $reports)
             : $this->reportWrite($io, $reports, $plan);
+    }
+
+    /**
+     * The program that generates one target.
+     *
+     * A declared builder is an external program and always wins: someone who named one
+     * meant it, and silently preferring a built-in of the same name would make the
+     * config a suggestion. Without one, the target has to be built into this
+     * installation.
+     *
+     * @param array<string, Target> $registry
+     */
+    private function target(string $name, TargetConfig $config, array $registry, Builders $builders): Target
+    {
+        if (null !== $config->builder) {
+            return new ExternalTarget($name, $builders->resolve($config));
+        }
+
+        $target = $registry[$name] ?? null;
+
+        if (null === $target) {
+            throw new RuntimeException(sprintf(
+                'Target "%s" is not built into this installation (it offers: %s) and declares no "builder".',
+                $name,
+                implode(', ', array_keys($registry)),
+            ));
+        }
+
+        return $target;
     }
 
     /**

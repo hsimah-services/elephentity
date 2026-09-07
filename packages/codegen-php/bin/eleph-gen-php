@@ -1,0 +1,55 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Codegen\Php\PhpTarget;
+use Eleph\Codegen\Protocol\Envelope;
+use Eleph\Codegen\Protocol\ProtocolException;
+
+/**
+ * The PHP target as a builder: a request on stdin, generated files on stdout.
+ *
+ * The same PhpTarget the core can also call in process. Having one implementation
+ * reachable both ways is what stops the in-process path and the wire path from drifting
+ * into two different generators; PhpTargetTest asserts they produce identical bytes.
+ *
+ * Diagnostics go to stderr, never stdout: stdout is the response and nothing else.
+ */
+
+// Works both when Elephentity is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+$stdin = file_get_contents('php://stdin');
+
+if (false === $stdin || '' === trim($stdin)) {
+    fwrite(STDERR, "eleph-gen-php: expected a request on stdin.\n");
+
+    exit(1);
+}
+
+try {
+    $incoming = Envelope::decodeRequest(Envelope::fromJson($stdin));
+} catch (ProtocolException $exception) {
+    fwrite(STDERR, 'eleph-gen-php: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+}
+
+$response = (new PhpTarget())->generate($incoming->request, $incoming->schema);
+
+try {
+    fwrite(STDOUT, Envelope::toJson(Envelope::encodeResponse($response)));
+} catch (JsonException $exception) {
+    fwrite(STDERR, 'eleph-gen-php: could not encode the response: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+}
+
+exit(0);

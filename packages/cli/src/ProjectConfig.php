@@ -33,6 +33,7 @@ final readonly class ProjectConfig
     public function __construct(
         public string $specDirectory,
         public array $targets,
+        public string $buildersDirectory = Builders::DEFAULT_DIRECTORY,
     ) {
     }
 
@@ -79,8 +80,14 @@ final readonly class ProjectConfig
             ));
         }
 
+        $builders = $data['builders'] ?? null;
+
         /** @var string $spec */
-        return new self($spec, $targets);
+        return new self(
+            $spec,
+            $targets,
+            is_string($builders) && '' !== $builders ? $builders : Builders::DEFAULT_DIRECTORY,
+        );
     }
 
     public function target(string $name): ?TargetConfig
@@ -128,8 +135,16 @@ final readonly class ProjectConfig
                 continue;
             }
 
+            $builder = $settings['builder'] ?? null;
+
+            if (null !== $builder && (!is_string($builder) || '' === $builder)) {
+                $problems[] = sprintf('Target "%s" has a "builder" that is not a non-empty string.', $name);
+
+                continue;
+            }
+
             /** @var array<string, mixed> $settings */
-            $targets[$name] = new TargetConfig($name, $output, $settings);
+            $targets[$name] = new TargetConfig($name, $output, $settings, $builder);
         }
 
         foreach (self::sharedDirectories($targets) as $directory => $sharing) {

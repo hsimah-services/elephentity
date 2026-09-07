@@ -51,11 +51,16 @@ final readonly class TargetResponse
     /**
      * A target that produced nothing owns nothing: there is no tree to sweep.
      *
+     * The header style is optional here because a response with no files has no use for
+     * one — an external builder that failed before it could say which style it speaks
+     * would otherwise have to invent an answer. It stays non-null so that reading the
+     * property never needs a branch.
+     *
      * @param list<string> $errors
      */
-    public static function failed(array $errors, HeaderStyle $headerStyle): self
+    public static function failed(array $errors, ?HeaderStyle $headerStyle = null): self
     {
-        return new self([], $headerStyle, [], $errors);
+        return new self([], $headerStyle ?? HeaderStyle::Php, [], $errors);
     }
 
     public function isSuccess(): bool

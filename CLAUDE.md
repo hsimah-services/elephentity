@@ -24,9 +24,9 @@ typed, so an exception here undermines the product.
 
 | Package | Ships? | Holds |
 |---|---|---|
-| `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR |
-| `codegen/` | dev | the target contract, signing, writing — language-neutral |
-| `codegen-php/` | dev | the PHP target: IR → locked PHP |
+| `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR, its wire format |
+| `codegen/` | dev | the target contract, the builder protocol, signing, writing |
+| `codegen-php/` | dev | the PHP target: IR → locked PHP, in process or as `eleph-gen-php` |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `wordpress/` | yes | the one adaptor — the only package that may name `WP_*` |
 | `wpgraphql/` | yes | IR → compiled GraphQL manifest |
