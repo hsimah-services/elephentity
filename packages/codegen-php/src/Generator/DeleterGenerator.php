@@ -67,9 +67,13 @@ final readonly class DeleterGenerator
 
         $rules = $this->rules($entity);
 
+        // Imported whether or not there are any: the return docblock names it either
+        // way, and an unimported name in a docblock resolves against this namespace,
+        // where there is no such class.
+        $namespace->addUse(DeletionRule::class);
+
         if ([] !== $rules) {
             $namespace->addUse(DeletionPolicy::class);
-            $namespace->addUse(DeletionRule::class);
         }
 
         $type->addMethod('rules')

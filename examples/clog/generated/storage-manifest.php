@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:b11840d9630535aa2f5cf94cb2ff675ceee8a7bb4f03167a5f4998ec76a7a7c8
+ * digest: sha256:e5cb83f4a06959779674a9382e74776d4269591790905eea3cdce15f29d48945
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -109,5 +109,8 @@ return new StorageManifest(
         'Inventory' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'dateAdded' => 'date_added', 'dateExpiry' => 'date_expiry'],
         'Item' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'barcode' => 'barcode', 'defaultExpiryUnit' => 'default_expiry_unit', 'defaultExpiryValue' => 'default_expiry_value'],
         'Location' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name'],
+    ],
+    joinTables: [
+
     ],
 );

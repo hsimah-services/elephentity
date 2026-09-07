@@ -1,6 +1,6 @@
 {
     "name": "elephentity/cli",
-    "description": "The eleph command: validate, generate, check, fmt, migrate. Build-time only.",
+    "description": "The eleph command: validate, generate, check, fmt. Build-time only.",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",

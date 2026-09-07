@@ -14,6 +14,7 @@ use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Query\HydratorRegistry;
 use Eleph\Runtime\Query\LazyEntityQuery;
+use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use RuntimeException;
@@ -131,6 +132,18 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
     public function get(string $entity): Hydrator
     {
         return $this->catalogue->hydrator($entity);
+    }
+
+    /**
+     * A query builder for hand-written finders.
+     *
+     * The application's own query classes need one, and building it means knowing
+     * which four things a lazy query is made of. This is the assembled framework, so
+     * it is the thing that already knows.
+     */
+    public function queries(): Queries
+    {
+        return new Queries($this->storage, $this->edges());
     }
 
     private function edges(): CachingEdgeLoader

@@ -4,20 +4,34 @@ The three post types from [clog](https://github.com/hsimah-services/clog) — It
 Location and Inventory — written as Elephentity specs, with the generated output committed
 so the two can be compared.
 
-This is a smoke test of the generator against real post types, not a migration plan.
-Clog is unfinished and the point was to find out whether its types produce signed,
-coherent code. They do: 22 files, all gates green. The notes below are what the
-exercise turned up, kept because they are cheap to write down now and expensive to
-rediscover later — not because any of them needs acting on.
+It is also the reference wiring. `src/` holds everything between "the code is
+generated" and "the application runs" — a container, the three contracts the spec says
+you owe it, and `Bootstrap.php`, which is the assembly order written down once. The
+plugin around it is `clog.php`.
+
+Both are analysed at PHPStan level max against the committed `generated/` tree, along
+with the generated tree itself. A reference that is not checked against the code it
+wires is a snippet that rots, and the framework's central claim is that generated code
+is provably typed — which is worth proving on real output rather than only on fixtures.
 
 All four gates pass:
 
 ```
 eleph fmt        Specs are in canonical form.
 eleph validate   Specs are valid: 3 entities, 1 type.
-eleph generate   22 file(s).
+eleph generate   32 file(s).
 eleph check      Conformant: 3 type(s), every field resolves.
 ```
+
+## Reading it
+
+| File | What it shows |
+|---|---|
+| `clog.php` | The three WordPress hooks and nothing else: activation migrates, `plugins_loaded` boots. |
+| `src/Bootstrap.php` | The assembly order, and why each step comes where it does. |
+| `src/Container.php` | Thirty lines, so the example depends on no particular container. |
+| `src/Contract/ItemSearch.php` | A hand-written finder, and how it gets a lazy query. |
+| `src/Contract/DefaultExpiryIsPaired.php` | A cross-field rule, as one class implementing both halves. |
 
 ## What the spec captures cleanly
 

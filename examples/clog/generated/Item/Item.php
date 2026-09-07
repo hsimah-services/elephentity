@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/Item.php
- * digest: sha256:cca14709960b7b7362d4f34d07ea2d12bdc0a30f813b6b9813eb34842af48fd3
+ * digest: sha256:3e6bda07392d4d23f8ff09192b7445457c614a9e6f7d93b82603080be543a9e8
  */
 
 namespace Clog\Entity\Item;
@@ -107,7 +107,10 @@ final class Item
      */
     public function inventoryEntries(): EntityQuery
     {
-        return $this->edges->inverseToMany('Inventory', 'item', $this->id);
+        /** @var EntityQuery<Inventory> $related */
+        $related = $this->edges->inverseToMany('Inventory', 'item', $this->id);
+
+        return $related;
     }
 
     public static function of(

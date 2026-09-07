@@ -54,6 +54,16 @@ interface Database
     public function describeTable(string $table): array;
 
     /**
+     * Index definitions for one table, or an empty list when it does not exist.
+     *
+     * Separate from describeTable() because MariaDB is: SHOW COLUMNS knows nothing
+     * about index names, and a planner comparing indexes needs them.
+     *
+     * @return list<array<string, scalar|null>>
+     */
+    public function describeIndexes(string $table): array;
+
+    /**
      * @return list<string>
      */
     public function tablesWithPrefix(string $prefix): array;

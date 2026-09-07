@@ -29,9 +29,11 @@ final readonly class StorageManifestBuilder
         /** @var array<string, TableSchema> $byEntity */
         $byEntity = [];
         $columns = [];
+        $claimed = [];
 
         foreach ($schema->entities as $entity) {
             $table = $this->naming->table($entity);
+            $claimed[$table] = true;
 
             if (isset($byTable[$table])) {
                 $byEntity[$entity->name] = $byTable[$table];
@@ -42,13 +44,20 @@ final readonly class StorageManifestBuilder
             }
         }
 
+        // Whatever the builder produced that no entity claims is a join table. Keyed by
+        // entity, they had nowhere to go and were dropped — so a many-to-many edge
+        // compiled to a placement pointing at a table nothing would ever create.
+        $joinTables = array_diff_key($byTable, $claimed);
+
         ksort($byEntity);
         ksort($columns);
+        ksort($joinTables);
 
         return new StorageManifest(
             $byEntity,
             (new EdgePlanner($this->naming))->plan($schema),
             $columns,
+            $joinTables,
         );
     }
 }

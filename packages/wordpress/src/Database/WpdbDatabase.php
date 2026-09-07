@@ -107,6 +107,15 @@ final readonly class WpdbDatabase implements Database
         return $this->select(sprintf('SHOW COLUMNS FROM `%s`', $table));
     }
 
+    public function describeIndexes(string $table): array
+    {
+        if (null === $this->scalar('SHOW TABLES LIKE %s', [$table])) {
+            return [];
+        }
+
+        return $this->select(sprintf('SHOW INDEX FROM `%s`', $table));
+    }
+
     public function tablesWithPrefix(string $prefix): array
     {
         $tables = [];

@@ -101,6 +101,52 @@ That interface has no implementation, so the application will not boot. Write on
 That loop — change the spec, regenerate, implement what appeared under `Contract/` — is
 the whole workflow.
 
+## Wire it up
+
+Codegen produces classes; something has to assemble them. The order matters, so the
+example carries a working one rather than this page describing it:
+[`examples/clog/src/Bootstrap.php`](../examples/clog/src/Bootstrap.php), with
+[`examples/clog/clog.php`](../examples/clog/clog.php) as the WordPress plugin around
+it. Both are analysed at PHPStan level max against the committed generated tree, so a
+reference that no longer compiles is a build failure rather than a surprise.
+
+In outline:
+
+```php
+$storage   = WordPress::adaptor($database, WordPress::manifest('generated/storage-manifest.php'));
+$container = /* your PSR-11 container, holding the generated classes and your contracts */;
+$catalogue = new Catalogue($container);
+
+$runtime = new Runtime(
+    $storage,
+    $catalogue,
+    new UnitOfWorkFactory($storage, $catalogue, $processors),
+);
+
+(new BootCheck($catalogue, $container))->run();
+```
+
+`$runtime` is the one object the application holds. It is the `EntityGateway`, so the
+GraphQL layer takes it directly:
+
+```php
+Plugin::fromManifest('generated/graphql-manifest.php', $runtime, $processors)->boot();
+```
+
+## Create the tables
+
+Migrating means diffing against a live database, which the build cannot reach — so
+this is a runtime call, on plugin activation:
+
+```php
+$plan = (new SchemaInstaller($database, $manifest))->install();
+```
+
+Additive changes — a new table, a new nullable column, a new index — are applied.
+Anything destructive or ambiguous is refused, and then **nothing** is applied:
+`$plan->refusals` says what it saw and why it will not guess, and an explicit migration
+is the answer. A half-migrated schema is worse than an unmigrated one.
+
 ## Wire up your editor
 
 ```bash

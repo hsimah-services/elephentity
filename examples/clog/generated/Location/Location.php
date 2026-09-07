@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:0681dfd98a1bbe6cf7a8da8deb9ed40335fb1f03c626548fc4f4be2e110c417f
+ * digest: sha256:09515c49656190143fdcbf5bd36e7560fd48ccefed2a8a019eae60102ea3a36c
  */
 
 namespace Clog\Entity\Location;
@@ -79,7 +79,10 @@ final class Location
      */
     public function inventoryEntries(): EntityQuery
     {
-        return $this->edges->inverseToMany('Inventory', 'location', $this->id);
+        /** @var EntityQuery<Inventory> $related */
+        $related = $this->edges->inverseToMany('Inventory', 'location', $this->id);
+
+        return $related;
     }
 
     public static function of(

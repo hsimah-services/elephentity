@@ -845,6 +845,21 @@ or a drop-plus-add, and guessing destroys data.
 
 Our own migration runner, not `dbDelta()`.
 
+**Migration is a runtime call, not an `eleph` command**, and `SchemaInstaller` is the
+entry point. This was listed as a CLI verb from the start and could never have been
+one: migrating means diffing against a live database, and the CLI runs at build time
+with no WordPress loaded and no credentials. A build-time `migrate` could only have
+emitted a fresh install's DDL and called it a migration, which is the guess this whole
+section exists to refuse. Plugin activation is where the database is.
+
+**Nothing is applied when anything is refused.** Applying the safe half of a plan leaves
+a schema that is two states away from the spec, on which the application boots and some
+queries work — strictly worse to diagnose than one that was never migrated.
+
+The manifest carries **join tables** as well as entity tables. Keyed by entity, a
+many-to-many link table belonged to nobody and was dropped, so an edge compiled to a
+placement pointing at a table nothing would ever create.
+
 ### Post-row divergence
 
 When a post type is registered, the custom table row and the post row are two records
