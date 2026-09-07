@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:e5cb83f4a06959779674a9382e74776d4269591790905eea3cdce15f29d48945
+ * digest: sha256:bdf424314fec93dfaa8c098e4188656f9f9ae40354bbd31a7704554ba3484801
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -18,7 +18,7 @@ use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\Index;
 use Eleph\WordPress\Sql\TableSchema;
-use Eleph\Schema\Ir\RelationKind;
+use Eleph\Runtime\Storage\RelationKind;
 
 /**
  * The compiled physical schema.

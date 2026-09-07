@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Sql;
 
+use Eleph\Runtime\Storage\RelationKind;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Primitive;
-use Eleph\Schema\Ir\RelationKind;
 use Eleph\Schema\Ir\Schema;
 use RuntimeException;
 
@@ -48,7 +48,7 @@ final readonly class SchemaBuilder
         $tables = [];
 
         foreach ($schema->entities as $entity) {
-            $tables[$this->naming->table($entity)] = $this->entityTable($schema, $entity);
+            $tables[$this->naming->table($entity->storage->table)] = $this->entityTable($schema, $entity);
         }
 
         // Edges are resolved second: a one-to-many edge on Post adds a column to the
@@ -65,7 +65,7 @@ final readonly class SchemaBuilder
 
     private function entityTable(Schema $schema, EntityDefinition $entity): TableSchema
     {
-        $table = $this->naming->table($entity);
+        $table = $this->naming->table($entity->storage->table);
 
         // Every entity has an implicit id. Auto-increment for now: WordPress-standard
         // and unblocking, at the cost of not knowing an id before insert.

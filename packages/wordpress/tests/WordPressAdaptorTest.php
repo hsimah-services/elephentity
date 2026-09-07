@@ -15,9 +15,9 @@ use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
+use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\FieldMap;
-use Eleph\WordPress\Sql\Naming;
 use Eleph\WordPress\Sql\TableSchema;
 use Eleph\WordPress\WordPressAdaptor;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -217,7 +217,10 @@ final class WordPressAdaptorTest extends TestCase
                     'title' => new Column('title', 'VARCHAR(255)'),
                 ]),
             ],
-            FieldMap::fromSchema($compiled->schema(), new Naming('wp_')),
+            // Built from the manifest, the way WordPress::adaptor() builds it. There
+            // used to be a fromSchema() shortcut and this was its only caller, which
+            // made a runtime class carry a build-time signature for a test's sake.
+            new FieldMap((new StorageManifestBuilder())->build($compiled->schema())->columns),
         );
     }
 }

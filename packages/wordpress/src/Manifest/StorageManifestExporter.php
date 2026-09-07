@@ -25,7 +25,7 @@ final readonly class StorageManifestExporter
                 use Eleph\WordPress\Sql\EdgePlacement;
                 use Eleph\WordPress\Sql\Index;
                 use Eleph\WordPress\Sql\TableSchema;
-                use Eleph\Schema\Ir\RelationKind;
+                use Eleph\Runtime\Storage\RelationKind;
 
                 /**
                  * The compiled physical schema.
