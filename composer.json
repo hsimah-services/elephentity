@@ -41,7 +41,9 @@
         }
     },
     "bin": [
-        "packages/cli/bin/eleph"
+        "packages/cli/bin/eleph",
+        "packages/wordpress/bin/eleph-gen-wordpress",
+        "packages/wpgraphql/bin/eleph-gen-wpgraphql"
     ],
     "scripts": {
         "test": "phpunit",

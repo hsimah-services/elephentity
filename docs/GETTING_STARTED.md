@@ -2,21 +2,27 @@
 
 ## Install
 
-> Not on Packagist yet. Until it is, add the repositories as Composer `vcs` repositories
-> — the package names below are what they will publish as.
-
 ```bash
-composer require elephentity/runtime elephentity/wordpress elephentity/wpgraphql
-composer require --dev elephentity/schema elephentity/cli
+composer require elephentity/elephentity
 composer require --dev elephentity/codegen elephentity/codegen-php
 ```
 
-The dev packages run at build time and never ship. The others do.
+**The framework ships as one package.** `elephentity/elephentity` carries the runtime and
+the WordPress and WPGraphQL adaptors, which your application uses at run time, and also
+the spec compiler and the `eleph` command, which it only uses at build time. Splitting
+those apart is worth doing and has not been done; until it is, requiring the whole thing
+is the honest instruction rather than five package names that do not resolve.
 
-The second dev line is the code generator, which is separate software: `elephentity/codegen`
-runs your builders and writes the tree, `elephentity/codegen-php` is the builder that emits
-PHP. If you later want TypeScript types from the same spec, you add a builder for it and a
-target in `eleph.json` — nothing else changes.
+**The code generator is separate software**, which is why it is a second line and a dev
+dependency. `elephentity/codegen` runs your builders and writes the tree;
+`elephentity/codegen-php` is the builder that emits PHP. If you later want TypeScript
+types from the same spec, you add a builder for it and a target in `eleph.json` — nothing
+else changes, and no part of the framework learns what TypeScript is.
+
+That gives you three commands in `vendor/bin`: `eleph`, `eleph-codegen` and
+`eleph-gen-php`, plus `eleph-gen-wordpress` and `eleph-gen-wpgraphql` from the framework
+package. `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all
+where the config expects.
 
 ## Lay out the project
 
