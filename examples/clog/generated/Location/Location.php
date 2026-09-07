@@ -9,14 +9,16 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:793fe8fe7c017398dfbd16c1584f2da6debd17af0b8cfea96f5f107b759c1b5b
+ * digest: sha256:09515c49656190143fdcbf5bd36e7560fd48ccefed2a8a019eae60102ea3a36c
  */
 
 namespace Clog\Entity\Location;
 
+use Clog\Entity\Inventory\Inventory;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EdgeLoader;
+use Eleph\Runtime\Query\EntityQuery;
 
 /**
  * Somewhere inventory can be kept.
@@ -27,8 +29,8 @@ final class Location
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?DateTimeImmutable $updatedAt,
-        private readonly int $postId,
+        private readonly DateTimeImmutable $updatedAt,
+        private readonly ?int $postId,
         private readonly string $name,
     ) {
     }
@@ -38,20 +40,26 @@ final class Location
         return $this->id;
     }
 
+    /**
+     * When the row was first written. Filled by the framework.
+     */
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    /**
+     * When the row was last written. Filled by the framework.
+     */
+    public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
     /**
-     * The wp_posts row this entity projects to.
+     * The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
      */
-    public function getPostId(): int
+    public function getPostId(): ?int
     {
         return $this->postId;
     }
@@ -64,12 +72,25 @@ final class Location
         return $this->name;
     }
 
+    /**
+     * Every Inventory whose "location" points here.
+     *
+     * @return EntityQuery<Inventory>
+     */
+    public function inventoryEntries(): EntityQuery
+    {
+        /** @var EntityQuery<Inventory> $related */
+        $related = $this->edges->inverseToMany('Inventory', 'location', $this->id);
+
+        return $related;
+    }
+
     public static function of(
         EntityId $id,
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $updatedAt,
-        int $postId,
+        DateTimeImmutable $updatedAt,
+        ?int $postId,
         string $name,
     ): self {
         return new self($id, $edges, $createdAt, $updatedAt, $postId, $name);

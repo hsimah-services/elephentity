@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:7ff0301770c9c95010dbd14712956cef026fc7949b2b21419ab2949f20cff8b8
+ * digest: sha256:545db6bff4f8e94b009aa7a31edc9c8d6a776e83078a9435cf440ae4d23c7f98
  */
 
 namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -27,14 +28,7 @@ final class InventoryMutator
     ) {
     }
 
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
-    {
-        $this->buffer->set('updatedAt', $updatedAt);
-
-        return $this;
-    }
-
-    public function setPostId(int $postId): self
+    public function setPostId(?int $postId): self
     {
         $this->buffer->set('postId', $postId);
 
@@ -58,6 +52,26 @@ final class InventoryMutator
     public function setDateExpiry(?DateTimeImmutable $dateExpiry): self
     {
         $this->buffer->set('dateExpiry', $dateExpiry);
+
+        return $this;
+    }
+
+    /**
+     * Point this at one Item, or at nothing.
+     */
+    public function setItem(?Identifier $item): self
+    {
+        $this->buffer->edge('item')->set(null === $item ? [] : [$item]);
+
+        return $this;
+    }
+
+    /**
+     * Point this at one Location, or at nothing.
+     */
+    public function setLocation(?Identifier $location): self
+    {
+        $this->buffer->edge('location')->set(null === $location ? [] : [$location]);
 
         return $this;
     }

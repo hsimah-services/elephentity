@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemHydrator.php
- * digest: sha256:bc5e208566feee10668e4abee834557331e0daf63499d59d3f2be4da1ef3cce5
+ * digest: sha256:b3a7c6f26fc144e44fb551f051d0c895d5565162b0b7174c2347fcc486dae608
  */
 
 namespace Clog\Entity\Item;
@@ -55,18 +55,18 @@ final readonly class ItemHydrator implements Hydrator
         return $this->decode->datetime($value, 'Item.createdAt');
     }
 
-    private function updatedAt(Record $record): ?DateTimeImmutable
+    private function updatedAt(Record $record): DateTimeImmutable
     {
         $value = $record->value('updatedAt');
 
-        return null === $value ? null : $this->decode->datetime($value, 'Item.updatedAt');
+        return $this->decode->datetime($value, 'Item.updatedAt');
     }
 
-    private function postId(Record $record): int
+    private function postId(Record $record): ?int
     {
         $value = $record->value('postId');
 
-        return $this->decode->int($value, 'Item.postId');
+        return null === $value ? null : $this->decode->int($value, 'Item.postId');
     }
 
     private function name(Record $record): string

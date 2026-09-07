@@ -38,7 +38,9 @@
             "Eleph\\Runtime\\Tests\\": "packages/runtime/tests/",
             "Eleph\\WordPress\\Tests\\": "packages/wordpress/tests/",
             "Eleph\\WPGraphQL\\Tests\\": "packages/wpgraphql/tests/",
-            "Eleph\\Cli\\Tests\\": "packages/cli/tests/"
+            "Eleph\\Cli\\Tests\\": "packages/cli/tests/",
+            "Clog\\Entity\\": "examples/clog/generated/",
+            "Clog\\": "examples/clog/src/"
         }
     },
     "bin": [

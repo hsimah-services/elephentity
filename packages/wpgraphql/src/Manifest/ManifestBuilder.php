@@ -6,6 +6,7 @@ namespace Eleph\WPGraphQL\Manifest;
 
 use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
@@ -69,7 +70,7 @@ final readonly class ManifestBuilder
                 $enums[$enumName] = $this->enum($enumName, $enum->inlineValues ?? []);
             }
 
-            foreach ($this->mutations($types, $entity, $name) as $mutation) {
+            foreach ($this->mutations($schema, $types, $entity, $name) as $mutation) {
                 $mutations[$mutation->name] = $mutation;
             }
 
@@ -105,6 +106,8 @@ final readonly class ManifestBuilder
                 $types->forField($entity, $field),
                 'get' . ucfirst($field->name),
                 $field->description,
+                $this->encoding($schema, $field),
+                $this->valueType($schema, $field),
             );
         }
 
@@ -144,6 +147,44 @@ final readonly class ManifestBuilder
             );
         }
 
+        // An inverse is the same edge read backwards, so it appears here for the same
+        // reason the forward direction does — and appeared nowhere at all before, which
+        // removed the query the data existed to serve.
+        foreach ($schema->inversesOf($entity->name) as $inverse) {
+            $declaring = $schema->entity($inverse->declaredBy);
+            $exposure = $declaring?->exposedVia(WpGraphQL::NAME);
+
+            if (null === $declaring || null === $exposure) {
+                continue;
+            }
+
+            $declaringName = is_string($exposure['singular'] ?? null)
+                ? $exposure['singular']
+                : $declaring->name;
+
+            $description = sprintf('The %s pointing here through "%s".', $declaring->name, $inverse->edge);
+
+            if ($inverse->unique) {
+                $fields[$inverse->name] = new FieldEntry(
+                    $inverse->name,
+                    new GraphQLType($declaringName),
+                    'get' . ucfirst($inverse->name),
+                    $description,
+                );
+
+                continue;
+            }
+
+            $connections[$inverse->name] = new ConnectionEntry(
+                $inverse->name,
+                $name,
+                $declaringName,
+                $inverse->name,
+                $inverse->edge,
+                $description,
+            );
+        }
+
         return new ObjectTypeEntry(
             $name,
             $entity->name,
@@ -151,6 +192,60 @@ final readonly class ManifestBuilder
             $connections,
             $entity->description,
         );
+    }
+
+    private function isExposed(Schema $schema, string $entity): bool
+    {
+        return null !== $schema->entity($entity)?->exposedVia(WpGraphQL::NAME);
+    }
+
+    /**
+     * How the accessor's return value reaches the wire.
+     *
+     * Derived from the same field the wire type was derived from, so the two are
+     * decided together: a datetime is declared String and formatted, an enum is
+     * declared as its enum type and travels as its backing value, and a declared value
+     * type travels as whatever it is stored as.
+     */
+    private function encoding(Schema $schema, FieldDefinition $field): FieldEncoding
+    {
+        $primitive = $field->type->primitive;
+
+        if (null === $primitive) {
+            $declared = $schema->type((string) $field->type->declaredType);
+
+            if (null !== $declared && $declared->isEnum()) {
+                return FieldEncoding::BackedEnum;
+            }
+
+            // A value type with no processors is an alias for its primitive, and the
+            // generator types the accessor as the primitive, so nothing has to happen.
+            return true === $declared?->hasProcessors
+                ? FieldEncoding::Processor
+                : $this->forPrimitive($declared->primitive ?? Primitive::String);
+        }
+
+        return $this->forPrimitive($primitive);
+    }
+
+    private function forPrimitive(Primitive $primitive): FieldEncoding
+    {
+        return match ($primitive) {
+            Primitive::Datetime => FieldEncoding::Datetime,
+            Primitive::Enum => FieldEncoding::BackedEnum,
+            Primitive::Json => FieldEncoding::Json,
+            default => FieldEncoding::Value,
+        };
+    }
+
+    /**
+     * The type whose processor unwinds the value, for the one encoding that needs one.
+     */
+    private function valueType(Schema $schema, FieldDefinition $field): ?string
+    {
+        return FieldEncoding::Processor === $this->encoding($schema, $field)
+            ? (string) $field->type->declaredType
+            : null;
     }
 
     /**
@@ -223,12 +318,18 @@ final readonly class ManifestBuilder
     /**
      * @return list<MutationEntry>
      */
-    private function mutations(TypeMapper $types, EntityDefinition $entity, string $name): array
+    private function mutations(Schema $schema, TypeMapper $types, EntityDefinition $entity, string $name): array
     {
         $creatable = [];
         $updatable = [];
 
         foreach ($entity->fields as $field) {
+            // A managed field is filled at commit, so putting it on the input would
+            // make every client invent a value the server is about to overwrite.
+            if (null !== $field->managed) {
+                continue;
+            }
+
             $creatable[$field->name] = $types->forInput($entity, $field);
 
             if ($field->immutable) {
@@ -240,6 +341,21 @@ final readonly class ManifestBuilder
             $updatable[$field->name] = new GraphQLType(
                 $types->forField($entity, $field)->name,
             );
+        }
+
+        // Edges are settable on both, and were on neither: the mutation listed fields
+        // only, so there was no argument through which an edge could be written at all.
+        foreach ($entity->edges as $edge) {
+            if (!$this->isExposed($schema, $edge->to)) {
+                continue;
+            }
+
+            $type = Cardinality::One === $edge->cardinality
+                ? new GraphQLType('ID')
+                : new GraphQLType('ID', list: true);
+
+            $creatable[$edge->name] = $type;
+            $updatable[$edge->name] = $type;
         }
 
         $mutations = [

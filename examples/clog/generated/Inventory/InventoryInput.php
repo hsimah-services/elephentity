@@ -9,14 +9,16 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryInput.php
- * digest: sha256:e88d07661140a8c098280dcbacce4ac6fb383c99d6682cceec336e3d43881df0
+ * digest: sha256:40f7f2478565e4f85ca391d3b12a78254c7f5700df51e42d2b501f5d753a1c11
  */
 
 namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
+use InvalidArgumentException;
 
 /**
  * Turns raw input into pending Inventory changes.
@@ -26,24 +28,6 @@ final readonly class InventoryInput
     public function __construct(
         private ValueDecoder $decode,
     ) {
-    }
-
-    private function createdAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Inventory.createdAt');
-    }
-
-    private function updatedAt(mixed $value): ?DateTimeImmutable
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        return $this->decode->datetime($value, 'Inventory.updatedAt');
     }
 
     private function postId(mixed $value): ?int
@@ -83,6 +67,30 @@ final readonly class InventoryInput
     }
 
     /**
+     * @return list<Identifier>
+     */
+    private function item(mixed $value): array
+    {
+        if (null === $value) {
+            return [];
+        }
+
+        return [$this->decode->id($value, 'Inventory.item')];
+    }
+
+    /**
+     * @return list<Identifier>
+     */
+    private function location(mixed $value): array
+    {
+        if (null === $value) {
+            return [];
+        }
+
+        return [$this->decode->id($value, 'Inventory.location')];
+    }
+
+    /**
      * Only what the caller supplied. A key that is absent is left alone,
      * which is what makes a partial update partial.
      *
@@ -90,14 +98,6 @@ final readonly class InventoryInput
      */
     public function apply(MutationBuffer $buffer, array $input): void
     {
-        if (array_key_exists('createdAt', $input)) {
-            $buffer->set('createdAt', $this->createdAt($input['createdAt']));
-        }
-
-        if (array_key_exists('updatedAt', $input)) {
-            $buffer->set('updatedAt', $this->updatedAt($input['updatedAt']));
-        }
-
         if (array_key_exists('postId', $input)) {
             $buffer->set('postId', $this->postId($input['postId']));
         }
@@ -112,6 +112,14 @@ final readonly class InventoryInput
 
         if (array_key_exists('dateExpiry', $input)) {
             $buffer->set('dateExpiry', $this->dateExpiry($input['dateExpiry']));
+        }
+
+        if (array_key_exists('item', $input)) {
+            $buffer->edge('item')->set($this->item($input['item']));
+        }
+
+        if (array_key_exists('location', $input)) {
+            $buffer->edge('location')->set($this->location($input['location']));
         }
     }
 }

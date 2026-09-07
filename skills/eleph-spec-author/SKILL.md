@@ -98,7 +98,9 @@ When the description needs one of these, say so rather than approximating quietl
   `{unit, value}` becomes two fields and any nested API shape is lost.
 - **Deletion policy beyond `onDelete`.** Soft delete, retention, archival — model them
   as fields and actions.
-- **GraphQL root query fields.** No entry points are generated yet.
+- **Field visibility and access rules.** Exposing an entity exposes every field on
+  it. If the description says "only the owner sees the notes", that is a layer
+  above the spec, and it should be raised rather than absorbed.
 
 ## Reference
 

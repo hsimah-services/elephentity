@@ -43,21 +43,28 @@ final readonly class StorageManifestExporter
                     columns: [
                 %s
                     ],
+                    joinTables: [
+                %s
+                    ],
                 );
 
                 PHP,
             __NAMESPACE__,
-            $this->tables($manifest),
+            $this->tables($manifest->tables),
             $this->placements($manifest),
             $this->columns($manifest),
+            $this->tables($manifest->joinTables),
         );
     }
 
-    private function tables(StorageManifest $manifest): string
+    /**
+     * @param array<string, TableSchema> $tables
+     */
+    private function tables(array $tables): string
     {
         $lines = [];
 
-        foreach ($manifest->tables as $entity => $table) {
+        foreach ($tables as $entity => $table) {
             $lines[] = sprintf(
                 "        %s => new TableSchema(\n            %s,\n            [\n%s\n            ],\n            [\n%s\n            ],\n            %s,\n        ),",
                 var_export($entity, true),

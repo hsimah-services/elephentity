@@ -480,6 +480,53 @@ fields:
 `required` and `nullable` are deliberately separate facts; all four combinations are
 meaningful.
 
+**`required` is checked, at commit, before any SQL runs.** It was once a word in the
+spec that changed nothing: nothing verified it and the catalogue did not expose which
+fields carried it, so a missing value reached the database and the outcome depended on
+the installation — a strict MySQL raised an error, and WordPress's default session
+quietly stored `0000-00-00 00:00:00`. It is now a `Violation` with a field path, which
+puts it alongside the deletion rules rather than in the driver.
+
+A field with a `default:` is exempt, because the column already answers for it.
+
+**`unique:` is checked the same way, and for the same reason.** A duplicate used to
+arrive as the driver's own exception — the message, the statement that produced it, and
+an index name no caller has heard of — where `onDelete: restrict` in the same commit
+produces "Cannot delete Location#1: 1 Inventory still depends on it". Both are facts
+about the row being written, and both belong in the same list of violations.
+
+The index remains the guarantee. The check reads before the transaction opens, so two
+concurrent creates can both pass it and one will still fail on the constraint. That is
+the right division of labour: the check makes the ordinary case a good error, the
+database keeps being right about the race, and nothing pretends otherwise. A null is
+never checked — NULL does not collide with NULL, and a nullable unique column is how
+"at most one, if any" is spelled.
+
+### Managed fields
+
+```yaml
+createdAt: { type: datetime, managed: created }    # stamped once, at insert
+updatedAt: { type: datetime, managed: modified }   # stamped on every write
+```
+
+A managed field is settable by nobody: no mutator setter, no input applier branch, and
+absent from the generated create and update inputs. The unit of work stamps it before
+verification, with one instant per commit.
+
+This exists because the shipped `Timestamps` pattern got it exactly backwards. Declared
+`required: true, immutable: true`, `createdAt` became `String!` on every create
+mutation — so every client had to invent a creation time, and `immutable` meant it
+could never be corrected afterwards. The constraint was enforced in the one place it
+should not have been, and ignored where it mattered.
+
+`managed` and `required` together are a compile error, and so are `managed` and
+`immutable`. Both combinations read as if they mean something and both say who fills a
+field twice, which is two chances to disagree.
+
+**A closed set of policies, not a `default: now` expression.** The framework has to
+implement each one. A value the spec can name and the runtime cannot produce is the
+same failure this replaces.
+
 ### Identity
 
 Every entity has an `id`, implicitly — no pattern needed, no way to override.
@@ -544,6 +591,35 @@ could not previously express.
 The generator never pluralises. English inflection quietly produces `Categorys` and
 different libraries disagree; that is not acceptable in a framework whose selling
 point is predictable output.
+
+An inverse **stores nothing of its own**. `Item.inventoryEntries` is `Inventory.item`
+read from the far end, so the placement table above answers for both directions and the
+adaptor reads it backwards. There is one relationship in the schema and one place that
+decides where it lives, which is the same rule that makes `EdgePlanner` the only thing
+allowed an opinion about placement.
+
+### Writing an edge
+
+The write side mirrors the read side, and its shape is chosen so cardinality cannot be
+got wrong:
+
+```php
+$inventory->setItem($itemId);          // cardinality: one — one argument, or null
+$post->comments()->add($commentId);    // cardinality: many — the EdgeMutation
+$post->comments()->set([$a, $b]);
+```
+
+A to-one edge is a setter taking one identifier, because a signature that cannot
+express two targets is the cheapest possible enforcement of `cardinality: one`. A
+to-many edge hands back the same `EdgeMutation` an action context exposes, so add,
+remove and replace all exist without inventing three method names per edge.
+
+Identifiers rather than entities, so a commit can link a row that does not exist yet.
+
+Through a protocol, an edge is a key in the input like any other — an id, or a list of
+them — and it is a **replacement**: "here is what this edge holds" is what a whole
+value arriving at once means. Null and the empty list both clear it, which is how an
+edge is emptied through a protocol with no other way to say so.
 
 ### To-many returns a lazy edge query, not an array
 
@@ -691,6 +767,17 @@ pattern carries the trigger.
 IDs a create trigger that ran earlier would have no ID to work with. This way the row
 exists, the ID is real, and a throw still rolls everything back.
 
+**A `delete` event is the exception, and runs before its DELETE.** The argument above
+is about a row that does not exist yet; a deletion is the mirror case, where waiting
+means the row is gone and the trigger has nothing to read. Both orderings put the
+trigger where the data is, and both stay inside the transaction, so a throw undoes
+everything either way. Every planned removal is announced — cascaded rows included,
+since an audit trail or an external projection that only heard about the row someone
+asked to delete would be silently incomplete.
+
+A delete context carries identity and nothing else: there are no pending values, and
+the original row is still there to be read for as long as the trigger is running.
+
 Anything slow or external (email, HTTP, search indexing) belongs in `postCommit` —
 holding DB locks while calling a third party is how transactions die.
 
@@ -758,11 +845,47 @@ or a drop-plus-add, and guessing destroys data.
 
 Our own migration runner, not `dbDelta()`.
 
+**Migration is a runtime call, not an `eleph` command**, and `SchemaInstaller` is the
+entry point. This was listed as a CLI verb from the start and could never have been
+one: migrating means diffing against a live database, and the CLI runs at build time
+with no WordPress loaded and no credentials. A build-time `migrate` could only have
+emitted a fresh install's DDL and called it a migration, which is the guess this whole
+section exists to refuse. Plugin activation is where the database is.
+
+**Nothing is applied when anything is refused.** Applying the safe half of a plan leaves
+a schema that is two states away from the spec, on which the application boots and some
+queries work — strictly worse to diagnose than one that was never migrated.
+
+The manifest carries **join tables** as well as entity tables. Keyed by entity, a
+many-to-many link table belonged to nobody and was dropped, so an edge compiled to a
+placement pointing at a table nothing would ever create.
+
 ### Post-row divergence
 
 When a post type is registered, the custom table row and the post row are two records
-that can diverge. The **custom table is authoritative**; the post row is a projection
-the Mutator writes as part of the same unit of work.
+that can diverge. The **custom table is authoritative**.
+
+**Nothing in the framework writes the post row.** This was once stated the other way
+round — "a projection the Mutator writes as part of the same unit of work" — and no
+such code ever existed, which is worse than the gap itself: an entity declaring a
+`postId` looked like it would be filled and silently was not.
+
+The projection stays the application's, for a reason that outlives the missing code. A
+post row is a WordPress-shaped side effect of a commit, and side effects on commit are
+already a thing the framework has: a `postCommit` trigger. Building a second,
+adaptor-level mechanism for the one platform that needs it would put a WordPress
+concept inside the unit of work, which is exactly what the storage port exists to
+prevent.
+
+Two consequences, both deliberate:
+
+- **`postId` is nullable**, in the example pattern and anywhere else. A non-null column
+  nothing fills is a create that either fails or stores zero, depending on the
+  installation's SQL mode.
+- **Delete events fire for cascades.** An application maintaining a projection has to
+  see every row that goes, not only the one it asked to delete, so the unit of work
+  announces every planned removal — and announces it *before* the DELETE, since a
+  trigger that cannot read the row it is being told about cannot project it.
 
 ---
 

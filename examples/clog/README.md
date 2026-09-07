@@ -4,20 +4,34 @@ The three post types from [clog](https://github.com/hsimah-services/clog) — It
 Location and Inventory — written as Elephentity specs, with the generated output committed
 so the two can be compared.
 
-This is a smoke test of the generator against real post types, not a migration plan.
-Clog is unfinished and the point was to find out whether its types produce signed,
-coherent code. They do: 22 files, all gates green. The notes below are what the
-exercise turned up, kept because they are cheap to write down now and expensive to
-rediscover later — not because any of them needs acting on.
+It is also the reference wiring. `src/` holds everything between "the code is
+generated" and "the application runs" — a container, the three contracts the spec says
+you owe it, and `Bootstrap.php`, which is the assembly order written down once. The
+plugin around it is `clog.php`.
+
+Both are analysed at PHPStan level max against the committed `generated/` tree, along
+with the generated tree itself. A reference that is not checked against the code it
+wires is a snippet that rots, and the framework's central claim is that generated code
+is provably typed — which is worth proving on real output rather than only on fixtures.
 
 All four gates pass:
 
 ```
 eleph fmt        Specs are in canonical form.
 eleph validate   Specs are valid: 3 entities, 1 type.
-eleph generate   22 file(s).
+eleph generate   32 file(s).
 eleph check      Conformant: 3 type(s), every field resolves.
 ```
+
+## Reading it
+
+| File | What it shows |
+|---|---|
+| `clog.php` | The three WordPress hooks and nothing else: activation migrates, `plugins_loaded` boots. |
+| `src/Bootstrap.php` | The assembly order, and why each step comes where it does. |
+| `src/Container.php` | Thirty lines, so the example depends on no particular container. |
+| `src/Contract/ItemSearch.php` | A hand-written finder, and how it gets a lazy query. |
+| `src/Contract/DefaultExpiryIsPaired.php` | A cross-field rule, as one class implementing both halves. |
 
 ## What the spec captures cleanly
 
@@ -72,36 +86,38 @@ now come from the `wpgraphql` integration, and the type names match the existing
 exactly — `ClogItem` / `ClogItems`, and `ClogInventory` / `ClogInventoryEntries`,
 supplied rather than derived because nothing here pluralises on your behalf.
 
-**The divergence hazard.** `show_ui: true` with `supports: ['title']` means a human can
-edit the title in wp-admin. Under Elephentity the column is authoritative and `post_title` is
-written by the Mutator as part of the same unit of work — so an admin edit changes the
-projection and not the truth, and nothing notices. `OrphanGuard` catches deletes;
-nothing catches edits.
+**Nothing writes the post row, and that is now said out loud.** `postId` is a nullable
+column like any other; registering the post type does not create a `wp_posts` row, and
+neither does a commit. An application that wants the projection writes it in a
+`postCommit` trigger, which is where a WordPress-shaped side effect of a commit
+belongs — the unit of work has no business knowing what a post is. Delete events fire
+for cascaded rows too, so such a trigger can keep up with a cascade rather than
+leaving orphans behind it.
 
-Three ways out, and only one of them is honest:
+The divergence hazard is unchanged and worth restating. `show_ui: true` with
+`supports: ['title']` would let a human edit the title in wp-admin, where the custom
+table is authoritative — an admin edit changes the copy and nothing notices. Three ways
+out, and only one of them is honest:
 
 - **Stop supporting `title` on the post type.** The post row becomes what the design
   says it is — an anchor for the ecosystem, holding nothing. Given Clog has its own
-  React client, losing the wp-admin title column costs little.
+  React client, losing the wp-admin title column costs little. This is now the default:
+  `supports` is empty unless an entity asks for something.
 - **Sync `post_title` back on `post_updated`.** Makes the projection bidirectional,
-  which contradicts "the custom table is authoritative" and invites write loops
-  between the hook and the Mutator.
+  which contradicts "the custom table is authoritative" and invites write loops.
 - **Let them diverge** until the next write re-projects. Silently wrong, which is the
   worst of the three.
 
-Worth noting that Elephentity's own `PostTypeRegistrar` currently emits `supports: ['title']`,
-so it ships the same hazard. That wants changing.
+### Post type registration, since resolved
 
-### Post type registration is not in the spec
-
-Related, and blocking for this port: `PostTypeRegistrar` hardcodes `public: true`,
-`show_in_rest: false` and `supports: ['title']`. Clog needs `public: false`,
+This was blocking for the port: `PostTypeRegistrar` hardcoded `public: true`,
+`show_in_rest: false` and `supports: ['title']`, where Clog needs `public: false`,
 `show_ui: true`, `show_in_menu: 'clog'`, `exclude_from_search: true` and a full label
-set. None of that is expressible today.
+set.
 
-The `ClogPost` pattern is the natural home for it — it is already the thing that says
-"this entity participates in the WordPress admin", and a pattern can carry storage
-configuration.
+The `ClogPost` pattern is the home for it, and now is: registration arguments come from
+pattern configuration, which the entity supplies with `configure:` and the compiler
+validates against the pattern's own declaration.
 
 ## What this exercise confirmed
 

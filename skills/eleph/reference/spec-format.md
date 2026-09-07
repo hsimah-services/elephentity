@@ -116,6 +116,7 @@ fields:
     unique: false
     indexed: true
     immutable: false    # settable on create, no setter afterwards
+    managed: created    # datetime only; the framework fills it — see below
     maxLength: 200      # string only; default 255
     values: [a, b]      # enum only — a list, or the name of a declared enum
     verify: true        # generate an entity-specific verifier interface
@@ -124,6 +125,20 @@ fields:
 **`required` and `nullable` are different facts.** `required` is about creating a row;
 `nullable` is about what the column can hold. All four combinations are meaningful, and
 conflating them is the most common mistake in a first spec.
+
+`required` is enforced at commit, as a violation with a field path, before any SQL
+runs. A field with a `default:` is exempt — the column answers for it.
+
+`unique` is checked the same way, so a duplicate is a violation rather than a driver
+exception. The index is still the guarantee: the check runs before the transaction, so
+a race is settled by the constraint. Nulls are never checked, which is what makes a
+nullable unique column mean "at most one, if any".
+
+**`managed` means the framework fills it.** `created` stamps the field when the row is
+inserted; `modified` stamps it on every write. Either way there is no setter, no input
+branch, and no GraphQL input field, so a machine-managed timestamp never becomes
+something an API client has to invent. Datetime only, and a compile error alongside
+`required` or `immutable` — both would be a second answer to "who fills this".
 
 Primitives: `string` `text` `int` `float` `bool` `datetime` `id` `enum` `json`.
 
@@ -163,6 +178,26 @@ side, which for shared vocabulary is rarely what you want.
 entity, lowercased — legal only when the reverse is unique, because the derived name is
 singular and **the generator never pluralises**. For a non-unique reverse, name it:
 `inverse: { name: posts, unique: false }`.
+
+Declaring one generates the accessor on the target entity — `Comment::getPost()`, or
+`Tag::posts()` returning a lazy query for a non-unique reverse — and exposes it in the
+GraphQL manifest. Nothing is stored for it: an inverse is the same edge read from the
+far end, so `Post.comments` remains the only relationship in the schema.
+
+### Writing an edge
+
+Reading and writing are symmetric, and the cardinality is in the signature:
+
+```php
+$inventory->setItem($itemId);          // cardinality: one — one identifier, or null
+$post->comments()->add($commentId);    // cardinality: many
+$post->comments()->set([$a, $b]);      // replace what it holds
+```
+
+Through the API an edge is a key in the input like any other — an id for a to-one edge,
+a list of ids for a to-many one — and it **replaces** what the edge holds. Null or the
+empty list clears it. Writing is always from the side that declares the edge; an
+inverse is a read.
 
 ## Queries
 

@@ -12,6 +12,7 @@ use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EdgeInverse;
 use Eleph\Schema\Ir\EnumSource;
 use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Managed;
 use Eleph\Schema\Ir\OnDelete;
 use Eleph\Schema\Ir\Origin;
 use Eleph\Schema\Ir\QueryDefinition;
@@ -61,6 +62,7 @@ final readonly class SectionParser
                 unique: $field->bool('unique'),
                 indexed: $field->bool('indexed'),
                 immutable: $field->bool('immutable'),
+                managed: $this->managed($field),
                 maxLength: $field->optionalInt('maxLength'),
                 enum: $this->enumSource($field),
                 verify: $field->bool('verify'),
@@ -68,6 +70,13 @@ final readonly class SectionParser
         }
 
         return $fields;
+    }
+
+    private function managed(SpecReader $field): ?Managed
+    {
+        $managed = $field->optionalString('managed');
+
+        return null === $managed ? null : Managed::from($managed);
     }
 
     private function enumSource(SpecReader $field): ?EnumSource

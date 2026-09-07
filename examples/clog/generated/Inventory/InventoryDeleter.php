@@ -9,13 +9,14 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryDeleter.php
- * digest: sha256:38b3b654a0b20e0d7df4df74440283ba29f804041bfac6a0d72dfc3722bd29fc
+ * digest: sha256:750a391abd5697afb742505d30bf93185ce9ca19942a8b0e58f1b3ceb8a097dd
  */
 
 namespace Clog\Entity\Inventory;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Mutation\Deletion;
+use Eleph\Runtime\Storage\DeletionRule;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 
 /**

@@ -3,9 +3,13 @@ parameters:
     phpVersion: 80300
     paths:
         - packages
+        # The example is analysed too. It is the reference wiring, and a reference
+        # that is not type-checked against the code it wires is a snippet that rots.
+        - examples
     excludePaths:
         analyse:
             - packages/*/vendor
+            - examples/*/vendor
     tmpDir: .phpstan.cache
     # WordPress ships no autoloadable class map, so its symbols come from stubs.
     # Only packages/wordpress and packages/wpgraphql may use them; the architecture

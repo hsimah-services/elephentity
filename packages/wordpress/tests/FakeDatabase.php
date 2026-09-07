@@ -29,6 +29,12 @@ final class FakeDatabase implements Database
     /** @var list<array<string, scalar|null>> */
     public array $rows = [];
 
+    /** @var array<string, list<array<string, scalar|null>>> Keyed by table. */
+    public array $columns = [];
+
+    /** @var array<string, list<array<string, scalar|null>>> Keyed by table. */
+    public array $indexes = [];
+
     public string|int|float|null $scalarResult = 0;
 
     public function prefix(): string
@@ -81,7 +87,12 @@ final class FakeDatabase implements Database
 
     public function describeTable(string $table): array
     {
-        return [];
+        return $this->columns[$table] ?? [];
+    }
+
+    public function describeIndexes(string $table): array
+    {
+        return $this->indexes[$table] ?? [];
     }
 
     public function tablesWithPrefix(string $prefix): array

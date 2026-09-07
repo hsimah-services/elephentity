@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Registration;
 
+use BackedEnum;
+use DateTimeInterface;
 use Eleph\Runtime\Gateway\EntityGateway;
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Query\EntityQuery;
+use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\WPGraphQL\Manifest\ConnectionEntry;
+use Eleph\WPGraphQL\Manifest\FieldEncoding;
 use Eleph\WPGraphQL\Manifest\FieldEntry;
 use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
 use Eleph\WPGraphQL\Manifest\QueryFieldEntry;
 use Eleph\WPGraphQL\Resolver\Connections;
+use RuntimeException;
 
 /**
  * Registers the manifest with WPGraphQL.
@@ -28,6 +34,12 @@ final readonly class TypeRegistrar
         private Manifest $manifest,
         private EntityGateway $gateway,
         private Connections $connections = new Connections(),
+        /**
+         * Only a project with declared value types needs one, so it is optional — but
+         * absent when one is needed, the field says so by name rather than handing
+         * WPGraphQL an object it cannot serialise.
+         */
+        private ?ProcessorRegistry $processors = null,
     ) {
     }
 
@@ -116,6 +128,7 @@ final readonly class TypeRegistrar
                     $connection->toType,
                     $connection->name,
                     $connection->description ?? '',
+                    $this->edgeResolver($connection),
                 );
             }
         }
@@ -154,6 +167,36 @@ final readonly class TypeRegistrar
         }
 
         return $configs;
+    }
+
+    /**
+     * An edge connection resolves by calling the accessor and paging the lazy query it
+     * returns.
+     *
+     * WPGraphQL's own connection resolvers know how to page posts and terms, and an
+     * entity is neither. Supplying one is also what makes an inverse work at all: the
+     * accessor is the only thing that knows the edge is being read backwards.
+     */
+    private function edgeResolver(ConnectionEntry $connection): callable
+    {
+        $accessor = $connection->accessor;
+
+        return function (mixed $source, array $args) use ($accessor): array {
+            if (!is_object($source) || !method_exists($source, $accessor)) {
+                throw new RuntimeException(sprintf(
+                    'A connection resolved against something with no %s(). The manifest and the generated entities have drifted; run `eleph generate`.',
+                    $accessor,
+                ));
+            }
+
+            $query = $source->{$accessor}();
+
+            if (!$query instanceof EntityQuery) {
+                throw new RuntimeException(sprintf('%s() did not return an EntityQuery.', $accessor));
+            }
+
+            return $this->connections->resolve($query, $args);
+        };
     }
 
     /**
@@ -204,13 +247,69 @@ final readonly class TypeRegistrar
 
     /**
      * The resolver is the convention made executable: call the accessor the generator
-     * emitted for this field, on the entity the parent resolver produced.
+     * emitted for this field, on the entity the parent resolver produced, and encode
+     * the result the way the manifest said this field travels.
+     *
+     * The encoding is not optional dressing. The read model is exactly typed, so
+     * `getCreatedAt()` hands back a DateTimeImmutable where the client was promised a
+     * String, and handing that straight to WPGraphQL fails the whole query.
      */
     private function resolver(FieldEntry $field): callable
     {
         $accessor = $field->accessor;
+        $encoding = $field->encoding;
+        $valueType = $field->valueType;
+        $name = $field->name;
 
-        return static fn (object $source): mixed => $source->{$accessor}();
+        return function (object $source) use ($accessor, $encoding, $valueType, $name): mixed {
+            /** @var mixed $value */
+            $value = $source->{$accessor}();
+
+            // Null short-circuits everywhere else in the framework; it does here too.
+            if (null === $value) {
+                return null;
+            }
+
+            return $this->encode($value, $encoding, $valueType, $name);
+        };
+    }
+
+    /**
+     * One domain value, in the shape the manifest promised.
+     */
+    private function encode(mixed $value, FieldEncoding $encoding, ?string $valueType, string $field): mixed
+    {
+        return match ($encoding) {
+            FieldEncoding::Value => $value,
+            FieldEncoding::Datetime => $value instanceof DateTimeInterface
+                ? $value->format(DateTimeInterface::ATOM)
+                : $value,
+            FieldEncoding::BackedEnum => $value instanceof BackedEnum ? $value->value : $value,
+            FieldEncoding::Json => is_array($value)
+                ? json_encode($value, JSON_THROW_ON_ERROR)
+                : $value,
+            FieldEncoding::Processor => $this->unwind($value, $valueType, $field),
+        };
+    }
+
+    /**
+     * A declared value type, back to the primitive it is stored as.
+     *
+     * The write processor already owns that conversion for the mutation path, so
+     * reusing it is what keeps a Money reading back as the same Int it was written as.
+     */
+    private function unwind(mixed $value, ?string $valueType, string $field): mixed
+    {
+        if (null === $valueType || null === $this->processors || !$this->processors->has($valueType)) {
+            throw new RuntimeException(sprintf(
+                'Field "%s" holds the declared type %s, which travels as its backing primitive. Pass a ProcessorRegistry to the GraphQL plugin so it can reach %s\'s write processor.',
+                $field,
+                $valueType ?? 'a value type',
+                $valueType ?? 'that type',
+            ));
+        }
+
+        return $this->processors->write($valueType)->write($value);
     }
 
     /**

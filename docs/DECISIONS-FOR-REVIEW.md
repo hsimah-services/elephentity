@@ -78,6 +78,6 @@ Revisit once enough real specs exist that a corpus can be drawn from experience.
   come from pattern configuration, and `supports` defaults to empty — so the post row
   is a projection by default rather than an editable copy.
 - ~~**No changes to the clog spec.**~~ **Resolved:** one barcode per item.
-- **No GraphQL root query fields.** Stands, and is the largest remaining hole in the
-  vertical slice: entities can be mutated through the generated API but not fetched.
-  Tracked in [PLAN.md](PLAN.md) §16 as a gap rather than a judgement call.
+- ~~**No GraphQL root query fields.**~~ **Resolved.** The `wpgraphql` integration's
+  `singular`/`plural` supply the root field and connection names, and the manifest has
+  carried a `roots:` block since v0.0.1.

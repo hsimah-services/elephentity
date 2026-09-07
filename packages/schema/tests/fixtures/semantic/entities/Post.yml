@@ -8,6 +8,8 @@ fields:
   body: { type: text, maxLength: 40 }
   price: { type: Money }
   status: { type: enum }
+  stampedAt: { type: datetime, required: true, immutable: true, managed: created }
+  counter: { type: int, managed: modified }
 edges:
   comments:
     to: Comment
@@ -19,7 +21,7 @@ edges:
 actions:
   publish:
     writes:
-      fields: [nonexistent]
+      fields: [nonexistent, stampedAt]
     handler: true
 queries:
   find:

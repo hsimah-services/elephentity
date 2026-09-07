@@ -15,6 +15,11 @@ storage:
   table: phe_post
   handle: post
 fields:
+  slug:
+    type: string
+    description: Write-once, and chosen by whoever creates the post.
+    immutable: true
+    maxLength: 120
   title:
     type: string
     required: true
@@ -31,6 +36,10 @@ fields:
   visibility:
     type: enum
     values: [public, private]
+  publishedAt:
+    type: datetime
+    description: When it went live. A plain datetime, set by whoever publishes it.
+    nullable: true
 edges:
   comments:
     to: Comment

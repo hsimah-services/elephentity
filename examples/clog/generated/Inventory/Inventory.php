@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/Inventory.php
- * digest: sha256:83ebbe86f59537b9007c3bb4252983b93d5ee0d96f9273fdb85e13a5d6c79fd7
+ * digest: sha256:fe26943a8d951ddbf8c1cc0110e1fc053b1238526737a1962c26eb80be5c95c0
  */
 
 namespace Clog\Entity\Inventory;
@@ -29,8 +29,8 @@ final class Inventory
         private readonly EntityId $id,
         private readonly EdgeLoader $edges,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?DateTimeImmutable $updatedAt,
-        private readonly int $postId,
+        private readonly DateTimeImmutable $updatedAt,
+        private readonly ?int $postId,
         private readonly string $name,
         private readonly DateTimeImmutable $dateAdded,
         private readonly ?DateTimeImmutable $dateExpiry,
@@ -42,20 +42,26 @@ final class Inventory
         return $this->id;
     }
 
+    /**
+     * When the row was first written. Filled by the framework.
+     */
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    /**
+     * When the row was last written. Filled by the framework.
+     */
+    public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
     /**
-     * The wp_posts row this entity projects to.
+     * The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
      */
-    public function getPostId(): int
+    public function getPostId(): ?int
     {
         return $this->postId;
     }
@@ -89,7 +95,10 @@ final class Inventory
      */
     public function getItem(): ?Item
     {
-        return $this->edges->toOne('Inventory', $this->id, 'item');
+        $related = $this->edges->toOne('Inventory', $this->id, 'item');
+        assert(null === $related || $related instanceof Item);
+
+        return $related;
     }
 
     /**
@@ -97,15 +106,18 @@ final class Inventory
      */
     public function getLocation(): ?Location
     {
-        return $this->edges->toOne('Inventory', $this->id, 'location');
+        $related = $this->edges->toOne('Inventory', $this->id, 'location');
+        assert(null === $related || $related instanceof Location);
+
+        return $related;
     }
 
     public static function of(
         EntityId $id,
         EdgeLoader $edges,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $updatedAt,
-        int $postId,
+        DateTimeImmutable $updatedAt,
+        ?int $postId,
         string $name,
         DateTimeImmutable $dateAdded,
         ?DateTimeImmutable $dateExpiry,

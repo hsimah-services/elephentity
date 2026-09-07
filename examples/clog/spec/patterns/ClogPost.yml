@@ -38,6 +38,10 @@ use:
 fields:
   postId:
     type: int
-    description: The wp_posts row this entity projects to.
+    description: >
+      The wp_posts row this entity projects to, once something creates one. Nullable
+      because nothing in the framework writes it: an entity exists in its own table
+      whether or not a post row was ever made for it.
+    nullable: true
     unique: true
     indexed: true

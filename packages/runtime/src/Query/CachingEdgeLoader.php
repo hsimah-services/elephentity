@@ -44,32 +44,54 @@ final class CachingEdgeLoader implements EdgeLoader
     {
         $target = $this->target($entity, $edge);
 
-        return new LazyEntityQuery(
-            $this->storage,
-            $this->hydrators->get($target),
-            $this,
-            (new Criteria($target))->linkedTo(new EdgeFilter($entity, $edge, $id)),
-        );
+        return $this->query($target, EdgeFilter::along($entity, $edge, $id));
     }
 
     public function toOne(string $entity, EntityId $id, string $edge): ?object
     {
-        $key = sprintf('%s#%s.%s', $entity, $id, $edge);
+        return $this->one(
+            sprintf('%s#%s.%s', $entity, $id, $edge),
+            $this->target($entity, $edge),
+            EdgeFilter::along($entity, $edge, $id),
+        );
+    }
 
+    public function inverseToMany(string $entity, string $edge, EntityId $id): EntityQuery
+    {
+        // Read backwards, the rows are of the entity that declares the edge — so it is
+        // both the thing being filtered and the thing being hydrated.
+        return $this->query($entity, EdgeFilter::back($entity, $edge, $id));
+    }
+
+    public function inverseToOne(string $entity, string $edge, EntityId $id): ?object
+    {
+        return $this->one(
+            sprintf('%s#%s.%s^', $entity, $id, $edge),
+            $entity,
+            EdgeFilter::back($entity, $edge, $id),
+        );
+    }
+
+    /**
+     * @return EntityQuery<object>
+     */
+    private function query(string $target, EdgeFilter $link): EntityQuery
+    {
+        return new LazyEntityQuery(
+            $this->storage,
+            $this->hydrators->get($target),
+            $this,
+            (new Criteria($target))->linkedTo($link),
+        );
+    }
+
+    private function one(string $key, string $target, EdgeFilter $link): ?object
+    {
         if (array_key_exists($key, $this->toOne)) {
             return $this->toOne[$key];
         }
 
-        $target = $this->target($entity, $edge);
-
-        $query = new LazyEntityQuery(
-            $this->storage,
-            $this->hydrators->get($target),
-            $this,
-            (new Criteria($target))->linkedTo(new EdgeFilter($entity, $edge, $id)),
-        );
-
-        return $this->toOne[$key] = $query->first();
+        return $this->toOne[$key] = $this->query($target, $link)->first();
     }
 
     /**
@@ -93,7 +115,7 @@ final class CachingEdgeLoader implements EdgeLoader
         $hydrator = $this->hydrators->get($target);
 
         // One filter naming every parent, so this is one query rather than one each.
-        $criteria = (new Criteria($target))->linkedTo(new EdgeFilter($entity, $edge, ...$ids));
+        $criteria = (new Criteria($target))->linkedTo(EdgeFilter::along($entity, $edge, ...$ids));
 
         $grouped = [];
 

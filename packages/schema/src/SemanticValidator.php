@@ -242,6 +242,67 @@ final readonly class SemanticValidator
         }
 
         $this->checkIndexWidth($entity, $field, $pointer, $errors);
+        $this->checkManaged($entity, $field, $pointer, $errors);
+    }
+
+    /**
+     * A managed field is the framework's to fill, which rules out the two ways a spec
+     * can also say who fills it.
+     *
+     * Both rejections exist because the combination reads as if it means something.
+     * `required` on a managed field asks a caller for a value it cannot supply — which
+     * is the bug that made every create mutation demand a `createdAt`. `immutable`
+     * describes a field settable exactly once, and a managed field is settable never;
+     * leaving both legal would give the same fact two spellings.
+     *
+     * @param list<SpecError> $errors
+     */
+    private function checkManaged(
+        EntityDefinition $entity,
+        FieldDefinition $field,
+        string $pointer,
+        array &$errors,
+    ): void {
+        if (null === $field->managed) {
+            return;
+        }
+
+        if (Primitive::Datetime !== $field->type->primitive) {
+            $errors[] = new SpecError(
+                'field.managedNotSupported',
+                sprintf(
+                    'Field "%s" is managed but is of type %s. The framework only knows how to fill a datetime; anything else needs a trigger.',
+                    $field->name,
+                    $field->type->name(),
+                ),
+                $entity->sourceFile,
+                $pointer,
+            );
+        }
+
+        if ($field->required) {
+            $errors[] = new SpecError(
+                'field.managedAndRequired',
+                sprintf(
+                    'Field "%s" is managed and required. The framework fills it, so requiring a caller to supply it is a contradiction — and it is how a machine-managed timestamp becomes mandatory API input. Drop `required`.',
+                    $field->name,
+                ),
+                $entity->sourceFile,
+                $pointer,
+            );
+        }
+
+        if ($field->immutable) {
+            $errors[] = new SpecError(
+                'field.managedAndImmutable',
+                sprintf(
+                    'Field "%s" is managed and immutable. Managed already means no setter; saying it twice lets the two drift. Drop `immutable`.',
+                    $field->name,
+                ),
+                $entity->sourceFile,
+                $pointer,
+            );
+        }
     }
 
     /**
@@ -443,10 +504,30 @@ final readonly class SemanticValidator
             $pointer = sprintf('/actions/%s', $action->name);
 
             foreach ($action->writes->fields as $field) {
-                if (null === $entity->field($field)) {
+                $declared = $entity->field($field);
+
+                if (null === $declared) {
                     $errors[] = new SpecError(
                         'action.unknownWrite',
                         sprintf('Action "%s" declares it writes field "%s", which %s does not declare.', $action->name, $field, $entity->name),
+                        $entity->sourceFile,
+                        $pointer,
+                    );
+
+                    continue;
+                }
+
+                if (null !== $declared->managed) {
+                    // The context is generated from `writes:`, so a setter would have
+                    // to exist for a field nothing else can set. Refusing here keeps
+                    // "managed means nobody sets it" true without exception.
+                    $errors[] = new SpecError(
+                        'action.managedWrite',
+                        sprintf(
+                            'Action "%s" declares it writes field "%s", which is managed. The framework fills it on every commit, including this one.',
+                            $action->name,
+                            $field,
+                        ),
                         $entity->sourceFile,
                         $pointer,
                     );

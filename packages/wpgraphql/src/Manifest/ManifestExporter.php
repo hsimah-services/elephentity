@@ -63,12 +63,14 @@ final readonly class ManifestExporter
 
             foreach ($object->fields as $field) {
                 $fields[] = sprintf(
-                    '                %s => new FieldEntry(%s, %s, %s, %s),',
+                    '                %s => new FieldEntry(%s, %s, %s, %s, %s, %s),',
                     $this->str($field->name),
                     $this->str($field->name),
                     $this->type($field->type),
                     $this->str($field->accessor),
                     $this->nullableStr($field->description),
+                    sprintf('FieldEncoding::%s', $field->encoding->name),
+                    $this->nullableStr($field->valueType),
                 );
             }
 

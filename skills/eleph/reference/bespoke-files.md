@@ -137,3 +137,38 @@ $mutator = PostMutator::of($buffer, $publishAction);
 
 Your container supplies the handlers. Nothing is auto-discovered — if a handler is not
 wired, boot fails and says which.
+
+**The reference assembly is `examples/clog/src/Bootstrap.php`** in the framework
+repository, with `examples/clog/clog.php` as the WordPress plugin around it. It is
+analysed at PHPStan level max against the real generated tree, so it cannot drift into
+being a snippet that no longer compiles. The order it lays out:
+
+1. `WordPress::manifest()` then `WordPress::adaptor()` — the manifest is generated, the
+   table prefix comes from `$wpdb`.
+2. A container holding the generated classes and your contract implementations.
+3. `new Catalogue($container)` — generated; it resolves everything through the
+   container, so adding an entity never widens your wiring's signature.
+4. `new Runtime($storage, $catalogue, new UnitOfWorkFactory(...))`.
+5. `(new BootCheck($catalogue, $container))->run()`, before serving anything.
+
+Three things are easy to get wrong on the first attempt:
+
+- **The catalogue needs a PSR-11 container**, not a list of services.
+- **Generated hydrators and input appliers take a `ValueDecoder`.** One instance,
+  shared; it holds no state.
+- **A hand-written query handler needs a `Queries`**, from `$runtime->queries()`.
+  Pass it the entity's generated hydrator and the return type stays exact.
+
+## Creating the tables
+
+Nothing at build time can migrate a database it cannot reach, so this is a runtime
+call — plugin activation, in WordPress terms:
+
+```php
+$plan = (new SchemaInstaller($database, $manifest))->install();
+
+if (!$plan->isSafe()) {
+    // Additive changes are applied; anything destructive or ambiguous is refused
+    // and then nothing is applied at all. $plan->refusals says what and why.
+}
+```

@@ -24,12 +24,40 @@ final readonly class StorageManifest
      * @param array<string, TableSchema>   $tables     Keyed by entity name.
      * @param array<string, EdgePlacement> $placements Keyed by "Entity.edge".
      * @param array<string, array<string, string>> $columns Entity => field => column.
+     * @param array<string, TableSchema>   $joinTables Keyed by table name.
      */
     public function __construct(
         public array $tables,
         public array $placements = [],
         public array $columns = [],
+        /**
+         * Many-to-many link tables, which belong to an edge rather than an entity and
+         * so cannot live in the entity-keyed map the adaptor looks rows up in. They
+         * still have to be created, and were previously in no manifest at all.
+         */
+        public array $joinTables = [],
     ) {
+    }
+
+    /**
+     * Every table the schema needs, entity and join alike, keyed by table name.
+     *
+     * What an installer wants: it is creating tables, and does not care which of them
+     * an entity reads rows from.
+     *
+     * @return array<string, TableSchema>
+     */
+    public function everyTable(): array
+    {
+        $tables = $this->joinTables;
+
+        foreach ($this->tables as $table) {
+            $tables[$table->name] = $table;
+        }
+
+        ksort($tables);
+
+        return $tables;
     }
 
     /**
@@ -64,6 +92,24 @@ final readonly class StorageManifest
             );
         }
 
+        $joinTables = [];
+
+        foreach ($this->joinTables as $table) {
+            $indexes = [];
+
+            foreach ($table->indexes as $index) {
+                $renamed = new Index($prefix . $index->name, $index->columns, $index->unique);
+                $indexes[$renamed->name] = $renamed;
+            }
+
+            $joinTables[$prefix . $table->name] = new TableSchema(
+                $prefix . $table->name,
+                $table->columns,
+                $indexes,
+                $table->primaryKey,
+            );
+        }
+
         $placements = [];
 
         foreach ($this->placements as $key => $placement) {
@@ -79,6 +125,6 @@ final readonly class StorageManifest
             );
         }
 
-        return new self($tables, $placements, $this->columns);
+        return new self($tables, $placements, $this->columns, $joinTables);
     }
 }

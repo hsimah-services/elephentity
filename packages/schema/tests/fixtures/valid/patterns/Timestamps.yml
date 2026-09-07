@@ -3,8 +3,9 @@ description: Creation and modification stamps.
 fields:
   createdAt:
     type: datetime
-    required: true
-    immutable: true
+    description: When the row was first written. Filled by the framework.
+    managed: created
   updatedAt:
     type: datetime
-    nullable: true
+    description: When the row was last written. Filled by the framework.
+    managed: modified

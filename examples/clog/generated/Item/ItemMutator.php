@@ -9,13 +9,12 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutator.php
- * digest: sha256:84dbda89fd31b2ebf4ca265f27e0f6bd7d2fa83d058f5adc1c39b33d60472d8e
+ * digest: sha256:83ae71f209227e1579d351210e44a0cc3c110c3abfebdd4a0f364eb2ac27f352
  */
 
 namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
-use DateTimeImmutable;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -28,14 +27,7 @@ final class ItemMutator
     ) {
     }
 
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
-    {
-        $this->buffer->set('updatedAt', $updatedAt);
-
-        return $this;
-    }
-
-    public function setPostId(int $postId): self
+    public function setPostId(?int $postId): self
     {
         $this->buffer->set('postId', $postId);
 

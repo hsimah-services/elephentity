@@ -6,6 +6,7 @@ namespace Eleph\Runtime\Query;
 
 use BackedEnum;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use Exception;
@@ -22,6 +23,13 @@ use RuntimeException;
  * Every method fails loudly on the wrong shape. A column holding something the spec
  * says it cannot is a corrupted row or a missed migration, and continuing with a
  * silently coerced value would bury the evidence.
+ *
+ * A value that is *already* the domain type passes through. The same methods decode
+ * input arriving through the gateway, where a caller holding a DateTimeImmutable has
+ * no reason to format it into a string for the framework to parse back — and being
+ * told "not a string" for handing over exactly the right type is the sort of thing
+ * that makes an API feel hostile. It is not a coercion: the value is what the spec
+ * says the field holds.
  */
 final readonly class ValueDecoder
 {
@@ -62,6 +70,14 @@ final readonly class ValueDecoder
 
     public function datetime(mixed $value, string $field): DateTimeImmutable
     {
+        if ($value instanceof DateTimeImmutable) {
+            return $value;
+        }
+
+        if ($value instanceof DateTimeInterface) {
+            return DateTimeImmutable::createFromInterface($value);
+        }
+
         $raw = $this->string($value, $field);
 
         try {
@@ -76,6 +92,10 @@ final readonly class ValueDecoder
 
     public function id(mixed $value, string $field): EntityId
     {
+        if ($value instanceof EntityId) {
+            return $value;
+        }
+
         return is_int($value) || is_string($value)
             ? EntityId::of($value)
             : $this->reject($value, 'id', $field);
@@ -107,6 +127,10 @@ final readonly class ValueDecoder
      */
     public function enum(string $enum, mixed $value, string $field): BackedEnum
     {
+        if ($value instanceof $enum) {
+            return $value;
+        }
+
         if (!is_string($value) && !is_int($value)) {
             $this->reject($value, $enum, $field);
         }

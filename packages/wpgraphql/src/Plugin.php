@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\WPGraphQL;
 
 use Eleph\Runtime\Gateway\EntityGateway;
+use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Registration\MutationRegistrar;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
@@ -32,6 +33,12 @@ final readonly class Plugin
     public function __construct(
         private Manifest $manifest,
         private EntityGateway $gateway,
+        /**
+         * Needed only by a project with declared value types: Money is a Money on the
+         * entity and an Int over the wire, and the write processor is what already
+         * knows how to get from one to the other.
+         */
+        private ?ProcessorRegistry $processors = null,
     ) {
     }
 
@@ -41,8 +48,11 @@ final readonly class Plugin
      * The file is generated PHP that rebuilds the object, so this is an include rather
      * than a parse — opcache holds it and nothing is worked out per request.
      */
-    public static function fromManifest(string $path, EntityGateway $gateway): self
-    {
+    public static function fromManifest(
+        string $path,
+        EntityGateway $gateway,
+        ?ProcessorRegistry $processors = null,
+    ): self {
         if (!is_file($path)) {
             throw new RuntimeException(sprintf(
                 'No GraphQL manifest at %s. Run `eleph generate`, and check the project enables the wpgraphql integration.',
@@ -57,7 +67,7 @@ final readonly class Plugin
             throw new RuntimeException(sprintf('%s did not return a Manifest.', $path));
         }
 
-        return new self($manifest, $gateway);
+        return new self($manifest, $gateway, $processors);
     }
 
     /**
@@ -73,7 +83,7 @@ final readonly class Plugin
      */
     public function register(): void
     {
-        (new TypeRegistrar($this->manifest, $this->gateway))->register();
+        (new TypeRegistrar($this->manifest, $this->gateway, processors: $this->processors))->register();
         (new MutationRegistrar($this->manifest, $this->gateway))->register();
     }
 }

@@ -88,7 +88,7 @@ final readonly class QueryCompiler
             $ids = array_map(static fn ($id): string => (string) $id, $link->from);
             $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
 
-            if (!$placement->usesJoinTable() && !$placement->keyIsLocal()) {
+            if ($this->keyIsOnThisTable($placement, $link)) {
                 // The key is a column on this very table, so no join is needed.
                 $clauses[] = sprintf('`%s`.`%s` IN (%s)', $table->name, $placement->localColumn, $placeholders);
 
@@ -103,29 +103,22 @@ final readonly class QueryCompiler
             } else {
                 $on = sprintf('l%d', ++$alias);
 
-                [$joinTable, $joinToTarget, $parentColumn] = $placement->usesJoinTable()
-                    ? [$placement->table, (string) $placement->targetColumn, $placement->localColumn]
-                    : [$placement->table, 'id', $placement->localColumn];
+                // On a join table the two columns swap roles when the edge is read
+                // backwards: whichever end we came from is the one we filter on.
+                [$joinToTarget, $parentColumn] = $placement->usesJoinTable()
+                    ? ($link->reversed
+                        ? [$placement->localColumn, (string) $placement->targetColumn]
+                        : [(string) $placement->targetColumn, $placement->localColumn])
+                    : [$placement->localColumn, $placement->localColumn];
 
-                // For a locally-keyed edge the declaring table points at us, so the
-                // join runs the other way round.
-                $joins .= $placement->usesJoinTable()
-                    ? sprintf(
-                        ' INNER JOIN `%s` `%s` ON `%s`.`%s` = `%s`.`id`',
-                        $joinTable,
-                        $on,
-                        $on,
-                        $joinToTarget,
-                        $table->name,
-                    )
-                    : sprintf(
-                        ' INNER JOIN `%s` `%s` ON `%s`.`%s` = `%s`.`id`',
-                        $joinTable,
-                        $on,
-                        $on,
-                        $placement->localColumn,
-                        $table->name,
-                    );
+                $joins .= sprintf(
+                    ' INNER JOIN `%s` `%s` ON `%s`.`%s` = `%s`.`id`',
+                    $placement->table,
+                    $on,
+                    $on,
+                    $joinToTarget,
+                    $table->name,
+                );
 
                 $clauses[] = $placement->usesJoinTable()
                     ? sprintf('`%s`.`%s` IN (%s)', $on, $parentColumn, $placeholders)
@@ -149,6 +142,24 @@ final readonly class QueryCompiler
             'projection' => $projection,
             'bindings' => $bindings,
         ];
+    }
+
+    /**
+     * Whether the link column sits on the table being queried, so no join is needed.
+     *
+     * Reading an edge backwards swaps the answer, and only the answer: one side of a
+     * foreign key is the table holding it and the other is the table it points at, and
+     * which of those we are selecting from is the whole difference between the two
+     * directions. There is no second placement for an inverse for the same reason
+     * there is no second edge.
+     */
+    private function keyIsOnThisTable(EdgePlacement $placement, EdgeFilter $link): bool
+    {
+        if ($placement->usesJoinTable()) {
+            return false;
+        }
+
+        return $link->reversed ? $placement->keyIsLocal() : !$placement->keyIsLocal();
     }
 
     private function placement(EdgeFilter $link): EdgePlacement
