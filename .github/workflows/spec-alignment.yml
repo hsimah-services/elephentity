@@ -10,24 +10,60 @@ name: Spec alignment
 # The agent is asked to enumerate, not to judge. "Are these aligned?" produces an
 # opinion nobody can check; "list the fields in the yaml with no counterpart in the md"
 # produces a list where a false positive is obvious at a glance.
+#
+# ---
+#
+# **This is a project gate, not a framework gate, so it does not run here.** Specs live
+# in projects that use Elephentity; this repository has none — only the worked example
+# and the compiler's test fixtures, several of which are deliberately malformed. Wired
+# to `pull_request` it fired on any markdown edit and had nothing valid to compare.
+#
+# It is `workflow_call` instead, so a project can adopt it in one line:
+#
+#     jobs:
+#       alignment:
+#         uses: hsimah/elephentity/.github/workflows/spec-alignment.yml@main
+#         with:
+#           specs: spec
+#         secrets: inherit
+#
+# Or copy this file and change the trigger back to `pull_request` — which is what a
+# project with a different layout will want anyway. See docs/CI.md.
 
 on:
-  pull_request:
-    paths:
-      - '**/*.yml'
-      - '**/*.md'
+  workflow_call:
+    inputs:
+      specs:
+        description: The directory holding the specs and their descriptions.
+        type: string
+        required: false
+        default: spec
+    secrets:
+      ANTHROPIC_API_KEY:
+        description: Absent is fine; the check skips rather than failing.
+        required: false
 
 permissions:
   contents: read
   pull-requests: write
+  # The action authenticates over OIDC when no key is supplied, and cannot mint a token
+  # without this. Its absence is not reported as a permissions problem, so it is worth
+  # keeping even when a key is set.
+  id-token: write
 
 jobs:
   alignment:
     name: Compare specs against their descriptions
     runs-on: ubuntu-latest
-    # Requires ANTHROPIC_API_KEY. Skipped entirely where it is absent, so a fork's PR
-    # does not fail on a secret it cannot have.
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+
+    # Advisory means advisory: a red tick on a check nobody agreed to be blocked by is
+    # how an advisory gate gets switched off within a week.
+    continue-on-error: true
+
+    env:
+      # A fork's pull request gets no secrets, so this covers that case too: the check
+      # skips instead of failing on something it was never going to have.
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -36,15 +72,17 @@ jobs:
 
       - name: Collect changed specs
         id: changed
+        if: env.HAS_KEY == 'true'
         run: |
           {
             echo 'files<<EOF'
-            git diff --name-only "origin/${{ github.base_ref }}"... -- '*.yml' '*.md'
+            git diff --name-only "origin/${{ github.base_ref }}"... \
+              -- "${{ inputs.specs }}" | grep -E '\.(yml|md)$' || true
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
       - name: Ask for an enumeration, not an opinion
-        if: steps.changed.outputs.files != ''
+        if: env.HAS_KEY == 'true' && steps.changed.outputs.files != ''
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
