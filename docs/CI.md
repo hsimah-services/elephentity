@@ -63,7 +63,7 @@ on:
 
 jobs:
   alignment:
-    uses: hsimah/elephentity/.github/workflows/spec-alignment.yml@main
+    uses: hsimah-services/elephentity/.github/workflows/spec-alignment.yml@main
     with:
       specs: spec          # where your specs and their descriptions live
     secrets: inherit       # needs ANTHROPIC_API_KEY; skips silently without it

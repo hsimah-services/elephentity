@@ -1400,12 +1400,12 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/hsimah/elephentity-codegen.git",
+                "url": "https://github.com/hsimah-services/elephentity-codegen.git",
                 "reference": "7a577e2c874b97f137730dc1a313443dac25fb6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah/elephentity-codegen/zipball/7a577e2c874b97f137730dc1a313443dac25fb6b",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/7a577e2c874b97f137730dc1a313443dac25fb6b",
                 "reference": "7a577e2c874b97f137730dc1a313443dac25fb6b",
                 "shasum": ""
             },
@@ -1434,8 +1434,8 @@
             ],
             "description": "The Elephentity code generator: runs a project's language builders, then signs and writes what they return.",
             "support": {
-                "issues": "https://github.com/hsimah/elephentity-codegen/issues",
-                "source": "https://github.com/hsimah/elephentity-codegen/tree/main"
+                "issues": "https://github.com/hsimah-services/elephentity-codegen/issues",
+                "source": "https://github.com/hsimah-services/elephentity-codegen/tree/main"
             },
             "time": "2026-09-07T18:34:23+00:00"
         },
@@ -1444,12 +1444,12 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/hsimah/elephentity-codegen-php.git",
+                "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
                 "reference": "85b820c5c23eb8adc9703e8a729bd2a1303e1a59"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah/elephentity-codegen-php/zipball/85b820c5c23eb8adc9703e8a729bd2a1303e1a59",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/85b820c5c23eb8adc9703e8a729bd2a1303e1a59",
                 "reference": "85b820c5c23eb8adc9703e8a729bd2a1303e1a59",
                 "shasum": ""
             },
@@ -1479,8 +1479,8 @@
             ],
             "description": "The PHP builder for Elephentity: compiles the IR into locked PHP. Build-time only.",
             "support": {
-                "issues": "https://github.com/hsimah/elephentity-codegen-php/issues",
-                "source": "https://github.com/hsimah/elephentity-codegen-php/tree/main"
+                "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
+                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
             },
             "time": "2026-09-07T18:26:18+00:00"
         },

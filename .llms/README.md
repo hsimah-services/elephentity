@@ -15,9 +15,9 @@ is itself the thing this directory is about, so it needs its own issues.
 
 | Repository | Is | Speaks |
 |---|---|---|
-| `hsimah/elephentity` | the compiler, runtime and adaptors | produces the IR; ships `eleph-gen-wordpress` and `eleph-gen-wpgraphql` |
-| `hsimah/elephentity-codegen` | the orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
-| `hsimah/elephentity-codegen-php` | the PHP builder, `eleph-gen-php` | implements the protocol |
+| `hsimah-services/elephentity` | the compiler, runtime and adaptors | produces the IR; ships `eleph-gen-wordpress` and `eleph-gen-wpgraphql` |
+| `hsimah-services/elephentity-codegen` | the orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
+| `hsimah-services/elephentity-codegen-php` | the PHP builder, `eleph-gen-php` | implements the protocol |
 
 ## The rule
 
@@ -37,7 +37,7 @@ lands alone is a contract change that breaks somebody's build that afternoon.
 Use the template in [issue-template.md](issue-template.md).
 
 ```bash
-gh issue create --repo hsimah/<repo> --title "<title>" --body-file <path>
+gh issue create --repo hsimah-services/<repo> --title "<title>" --body-file <path>
 ```
 
 Three things the issue must carry, because an issue without them costs more than it

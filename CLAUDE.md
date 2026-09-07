@@ -37,8 +37,8 @@ WordPress symbol. It uses the tokenizer, so prose in a doc comment is fine and a
 call is not.
 
 **The code generator is not in this repository.** `eleph generate` compiles the specs and
-pipes the IR to [`eleph-codegen`](https://github.com/hsimah/elephentity-codegen), which
-resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah/elephentity-codegen-php)
+pipes the IR to [`eleph-codegen`](https://github.com/hsimah-services/elephentity-codegen), which
+resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah-services/elephentity-codegen-php)
 and any others — runs them, and signs and writes what they return. Both are dev
 dependencies here so that `PipelineTest` and `examples/clog` can run; a project installs
 them itself. The generator is going to be rewritten in Rust, which is why it is a
