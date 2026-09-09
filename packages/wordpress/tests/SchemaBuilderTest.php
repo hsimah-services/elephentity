@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Tests;
 
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\Ir\StorageDefinition;
+use Eleph\Schema\Ir\TypeDefinition;
+use Eleph\Schema\Ir\TypeReference;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
@@ -80,6 +88,59 @@ final class SchemaBuilderTest extends TestCase
         self::assertSame('VARCHAR(9)', $post->column('status')?->type);
         // Inline: public, private — longest is 7.
         self::assertSame('VARCHAR(7)', $post->column('visibility')?->type);
+    }
+
+    public function testADeclaredValueTypeStoresAsItsBackingPrimitive(): void
+    {
+        // price: Money, and Money's own spec declares `primitive: int`. Falling back
+        // to LONGTEXT here would silently disagree with the generated PHP, which
+        // resolves Money's backing type correctly.
+        $post = $this->table('wp_phe_post');
+
+        self::assertSame('BIGINT', $post->column('price')?->type);
+    }
+
+    public function testADeclaredEnumReferencedDirectlyIsSizedToItsLongestMember(): void
+    {
+        // `type: Status` (a bare declared-type reference) rather than the documented
+        // `type: enum, values: Status` form. Both must resolve to the enum's own
+        // members, not fall through to an unindexable LONGTEXT.
+        $schema = $this->schemaWithDirectlyReferencedEnum();
+
+        $tables = (new SchemaBuilder(new Naming()))->build($schema);
+
+        self::assertArrayHasKey('post', $tables);
+        self::assertSame('VARCHAR(9)', $tables['post']->column('status')?->type);
+    }
+
+    private function schemaWithDirectlyReferencedEnum(): Schema
+    {
+        $status = new TypeDefinition(
+            name: 'Status',
+            primitive: Primitive::String,
+            sourceFile: 'types/Status.yml',
+            values: ['draft', 'published'],
+        );
+
+        $field = new FieldDefinition(
+            name: 'status',
+            type: TypeReference::declared('Status'),
+            origin: Origin::entity('entities/Post.yml'),
+            required: true,
+        );
+
+        $entity = new EntityDefinition(
+            name: 'Post',
+            storage: new StorageDefinition('wordpress', 'post'),
+            sourceFile: 'entities/Post.yml',
+            fields: ['status' => $field],
+        );
+
+        return new Schema(
+            project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
+            entities: ['Post' => $entity],
+            types: ['Status' => $status],
+        );
     }
 
     public function testAOneToManyEdgePutsTheKeyOnTheFarSide(): void
