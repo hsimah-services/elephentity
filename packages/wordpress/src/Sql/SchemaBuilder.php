@@ -187,9 +187,34 @@ final readonly class SchemaBuilder
         if (null === $primitive) {
             // A declared value type stores as its backing primitive; the schema
             // compiler has already proved the type exists.
-            return 'LONGTEXT';
+            return $this->declaredTypeColumnType($schema, $field);
         }
 
+        return $this->primitiveColumnType($primitive, $schema, $field);
+    }
+
+    private function declaredTypeColumnType(Schema $schema, FieldDefinition $field): string
+    {
+        $declared = $schema->type((string) $field->type->declaredType);
+
+        if (null === $declared) {
+            throw new RuntimeException(sprintf(
+                'Field %s references declared type "%s", which the schema compiler '
+                . 'should already have proved exists.',
+                $field->name,
+                (string) $field->type->declaredType,
+            ));
+        }
+
+        if ($declared->isEnum()) {
+            return $this->sizeToLongest($declared->values ?? []);
+        }
+
+        return $this->primitiveColumnType($declared->primitive, $schema, $field);
+    }
+
+    private function primitiveColumnType(Primitive $primitive, Schema $schema, FieldDefinition $field): string
+    {
         return match ($primitive) {
             Primitive::String => sprintf('VARCHAR(%d)', $field->maxLength ?? self::DEFAULT_STRING_LENGTH),
             Primitive::Text, Primitive::Json => 'LONGTEXT',
@@ -220,6 +245,14 @@ final readonly class SchemaBuilder
             ?? $schema->type((string) $enum->declaredType)->values
             ?? [];
 
+        return $this->sizeToLongest($values);
+    }
+
+    /**
+     * @param list<string> $values
+     */
+    private function sizeToLongest(array $values): string
+    {
         if ([] === $values) {
             return 'VARCHAR(64)';
         }
