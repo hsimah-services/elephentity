@@ -12,6 +12,7 @@ use Eleph\Schema\Ir\ConfigParameter;
 use Eleph\Schema\Ir\ConfigType;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\PatternDeclaration;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
@@ -85,7 +86,7 @@ final readonly class SchemaCompiler
             return CompilationResult::failure($errors);
         }
 
-        $schema = new Schema($project, $entities, $types);
+        $schema = new Schema($project, $entities, $types, $this->declaredPatterns($patterns, $entities));
 
         $semantic = (new SemanticValidator())->validate($schema);
 
@@ -180,10 +181,44 @@ final readonly class SchemaCompiler
                 storage: $storage,
                 config: $this->configParameters($reader),
                 description: $reader->optionalString('description'),
+                generatesInterface: $reader->bool('interface'),
             );
         }
 
         return $patterns;
+    }
+
+    /**
+     * The patterns worth telling a generator about: opted into an interface, and
+     * actually applied somewhere. A pattern nobody uses generating a class nothing
+     * references would be noise no builder asked for.
+     *
+     * @param array<string, PatternDefinition> $patterns
+     * @param array<string, EntityDefinition>  $entities
+     *
+     * @return array<string, PatternDeclaration>
+     */
+    private function declaredPatterns(array $patterns, array $entities): array
+    {
+        $used = [];
+
+        foreach ($entities as $entity) {
+            foreach ($entity->appliedPatterns as $name) {
+                $used[$name] = true;
+            }
+        }
+
+        $declared = [];
+
+        foreach ($patterns as $name => $pattern) {
+            if (!$pattern->generatesInterface || !isset($used[$name])) {
+                continue;
+            }
+
+            $declared[$name] = new PatternDeclaration($name, $pattern->sections->fields, $pattern->sections->edges);
+        }
+
+        return $declared;
     }
 
     /**
@@ -436,6 +471,7 @@ final readonly class SchemaCompiler
                 sourceFile: $spec->file,
                 description: $reader->optionalString('description'),
                 uses: $uses,
+                appliedPatterns: array_map(static fn (PatternDefinition $pattern): string => $pattern->name, $applied),
                 fields: $sections->fields,
                 edges: $sections->edges,
                 queries: $queries,

@@ -36,6 +36,10 @@
         "config": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/configParameters"
         },
+        "interface": {
+            "type": "boolean",
+            "description": "Generate a shared interface and mutator trait for the fields and edges this pattern declares, so every entity using it exposes them uniformly. Opt-in: most patterns need nothing beyond the fields themselves landing on the entity."
+        },
         "storage": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/storage"
         },

@@ -18,6 +18,12 @@ final readonly class EntityDefinition
      * @param array<string, TriggerDefinition> $triggers Ordered; declaration order is execution order.
      * @param array<string, mixed>                $config       Pattern configuration, resolved and defaulted.
      * @param array<string, array<string, mixed>> $integrations Keyed by integration name.
+     * @param list<string>                        $appliedPatterns Every pattern that actually
+     *                                                              applies, including ones pulled
+     *                                                              in transitively through another
+     *                                                              pattern's own `use:` — unlike
+     *                                                              $uses, which is only what this
+     *                                                              entity's own spec names.
      */
     public function __construct(
         public string $name,
@@ -32,6 +38,7 @@ final readonly class EntityDefinition
         public array $triggers = [],
         public array $config = [],
         public array $integrations = [],
+        public array $appliedPatterns = [],
     ) {
     }
 

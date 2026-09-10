@@ -1,0 +1,7 @@
+entity: Comment
+use: [Auditable]
+storage:
+  table: comment
+fields:
+  body:
+    type: text

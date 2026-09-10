@@ -322,6 +322,44 @@ fields:
 `handle`. A `FacetWP` pattern is the intended home for facet integration later — same
 mechanism, no special case in the core.
 
+### A pattern's fields and edges as a shared interface
+
+`interface: true` on a pattern generates a shared interface and mutator trait for its
+own fields and edges — `Auditable`, not `PostAuditable`, because every entity using it
+gets the same one. Opt-in, and rare: most patterns need nothing beyond their fields
+landing on the entity, which already happens without this.
+
+Everything it produces is fully generated, unlike a field verifier or a trigger — there
+is nothing for an application to implement. An entity's own getters already have the
+exact signatures the pattern's fields require, so `implements Auditable` costs the
+generator an `implements` clause and nothing else. This is why a *shared* interface
+across entities is safe here in a way it is not for `verify(mixed, MutationContext)`:
+`ContractGenerator`'s interfaces extend nothing because PHP forbids narrowing a
+parameter type in an implementation, and a plain field getter has no such parameter to
+narrow.
+
+**The mutator side is a trait, `use`d, never a base class.** PHP allows one `extends`
+but many `use`s, and two patterns on the same entity both wanting to contribute setters
+— `Auditable` and `SoftDeletable` on the same `Post` — is not hypothetical. Composing
+via inheritance would need the same sealing treatment field/edge collisions already
+get; a trait sidesteps the conflict entirely. `{Pattern}MutatorTrait`'s methods assume
+the class mixing it in has a private `MutationBuffer $buffer` — true of every generated
+`{Entity}Mutator`, and the only thing the trait requires of it. A field the pattern
+manages (`managed: created`, say) gets no setter on the trait, for the same reason it
+gets none on the entity's own mutator.
+
+**Only patterns actually used, by at least one entity, are declared on the IR.** A
+pattern nobody applies would generate a class nothing references — `Schema::$patterns`
+carries `PatternDeclaration`s keyed by name, one per opted-in *and used* pattern, built
+from the pattern's own field/edge declaration rather than any one entity's merged copy
+of it — every entity applying a pattern gets exactly the same shape, which is what
+sealing already guarantees. `EntityDefinition::$appliedPatterns` is the companion fact
+on the entity side: every pattern that actually applies, including ones pulled in only
+through another pattern's own `use:` — deliberately not the same list as
+`EntityDefinition::$uses`, which stays what the entity's own spec names directly (see
+`SchemaCompilerTest::testResolvesPatternsUsedByOtherPatterns`, which depends on that
+distinction).
+
 ---
 
 ## 6. Type system

@@ -14,13 +14,17 @@ namespace Eleph\Schema\Ir;
 final readonly class Schema
 {
     /**
-     * @param array<string, EntityDefinition> $entities
-     * @param array<string, TypeDefinition>   $types
+     * @param array<string, EntityDefinition>  $entities
+     * @param array<string, TypeDefinition>    $types
+     * @param array<string, PatternDeclaration> $patterns Only patterns that opted into
+     *                                                     generating an interface, and
+     *                                                     are used by at least one entity.
      */
     public function __construct(
         public ProjectDefinition $project,
         public array $entities = [],
         public array $types = [],
+        public array $patterns = [],
     ) {
     }
 
@@ -32,6 +36,11 @@ final readonly class Schema
     public function type(string $name): ?TypeDefinition
     {
         return $this->types[$name] ?? null;
+    }
+
+    public function pattern(string $name): ?PatternDeclaration
+    {
+        return $this->patterns[$name] ?? null;
     }
 
     public function hasEntity(string $name): bool
