@@ -1,0 +1,5 @@
+pattern: Silent
+fields:
+  note:
+    type: string
+    nullable: true

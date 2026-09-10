@@ -1,0 +1,7 @@
+entity: Post
+use: [Auditable, Silent]
+storage:
+  table: post
+fields:
+  title:
+    type: string

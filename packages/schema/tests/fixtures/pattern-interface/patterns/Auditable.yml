@@ -1,0 +1,9 @@
+pattern: Auditable
+interface: true
+fields:
+  createdAt:
+    type: datetime
+    managed: created
+  updatedAt:
+    type: datetime
+    managed: modified

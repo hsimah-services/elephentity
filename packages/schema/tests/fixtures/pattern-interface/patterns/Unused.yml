@@ -1,0 +1,6 @@
+pattern: Unused
+interface: true
+fields:
+  ghost:
+    type: string
+    nullable: true

@@ -26,6 +26,8 @@ final readonly class PatternDefinition
         public array $storage = [],
         public array $config = [],
         public ?string $description = null,
+        /** Generate a shared interface and mutator trait for this pattern's own fields and edges. */
+        public bool $generatesInterface = false,
     ) {
     }
 }

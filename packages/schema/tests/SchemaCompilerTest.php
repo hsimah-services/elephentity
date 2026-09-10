@@ -59,6 +59,12 @@ final class SchemaCompilerTest extends TestCase
         self::assertNotContains('Timestamps', $post->uses);
         self::assertArrayHasKey('updatedAt', $post->fields);
         self::assertSame(TriggerPhase::PostCommit, $post->triggers['audit']->phase);
+
+        // appliedPatterns is the other list: everything that actually applies,
+        // transitively pulled-in patterns included — what a consumer wanting to know
+        // "does this entity have Timestamps" actually needs.
+        self::assertContains('Timestamps', $post->appliedPatterns);
+        self::assertContains('Auditable', $post->appliedPatterns);
     }
 
     public function testDerivesRelationKindFromCardinalityAndInverseUniqueness(): void
