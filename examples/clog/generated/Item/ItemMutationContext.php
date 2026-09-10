@@ -9,13 +9,14 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutationContext.php
- * digest: sha256:6f08f807a7ba32db8195a6cc8854805cd4443efb0c6df4a93edd48834ec9ab80
+ * digest: sha256:a6320dec0fbfcb94b8970ed72f4eb11979060ae84e325ce9a246ffa509894abb
  */
 
 namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationContext;
 
 /**
@@ -59,6 +60,19 @@ final readonly class ItemMutationContext implements MutationContext
     public function changes(): array
     {
         return $this->context->changes();
+    }
+
+    /**
+     * @return list<Identifier>
+     */
+    public function pendingEdge(string $edge): array
+    {
+        return $this->context->pendingEdge($edge);
+    }
+
+    public function isEdgeChanged(string $edge): bool
+    {
+        return $this->context->isEdgeChanged($edge);
     }
 
     public function originalCreatedAt(): ?DateTimeImmutable

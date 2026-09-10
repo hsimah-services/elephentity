@@ -468,6 +468,20 @@ symmetrically.
 Values in the bag are domain-typed (`TOut`) on both sides: `write()` has not run yet
 at verify time, and old values come from the Entity.
 
+**Edges get a pending-only counterpart, not a symmetric one.** `pendingEdge(string):
+list<Identifier>` and `isEdgeChanged(string): bool` exist so a `preCommit` trigger can
+implement a cross-edge rule such as "exactly one of tutorial/quiz/commodity is set" —
+the case that has no field to attach `verify: true` to. There is deliberately no
+`originalEdge()`: nothing in the write path loads an entity's currently-attached edges
+before a mutation runs (`Runtime::currentValues()` reads field getters only), so a
+method promising the previously-attached targets would either be wrong on update or
+need a new storage read wired through the whole write path. `pendingEdge()` is exactly
+`MutationBuffer::edge()`'s own bookkeeping read back — correct and complete on create,
+and on update reflecting only what *this* mutation touched, same as the buffer it
+wraps. Generated per-entity contexts get typed accessors the same way fields do:
+`pending{Edge}(): ?Identifier` for a to-one edge, `pending{Edge}(): list<Identifier>`
+for a to-many one, plus `is{Edge}Changed(): bool`.
+
 ### Two tiers
 
 1. **Field verifier** — entity-specific, runs first, and can be exactly typed because

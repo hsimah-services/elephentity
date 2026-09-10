@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutationContext.php
- * digest: sha256:98f91cb2e15f42f6535d384472aaad2648334b51ca58e793ec1f40dae5e4f584
+ * digest: sha256:5c7c736469c2169dc2310f70fb73831e6a5ad8ddba01274005ef9ebe0ff34765
  */
 
 namespace Clog\Entity\Inventory;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationContext;
 
 /**
@@ -58,6 +59,19 @@ final readonly class InventoryMutationContext implements MutationContext
     public function changes(): array
     {
         return $this->context->changes();
+    }
+
+    /**
+     * @return list<Identifier>
+     */
+    public function pendingEdge(string $edge): array
+    {
+        return $this->context->pendingEdge($edge);
+    }
+
+    public function isEdgeChanged(string $edge): bool
+    {
+        return $this->context->isEdgeChanged($edge);
     }
 
     public function originalCreatedAt(): ?DateTimeImmutable
@@ -154,6 +168,26 @@ final readonly class InventoryMutationContext implements MutationContext
         assert(null === $value || $value instanceof DateTimeImmutable);
 
         return $value;
+    }
+
+    public function pendingItem(): ?Identifier
+    {
+        return $this->context->pendingEdge('item')[0] ?? null;
+    }
+
+    public function isItemChanged(): bool
+    {
+        return $this->context->isEdgeChanged('item');
+    }
+
+    public function pendingLocation(): ?Identifier
+    {
+        return $this->context->pendingEdge('location')[0] ?? null;
+    }
+
+    public function isLocationChanged(): bool
+    {
+        return $this->context->isEdgeChanged('location');
     }
 
     public static function of(MutationContext $context): self

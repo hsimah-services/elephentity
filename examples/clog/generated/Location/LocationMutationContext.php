@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationMutationContext.php
- * digest: sha256:c0591f71b18b86b683540bf7093c60ccec24bdbca4144401cb6cb83ae26173be
+ * digest: sha256:52690c7ac763155f94473233853965f48fe8861c51269abe91f23c419e11f30a
  */
 
 namespace Clog\Entity\Location;
 
 use DateTimeImmutable;
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationContext;
 
 /**
@@ -58,6 +59,19 @@ final readonly class LocationMutationContext implements MutationContext
     public function changes(): array
     {
         return $this->context->changes();
+    }
+
+    /**
+     * @return list<Identifier>
+     */
+    public function pendingEdge(string $edge): array
+    {
+        return $this->context->pendingEdge($edge);
+    }
+
+    public function isEdgeChanged(string $edge): bool
+    {
+        return $this->context->isEdgeChanged($edge);
     }
 
     public function originalCreatedAt(): ?DateTimeImmutable
