@@ -27,7 +27,13 @@ final class RecordingTriggers implements EntityTriggers
 
     public function dispatch(TriggerPhase $phase, TriggerEvent $event, MutationContext $context): void
     {
-        $this->calls[] = sprintf('%s:%s:%s', $phase->value, $event->value, $context->entity());
+        $this->calls[] = sprintf(
+            '%s:%s:%s:%s',
+            $phase->value,
+            $event->value,
+            $context->entity(),
+            $context->id(),
+        );
 
         $failure = $this->failures[$phase->value] ?? null;
 
