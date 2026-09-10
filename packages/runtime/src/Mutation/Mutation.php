@@ -83,6 +83,19 @@ final class Mutation implements MutationBuffer, MutationContext
     }
 
     /**
+     * @return list<Identifier>
+     */
+    public function pendingEdge(string $edge): array
+    {
+        return ($this->edges[$edge] ?? null)?->added() ?? [];
+    }
+
+    public function isEdgeChanged(string $edge): bool
+    {
+        return isset($this->edges[$edge]) && !$this->edges[$edge]->isEmpty();
+    }
+
+    /**
      * @return array<string, PendingEdge>
      */
     public function edgeChanges(): array

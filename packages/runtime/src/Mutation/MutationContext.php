@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Mutation;
 
+use Eleph\Runtime\Identity\Identifier;
+
 /**
  * The state a verifier is allowed to reason about.
  *
@@ -51,4 +53,25 @@ interface MutationContext
      * @return array<string, mixed>
      */
     public function changes(): array;
+
+    /**
+     * What this mutation will attach this edge to.
+     *
+     * This is the write side's own bookkeeping, not the row's true final state: there
+     * is no original edge state to fall back to (nothing here loads what is currently
+     * attached), so on an update an edge this mutation never touches reads as empty
+     * even though the row may already hold something. On create that distinction does
+     * not exist — nothing is attached yet — which is exactly the case a cross-edge
+     * rule such as "exactly one of these three is set" needs.
+     *
+     * @return list<Identifier>
+     */
+    public function pendingEdge(string $edge): array;
+
+    /**
+     * Whether this mutation's buffer recorded anything for this edge — an add, a
+     * remove, or a wholesale replacement. False does not mean the edge is empty; it
+     * means this mutation is silent about it.
+     */
+    public function isEdgeChanged(string $edge): bool;
 }
