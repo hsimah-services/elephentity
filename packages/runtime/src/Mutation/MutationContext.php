@@ -30,6 +30,18 @@ interface MutationContext
     public function entity(): string;
 
     /**
+     * The row this mutation is about.
+     *
+     * On create, this is a real EntityId by the time a preCommit or postCommit trigger
+     * sees it — the unit of work resolves it once the insert flushes, before either
+     * phase dispatches — but never earlier: a field verifier or a `preCommit` trigger's
+     * own read of `isCreate()` still needs to work, so nothing here pretends a pending
+     * row is persisted before it is. Call `isPersisted()` on the result, or check
+     * `isCreate()`, rather than assuming.
+     */
+    public function id(): Identifier;
+
+    /**
      * True when there is no prior state, so every original() is null.
      */
     public function isCreate(): bool;

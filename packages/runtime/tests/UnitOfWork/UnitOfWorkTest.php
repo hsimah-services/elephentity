@@ -419,12 +419,34 @@ final class UnitOfWorkTest extends TestCase
         $work->commit();
 
         self::assertSame(
-            ['preCommit:update:Post', 'postCommit:update:Post'],
+            ['preCommit:update:Post:1', 'postCommit:update:Post:1'],
             $triggers->calls,
         );
 
         // preCommit fired between the write and the commit; postCommit after it.
         self::assertSame(['begin', 'update Post', 'commit'], $storage->log);
+    }
+
+    public function testATriggerOnACreateSeesTheRealIdInBothPhases(): void
+    {
+        // The row does not exist until the insert flushes, but both trigger phases run
+        // after that — so neither should ever see the PendingId placeholder the
+        // mutation started with.
+        $storage = new FakeStorage();
+        $storage->nextId = 42;
+        $triggers = new RecordingTriggers();
+
+        $work = $this->unitOfWork($storage, triggers: ['Post' => $triggers]);
+
+        $mutation = new Mutation('Post', new PendingId('Post'));
+        $mutation->set('title', 'Hello');
+        $work->register($mutation);
+        $work->commit();
+
+        self::assertSame(
+            ['preCommit:create:Post:42', 'postCommit:create:Post:42'],
+            $triggers->calls,
+        );
     }
 
     public function testAPreCommitTriggerThrowingRollsBackTheWholeCommit(): void
@@ -490,7 +512,7 @@ final class UnitOfWorkTest extends TestCase
         $work->delete(new Deletion('Tag', EntityId::of(7)));
         $work->commit();
 
-        self::assertSame(['preCommit:delete:Tag', 'postCommit:delete:Tag'], $triggers->calls);
+        self::assertSame(['preCommit:delete:Tag:7', 'postCommit:delete:Tag:7'], $triggers->calls);
         self::assertSame(['begin', 'delete Tag', 'commit'], $storage->log);
     }
 
@@ -515,8 +537,8 @@ final class UnitOfWorkTest extends TestCase
         $work->delete(new Deletion('Post', EntityId::of(1)));
         $work->commit();
 
-        self::assertSame(['preCommit:delete:Comment', 'postCommit:delete:Comment'], $comments->calls);
-        self::assertSame(['preCommit:delete:Post', 'postCommit:delete:Post'], $posts->calls);
+        self::assertSame(['preCommit:delete:Comment:10', 'postCommit:delete:Comment:10'], $comments->calls);
+        self::assertSame(['preCommit:delete:Post:1', 'postCommit:delete:Post:1'], $posts->calls);
     }
 
     public function testADeleteTriggerThrowingRollsBackTheDeletion(): void

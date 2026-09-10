@@ -520,6 +520,18 @@ wraps. Generated per-entity contexts get typed accessors the same way fields do:
 `pending{Edge}(): ?Identifier` for a to-one edge, `pending{Edge}(): list<Identifier>`
 for a to-many one, plus `is{Edge}Changed(): bool`.
 
+**`id(): Identifier` is how a trigger finds out which row it was called about.** The
+gap was not just a missing interface method: `Mutation::$target` is the `PendingId` a
+create started with, and it stays that object — `readonly`, never reassigned — for the
+whole commit, because `isCreate()` depends on `$target->isPersisted()` staying
+answerable the same way throughout. Overwriting it the moment the insert flushes would
+flip `isCreate()` mid-dispatch, which is worse than the gap this fixes. A second,
+separate slot (`resolveId(EntityId)`, called by the unit of work right after the row
+write, before either trigger phase) carries the real id instead, and `id()` reads
+whichever is available — the resolved one if a create has happened, `$target` itself
+otherwise (which is already real for an update or a delete context). Both trigger
+phases run after that resolution, so neither ever sees a placeholder.
+
 ### Two tiers
 
 1. **Field verifier** — entity-specific, runs first, and can be exactly typed because
