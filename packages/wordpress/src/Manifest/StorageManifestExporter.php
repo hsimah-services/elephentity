@@ -25,6 +25,7 @@ final readonly class StorageManifestExporter
                 use Eleph\WordPress\Sql\EdgePlacement;
                 use Eleph\WordPress\Sql\Index;
                 use Eleph\WordPress\Sql\TableSchema;
+                use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
                 use Eleph\Runtime\Storage\RelationKind;
 
                 /**
@@ -46,6 +47,12 @@ final readonly class StorageManifestExporter
                     joinTables: [
                 %s
                     ],
+                    taxonomies: [
+                %s
+                    ],
+                    taxonomyPlacements: [
+                %s
+                    ],
                 );
 
                 PHP,
@@ -54,7 +61,38 @@ final readonly class StorageManifestExporter
             $this->placements($manifest),
             $this->columns($manifest),
             $this->tables($manifest->joinTables),
+            $this->taxonomies($manifest),
+            $this->taxonomyPlacements($manifest),
         );
+    }
+
+    private function taxonomies(StorageManifest $manifest): string
+    {
+        $lines = [];
+
+        foreach ($manifest->taxonomies as $entity => $slug) {
+            $lines[] = sprintf('        %s => %s,', var_export($entity, true), var_export($slug, true));
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function taxonomyPlacements(StorageManifest $manifest): string
+    {
+        $lines = [];
+
+        foreach ($manifest->taxonomyPlacements as $key => $placement) {
+            $lines[] = sprintf(
+                "        %s => new TaxonomyPlacement(\n            %s,\n            %s,\n            %s,\n            %s,\n        ),",
+                var_export($key, true),
+                var_export($placement->entity, true),
+                var_export($placement->edge, true),
+                var_export($placement->target, true),
+                var_export($placement->taxonomy, true),
+            );
+        }
+
+        return implode("\n", $lines);
     }
 
     /**

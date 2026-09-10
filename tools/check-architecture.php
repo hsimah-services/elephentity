@@ -51,6 +51,7 @@ const COMPILERS = [
     'wordpress/bin/eleph-gen-wordpress',
     'wordpress/src/Manifest/PostTypeManifestBuilder.php',
     'wordpress/src/Manifest/StorageManifestBuilder.php',
+    'wordpress/src/Manifest/TaxonomyManifestBuilder.php',
     'wordpress/src/Sql/EdgePlanner.php',
     'wordpress/src/Sql/SchemaBuilder.php',
     'wpgraphql/bin/eleph-gen-wpgraphql',

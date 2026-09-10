@@ -10,6 +10,8 @@ use Eleph\WordPress\Manifest\PostTypeManifestBuilder;
 use Eleph\WordPress\Manifest\PostTypeManifestExporter;
 use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Manifest\StorageManifestExporter;
+use Eleph\WordPress\Manifest\TaxonomyManifestBuilder;
+use Eleph\WordPress\Manifest\TaxonomyManifestExporter;
 
 /**
  * The WordPress builder: the driver's declaration, and the physical schema it compiles to.
@@ -65,6 +67,11 @@ try {
             // post types still gets the file — empty, and saying so.
             'post-types.php' => (new PostTypeManifestExporter())->export(
                 (new PostTypeManifestBuilder())->build($schema),
+            ),
+            // Same reasoning, for register_taxonomy(). A project declaring no
+            // taxonomy-backed entity still gets the file — empty, and saying so.
+            'taxonomies.php' => (new TaxonomyManifestExporter())->export(
+                (new TaxonomyManifestBuilder())->build($schema),
             ),
         ]
         : [];

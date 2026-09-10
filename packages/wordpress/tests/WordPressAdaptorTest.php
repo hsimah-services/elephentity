@@ -10,6 +10,8 @@ use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Write\Insert;
+use Eleph\Runtime\Storage\Write\Link;
+use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Schema\SchemaCompiler;
@@ -19,6 +21,8 @@ use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\FieldMap;
 use Eleph\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
+use Eleph\WordPress\Taxonomy\TaxonomyStorage;
 use Eleph\WordPress\WordPressAdaptor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -199,6 +203,115 @@ final class WordPressAdaptorTest extends TestCase
         $record = $this->adaptor($database)->get('Post', EntityId::of(1));
 
         self::assertSame(['createdAt' => '2026-09-05 00:00:00'], $record?->values);
+    }
+
+    public function testGetDispatchesATaxonomyEntityToTerms(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $id = $terms->insert('aka', 'Sparky');
+
+        $record = $this->taxonomyAdaptor($database, $terms)->get('Aka', EntityId::of($id));
+
+        self::assertSame('Sparky', $record?->value('name'));
+        self::assertSame([], $database->statements, 'A taxonomy entity never touches the SQL database.');
+    }
+
+    public function testQueryDispatchesATaxonomyEntityToTerms(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $terms->insert('aka', 'Sparky');
+
+        $page = $this->taxonomyAdaptor($database, $terms)->query(new Criteria('Aka'));
+
+        self::assertCount(1, $page->items);
+        self::assertSame([], $database->statements);
+    }
+
+    public function testCountDispatchesATaxonomyEntityToTerms(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $terms->insert('aka', 'Sparky');
+
+        self::assertSame(1, $this->taxonomyAdaptor($database, $terms)->count(new Criteria('Aka')));
+        self::assertSame([], $database->statements);
+    }
+
+    public function testInsertOnATaxonomyEntityCreatesATermRatherThanARow(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $pending = new PendingId('Aka');
+
+        $result = $this->taxonomyAdaptor($database, $terms)->write(new WriteBatch(
+            new Insert('Aka', $pending, ['name' => 'Sparky']),
+        ));
+
+        self::assertSame('Sparky', $terms->name('aka', (int) $result->idFor($pending)->raw()));
+        self::assertSame([], $database->inserts);
+    }
+
+    public function testLinkOnATaxonomyPlacedEdgeSetsATermRelationshipRatherThanSql(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $akaId = $terms->insert('aka', 'Sparky');
+
+        $this->taxonomyAdaptor($database, $terms)->write(new WriteBatch(
+            new Link('Tutorial', 'akas', EntityId::of(5), EntityId::of($akaId)),
+        ));
+
+        self::assertSame([$akaId], $terms->relationships['aka'][5]);
+        self::assertSame([], $database->statements);
+    }
+
+    public function testUnlinkOnATaxonomyPlacedEdgeRemovesATermRelationship(): void
+    {
+        $database = new FakeDatabase();
+        $terms = new FakeTerms();
+        $akaId = $terms->insert('aka', 'Sparky');
+        $terms->setTerms('aka', 5, [$akaId], append: false);
+
+        $this->taxonomyAdaptor($database, $terms)->write(new WriteBatch(
+            new Unlink('Tutorial', 'akas', EntityId::of(5), EntityId::of($akaId)),
+        ));
+
+        self::assertSame([], $terms->relationships['aka'][5]);
+    }
+
+    public function testAnOrdinaryEdgeOnTheSameEntityIsUnaffectedByTaxonomyPlacements(): void
+    {
+        // Tutorial itself is not taxonomy-backed — only its "akas" edge is diverted.
+        // An unrelated write against Tutorial's own table must still reach SQL.
+        $database = new FakeDatabase();
+
+        $adaptor = new WordPressAdaptor(
+            $database,
+            ['Tutorial' => new TableSchema('wp_phe_tutorial', [
+                'id' => new Column('id', 'BIGINT UNSIGNED', autoIncrement: true),
+                'title' => new Column('title', 'VARCHAR(255)'),
+            ])],
+            new FieldMap([]),
+            taxonomyPlacements: ['Tutorial.akas' => new TaxonomyPlacement('Tutorial', 'akas', 'Aka', 'aka')],
+        );
+
+        $adaptor->write(new WriteBatch(new Update('Tutorial', EntityId::of(1), ['title' => 'New'])));
+
+        self::assertCount(1, $database->statements);
+    }
+
+    private function taxonomyAdaptor(FakeDatabase $database, FakeTerms $terms): WordPressAdaptor
+    {
+        return new WordPressAdaptor(
+            $database,
+            [],
+            new FieldMap([]),
+            taxonomies: ['Aka' => 'aka'],
+            taxonomyPlacements: ['Tutorial.akas' => new TaxonomyPlacement('Tutorial', 'akas', 'Aka', 'aka')],
+            taxonomy: new TaxonomyStorage($terms),
+        );
     }
 
     private function adaptor(FakeDatabase $database): WordPressAdaptor

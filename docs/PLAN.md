@@ -941,6 +941,57 @@ Two consequences, both deliberate:
   announces every planned removal — and announces it *before* the DELETE, since a
   trigger that cannot read the row it is being told about cannot project it.
 
+### Taxonomy-backed entities
+
+A classification vocabulary — a `name` field and a many-to-many edge to whatever it
+classifies, nothing else — gets a custom table, a post type and a full WPGraphQL type
+by default, which is a lot of machinery for something `register_taxonomy()` already is.
+An entity can opt out of all of it instead.
+
+**The marker is pattern configuration, the same extension point `visibility` and
+`adminMenu` already use.** A project's own pattern (shaped like `ClogPost`, not a
+pattern this framework ships) sets `taxonomy: true` in its `config:`, and the entity's
+`storage.handle` is read as the taxonomy slug rather than a post type slug. Nothing in
+`packages/schema` learns what a taxonomy is — `EdgePlanner::isTaxonomy()` is the one
+place that reads the flag, and every other WordPress-package class downstream of it
+either skips such an entity or treats it specially, without any of them changing what
+the core IR carries.
+
+**Placement, not declaration, decides where an edge to one lives.** A many-to-many edge
+whose target is taxonomy-backed is diverted at the same point `EdgePlanner` decides
+every other edge's placement: `plan()` skips it (there is no column or join table to
+place — WordPress's own `wp_term_relationships` already is one), and
+`planTaxonomies()` records a `TaxonomyPlacement` instead. `SchemaBuilder` never creates
+a table for the taxonomy entity itself, for the same reason.
+
+**Term relationships are keyed by the entity's own id, not its `postId`.** The obvious
+alternative — using the real `wp_posts.ID` so WordPress's own `tax_query` and admin
+term lists see the relationship — was rejected because nothing in this framework
+reliably has that id at write time: `postId`, per "Post-row divergence" above, is
+filled by an application's own `postCommit` trigger, asynchronously, and possibly never.
+Keying by the framework's own id keeps this correct and fully framework-owned, at the
+cost of WordPress-native `tax_query`/admin-list integration needing the application to
+keep the two in sync itself — the identical tradeoff `postId` already makes.
+
+**Only `name` is supported.** Every real motivating case for this pattern is exactly a
+label; a taxonomy entity with any other field is a spec error this package has no way
+to report today, so it is silently ignored by `TaxonomyStorage` rather than guessed at.
+
+**Reading the edge forwards and backwards go through different code**, because they
+are genuinely different queries. Forwards — "this Tutorial's Akas" — queries the
+taxonomy entity itself and is `TaxonomyStorage`'s job, batched across many parents via
+`Terms::termsOfMany()` the same way the SQL edge loader batches. Backwards — "which
+Tutorials carry this Aka" — queries Tutorial's own table, so it stays in
+`QueryCompiler`, joining WordPress's own `wp_term_relationships`/`wp_term_taxonomy`
+tables directly (their names carry only `$wpdb`'s prefix, never this schema's own
+additional layer).
+
+**Deferred**: `required: true` on an edge (tracked separately, elephentity#35),
+hierarchical taxonomies beyond the registration flag (no parent-edge modelling), and
+WPGraphQL-native taxonomy connections — the existing manifest builder already exposes
+a taxonomy entity as an ordinary object type, which is enough to query but not to
+integrate with WPGraphQL's own taxonomy-aware tooling.
+
 ---
 
 ## 13. Plugin layer: WPGraphQL

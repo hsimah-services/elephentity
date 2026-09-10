@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Tests;
 
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EdgeDefinition;
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\Primitive;
+use Eleph\Schema\Ir\ProjectDefinition;
+use Eleph\Schema\Ir\Schema;
+use Eleph\Schema\Ir\StorageDefinition;
+use Eleph\Schema\Ir\TypeReference;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
@@ -66,6 +76,48 @@ final class StorageManifestTest extends TestCase
 
         self::assertInstanceOf(StorageManifest::class, $rebuilt);
         self::assertEquals($this->manifest(), $rebuilt);
+    }
+
+    public function testATaxonomyBackedEntityIsCarriedByTableNameNotByEdgePlacement(): void
+    {
+        $aka = new EntityDefinition(
+            name: 'Aka',
+            storage: new StorageDefinition('wordpress', 'aka', handle: 'aka'),
+            sourceFile: 'entities/Aka.yml',
+            fields: ['name' => new FieldDefinition('name', TypeReference::primitive(Primitive::String), Origin::entity('entities/Aka.yml'))],
+            config: ['taxonomy' => true],
+        );
+
+        $tutorial = new EntityDefinition(
+            name: 'Tutorial',
+            storage: new StorageDefinition('wordpress', 'tutorial'),
+            sourceFile: 'entities/Tutorial.yml',
+            edges: ['akas' => new EdgeDefinition('akas', 'Aka', Cardinality::Many, Origin::entity('entities/Tutorial.yml'))],
+        );
+
+        $schema = new Schema(
+            project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
+            entities: ['Aka' => $aka, 'Tutorial' => $tutorial],
+        );
+
+        $manifest = (new StorageManifestBuilder())->build($schema);
+
+        self::assertSame(['Aka' => 'aka'], $manifest->taxonomies);
+        self::assertArrayHasKey('Tutorial.akas', $manifest->taxonomyPlacements);
+        self::assertSame('aka', $manifest->taxonomyPlacements['Tutorial.akas']->taxonomy);
+        self::assertArrayNotHasKey('Tutorial.akas', $manifest->placements);
+        self::assertArrayNotHasKey('Aka', $manifest->tables);
+
+        // Round-trips through export/rebuild the same as the rest of the manifest.
+        $exported = (new StorageManifestExporter())->export($manifest);
+        $file = tempnam(sys_get_temp_dir(), 'eleph') . '.php';
+        file_put_contents($file, "<?php\n\ndeclare(strict_types=1);\n\n" . $exported);
+
+        /** @var mixed $rebuilt */
+        $rebuilt = require $file;
+        unlink($file);
+
+        self::assertEquals($manifest, $rebuilt);
     }
 
     private function manifest(): StorageManifest

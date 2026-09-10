@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Tests;
 
+use Eleph\Schema\Ir\Cardinality;
+use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Origin;
@@ -140,6 +142,47 @@ final class SchemaBuilderTest extends TestCase
             project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
             entities: ['Post' => $entity],
             types: ['Status' => $status],
+        );
+    }
+
+    public function testATaxonomyBackedEntityGetsNoTableOfItsOwn(): void
+    {
+        $tables = (new SchemaBuilder(new Naming()))->build($this->schemaWithATaxonomy());
+
+        self::assertArrayHasKey('tutorial', $tables);
+        self::assertArrayNotHasKey('aka', $tables);
+    }
+
+    public function testAManyToManyEdgeToATaxonomyGetsNoColumnOrJoinTable(): void
+    {
+        // No FK column on Tutorial's own table, and no join table either — the
+        // relationship lives in wp_term_relationships, which this builder never touches.
+        $tables = (new SchemaBuilder(new Naming()))->build($this->schemaWithATaxonomy());
+
+        self::assertNull($tables['tutorial']->column('akas_id'));
+        self::assertCount(1, $tables, 'only the Tutorial table exists');
+    }
+
+    private function schemaWithATaxonomy(): Schema
+    {
+        $aka = new EntityDefinition(
+            name: 'Aka',
+            storage: new StorageDefinition('wordpress', 'aka', handle: 'aka'),
+            sourceFile: 'entities/Aka.yml',
+            fields: ['name' => new FieldDefinition('name', TypeReference::primitive(Primitive::String), Origin::entity('entities/Aka.yml'))],
+            config: ['taxonomy' => true],
+        );
+
+        $tutorial = new EntityDefinition(
+            name: 'Tutorial',
+            storage: new StorageDefinition('wordpress', 'tutorial'),
+            sourceFile: 'entities/Tutorial.yml',
+            edges: ['akas' => new EdgeDefinition('akas', 'Aka', Cardinality::Many, Origin::entity('entities/Tutorial.yml'))],
+        );
+
+        return new Schema(
+            project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
+            entities: ['Aka' => $aka, 'Tutorial' => $tutorial],
         );
     }
 

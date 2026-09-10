@@ -6,6 +6,7 @@ namespace Eleph\WordPress\Manifest;
 
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\Schema;
+use Eleph\WordPress\Sql\EdgePlanner;
 
 /**
  * Compiles the arguments `register_post_type()` will be called with.
@@ -43,6 +44,12 @@ final readonly class PostTypeManifestBuilder
             $handle = $entity->storage->handle;
 
             if ('wordpress' !== $entity->storage->driver || null === $handle) {
+                continue;
+            }
+
+            // A taxonomy entity's handle names a taxonomy slug, not a post type —
+            // TaxonomyManifestBuilder owns it instead.
+            if (EdgePlanner::isTaxonomy($entity)) {
                 continue;
             }
 
