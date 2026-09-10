@@ -60,6 +60,8 @@ final class CompilationFailureTest extends TestCase
         self::assertContains('field.enumWithoutValues', $codes);
         // A derived inverse cannot be pluralised.
         self::assertContains('edge.inverseNotDerivable', $codes);
+        // required only expresses a to-one relationship.
+        self::assertContains('edge.requiredNotToOne', $codes);
         // Edge and query targets must exist.
         self::assertContains('edge.unknownTarget', $codes);
         self::assertContains('query.unknownReturn', $codes);

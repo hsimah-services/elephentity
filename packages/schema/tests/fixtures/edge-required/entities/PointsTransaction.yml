@@ -1,0 +1,14 @@
+entity: PointsTransaction
+storage:
+  table: points_transaction
+fields:
+  value:
+    type: int
+edges:
+  user:
+    to: User
+    cardinality: one
+    required: true
+  reference:
+    to: User
+    cardinality: one

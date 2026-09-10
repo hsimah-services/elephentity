@@ -1,0 +1,6 @@
+entity: User
+storage:
+  table: user
+fields:
+  name:
+    type: string

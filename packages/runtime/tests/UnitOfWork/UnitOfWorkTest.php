@@ -291,6 +291,59 @@ final class UnitOfWorkTest extends TestCase
         self::assertSame(['begin', 'update Post', 'commit'], $storage->log);
     }
 
+    public function testACreateMissingARequiredEdgeIsRejectedBeforeAnySql(): void
+    {
+        // A ledger row with no owning user should not be constructible — the same
+        // rule as a required field, for a to-one edge instead.
+        $storage = new FakeStorage();
+        $work = $this->unitOfWork($storage, requiredEdges: ['PointsTransaction' => ['user']]);
+
+        $mutation = new Mutation('PointsTransaction', new PendingId('PointsTransaction'));
+        $mutation->set('value', 10);
+
+        $work->register($mutation);
+
+        try {
+            $work->commit();
+            self::fail('the commit should have been rejected');
+        } catch (CommitRejected $rejected) {
+            self::assertSame(['PointsTransaction.user'], $rejected->paths());
+        }
+
+        self::assertSame([], $storage->log);
+    }
+
+    public function testARequiredEdgeThatIsAttachedPasses(): void
+    {
+        $storage = new FakeStorage();
+        $work = $this->unitOfWork($storage, requiredEdges: ['PointsTransaction' => ['user']]);
+
+        $mutation = new Mutation('PointsTransaction', new PendingId('PointsTransaction'));
+        $mutation->set('value', 10);
+        $mutation->edge('user')->add(EntityId::of(1));
+
+        $work->register($mutation);
+        $work->commit();
+
+        self::assertContains('commit', $storage->log);
+    }
+
+    public function testAnUpdateStaysPartialWhateverEdgeIsRequired(): void
+    {
+        // required describes creating a row, the same as a required field — an update
+        // that never touches the edge is not thereby forced to attach it.
+        $storage = new FakeStorage();
+        $work = $this->unitOfWork($storage, requiredEdges: ['PointsTransaction' => ['user']]);
+
+        $mutation = new Mutation('PointsTransaction', EntityId::of(1));
+        $mutation->set('value', 20);
+
+        $work->register($mutation);
+        $work->commit();
+
+        self::assertSame(['begin', 'update PointsTransaction', 'commit'], $storage->log);
+    }
+
     public function testAManagedFieldIsStampedBeforeAnythingLooksAtIt(): void
     {
         // Stamped first, so the required check sees a value that is really there. The
@@ -512,6 +565,7 @@ final class UnitOfWorkTest extends TestCase
      * @param array<string, string>            $fieldTypes
      * @param array<string, RecordingTriggers> $triggers
      * @param array<string, list<string>>      $required
+     * @param array<string, list<string>>      $requiredEdges
      */
     private function unitOfWork(
         FakeStorage $storage,
@@ -522,12 +576,13 @@ final class UnitOfWorkTest extends TestCase
         ?DeletionPlanner $planner = null,
         ?ManagedFields $managed = null,
         array $required = [],
+        array $requiredEdges = [],
     ): UnitOfWork {
         $processors ??= new StubProcessors();
 
         return new UnitOfWork(
             $storage,
-            new VerificationPipeline($verifiers, $fieldTypes, $processors, $required),
+            new VerificationPipeline($verifiers, $fieldTypes, $processors, $required, $requiredEdges),
             new ValueEncoder($fieldTypes, $processors),
             new TriggerDispatcher($triggers),
             new DependencySorter(),

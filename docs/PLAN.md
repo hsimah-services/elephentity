@@ -701,6 +701,31 @@ them — and it is a **replacement**: "here is what this edge holds" is what a w
 value arriving at once means. Null and the empty list both clear it, which is how an
 edge is emptied through a protocol with no other way to say so.
 
+### Required edges
+
+```yaml
+edges:
+  user:
+    to: User
+    cardinality: one
+    required: true      # must be attached on create
+```
+
+Only meaningful on `cardinality: one` — `required: true` on a to-many edge is a
+**compile error**: it reads as "at least one target", a different rule this does not
+express, and saying so plainly beats a flag that silently does nothing.
+
+**Checked at commit, never a `NOT NULL` column — the same shape `required` already has
+for fields, for a stronger reason here.** A field's `required` check exists because a
+missing value used to reach the database and the outcome depended on the installation;
+an edge's column cannot even be made `NOT NULL` in the first place. `UnitOfWork` always
+writes a mutation's own row before its edges — a `Link` is a separate statement, issued
+once both ends exist — so a `NOT NULL` foreign key would fail every create using that
+edge, required or not. The column stays nullable regardless, and `EntityCatalogue::
+requiredEdges()` (parallel to `requiredFields()`) is what lets `VerificationPipeline`
+raise `edge.required` before any SQL runs, exactly as an absent required field already
+does.
+
 ### To-many returns a lazy edge query, not an array
 
 ```php

@@ -15,6 +15,7 @@ edges:
     to: Comment
     cardinality: many
     inverse: { unique: false }
+    required: true
   ghosts:
     to: Ghost
     cardinality: one
