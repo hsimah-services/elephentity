@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Mutation;
 
+use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\Identifier;
 
 /**
@@ -20,6 +21,13 @@ final class Mutation implements MutationBuffer, MutationContext
 
     /** @var array<string, PendingEdge> */
     private array $edges = [];
+
+    /**
+     * The real id, once a create's insert has flushed. $target stays the original
+     * PendingId throughout — isCreate() depends on that — so this is tracked
+     * separately rather than overwriting it.
+     */
+    private ?EntityId $resolvedId = null;
 
     /**
      * @param array<string, mixed> $original The entity as it was, in domain form. Empty on create.
@@ -39,6 +47,22 @@ final class Mutation implements MutationBuffer, MutationContext
     public function target(): Identifier
     {
         return $this->target;
+    }
+
+    public function id(): Identifier
+    {
+        return $this->resolvedId ?? $this->target;
+    }
+
+    /**
+     * Told the real id once, by the unit of work, right after a create's row is
+     * inserted — before either trigger phase dispatches. A mutation that was never
+     * pending (every update, every delete context) never needs this: its target was a
+     * real EntityId from the start.
+     */
+    public function resolveId(EntityId $id): void
+    {
+        $this->resolvedId = $id;
     }
 
     public function isCreate(): bool

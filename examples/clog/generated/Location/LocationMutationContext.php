@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationMutationContext.php
- * digest: sha256:52690c7ac763155f94473233853965f48fe8861c51269abe91f23c419e11f30a
+ * digest: sha256:e1829b380c94760e917ab4013fd5a92943af25194bd356633f2c393309630adf
  */
 
 namespace Clog\Entity\Location;
@@ -26,6 +26,11 @@ final readonly class LocationMutationContext implements MutationContext
     private function __construct(
         private MutationContext $context,
     ) {
+    }
+
+    public function id(): Identifier
+    {
+        return $this->context->id();
     }
 
     public function entity(): string

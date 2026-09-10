@@ -57,6 +57,30 @@ final class MutationTest extends TestCase
         self::assertSame([], $mutation->pendingEdge('tags'));
     }
 
+    public function testIdFallsBackToTheTargetUntilResolved(): void
+    {
+        $pending = new PendingId('Post');
+        $mutation = new Mutation('Post', $pending);
+
+        self::assertSame($pending, $mutation->id());
+
+        $resolved = EntityId::of(42);
+        $mutation->resolveId($resolved);
+
+        self::assertTrue($resolved->equals($mutation->id()));
+        // target() stays the original PendingId — isCreate() depends on that.
+        self::assertSame($pending, $mutation->target());
+        self::assertTrue($mutation->isCreate());
+    }
+
+    public function testIdIsTheTargetItselfWhenThereIsNothingToResolve(): void
+    {
+        $id = EntityId::of(7);
+        $mutation = new Mutation('Post', $id);
+
+        self::assertSame($id, $mutation->id());
+    }
+
     public function testExactlyOneOfSeveralEdgesCanBeCheckedFromTheContext(): void
     {
         // The motivating case: a preCommit trigger enforcing "exactly one of

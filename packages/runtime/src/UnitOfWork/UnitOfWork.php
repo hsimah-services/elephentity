@@ -125,6 +125,10 @@ final class UnitOfWork
         $result = $this->storage->transaction(function () use ($ordered, $deletions, &$removed): WriteResult {
             $result = $this->storage->write(new WriteBatch(...$this->rowOperations($ordered)));
 
+            // Before anything reads a mutation's id: a trigger sees a resolved EntityId
+            // for a row this same commit just created, not the PendingId it started with.
+            $this->resolveIds($ordered, $result);
+
             $links = $this->linkOperations($ordered, $result);
 
             if ([] !== $links) {
@@ -317,6 +321,20 @@ final class UnitOfWork
         }
 
         return $identifier;
+    }
+
+    /**
+     * @param list<Mutation> $mutations
+     */
+    private function resolveIds(array $mutations, WriteResult $result): void
+    {
+        foreach ($mutations as $mutation) {
+            $target = $mutation->target();
+
+            if ($target instanceof PendingId && $result->wasAssigned($target)) {
+                $mutation->resolveId($result->idFor($target));
+            }
+        }
     }
 
     /**
