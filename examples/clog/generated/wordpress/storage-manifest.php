@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:bdf424314fec93dfaa8c098e4188656f9f9ae40354bbd31a7704554ba3484801
+ * digest: sha256:9da7363fc1cc6c3f944dbe327d9e3854c678b5a5a8e9b93824b75129e0678b98
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -18,6 +18,7 @@ use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\Index;
 use Eleph\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
 use Eleph\Runtime\Storage\RelationKind;
 
 /**
@@ -111,6 +112,12 @@ return new StorageManifest(
         'Location' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name'],
     ],
     joinTables: [
+
+    ],
+    taxonomies: [
+
+    ],
+    taxonomyPlacements: [
 
     ],
 );

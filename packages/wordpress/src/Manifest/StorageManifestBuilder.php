@@ -49,15 +49,28 @@ final readonly class StorageManifestBuilder
         // compiled to a placement pointing at a table nothing would ever create.
         $joinTables = array_diff_key($byTable, $claimed);
 
+        $taxonomies = [];
+
+        foreach ($schema->entities as $entity) {
+            if (EdgePlanner::isTaxonomy($entity)) {
+                $taxonomies[$entity->name] = (string) $entity->storage->handle;
+            }
+        }
+
+        $planner = new EdgePlanner($this->naming);
+
         ksort($byEntity);
         ksort($columns);
         ksort($joinTables);
+        ksort($taxonomies);
 
         return new StorageManifest(
             $byEntity,
-            (new EdgePlanner($this->naming))->plan($schema),
+            $planner->plan($schema),
             $columns,
             $joinTables,
+            $taxonomies,
+            $planner->planTaxonomies($schema),
         );
     }
 }

@@ -7,6 +7,7 @@ namespace Eleph\WordPress\Manifest;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\Index;
 use Eleph\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
 
 /**
  * The physical schema, compiled.
@@ -25,6 +26,8 @@ final readonly class StorageManifest
      * @param array<string, EdgePlacement> $placements Keyed by "Entity.edge".
      * @param array<string, array<string, string>> $columns Entity => field => column.
      * @param array<string, TableSchema>   $joinTables Keyed by table name.
+     * @param array<string, string>            $taxonomies         Entity name => taxonomy slug.
+     * @param array<string, TaxonomyPlacement> $taxonomyPlacements Keyed by "Entity.edge".
      */
     public function __construct(
         public array $tables,
@@ -36,6 +39,8 @@ final readonly class StorageManifest
          * still have to be created, and were previously in no manifest at all.
          */
         public array $joinTables = [],
+        public array $taxonomies = [],
+        public array $taxonomyPlacements = [],
     ) {
     }
 
@@ -125,6 +130,6 @@ final readonly class StorageManifest
             );
         }
 
-        return new self($tables, $placements, $this->columns, $joinTables);
+        return new self($tables, $placements, $this->columns, $joinTables, $this->taxonomies, $this->taxonomyPlacements);
     }
 }

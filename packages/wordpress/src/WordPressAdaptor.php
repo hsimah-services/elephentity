@@ -25,21 +25,28 @@ use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\FieldMap;
 use Eleph\WordPress\Sql\QueryCompiler;
 use Eleph\WordPress\Sql\TableSchema;
+use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
+use Eleph\WordPress\Taxonomy\TaxonomyStorage;
 use RuntimeException;
 use Throwable;
 
 /**
- * Stores entities in custom MariaDB tables inside a WordPress installation.
+ * Stores entities in custom MariaDB tables inside a WordPress installation — or, for a
+ * taxonomy-backed entity, as terms.
  *
  * Thin by design: the interesting decisions — how the spec becomes a schema, how a
- * Criteria becomes SQL — live in pure classes that can be tested without a database.
- * What remains here is dispatch and the transaction boundary.
+ * Criteria becomes SQL, how one becomes a term instead — live in pure classes that can
+ * be tested without a database. What remains here is dispatch and the transaction
+ * boundary. Dispatch is by entity name for an entity's own rows, and by "Entity.edge"
+ * for an edge that turned out to be a term relationship rather than a column.
  */
 final readonly class WordPressAdaptor implements StorageAdaptor
 {
     /**
-     * @param array<string, TableSchema>   $tables     Keyed by entity name.
-     * @param array<string, EdgePlacement> $placements Keyed by "Entity.edge".
+     * @param array<string, TableSchema>       $tables            Keyed by entity name.
+     * @param array<string, EdgePlacement>     $placements        Keyed by "Entity.edge".
+     * @param array<string, string>            $taxonomies        Entity name => taxonomy slug.
+     * @param array<string, TaxonomyPlacement> $taxonomyPlacements Keyed by "Entity.edge".
      */
     public function __construct(
         private Database $database,
@@ -47,6 +54,9 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         private FieldMap $fields,
         private array $placements = [],
         private QueryCompiler $compiler = new QueryCompiler(),
+        private array $taxonomies = [],
+        private array $taxonomyPlacements = [],
+        private TaxonomyStorage $taxonomy = new TaxonomyStorage(),
     ) {
     }
 
@@ -64,6 +74,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
     public function get(string $entity, EntityId $id): ?Record
     {
+        $taxonomy = $this->taxonomies[$entity] ?? null;
+
+        if (null !== $taxonomy) {
+            return $this->taxonomy->get($entity, $taxonomy, $id);
+        }
+
         $table = $this->table($entity);
 
         $rows = $this->database->select(
@@ -80,6 +96,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
             return [];
         }
 
+        $taxonomy = $this->taxonomies[$entity] ?? null;
+
+        if (null !== $taxonomy) {
+            return $this->taxonomy->getMany($entity, $taxonomy, $ids);
+        }
+
         $table = $this->table($entity);
         $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
 
@@ -93,6 +115,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
     public function query(Criteria $criteria): Page
     {
+        $taxonomy = $this->taxonomies[$criteria->entity] ?? null;
+
+        if (null !== $taxonomy) {
+            return $this->taxonomy->query($criteria->entity, $taxonomy, $criteria);
+        }
+
         $table = $this->table($criteria->entity);
         $compiled = $this->compiler->select($table, $criteria);
 
@@ -121,6 +149,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
     public function count(Criteria $criteria): int
     {
+        $taxonomy = $this->taxonomies[$criteria->entity] ?? null;
+
+        if (null !== $taxonomy) {
+            return $this->taxonomy->count($taxonomy, $criteria);
+        }
+
         $compiled = $this->compiler->count($this->table($criteria->entity), $criteria);
 
         return (int) $this->database->scalar($compiled->sql, $compiled->bindings);
@@ -131,6 +165,38 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         $result = new WriteResult();
 
         foreach ($batch->operations as $operation) {
+            $taxonomy = $this->taxonomies[$operation->entity()] ?? null;
+
+            if (null !== $taxonomy && $operation instanceof Insert) {
+                $result->assign($operation->pendingId(), $this->taxonomy->insert($taxonomy, $operation));
+
+                continue;
+            }
+
+            if (null !== $taxonomy && $operation instanceof Update) {
+                $this->taxonomy->update($taxonomy, $operation);
+
+                continue;
+            }
+
+            if (null !== $taxonomy && $operation instanceof Delete) {
+                $this->taxonomy->delete($taxonomy, $operation);
+
+                continue;
+            }
+
+            if ($operation instanceof Link && null !== ($placement = $this->taxonomyPlacements[$this->edgeKey($operation)] ?? null)) {
+                $this->taxonomy->link($placement->taxonomy, $operation);
+
+                continue;
+            }
+
+            if ($operation instanceof Unlink && null !== ($placement = $this->taxonomyPlacements[$this->edgeKey($operation)] ?? null)) {
+                $this->taxonomy->unlink($placement->taxonomy, $operation);
+
+                continue;
+            }
+
             $table = $this->table($operation->entity());
 
             match (true) {
@@ -153,6 +219,14 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         }
 
         return $result;
+    }
+
+    /**
+     * @param Link|Unlink $operation
+     */
+    private function edgeKey(Link|Unlink $operation): string
+    {
+        return $operation->entity() . '.' . $operation->edge;
     }
 
     public function transaction(callable $work): mixed

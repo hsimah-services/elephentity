@@ -48,6 +48,12 @@ final readonly class SchemaBuilder
         $tables = [];
 
         foreach ($schema->entities as $entity) {
+            // A taxonomy-backed entity's rows are terms, not rows in a table of its
+            // own — there is nothing here for this builder to create.
+            if (EdgePlanner::isTaxonomy($entity)) {
+                continue;
+            }
+
             $tables[$this->naming->table($entity->storage->table)] = $this->entityTable($schema, $entity);
         }
 
