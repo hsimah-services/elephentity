@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9f85231ad37c1762eef45b5287607dd",
+    "content-hash": "00f5fdb52e335e4b6207ab2a5c72d51c",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -1445,12 +1445,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "12aeb1d5e459ef3bc5e3a5450bed3a356316565e"
+                "reference": "03fc7f17bb2b1302c4d304479eaf9cf7b6771425"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/12aeb1d5e459ef3bc5e3a5450bed3a356316565e",
-                "reference": "12aeb1d5e459ef3bc5e3a5450bed3a356316565e",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/03fc7f17bb2b1302c4d304479eaf9cf7b6771425",
+                "reference": "03fc7f17bb2b1302c4d304479eaf9cf7b6771425",
                 "shasum": ""
             },
             "require": {
@@ -1473,39 +1473,16 @@
                     "Eleph\\Gen\\Php\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Eleph\\Gen\\Php\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "stan": [
-                    "phpstan analyse --memory-limit=1G"
-                ],
-                "style": [
-                    "php-cs-fixer fix --dry-run --diff"
-                ],
-                "style:fix": [
-                    "php-cs-fixer fix"
-                ],
-                "ci": [
-                    "@style",
-                    "@stan",
-                    "@test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "The PHP builder for Elephentity: compiles the IR into locked PHP. Build-time only.",
             "support": {
-                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main",
-                "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues"
+                "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
+                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
             },
-            "time": "2026-09-10T02:14:30+00:00"
+            "time": "2026-09-10T13:08:51+00:00"
         },
         {
             "name": "ergebnis/agent-detector",

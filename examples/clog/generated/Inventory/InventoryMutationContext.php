@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutationContext.php
- * digest: sha256:5c7c736469c2169dc2310f70fb73831e6a5ad8ddba01274005ef9ebe0ff34765
+ * digest: sha256:97300a7c35e9eca20f963e27596280eac45d10ecaf3539f9038bc898d1e8ccb9
  */
 
 namespace Clog\Entity\Inventory;
@@ -26,6 +26,11 @@ final readonly class InventoryMutationContext implements MutationContext
     private function __construct(
         private MutationContext $context,
     ) {
+    }
+
+    public function id(): Identifier
+    {
+        return $this->context->id();
     }
 
     public function entity(): string

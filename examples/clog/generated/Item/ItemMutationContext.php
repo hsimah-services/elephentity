@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutationContext.php
- * digest: sha256:a6320dec0fbfcb94b8970ed72f4eb11979060ae84e325ce9a246ffa509894abb
+ * digest: sha256:30d09e1c189df1d0afee0ea73beec7bdf5d3393a5a975f01c7654d6f431bafe3
  */
 
 namespace Clog\Entity\Item;
@@ -27,6 +27,11 @@ final readonly class ItemMutationContext implements MutationContext
     private function __construct(
         private MutationContext $context,
     ) {
+    }
+
+    public function id(): Identifier
+    {
+        return $this->context->id();
     }
 
     public function entity(): string
