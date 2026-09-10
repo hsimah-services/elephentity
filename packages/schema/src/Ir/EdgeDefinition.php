@@ -14,6 +14,8 @@ final readonly class EdgeDefinition implements Contributed
         public ?string $description = null,
         public ?EdgeInverse $inverse = null,
         public OnDelete $onDelete = OnDelete::Restrict,
+        /** Must be set on create. Checked at commit; never a NOT NULL column. */
+        public bool $required = false,
     ) {
     }
 

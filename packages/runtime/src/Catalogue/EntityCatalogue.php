@@ -71,6 +71,18 @@ interface EntityCatalogue
     public function requiredFields(string $entity): array;
 
     /**
+     * To-one edges that must be attached when the row is created.
+     *
+     * The same reasoning as requiredFields(): the runtime has no schema, so without
+     * this `required: true` on an edge is a word in the spec that changes nothing.
+     * Checked at commit, never as a NOT NULL column — a link is always written after
+     * the row it links, so the column has to stay nullable regardless of this.
+     *
+     * @return list<string>
+     */
+    public function requiredEdges(string $entity): array;
+
+    /**
      * Fields carrying a uniqueness constraint, so the commit can check one before the
      * database does and report it as a violation rather than a SQL exception.
      *

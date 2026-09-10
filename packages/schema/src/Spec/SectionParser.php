@@ -111,6 +111,7 @@ final readonly class SectionParser
                 description: $edge->optionalString('description'),
                 inverse: $this->inverse($edge),
                 onDelete: null === $onDelete ? OnDelete::Restrict : OnDelete::from($onDelete),
+                required: $edge->bool('required'),
             );
         }
 

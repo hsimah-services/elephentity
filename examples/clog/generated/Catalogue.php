@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:329f4ba0f62e50eb5c52220e2ac6eeba481f293d6d11e9f79fd326e875272f2a
+ * digest: sha256:be0f860cdd38b7a0555033f205dfb6b3cff061b1a153704618673e62300a2a9c
  */
 
 namespace Clog\Entity;
@@ -147,6 +147,19 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['name', 'dateAdded'],
             'Item' => ['name'],
             'Location' => ['name'],
+            default => [],
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function requiredEdges(string $entity): array
+    {
+        return match ($entity) {
+            'Inventory' => [],
+            'Item' => [],
+            'Location' => [],
             default => [],
         };
     }

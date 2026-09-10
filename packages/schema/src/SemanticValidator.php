@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\Schema;
 
 use Eleph\Schema\Error\SpecError;
+use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
@@ -423,6 +424,18 @@ final readonly class SemanticValidator
             $errors[] = new SpecError(
                 'edge.unknownTarget',
                 sprintf('Edge "%s" points at unknown entity "%s".', $edge->name, $edge->to),
+                $entity->sourceFile,
+                $pointer,
+            );
+        }
+
+        if ($edge->required && Cardinality::One !== $edge->cardinality) {
+            $errors[] = new SpecError(
+                'edge.requiredNotToOne',
+                sprintf(
+                    'Edge "%s" is required but cardinality: many. required only expresses "this one relationship must be set" — a to-many edge needing at least one target is a different rule this does not cover.',
+                    $edge->name,
+                ),
                 $entity->sourceFile,
                 $pointer,
             );

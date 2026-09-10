@@ -30,15 +30,17 @@ use Eleph\Runtime\Verification\Violation;
 final readonly class VerificationPipeline
 {
     /**
-     * @param array<string, EntityVerifiers> $verifiers   Keyed by entity name.
-     * @param array<string, string>          $fieldTypes  "Entity.field" => declared type name.
-     * @param array<string, list<string>>    $required    Entity => fields that must be supplied on create.
+     * @param array<string, EntityVerifiers> $verifiers     Keyed by entity name.
+     * @param array<string, string>          $fieldTypes    "Entity.field" => declared type name.
+     * @param array<string, list<string>>    $required      Entity => fields that must be supplied on create.
+     * @param array<string, list<string>>    $requiredEdges Entity => to-one edges that must be attached on create.
      */
     public function __construct(
         private array $verifiers,
         private array $fieldTypes,
         private ProcessorRegistry $processors,
         private array $required = [],
+        private array $requiredEdges = [],
     ) {
     }
 
@@ -47,7 +49,7 @@ final readonly class VerificationPipeline
      */
     public function verify(Mutation $mutation): array
     {
-        $violations = $this->verifyPresence($mutation);
+        $violations = [...$this->verifyPresence($mutation), ...$this->verifyEdgePresence($mutation)];
 
         foreach ($mutation->changes() as $field => $value) {
             foreach ($this->verifyField($mutation, $field, $value) as $violation) {
@@ -85,6 +87,36 @@ final readonly class VerificationPipeline
             $violations[] = new FieldViolation($mutation->entity(), $field, new Violation(
                 'field.required',
                 'Required on create, and no value was supplied.',
+            ));
+        }
+
+        return $violations;
+    }
+
+    /**
+     * Required edges, on create only — the same rule as verifyPresence(), for a
+     * to-one edge instead of a field. `pendingEdge()` is exactly right here: on
+     * create there is no original to fall back to, so "this mutation never touched
+     * it" and "it is genuinely empty" are the same fact.
+     *
+     * @return list<FieldViolation>
+     */
+    private function verifyEdgePresence(Mutation $mutation): array
+    {
+        if (!$mutation->isCreate()) {
+            return [];
+        }
+
+        $violations = [];
+
+        foreach ($this->requiredEdges[$mutation->entity()] ?? [] as $edge) {
+            if ([] !== $mutation->pendingEdge($edge)) {
+                continue;
+            }
+
+            $violations[] = new FieldViolation($mutation->entity(), $edge, new Violation(
+                'edge.required',
+                'Required on create, and nothing was attached.',
             ));
         }
 

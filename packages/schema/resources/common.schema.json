@@ -192,6 +192,10 @@
                         "cascade",
                         "nullify"
                     ]
+                },
+                "required": {
+                    "type": "boolean",
+                    "description": "Must be set on create. Only meaningful on a cardinality: one edge — checked at commit, the same way a required field is, never as a NOT NULL column."
                 }
             }
         },
