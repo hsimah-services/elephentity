@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   class-map.php
- * digest: sha256:1d5d236e5e1399e5e751f1f6b805f5fb99bbe275d1069bb28d426453026c6c74
+ * digest: sha256:68abcfb864b6f3cbe4e348d7a9f8a18c9607fe5bdbf8620e8622cc8b10d55704
  */
 
 /**
@@ -59,5 +59,6 @@ return [
         'Clog\\Entity\\Location\\LocationMutator' => 'Location/LocationMutator.php',
         'Clog\\Entity\\Location\\LocationTriggers' => 'Location/LocationTriggers.php',
         'Clog\\Entity\\Location\\LocationVerifiers' => 'Location/LocationVerifiers.php',
+        'Clog\\Entity\\Wiring' => 'Wiring.php',
     ],
 ];
