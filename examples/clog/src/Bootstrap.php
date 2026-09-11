@@ -28,6 +28,7 @@ use Eleph\Runtime\Gateway\Runtime;
 use Eleph\Runtime\Gateway\UnitOfWorkFactory;
 use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Query\ValueDecoder;
+use Eleph\Runtime\Type\NullProcessorRegistry;
 use Eleph\WordPress\Database\Database;
 use Eleph\WordPress\Integrity\OrphanGuard;
 use Eleph\WordPress\Manifest\StorageManifest;
@@ -101,7 +102,7 @@ final class Bootstrap
         $runtime = new Runtime(
             $storage,
             $catalogue,
-            new UnitOfWorkFactory($storage, $catalogue, new NoProcessors()),
+            new UnitOfWorkFactory($storage, $catalogue, new NullProcessorRegistry()),
         );
 
         $this->register($container, $runtime);
@@ -124,7 +125,7 @@ final class Bootstrap
         return Plugin::fromManifest(
             self::GRAPHQL_MANIFEST,
             $this->runtime(),
-            new NoProcessors(),
+            new NullProcessorRegistry(),
         );
     }
 
