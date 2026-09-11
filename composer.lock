@@ -1401,12 +1401,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen.git",
-                "reference": "7a577e2c874b97f137730dc1a313443dac25fb6b"
+                "reference": "95020d70b1356e10b6da02cdd6cc623539cbdb1e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/7a577e2c874b97f137730dc1a313443dac25fb6b",
-                "reference": "7a577e2c874b97f137730dc1a313443dac25fb6b",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/95020d70b1356e10b6da02cdd6cc623539cbdb1e",
+                "reference": "95020d70b1356e10b6da02cdd6cc623539cbdb1e",
                 "shasum": ""
             },
             "require": {
@@ -1437,7 +1437,7 @@
                 "issues": "https://github.com/hsimah-services/elephentity-codegen/issues",
                 "source": "https://github.com/hsimah-services/elephentity-codegen/tree/main"
             },
-            "time": "2026-09-07T18:34:23+00:00"
+            "time": "2026-09-07T23:20:29+00:00"
         },
         {
             "name": "elephentity/codegen-php",
@@ -1445,12 +1445,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "f5352f2876397cd5328dfa5f727e645a9ce8a673"
+                "reference": "fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/f5352f2876397cd5328dfa5f727e645a9ce8a673",
-                "reference": "f5352f2876397cd5328dfa5f727e645a9ce8a673",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3",
+                "reference": "fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3",
                 "shasum": ""
             },
             "require": {
@@ -1482,7 +1482,7 @@
                 "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
                 "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
             },
-            "time": "2026-09-10T13:41:52+00:00"
+            "time": "2026-09-11T00:34:41+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
