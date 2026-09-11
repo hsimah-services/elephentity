@@ -216,6 +216,42 @@ final class SchemaBuilderTest extends TestCase
         self::assertSame(['post_id', 'tag_id'], $unique->columns);
     }
 
+    public function testASelfReferencingManyToManyEdgeGetsTwoDistinctColumns(): void
+    {
+        // Both sides of Person.friends resolve to Person, so joinColumn($entity->name)
+        // and joinColumn($target->name) would otherwise both be "person_id" — one
+        // column, silently, in an array keyed by column name. The edge name is what
+        // has to disambiguate the target side.
+        $tables = (new SchemaBuilder(new Naming()))->build($this->schemaWithASelfReferencingEdge());
+
+        $join = $tables['person_friends'] ?? null;
+
+        self::assertNotNull($join);
+        self::assertCount(2, $join->columns, 'both sides of the pair must be real columns');
+        self::assertNotNull($join->column('person_id'));
+        self::assertNotNull($join->column('friends_id'));
+
+        $unique = $join->indexes['person_friends_pair_uniq'] ?? null;
+
+        self::assertNotNull($unique);
+        self::assertSame(['person_id', 'friends_id'], $unique->columns);
+    }
+
+    private function schemaWithASelfReferencingEdge(): Schema
+    {
+        $person = new EntityDefinition(
+            name: 'Person',
+            storage: new StorageDefinition('wordpress', 'person'),
+            sourceFile: 'entities/Person.yml',
+            edges: ['friends' => new EdgeDefinition('friends', 'Person', Cardinality::Many, Origin::entity('entities/Person.yml'))],
+        );
+
+        return new Schema(
+            project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
+            entities: ['Person' => $person],
+        );
+    }
+
     public function testUniqueAndIndexedFieldsProduceTheMatchingIndex(): void
     {
         self::assertArrayHasKey('wp_phe_tag_label_uniq', $this->table('wp_phe_tag')->indexes);

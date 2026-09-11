@@ -53,6 +53,14 @@ final readonly class EdgePlanner
                 }
 
                 if ($relation->needsJoinTable()) {
+                    // A self-referencing edge (Person.friends -> Person) would otherwise
+                    // give both sides the same joinColumn($entity->name) — one column,
+                    // silently, where the join table needs two. The edge name is unique
+                    // per entity already, so it is what disambiguates the target side;
+                    // the local side keeps the ordinary name because nothing else on
+                    // this table could collide with it.
+                    $targetColumnName = $entity->name === $target->name ? $edge->name : $target->name;
+
                     $placements[$key] = new EdgePlacement(
                         entity: $entity->name,
                         edge: $edge->name,
@@ -60,7 +68,7 @@ final readonly class EdgePlanner
                         relation: $relation,
                         table: $this->naming->joinTable($entity->storage->table, $edge->name),
                         localColumn: $this->naming->joinColumn($entity->name),
-                        targetColumn: $this->naming->joinColumn($target->name),
+                        targetColumn: $this->naming->joinColumn($targetColumnName),
                         targetTable: $this->naming->table($target->storage->table),
                     );
 
