@@ -7,7 +7,6 @@ namespace Eleph\WPGraphQL\Registration;
 use BackedEnum;
 use DateTimeInterface;
 use Eleph\Runtime\Gateway\EntityGateway;
-use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\WPGraphQL\Manifest\ConnectionEntry;
@@ -17,8 +16,10 @@ use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
 use Eleph\WPGraphQL\Manifest\QueryFieldEntry;
+use Eleph\WPGraphQL\Relay\GlobalId;
 use Eleph\WPGraphQL\Resolver\Connections;
 use RuntimeException;
+use Stringable;
 
 /**
  * Registers the manifest with WPGraphQL.
@@ -101,6 +102,10 @@ final readonly class TypeRegistrar
         foreach ($this->manifest->objects as $object) {
             $configs[$object->name] = [
                 'description' => $object->description ?? '',
+                // Without this the type has a globally unique id and no way for a
+                // client to say so: `node(id: …)` cannot return it, and a normalised
+                // cache has nothing to refetch through.
+                'interfaces' => $object->interfaces,
                 'fields' => $this->fieldConfigs($object),
             ];
         }
@@ -238,7 +243,7 @@ final readonly class TypeRegistrar
             $fields[$field->name] = [
                 'type' => $field->type->toConfig(),
                 'description' => $field->description ?? '',
-                'resolve' => $this->resolver($field),
+                'resolve' => $this->resolver($field, $object->name),
             ];
         }
 
@@ -254,14 +259,14 @@ final readonly class TypeRegistrar
      * `getCreatedAt()` hands back a DateTimeImmutable where the client was promised a
      * String, and handing that straight to WPGraphQL fails the whole query.
      */
-    private function resolver(FieldEntry $field): callable
+    private function resolver(FieldEntry $field, string $type): callable
     {
         $accessor = $field->accessor;
         $encoding = $field->encoding;
         $valueType = $field->valueType;
         $name = $field->name;
 
-        return function (object $source) use ($accessor, $encoding, $valueType, $name): mixed {
+        return function (object $source) use ($accessor, $encoding, $valueType, $name, $type): mixed {
             /** @var mixed $value */
             $value = $source->{$accessor}();
 
@@ -270,17 +275,24 @@ final readonly class TypeRegistrar
                 return null;
             }
 
-            return $this->encode($value, $encoding, $valueType, $name);
+            return $this->encode($value, $encoding, $valueType, $name, $type);
         };
     }
 
     /**
      * One domain value, in the shape the manifest promised.
      */
-    private function encode(mixed $value, FieldEncoding $encoding, ?string $valueType, string $field): mixed
-    {
+    private function encode(
+        mixed $value,
+        FieldEncoding $encoding,
+        ?string $valueType,
+        string $field,
+        string $type,
+    ): mixed {
         return match ($encoding) {
             FieldEncoding::Value => $value,
+            FieldEncoding::GlobalId => GlobalId::encode($type, $this->scalar($value)),
+            FieldEncoding::Id => $this->scalar($value),
             FieldEncoding::Datetime => $value instanceof DateTimeInterface
                 ? $value->format(DateTimeInterface::ATOM)
                 : $value,
@@ -290,6 +302,22 @@ final readonly class TypeRegistrar
                 : $value,
             FieldEncoding::Processor => $this->unwind($value, $valueType, $field),
         };
+    }
+
+    /**
+     * An id as a string, whatever the read model chose to model it as.
+     *
+     * EntityId is deliberately opaque above the storage layer, so the only thing that
+     * can be assumed of it is that it prints.
+     */
+    private function scalar(mixed $value): string
+    {
+        return is_string($value) || is_int($value) || $value instanceof Stringable
+            ? (string) $value
+            : throw new RuntimeException(sprintf(
+                'An id resolved to %s, which cannot be a global identifier.',
+                get_debug_type($value),
+            ));
     }
 
     /**
@@ -334,11 +362,12 @@ final readonly class TypeRegistrar
                     'description' => sprintf('One %s by id.', $root->type),
                     'args' => ['id' => ['type' => ['non_null' => 'ID']]],
                     'resolve' => function (mixed $source, array $args) use ($entity): ?object {
-                        $id = $args['id'] ?? null;
+                        // The id a client holds is the global one this type hands out,
+                        // so it arrives encoded. A raw row id still works, which is
+                        // what keeps a hand-written query or an older client running.
+                        $id = GlobalId::entityId($args['id'] ?? null);
 
-                        return is_string($id) || is_int($id)
-                            ? $this->gateway->find($entity, EntityId::of($id))
-                            : null;
+                        return null === $id ? null : $this->gateway->find($entity, $id);
                     },
                 ],
             ];
@@ -357,7 +386,7 @@ final readonly class TypeRegistrar
                     'description' => $query->description ?? '',
                     'args' => $this->args($query->args),
                     'resolve' => fn (mixed $source, array $args): ?object => $this->gateway
-                        ->runQuery($query->entity, $query->query, $args)
+                        ->runQuery($query->entity, $query->query, $this->rawIds($query->args, $args))
                         ->first(),
                 ],
             ];
@@ -369,9 +398,35 @@ final readonly class TypeRegistrar
     private function queryResolver(QueryFieldEntry $query): callable
     {
         return fn (mixed $source, array $args): array => $this->connections->resolve(
-            $this->gateway->runQuery($query->entity, $query->query, $args),
+            $this->gateway->runQuery($query->entity, $query->query, $this->rawIds($query->args, $args)),
             $args,
         );
+    }
+
+    /**
+     * Arguments as the query declared them, with any global id unwrapped.
+     *
+     * A client only ever sees the global form, so an argument a spec typed `id` would
+     * otherwise be matched against a value no row holds. Decoding is strict — anything
+     * that is not one of ours is passed through exactly as it arrived — so a genuinely
+     * opaque `id` argument that means something else is untouched.
+     *
+     * @param array<string, GraphQLType> $declared
+     * @param array<array-key, mixed>    $args
+     *
+     * @return array<array-key, mixed>
+     */
+    private function rawIds(array $declared, array $args): array
+    {
+        foreach ($args as $name => $value) {
+            if (is_string($name) && 'ID' === ($declared[$name] ?? null)?->name) {
+                $args[$name] = is_array($value)
+                    ? array_map(GlobalId::raw(...), $value)
+                    : GlobalId::raw($value);
+            }
+        }
+
+        return $args;
     }
 
     /**

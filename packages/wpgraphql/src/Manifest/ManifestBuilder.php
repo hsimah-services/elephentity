@@ -96,8 +96,27 @@ final readonly class ManifestBuilder
     ): ObjectTypeEntry {
         // Every entity has an implicit id, and it is exposed as an opaque ID rather
         // than an Int so that a later move to UUIDv7 is invisible to clients.
+        //
+        // Two of them, because the Node interface promises `id` is unique across the
+        // whole schema and a row number is only unique within its table. `id` carries
+        // the type name with it and is the one a client caches and refetches by;
+        // `databaseId` is the row as storage knows it, for anything that has to
+        // address it outside GraphQL.
         $fields = [
-            'id' => new FieldEntry('id', new GraphQLType('ID', nonNull: true), 'getId'),
+            'id' => new FieldEntry(
+                'id',
+                new GraphQLType('ID', nonNull: true),
+                'getId',
+                'The globally unique identifier, opaque and safe to use as a cache key.',
+                FieldEncoding::GlobalId,
+            ),
+            'databaseId' => new FieldEntry(
+                'databaseId',
+                new GraphQLType('ID', nonNull: true),
+                'getId',
+                'The row as storage knows it, unique within its table rather than the schema.',
+                FieldEncoding::Id,
+            ),
         ];
 
         foreach ($entity->fields as $field) {

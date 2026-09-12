@@ -13,6 +13,7 @@ use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Registration\MutationRegistrar;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
+use Eleph\WPGraphQL\Relay\GlobalId;
 use Eleph\WPGraphQL\Resolver\Connections;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -119,7 +120,10 @@ final class ResolverTest extends TestCase
         $payload = $this->call($configs['deletePost']['mutateAndGetPayload'], ['id' => '7']);
 
         self::assertSame(['delete Post#7'], $gateway->calls);
-        self::assertSame('7', $payload['deletedId']);
+
+        // The global form, because it is the id the client cached under and so the one
+        // it has to evict. NodeTest covers the round trip.
+        self::assertSame(GlobalId::encode('Post', 7), $payload['deletedId']);
     }
 
     public function testAMutationHandsBackTheRowItTouched(): void
