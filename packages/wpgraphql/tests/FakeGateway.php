@@ -24,6 +24,9 @@ final class FakeGateway implements EntityGateway
     /** @var list<object> */
     public array $items = [];
 
+    /** @var array<string, mixed> The input the last write was handed. */
+    public array $input = [];
+
     public int $total = 0;
 
     public bool $hasMore = false;
@@ -52,6 +55,7 @@ final class FakeGateway implements EntityGateway
     public function create(string $entity, array $input): EntityId
     {
         $this->calls[] = sprintf('create %s(%s)', $entity, implode(',', array_keys($input)));
+        $this->input = $input;
 
         return EntityId::of(1);
     }
@@ -59,6 +63,7 @@ final class FakeGateway implements EntityGateway
     public function update(string $entity, EntityId $id, array $input): void
     {
         $this->calls[] = sprintf('update %s#%s(%s)', $entity, $id, implode(',', array_keys($input)));
+        $this->input = $input;
     }
 
     public function delete(string $entity, EntityId $id): void

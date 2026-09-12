@@ -89,14 +89,17 @@ final readonly class ManifestExporter
                 );
             }
 
+            $interfaces = array_map($this->str(...), $object->interfaces);
+
             $lines[] = sprintf(
-                "        %s => new ObjectTypeEntry(\n            %s,\n            %s,\n            %s,\n            %s,\n            %s,\n        ),",
+                "        %s => new ObjectTypeEntry(\n            %s,\n            %s,\n            %s,\n            %s,\n            %s,\n            [%s],\n        ),",
                 $this->str($object->name),
                 $this->str($object->name),
                 $this->str($object->entity),
                 $this->block($fields),
                 $this->block($connections),
                 $this->nullableStr($object->description),
+                implode(', ', $interfaces),
             );
         }
 

@@ -21,6 +21,25 @@ enum FieldEncoding: string
     case Value = 'value';
 
     /**
+     * A row id, as the globally unique one the Node interface promises.
+     *
+     * `12` identifies a row within its table and nothing beyond it, so a client with a
+     * normalised cache would file two entities of the same row number in one place.
+     * The type name travels with the id to stop that; `databaseId` keeps the raw one
+     * for anything that has to address the row outside GraphQL.
+     */
+    case GlobalId = 'global_id';
+
+    /**
+     * A row id, as the string GraphQL's ID scalar wants.
+     *
+     * EntityId is opaque above the storage layer and prints rather than casts. The ID
+     * scalar happens to accept anything that prints, but leaning on that is exactly
+     * the implicit conversion the rest of these cases exist to remove.
+     */
+    case Id = 'id';
+
+    /**
      * ISO 8601, not the storage format.
      *
      * Storage wants a sortable column and gets `Y-m-d H:i:s` from ValueEncoder; a

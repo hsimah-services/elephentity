@@ -9,6 +9,9 @@ use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Registration\MutationRegistrar;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
+use Eleph\WPGraphQL\Relay\EntityLoader;
+use Eleph\WPGraphQL\Relay\GlobalId;
+use Eleph\WPGraphQL\Relay\NodeRuntime;
 use RuntimeException;
 
 /**
@@ -75,6 +78,28 @@ final readonly class Plugin
      */
     public function boot(): void
     {
+        NodeRuntime::bind($this->manifest, $this->gateway);
+
+        // Both halves of the Node interface, and neither can be done on
+        // `graphql_register_types`: the loaders are prepared when the AppContext is
+        // built, and the type of a node is asked for while a query is executing.
+        add_filter('graphql_data_loader_classes', static function (array $loaders): array {
+            $loaders[GlobalId::LOADER] = EntityLoader::class;
+
+            return $loaders;
+        });
+
+        // WPGraphQL's own switch knows posts, terms and users; a read model is none of
+        // them, so without this every `node` that resolves to one fails with "No type
+        // was found matching the node".
+        add_filter(
+            'graphql_resolve_node_type',
+            static fn (mixed $type, mixed $node): mixed => $type
+                ?? (is_object($node) ? NodeRuntime::typeOf($node) : null),
+            10,
+            2,
+        );
+
         add_action('graphql_register_types', $this->register(...));
     }
 

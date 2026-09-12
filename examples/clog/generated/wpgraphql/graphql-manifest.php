@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:7a882dccdf5e7250624eb39033d52af941175ccbdf3e68fbf01deb6902abd86f
+ * digest: sha256:5a70764e7089e5d50c303d2f0fe241c115b4ebd2a19d7a15f90ef744ba56fa25
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -26,7 +26,8 @@ return new Manifest(
             'ClogInventory',
             'Inventory',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', 'The globally unique identifier, opaque and safe to use as a cache key.', FieldEncoding::GlobalId, null),
+                'databaseId' => new FieldEntry('databaseId', new GraphQLType('ID', true, false), 'getId', 'The row as storage knows it, unique within its table rather than the schema.', FieldEncoding::Id, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', 'When the row was first written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', true, false), 'getUpdatedAt', 'When the row was last written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
@@ -39,12 +40,14 @@ return new Manifest(
             ],
             [],
             'One stocked instance of an item, in a location, with its own expiry.',
+            ['Node'],
         ),
         'ClogItem' => new ObjectTypeEntry(
             'ClogItem',
             'Item',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', 'The globally unique identifier, opaque and safe to use as a cache key.', FieldEncoding::GlobalId, null),
+                'databaseId' => new FieldEntry('databaseId', new GraphQLType('ID', true, false), 'getId', 'The row as storage knows it, unique within its table rather than the schema.', FieldEncoding::Id, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', 'When the row was first written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', true, false), 'getUpdatedAt', 'When the row was last written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
@@ -59,12 +62,14 @@ return new Manifest(
                 'inventoryEntries' => new ConnectionEntry('inventoryEntries', 'ClogItem', 'ClogInventory', 'inventoryEntries', 'item', 'The Inventory pointing here through "item".'),
             ],
             'A thing that can be stocked, identified by its barcode.',
+            ['Node'],
         ),
         'ClogLocation' => new ObjectTypeEntry(
             'ClogLocation',
             'Location',
             [
-                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', null, FieldEncoding::Value, null),
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', 'The globally unique identifier, opaque and safe to use as a cache key.', FieldEncoding::GlobalId, null),
+                'databaseId' => new FieldEntry('databaseId', new GraphQLType('ID', true, false), 'getId', 'The row as storage knows it, unique within its table rather than the schema.', FieldEncoding::Id, null),
                 'createdAt' => new FieldEntry('createdAt', new GraphQLType('String', true, false), 'getCreatedAt', 'When the row was first written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'updatedAt' => new FieldEntry('updatedAt', new GraphQLType('String', true, false), 'getUpdatedAt', 'When the row was last written. Filled by the framework.', FieldEncoding::Datetime, null),
                 'postId' => new FieldEntry('postId', new GraphQLType('Int', false, false), 'getPostId', 'The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.
@@ -75,6 +80,7 @@ return new Manifest(
                 'inventoryEntries' => new ConnectionEntry('inventoryEntries', 'ClogLocation', 'ClogInventory', 'inventoryEntries', 'location', 'The Inventory pointing here through "location".'),
             ],
             'Somewhere inventory can be kept.',
+            ['Node'],
         ),
     ],
     enums: [

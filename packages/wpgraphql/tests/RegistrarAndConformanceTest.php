@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Eleph\WPGraphQL\Tests;
 
 use DateTimeImmutable;
-use Eleph\Schema\Integration\IntegrationRegistry;
-use Eleph\Schema\SchemaCompiler;
-use Eleph\Schema\SpecSource;
 use Eleph\WPGraphQL\Conformance\ConformanceChecker;
-use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\Manifest;
-use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -22,8 +17,6 @@ use stdClass;
 #[CoversClass(ConformanceChecker::class)]
 final class RegistrarAndConformanceTest extends TestCase
 {
-    private static ?Manifest $manifest = null;
-
     public function testEnumConfigsCarryTheStoredValueBehindTheGraphQLName(): void
     {
         $configs = (new TypeRegistrar($this->manifest(), new FakeGateway()))->enumConfigs();
@@ -262,16 +255,6 @@ final class RegistrarAndConformanceTest extends TestCase
 
     private function manifest(): Manifest
     {
-        if (null !== self::$manifest) {
-            return self::$manifest;
-        }
-
-        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))->compile(
-            new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
-        );
-
-        self::assertTrue($compiled->isSuccess());
-
-        return self::$manifest = (new ManifestBuilder())->build($compiled->schema());
+        return Fixture::manifest();
     }
 }

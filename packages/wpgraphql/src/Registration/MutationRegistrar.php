@@ -6,8 +6,10 @@ namespace Eleph\WPGraphQL\Registration;
 
 use Eleph\Runtime\Gateway\EntityGateway;
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Manifest\MutationEntry;
+use Eleph\WPGraphQL\Relay\GlobalId;
 use InvalidArgumentException;
 
 /**
@@ -64,7 +66,9 @@ final readonly class MutationRegistrar
                     $id = $this->identifier($input);
                     $this->gateway->delete($root->entity, $id);
 
-                    return ['deletedId' => (string) $id];
+                    // The global form, because it is the id the client cached under
+                    // and so the one it has to evict.
+                    return ['deletedId' => GlobalId::encode($root->type, (string) $id)];
                 },
             ];
         }
@@ -114,13 +118,13 @@ final readonly class MutationRegistrar
             $id = match ($mutation->kind) {
                 MutationEntry::CREATE => $this->gateway->create(
                     $mutation->entity,
-                    $this->withoutId($input),
+                    $this->withoutId($mutation, $input),
                 ),
                 default => $this->identifier($input),
             };
 
             if (MutationEntry::UPDATE === $mutation->kind) {
-                $this->gateway->update($mutation->entity, $id, $this->withoutId($input));
+                $this->gateway->update($mutation->entity, $id, $this->withoutId($mutation, $input));
             }
 
             if (MutationEntry::ACTION === $mutation->kind) {
@@ -128,7 +132,7 @@ final readonly class MutationRegistrar
                     $mutation->entity,
                     (string) $mutation->method,
                     $id,
-                    $this->withoutId($input),
+                    $this->withoutId($mutation, $input),
                 );
             }
 
@@ -146,21 +150,24 @@ final readonly class MutationRegistrar
      */
     private function identifier(array $input): EntityId
     {
-        $id = $input['id'] ?? null;
-
-        if (!is_string($id) && !is_int($id)) {
-            throw new InvalidArgumentException('This mutation needs an id.');
-        }
-
-        return EntityId::of($id);
+        // A client only ever holds the global form, so that is what arrives. A raw row
+        // id still resolves, which keeps a hand-written mutation working.
+        return GlobalId::entityId($input['id'] ?? null)
+            ?? throw new InvalidArgumentException('This mutation needs an id.');
     }
 
     /**
+     * Everything but the id, with any global id unwrapped.
+     *
+     * An edge is written by naming the row it points at, and the id the client has for
+     * that row is the global one this type hands out. Passing it through untouched
+     * would write a link to a row number nothing holds.
+     *
      * @param array<array-key, mixed> $input
      *
      * @return array<string, mixed>
      */
-    private function withoutId(array $input): array
+    private function withoutId(MutationEntry $mutation, array $input): array
     {
         unset($input['id']);
 
@@ -168,11 +175,26 @@ final readonly class MutationRegistrar
 
         foreach ($input as $name => $value) {
             if (is_string($name)) {
-                $fields[$name] = $value;
+                $fields[$name] = $this->raw($mutation->inputs[$name] ?? null, $value);
             }
         }
 
         return $fields;
+    }
+
+    /**
+     * Decoding is strict — anything that is not one of ours is passed through exactly
+     * as it arrived — so a spec field genuinely typed `id` is untouched.
+     */
+    private function raw(?GraphQLType $declared, mixed $value): mixed
+    {
+        if ('ID' !== $declared?->name) {
+            return $value;
+        }
+
+        return is_array($value)
+            ? array_map(GlobalId::raw(...), $value)
+            : GlobalId::raw($value);
     }
 
     private function typeFor(string $entity): string
