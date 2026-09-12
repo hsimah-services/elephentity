@@ -19,7 +19,7 @@ All four gates pass:
 ```
 eleph fmt        Specs are in canonical form.
 eleph validate   Specs are valid: 3 entities, 1 type.
-eleph generate   32 file(s).
+eleph generate   36 file(s).
 eleph check      Conformant: 3 type(s), every field resolves.
 ```
 
