@@ -1,0 +1,24 @@
+pattern: Taxonomy
+description: >
+  A flat vocabulary of terms, stored as WordPress taxonomy terms rather than a table
+  of the framework's own. A many-to-many edge into an entity using this pattern lives
+  in wp_term_relationships, so the same vocabulary can classify posts of different
+  types without being declared once per type, and a term applies or lifts without
+  moving any row the term itself did not own.
+requires:
+  driver: wordpress
+config:
+  taxonomy:
+    type: bool
+    description: Marks this entity's rows as WordPress taxonomy terms.
+    default: true
+fields:
+  name:
+    type: string
+    description: >
+      The term's label. A taxonomy-backed entity has exactly this field — anything
+      else declared here has nowhere to live in wp_term_taxonomy and is silently
+      dropped at runtime.
+    required: true
+    unique: true
+    maxLength: 200

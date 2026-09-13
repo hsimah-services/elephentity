@@ -45,3 +45,19 @@ edges:
     inverse:
       name: inventoryEntries
       unique: false
+  site:
+    to: Site
+    cardinality: many
+    description: >
+      Which building this instance is physically in. Many-to-many because that is
+      the only relation Elephentity's WordPress driver stores as a taxonomy term
+      rather than a column; an entry moving between buildings relinks this edge
+      instead of becoming a different row.
+triggers:
+  siteAvailability:
+    description: >
+      Rejects a write whose site is not one of its location's available sites — Deep
+      Freezer lists only Cave, so an entry there can never claim the Loft.
+    on: [create, update]
+    phase: preCommit
+    handler: true

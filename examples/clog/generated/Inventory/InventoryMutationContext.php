@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutationContext.php
- * digest: sha256:97300a7c35e9eca20f963e27596280eac45d10ecaf3539f9038bc898d1e8ccb9
+ * digest: sha256:ae02c6115d5503090c94e3c2540356cadbd793212f89e2328b632cbda53abd7b
  */
 
 namespace Clog\Entity\Inventory;
@@ -193,6 +193,19 @@ final readonly class InventoryMutationContext implements MutationContext
     public function isLocationChanged(): bool
     {
         return $this->context->isEdgeChanged('location');
+    }
+
+    /**
+     * @return list<Identifier>
+     */
+    public function pendingSite(): array
+    {
+        return $this->context->pendingEdge('site');
+    }
+
+    public function isSiteChanged(): bool
+    {
+        return $this->context->isEdgeChanged('site');
     }
 
     public static function of(MutationContext $context): self

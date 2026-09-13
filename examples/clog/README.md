@@ -52,6 +52,26 @@ version had that mapping in three files.
 entity that participates in the WordPress admin says so in one line, and the compiler
 refuses that pattern on a non-WordPress driver.
 
+**Buildings are a taxonomy, not a duplicated Location.** `Site` (`Loft`, `Cave`) uses the
+new `Taxonomy` pattern instead of `ClogPost`, so its rows are `wp_term_taxonomy` terms
+rather than a table of their own. `Inventory.site` is declared `cardinality: many` — the
+one relation the WordPress driver stores as a term relationship instead of a column — so
+moving an item between buildings relinks that edge rather than retiring "Cave Pantry" and
+creating "Loft Pantry". `Location` stays the shared vocabulary of storage kinds (`Pantry`,
+`Fridge`, `Freezer`, `Deep Freezer`); the two axes only combine on the `Inventory` row
+that holds an actual count.
+
+**Not every combination is real, and that lives on an edge too.** There is one Deep
+Freezer, in the Cave — `Loft`/`Deep Freezer` is not a thing. `Location.sites` (also
+`cardinality: many` against the `Site` taxonomy) declares which buildings a kind of
+storage actually exists in, so a client reading `location { sites { name } }` sees only
+the sites worth offering for that location, with no query the spec did not already
+expose. Checking that `Inventory.site` actually falls within `Inventory.location`'s
+`sites` is a rule about two edges on the row plus an edge on a different entity — past
+what a field `verify:` can reach — so it is a `preCommit` trigger instead:
+`Inventory.siteAvailability`, implemented by `src/Contract/SiteAvailableAtLocation.php`,
+which queries `Location.sites` and rejects the commit if the pending site is not in it.
+
 ## What it does not capture
 
 Both serialization gaps are closed by changing the model rather than the framework:

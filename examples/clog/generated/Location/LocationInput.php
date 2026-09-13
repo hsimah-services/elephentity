@@ -9,11 +9,12 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationInput.php
- * digest: sha256:055b364038330b2d2589a39d52d60fcece28b9383c7397d233541584a8e93146
+ * digest: sha256:c316f1b6c51d02a6f2c08c52bcd7810c9a6ee64e63ab3a09cda809bdbb8cc43e
  */
 
 namespace Clog\Entity\Location;
 
+use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
 use InvalidArgumentException;
@@ -47,6 +48,28 @@ final readonly class LocationInput
     }
 
     /**
+     * @return list<Identifier>
+     */
+    private function sites(mixed $value): array
+    {
+        if (null === $value) {
+            return [];
+        }
+
+        if (!is_array($value)) {
+            throw new InvalidArgumentException(sprintf('%s takes a list of ids.', 'Location.sites'));
+        }
+
+        $ids = [];
+
+        foreach ($value as $id) {
+            $ids[] = $this->decode->id($id, 'Location.sites');
+        }
+
+        return $ids;
+    }
+
+    /**
      * Only what the caller supplied. A key that is absent is left alone,
      * which is what makes a partial update partial.
      *
@@ -60,6 +83,10 @@ final readonly class LocationInput
 
         if (array_key_exists('name', $input)) {
             $buffer->set('name', $this->name($input['name']));
+        }
+
+        if (array_key_exists('sites', $input)) {
+            $buffer->edge('sites')->set($this->sites($input['sites']));
         }
     }
 

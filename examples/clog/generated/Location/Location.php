@@ -9,13 +9,14 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:3d5994c450e3f5023d9f1544245d2722d27acf6e3c5ec7ce07cca3608a916274
+ * digest: sha256:baea7fb022e899094b87911837676d234f34c6955dea24a41adb25e862e1aafd
  */
 
 namespace Clog\Entity\Location;
 
 use Clog\Entity\Inventory\Inventory;
 use Clog\Entity\Pattern\ClogPost\ClogPost;
+use Clog\Entity\Site\Site;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EdgeLoader;
@@ -71,6 +72,17 @@ final class Location implements ClogPost
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @return EntityQuery<Site>
+     */
+    public function sites(): EntityQuery
+    {
+        /** @var EntityQuery<Site> $related */
+        $related = $this->edges->toMany('Location', $this->id, 'sites');
+
+        return $related;
     }
 
     /**

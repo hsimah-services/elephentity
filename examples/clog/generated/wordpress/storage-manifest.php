@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:2241859661884c8d94839ee30e44cd07f4934fbe92d07297869cc3d827879124
+ * digest: sha256:e6401abdaf8af532270c36c8594aa175d436a4e2a5fe3745d236de90b360bf85
  */
 
 namespace Eleph\WordPress\Manifest;
@@ -111,16 +111,28 @@ return new StorageManifest(
         'Inventory' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'dateAdded' => 'date_added', 'dateExpiry' => 'date_expiry'],
         'Item' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'barcode' => 'barcode', 'defaultExpiryUnit' => 'default_expiry_unit', 'defaultExpiryValue' => 'default_expiry_value'],
         'Location' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name'],
+        'Site' => ['name' => 'name'],
         'User' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'bio' => 'bio'],
     ],
     joinTables: [
 
     ],
     taxonomies: [
-
+        'Site' => 'clog_site',
     ],
     taxonomyPlacements: [
-
+        'Inventory.site' => new TaxonomyPlacement(
+            'Inventory',
+            'site',
+            'Site',
+            'clog_site',
+        ),
+        'Location.sites' => new TaxonomyPlacement(
+            'Location',
+            'sites',
+            'Site',
+            'clog_site',
+        ),
     ],
     accounts: [
         'User' => new AccountFields(

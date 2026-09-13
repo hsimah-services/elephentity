@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   class-map.php
- * digest: sha256:a73199f7f731ea232024b823da1efcee92fea137c39a8a0e9109abff59b8c470
+ * digest: sha256:92b311c855cdadf6b1438b1dc64c183561c0d29f2bd0fd9d4a4770d9b6615dc5
  */
 
 /**
@@ -27,11 +27,13 @@ return [
         'Inventory' => 'Clog\\Entity\\Inventory\\Inventory',
         'Item' => 'Clog\\Entity\\Item\\Item',
         'Location' => 'Clog\\Entity\\Location\\Location',
+        'Site' => 'Clog\\Entity\\Site\\Site',
         'User' => 'Clog\\Entity\\User\\User',
     ],
     'classes' => [
         'Clog\\Entity\\Catalogue' => 'Catalogue.php',
         'Clog\\Entity\\Enum\\ExpiryUnit' => 'Enum/ExpiryUnit.php',
+        'Clog\\Entity\\Inventory\\Contract\\InventorySiteAvailabilityTrigger' => 'Inventory/Contract/InventorySiteAvailabilityTrigger.php',
         'Clog\\Entity\\Inventory\\Inventory' => 'Inventory/Inventory.php',
         'Clog\\Entity\\Inventory\\InventoryDeleter' => 'Inventory/InventoryDeleter.php',
         'Clog\\Entity\\Inventory\\InventoryHydrator' => 'Inventory/InventoryHydrator.php',
@@ -76,6 +78,17 @@ return [
         'Clog\\Entity\\Pattern\\ClogPost\\ClogPost' => 'Pattern/ClogPost/ClogPost.php',
         'Clog\\Entity\\Pattern\\ClogPost\\ClogPostMutatorTrait' => 'Pattern/ClogPost/ClogPostMutatorTrait.php',
         'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy' => 'Pattern/ClogPost/Contract/ClogPostSignedInReadPolicy.php',
+        'Clog\\Entity\\Site\\Site' => 'Site/Site.php',
+        'Clog\\Entity\\Site\\SiteDeleter' => 'Site/SiteDeleter.php',
+        'Clog\\Entity\\Site\\SiteHydrator' => 'Site/SiteHydrator.php',
+        'Clog\\Entity\\Site\\SiteInput' => 'Site/SiteInput.php',
+        'Clog\\Entity\\Site\\SiteMutationContext' => 'Site/SiteMutationContext.php',
+        'Clog\\Entity\\Site\\SiteMutator' => 'Site/SiteMutator.php',
+        'Clog\\Entity\\Site\\SiteReadPolicies' => 'Site/SiteReadPolicies.php',
+        'Clog\\Entity\\Site\\SiteTriggers' => 'Site/SiteTriggers.php',
+        'Clog\\Entity\\Site\\SiteVerifiers' => 'Site/SiteVerifiers.php',
+        'Clog\\Entity\\Site\\SiteWriteContext' => 'Site/SiteWriteContext.php',
+        'Clog\\Entity\\Site\\SiteWritePolicies' => 'Site/SiteWritePolicies.php',
         'Clog\\Entity\\User\\User' => 'User/User.php',
         'Clog\\Entity\\User\\UserDeleter' => 'User/UserDeleter.php',
         'Clog\\Entity\\User\\UserHydrator' => 'User/UserHydrator.php',

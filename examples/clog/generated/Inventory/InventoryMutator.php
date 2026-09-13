@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryMutator.php
- * digest: sha256:d2f286a42d7b1b3790bf37b4e6d59b1f0fb8e4a161a68b595b73bfe69c8b08ad
+ * digest: sha256:5b2c4c60cbd470be280177f9c7e091fbf7426b0164646e89ed9fc2658e15ba4a
  */
 
 namespace Clog\Entity\Inventory;
@@ -17,6 +17,7 @@ namespace Clog\Entity\Inventory;
 use Clog\Entity\Pattern\ClogPost\ClogPostMutatorTrait;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\Identifier;
+use Eleph\Runtime\Mutation\EdgeMutation;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -77,5 +78,13 @@ final class InventoryMutator
         $this->buffer->edge('location')->set(null === $location ? [] : [$location]);
 
         return $this;
+    }
+
+    /**
+     * Add, remove or replace the Site this links to.
+     */
+    public function site(): EdgeMutation
+    {
+        return $this->buffer->edge('site');
     }
 }

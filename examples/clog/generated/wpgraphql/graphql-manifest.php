@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:15f982ba39bf5b02b25056032300039bc733f4168e9a3b989b4a0642ee8c888c
+ * digest: sha256:2a0c887cdfb465ecb077ad84d461b6348ca22796ca387306ad4a1c437b4b4556
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -38,7 +38,10 @@ return new Manifest(
                 'item' => new FieldEntry('item', new GraphQLType('ClogItem', false, false), 'getItem', 'What this entry is an instance of.', FieldEncoding::Value, null),
                 'location' => new FieldEntry('location', new GraphQLType('ClogLocation', false, false), 'getLocation', 'Where it is kept.', FieldEncoding::Value, null),
             ],
-            [],
+            [
+                'site' => new ConnectionEntry('site', 'ClogInventory', 'ClogSite', 'site', 'site', 'Which building this instance is physically in. Many-to-many because that is the only relation Elephentity\'s WordPress driver stores as a taxonomy term rather than a column; an entry moving between buildings relinks this edge instead of becoming a different row.
+'),
+            ],
             'One stocked instance of an item, in a location, with its own expiry.',
             ['Node'],
         ),
@@ -77,9 +80,24 @@ return new Manifest(
                 'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'What the location is called. Projected to post_title.', FieldEncoding::Value, null),
             ],
             [
+                'sites' => new ConnectionEntry('sites', 'ClogLocation', 'ClogSite', 'sites', 'sites', 'Which buildings this kind of storage exists in — Deep Freezer might list only Cave, where Pantry lists both. Inventory.site is checked against this list on write, so an entry can never claim a combination this edge does not allow.
+'),
                 'inventoryEntries' => new ConnectionEntry('inventoryEntries', 'ClogLocation', 'ClogInventory', 'inventoryEntries', 'location', 'The Inventory pointing here through "location".'),
             ],
             'Somewhere inventory can be kept.',
+            ['Node'],
+        ),
+        'ClogSite' => new ObjectTypeEntry(
+            'ClogSite',
+            'Site',
+            [
+                'id' => new FieldEntry('id', new GraphQLType('ID', true, false), 'getId', 'The globally unique identifier, opaque and safe to use as a cache key.', FieldEncoding::GlobalId, null),
+                'databaseId' => new FieldEntry('databaseId', new GraphQLType('ID', true, false), 'getId', 'The row as storage knows it, unique within its table rather than the schema.', FieldEncoding::Id, null),
+                'name' => new FieldEntry('name', new GraphQLType('String', true, false), 'getName', 'The term\'s label. A taxonomy-backed entity has exactly this field — anything else declared here has nowhere to live in wp_term_taxonomy and is silently dropped at runtime.
+', FieldEncoding::Value, null),
+            ],
+            [],
+            'A building an inventory entry is physically kept in — Loft or Cave.',
             ['Node'],
         ),
     ],
@@ -98,6 +116,7 @@ return new Manifest(
                 'dateExpiry' => new GraphQLType('String', false, false),
                 'item' => new GraphQLType('ID', false, false),
                 'location' => new GraphQLType('ID', false, false),
+                'site' => new GraphQLType('ID', false, true),
             ],
             null,
             'Create a ClogInventory.',
@@ -123,9 +142,20 @@ return new Manifest(
             [
                 'postId' => new GraphQLType('Int', false, false),
                 'name' => new GraphQLType('String', true, false),
+                'sites' => new GraphQLType('ID', false, true),
             ],
             null,
             'Create a ClogLocation.',
+        ),
+        'createClogSite' => new MutationEntry(
+            'createClogSite',
+            'create',
+            'Site',
+            [
+                'name' => new GraphQLType('String', true, false),
+            ],
+            null,
+            'Create a ClogSite.',
         ),
         'discontinueClogItem' => new MutationEntry(
             'discontinueClogItem',
@@ -151,6 +181,7 @@ return new Manifest(
                 'dateExpiry' => new GraphQLType('String', false, false),
                 'item' => new GraphQLType('ID', false, false),
                 'location' => new GraphQLType('ID', false, false),
+                'site' => new GraphQLType('ID', false, true),
             ],
             null,
             'Update a ClogInventory.',
@@ -178,15 +209,28 @@ return new Manifest(
                 'id' => new GraphQLType('ID', true, false),
                 'postId' => new GraphQLType('Int', false, false),
                 'name' => new GraphQLType('String', false, false),
+                'sites' => new GraphQLType('ID', false, true),
             ],
             null,
             'Update a ClogLocation.',
+        ),
+        'updateClogSite' => new MutationEntry(
+            'updateClogSite',
+            'update',
+            'Site',
+            [
+                'id' => new GraphQLType('ID', true, false),
+                'name' => new GraphQLType('String', false, false),
+            ],
+            null,
+            'Update a ClogSite.',
         ),
     ],
     roots: [
         'ClogInventory' => new RootFieldEntry('ClogInventory', 'ClogInventoryEntries', 'Inventory'),
         'ClogItem' => new RootFieldEntry('ClogItem', 'ClogItems', 'Item'),
         'ClogLocation' => new RootFieldEntry('ClogLocation', 'ClogLocations', 'Location'),
+        'ClogSite' => new RootFieldEntry('ClogSite', 'ClogSites', 'Site'),
     ],
     queries: [
         'clogItemSearch' => new QueryFieldEntry(

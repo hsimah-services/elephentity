@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:447e29800ed606df5e97b3690b4ae04f6fb438300d6b2792499129b04d3d1ed6
+ * digest: sha256:13a927e2b938a5f9e897edee14308463d60fb78341d0a891cfd9cccd065deaad
  */
 
 namespace Clog\Entity;
@@ -38,6 +38,12 @@ use Clog\Entity\Location\LocationMutator;
 use Clog\Entity\Location\LocationReadPolicies;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
+use Clog\Entity\Site\SiteDeleter;
+use Clog\Entity\Site\SiteHydrator;
+use Clog\Entity\Site\SiteInput;
+use Clog\Entity\Site\SiteMutator;
+use Clog\Entity\Site\SiteTriggers;
+use Clog\Entity\Site\SiteVerifiers;
 use Clog\Entity\User\UserDeleter;
 use Clog\Entity\User\UserHydrator;
 use Clog\Entity\User\UserInput;
@@ -73,7 +79,7 @@ final readonly class Catalogue implements EntityCatalogue
      */
     public function entities(): array
     {
-        return ['Inventory', 'Item', 'Location', 'User'];
+        return ['Inventory', 'Item', 'Location', 'Site', 'User'];
     }
 
     /**
@@ -85,6 +91,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryHydrator::class),
             'Item' => $this->container->get(ItemHydrator::class),
             'Location' => $this->container->get(LocationHydrator::class),
+            'Site' => $this->container->get(SiteHydrator::class),
             'User' => $this->container->get(UserHydrator::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -100,6 +107,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryVerifiers::class),
             'Item' => $this->container->get(ItemVerifiers::class),
             'Location' => $this->container->get(LocationVerifiers::class),
+            'Site' => $this->container->get(SiteVerifiers::class),
             'User' => $this->container->get(UserVerifiers::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -115,6 +123,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryTriggers::class),
             'Item' => $this->container->get(ItemTriggers::class),
             'Location' => $this->container->get(LocationTriggers::class),
+            'Site' => $this->container->get(SiteTriggers::class),
             'User' => $this->container->get(UserTriggers::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -166,6 +175,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->readPoliciesInventoryReadPolicies(),
             'Item' => $this->readPoliciesItemReadPolicies(),
             'Location' => $this->readPoliciesLocationReadPolicies(),
+            'Site' => new NoPolicies(),
             'User' => $this->readPoliciesUserReadPolicies(),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -186,6 +196,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => new NoPolicies(),
             'Item' => $this->writePoliciesItemWritePolicies(),
             'Location' => new NoPolicies(),
+            'Site' => new NoPolicies(),
             'User' => new NoPolicies(),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -199,6 +210,8 @@ final readonly class Catalogue implements EntityCatalogue
         return [
             'Inventory.item' => 'Item',
             'Inventory.location' => 'Location',
+            'Inventory.site' => 'Site',
+            'Location.sites' => 'Site',
         ];
     }
 
@@ -219,6 +232,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['createdAt', 'updatedAt', 'postId', 'name', 'dateAdded', 'dateExpiry'],
             'Item' => ['createdAt', 'updatedAt', 'postId', 'name', 'barcode', 'defaultExpiryUnit', 'defaultExpiryValue'],
             'Location' => ['createdAt', 'updatedAt', 'postId', 'name'],
+            'Site' => ['name'],
             'User' => ['createdAt', 'updatedAt', 'postId', 'bio'],
             default => [],
         };
@@ -233,6 +247,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['name', 'dateAdded'],
             'Item' => ['name'],
             'Location' => ['name'],
+            'Site' => ['name'],
             'User' => [],
             default => [],
         };
@@ -247,6 +262,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => [],
             'Item' => [],
             'Location' => [],
+            'Site' => [],
             'User' => [],
             default => [],
         };
@@ -261,6 +277,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['postId'],
             'Item' => ['postId', 'barcode'],
             'Location' => ['postId', 'name'],
+            'Site' => ['name'],
             'User' => ['postId'],
             default => [],
         };
@@ -292,6 +309,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => InventoryDeleter::rules(),
             'Item' => ItemDeleter::rules(),
             'Location' => LocationDeleter::rules(),
+            'Site' => SiteDeleter::rules(),
             'User' => UserDeleter::rules(),
             default => [],
         };
@@ -315,6 +333,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => new InventoryMutator($buffer),
             'Item' => new ItemMutator($buffer, $this->resolve(ItemDiscontinueAction::class)),
             'Location' => new LocationMutator($buffer),
+            'Site' => new SiteMutator($buffer),
             'User' => new UserMutator($buffer),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -385,6 +404,19 @@ final readonly class Catalogue implements EntityCatalogue
      * @param array<string, mixed> $args
      * @return array<string, mixed>
      */
+    private function decodeSiteInputActionArguments(string $action, array $args): array
+    {
+        $input = $this->container->get(SiteInput::class);
+
+        assert($input instanceof SiteInput);
+
+        return $input->decodeAction($action, $args);
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
     private function decodeUserInputActionArguments(string $action, array $args): array
     {
         $input = $this->container->get(UserInput::class);
@@ -404,6 +436,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->decodeInventoryInputActionArguments($action, $args),
             'Item' => $this->decodeItemInputActionArguments($action, $args),
             'Location' => $this->decodeLocationInputActionArguments($action, $args),
+            'Site' => $this->decodeSiteInputActionArguments($action, $args),
             'User' => $this->decodeUserInputActionArguments($action, $args),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -418,6 +451,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryInput::class),
             'Item' => $this->container->get(ItemInput::class),
             'Location' => $this->container->get(LocationInput::class),
+            'Site' => $this->container->get(SiteInput::class),
             'User' => $this->container->get(UserInput::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -434,7 +468,7 @@ final readonly class Catalogue implements EntityCatalogue
      */
     public function contracts(): array
     {
-        return ['Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDiscontinueAction', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery', 'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy', 'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy'];
+        return ['Clog\\Entity\\Inventory\\Contract\\InventorySiteAvailabilityTrigger', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDiscontinueAction', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery', 'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy', 'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy'];
     }
 
     /**

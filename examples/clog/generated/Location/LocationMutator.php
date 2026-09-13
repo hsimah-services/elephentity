@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationMutator.php
- * digest: sha256:4d05b5dffb1d7847fd331228e1b133e0252f58effd46100d4ebfc39027b7ed9a
+ * digest: sha256:09e22bd8233b10bc3823c03cfdb2ea114b4bff8fc8e087544ed2dbc0551d560a
  */
 
 namespace Clog\Entity\Location;
 
 use Clog\Entity\Pattern\ClogPost\ClogPostMutatorTrait;
+use Eleph\Runtime\Mutation\EdgeMutation;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
 /**
@@ -41,5 +42,13 @@ final class LocationMutator
         $this->buffer->set('name', $name);
 
         return $this;
+    }
+
+    /**
+     * Add, remove or replace the Site this links to.
+     */
+    public function sites(): EdgeMutation
+    {
+        return $this->buffer->edge('sites');
     }
 }

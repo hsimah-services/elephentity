@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   taxonomies.php
- * digest: sha256:6c2076b5855cc98c9101fd0c512549c929f1a0076b5c0c9fc73bf491c126a535
+ * digest: sha256:89b1e66a80b715b71f95ae6a356c8ea137151e105e151f6c9d75dd714af78df1
  */
 
 /**
@@ -19,4 +19,27 @@ declare(strict_types=1);
  * time meant compiling the spec on every request, which is the cost every
  * manifest here exists to remove.
  */
-return [];
+return [
+    'clog_site' => [
+        'labels' => [
+            'name' => 'Sites',
+            'singular_name' => 'Site',
+            'search_items' => 'Search Sites',
+            'all_items' => 'All Sites',
+            'edit_item' => 'Edit Site',
+            'add_new_item' => 'Add New Site',
+            'new_item_name' => 'New Site Name',
+        ],
+        'description' => 'A building an inventory entry is physically kept in — Loft or Cave.',
+        'public' => true,
+        'publicly_queryable' => true,
+        'hierarchical' => false,
+        'show_ui' => true,
+        'show_admin_column' => true,
+        'show_in_rest' => false,
+        'object_type' => [
+            0 => 'clog_inventory',
+            1 => 'clog_location',
+        ],
+    ],
+];
