@@ -12,7 +12,6 @@ use Eleph\Runtime\Mutation\Mutation;
 use Eleph\Runtime\Policy\PendingWrite;
 use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Policy\WriteGate;
-use Eleph\Runtime\Policy\WriteOperation;
 use Eleph\Runtime\Query\CachingEdgeLoader;
 use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Query\Hydrator;
@@ -57,7 +56,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             $this->storage,
             $this->get($entity),
             $this->edges(),
-            new Criteria($entity),
+            Criteria::for($entity),
             $this->reads,
         );
     }
@@ -87,13 +86,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
         $this->catalogue->apply($entity, $mutation, $input);
 
-        $this->writes->permit($entity, null, new PendingWrite(
-            $entity,
-            WriteOperation::Create,
-            null,
-            [],
-            $mutation,
-        ));
+        $this->writes->permit($entity, null, PendingWrite::create($entity, $mutation));
 
 
         $work = $this->units->create();
@@ -113,13 +106,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing));
 
         $this->catalogue->apply($entity, $mutation, $input);
-        $this->writes->permit($entity, $existing, new PendingWrite(
-            $entity,
-            WriteOperation::Update,
-            null,
-            [],
-            $mutation,
-        ));
+        $this->writes->permit($entity, $existing, PendingWrite::update($entity, $mutation));
 
         $work = $this->units->create();
         $work->register($mutation);
@@ -134,13 +121,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
         }
 
-        $this->writes->permit($entity, $existing, new PendingWrite(
-            $entity,
-            WriteOperation::Delete,
-            null,
-            [],
-            null,
-        ));
+        $this->writes->permit($entity, $existing, PendingWrite::delete($entity));
 
         $work = $this->units->create();
         $work->delete(new Deletion($entity, $id));
@@ -164,13 +145,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         }
 
         $decoded = $this->catalogue->decodeActionArguments($entity, $action, $args);
-        $this->writes->permit($entity, $existing, new PendingWrite(
-            $entity,
-            WriteOperation::Action,
-            $action,
-            $decoded,
-            $mutation,
-        ));
+        $this->writes->permit($entity, $existing, PendingWrite::forAction($entity, $action, $decoded, $mutation));
 
         // The mutator was built against this buffer, so what the action writes lands
         // in the same mutation the unit of work is about to verify.

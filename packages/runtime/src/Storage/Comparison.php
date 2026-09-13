@@ -18,10 +18,4 @@ enum Comparison: string
     case StartsWith = 'startsWith';
     case IsNull = 'isNull';
     case IsNotNull = 'isNotNull';
-
-    /** Whether this comparison reads its value, or stands alone. */
-    public function takesValue(): bool
-    {
-        return self::IsNull !== $this && self::IsNotNull !== $this;
-    }
 }

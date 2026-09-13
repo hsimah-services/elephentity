@@ -6,7 +6,6 @@ namespace Eleph\Runtime\UnitOfWork;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Mutation\Mutation;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\StorageAdaptor;
@@ -76,15 +75,15 @@ final readonly class UniquenessCheck
 
     private function isTaken(Mutation $mutation, string $field, string|int|float|bool $value): bool
     {
-        $criteria = (new Criteria($mutation->entity()))
-            ->where(new Filter($field, Comparison::Equals, $value));
+        $criteria = Criteria::for($mutation->entity())
+            ->where(Filter::equals($field, $value));
 
         $target = $mutation->target();
 
         // On update the row itself holds the value, and colliding with yourself is not
         // a collision.
         if ($target instanceof EntityId) {
-            $criteria = $criteria->where(new Filter('id', Comparison::NotEquals, $target->raw()));
+            $criteria = $criteria->where(Filter::notEquals('id', $target->raw()));
         }
 
         return $this->storage->count($criteria) > 0;

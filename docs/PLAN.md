@@ -1614,6 +1614,29 @@ builds is not. Entities and contexts get `Item::of(...)` with a private construc
 `new Item(...)` beside `Item::of(...)` says nothing about which is intended, and the
 runtime already reads this way (`EntityId::of()`, `Verification::ok()`).
 
+The same test applies to hand-written value objects, not just generated ones, in two
+shapes. **A value object identified by one semantically-named argument gets a private
+constructor and a static factory named for what that argument means** —
+`EntityId::of(...)`, `Cursor::of(...)`, `EdgeFilter::along(...)` / `::back(...)`,
+`UnsupportedCapability::for(...)`, `Criteria::for(...)`. `Criteria::for('Site')` says
+what `new Criteria('Site')` does not, and every call site was already building one only
+to chain `->where()` / `->take()` straight off it, so the constructor was never the
+interesting part.
+
+**A value object whose shape is chosen by a closed enum gets one static factory per
+case**, named for the case instead of spelling the enum out at the call site —
+`Filter::equals(...)`, `::in(...)`, `::isNull(...)` read `Comparison` off the method name,
+and `Order::ascending(...)` / `::descending(...)` do the same for `Direction`. Where the
+enum also controls arity — `Comparison::IsNull` takes no value, every other case does —
+the per-case factories make the invalid pairing unrepresentable instead of catching it
+with a runtime check: `Filter::isNull($field)` has no parameter to pass a value through,
+so the constructor no longer needs to guard against one. `PendingWrite` is the same
+shape one level up: `::create(...)` and `::update(...)` always carry a `MutationContext`,
+`::delete(...)` never does, and `::forAction(...)` is the only one that takes an action
+name — four fixed shapes behind `WriteOperation`, not one constructor call site had to
+spell out by hand each time. (Plain `action` was already taken: `WriteContext::action()`
+reads the pending action name back, so the factory needed a different name.)
+
 Mutators, finders, hydrators and bridges keep public constructors, because every
 mainstream container autowires through one. Sealing them would buy uniformity at the
 price of an explicit service definition per entity, forever. The line is "who
