@@ -59,6 +59,8 @@ final readonly class FormatChecker
             'queries' => 'query',
             'actions' => 'action',
             'triggers' => 'trigger',
+            'readPolicies' => 'policy',
+            'writePolicies' => 'policy',
         ];
 
         $parameters = $spec->data['config'] ?? null;
@@ -89,6 +91,14 @@ final readonly class FormatChecker
                 /** @var array<string, mixed> $nested */
                 $this->checkMapping($spec, $shape, $nested, '/' . $key, $errors);
             }
+        }
+
+        $policies = $spec->data['policies'] ?? null;
+        $terminalRule = is_array($policies) ? ($policies['terminalRule'] ?? null) : null;
+
+        if (is_array($terminalRule)) {
+            /** @var array<string, mixed> $terminalRule */
+            $this->checkMapping($spec, 'terminalRule', $terminalRule, '/policies/terminalRule', $errors);
         }
 
         foreach ($sections as $section => $shape) {

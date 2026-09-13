@@ -14,6 +14,9 @@ integrations:
 storage:
   table: phe_post
   handle: post
+policies:
+  terminalRule:
+    read: allow
 fields:
   slug:
     type: string
@@ -74,4 +77,12 @@ triggers:
   reindex:
     on: [create, update]
     phase: postCommit
+    handler: true
+readPolicies:
+  reporter:
+    description: The person who raised it may always read it.
+    handler: true
+writePolicies:
+  noBackwards:
+    description: A post never returns to draft.
     handler: true

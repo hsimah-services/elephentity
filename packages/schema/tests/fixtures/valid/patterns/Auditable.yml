@@ -7,3 +7,7 @@ triggers:
     on: [create, update]
     phase: postCommit
     handler: true
+readPolicies:
+  owner:
+    handler: true
+interface: true

@@ -1,0 +1,4 @@
+pattern: Owned
+readPolicies:
+  owner:
+    handler: true

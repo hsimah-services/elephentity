@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\WPGraphQL\Tests;
 
 use Closure;
+use Eleph\Runtime\Policy\AccessDenied;
 use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
@@ -50,6 +51,17 @@ final class ResolverTest extends TestCase
         self::assertIsCallable($resolve);
         self::assertNull($resolve(null, []));
         self::assertSame([], $gateway->calls);
+    }
+
+    public function testAccessDeniedPropagatesFromTheRuntimeAsAnException(): void
+    {
+        $gateway = new FakeGateway();
+        $gateway->denyReads = true;
+        $resolve = $this->rootField($gateway, 'post')['resolve'];
+
+        $this->expectException(AccessDenied::class);
+        self::assertIsCallable($resolve);
+        $resolve(null, ['id' => '7']);
     }
 
     public function testARootConnectionAsksForEverythingAndShapesAPage(): void

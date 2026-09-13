@@ -306,6 +306,48 @@
                 "$ref": "#/$defs/trigger"
             }
         },
+        "policies": {
+            "type": "object",
+            "propertyNames": {
+                "$ref": "#/$defs/memberName"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/policy"
+            }
+        },
+        "policy": {
+            "type": "object",
+            "required": [
+                "handler"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "handler": {
+                    "const": true
+                }
+            }
+        },
+        "terminalRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "read": {
+                    "enum": [
+                        "allow",
+                        "deny"
+                    ]
+                },
+                "write": {
+                    "enum": [
+                        "allow",
+                        "deny"
+                    ]
+                }
+            }
+        },
         "trigger": {
             "type": "object",
             "required": [

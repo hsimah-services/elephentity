@@ -8,6 +8,7 @@ use Eleph\Schema\Error\CompilationResult;
 use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\RelationKind;
+use Eleph\Schema\Ir\TerminalRule;
 use Eleph\Schema\Ir\TriggerPhase;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
@@ -121,6 +122,19 @@ final class SchemaCompilerTest extends TestCase
         self::assertFalse($post->fields['title']->nullable);
         self::assertFalse($post->fields['price']->required);
         self::assertTrue($post->fields['price']->nullable);
+    }
+
+    public function testMergesPoliciesInPatternThenEntityOrder(): void
+    {
+        $post = $this->compile('valid')->schema()->entity('Post');
+        $pattern = $this->compile('valid')->schema()->pattern('Auditable');
+
+        self::assertNotNull($post);
+        self::assertNotNull($pattern);
+        self::assertSame(['owner', 'reporter'], array_keys($post->readPolicies));
+        self::assertSame(['noBackwards'], array_keys($post->writePolicies));
+        self::assertSame(TerminalRule::Allow, $post->terminalRead);
+        self::assertSame(['owner'], array_keys($pattern->readPolicies));
     }
 
     private function compile(string $fixture): CompilationResult

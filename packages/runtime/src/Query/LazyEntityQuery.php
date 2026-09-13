@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Query;
 
+use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Cursor;
 use Eleph\Runtime\Storage\Page;
@@ -34,11 +35,18 @@ final readonly class LazyEntityQuery implements EntityQuery
         private Hydrator $hydrator,
         private EdgeLoader $edges,
         private Criteria $criteria,
+        private ReadGate $gate,
     ) {
     }
 
     public function count(): int
     {
+        // A database count includes rows the viewer cannot receive, so gated entities
+        // must hydrate the unbounded set and count the survivors.
+        if ($this->gate->guards($this->criteria->entity)) {
+            return count($this->hydrateAll($this->storage->query($this->criteria->unbounded())->items));
+        }
+
         return $this->storage->count($this->criteria->unbounded());
     }
 
@@ -75,9 +83,17 @@ final readonly class LazyEntityQuery implements EntityQuery
      */
     private function hydrateAll(array $records): array
     {
-        return array_map(
+        $objects = array_map(
             fn (Record $record): object => $this->hydrator->hydrate($record, $this->edges),
             $records,
         );
+
+        /** @var list<T> $objects */
+        $objects = array_values($objects);
+
+        /** @var list<T> $retained */
+        $retained = $this->gate->retain($this->criteria->entity, $objects);
+
+        return $retained;
     }
 }

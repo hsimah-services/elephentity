@@ -67,8 +67,24 @@ final readonly class SectionMerger
             $errors,
         );
 
+        $readPolicies = $this->mergeSection(
+            array_map(static fn (ParsedSections $s): array => $s->readPolicies, $contributions),
+            'readPolicy',
+            $entityName,
+            $entityFile,
+            $errors,
+        );
+
+        $writePolicies = $this->mergeSection(
+            array_map(static fn (ParsedSections $s): array => $s->writePolicies, $contributions),
+            'writePolicy',
+            $entityName,
+            $entityFile,
+            $errors,
+        );
+
         return [
-            'sections' => new ParsedSections($fields, $edges, $queries, $actions, $triggers),
+            'sections' => new ParsedSections($fields, $edges, $queries, $actions, $triggers, $readPolicies, $writePolicies),
             'errors' => $errors,
         ];
     }

@@ -9,27 +9,35 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Wiring.php
- * digest: sha256:aa87e37142ade07af7d4eba012e99b19a3606b018682c8e820c2c25b9bd61741
+ * digest: sha256:2b20e7499679508940b9c246cd03bf9502d5532d49b128889b415c054bb63cce
  */
 
 namespace Clog\Entity;
 
 use Clog\Entity\Inventory\InventoryHydrator;
 use Clog\Entity\Inventory\InventoryInput;
+use Clog\Entity\Inventory\InventoryReadPolicies;
 use Clog\Entity\Inventory\InventoryTriggers;
 use Clog\Entity\Inventory\InventoryVerifiers;
+use Clog\Entity\Inventory\InventoryWritePolicies;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryUnitVerifier;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryValueVerifier;
 use Clog\Entity\Item\Contract\ItemSearchQuery;
+use Clog\Entity\Item\Contract\ItemStaffWritePolicy;
 use Clog\Entity\Item\ItemFinder;
 use Clog\Entity\Item\ItemHydrator;
 use Clog\Entity\Item\ItemInput;
+use Clog\Entity\Item\ItemReadPolicies;
 use Clog\Entity\Item\ItemTriggers;
 use Clog\Entity\Item\ItemVerifiers;
+use Clog\Entity\Item\ItemWritePolicies;
 use Clog\Entity\Location\LocationHydrator;
 use Clog\Entity\Location\LocationInput;
+use Clog\Entity\Location\LocationReadPolicies;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
+use Clog\Entity\Location\LocationWritePolicies;
+use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
 use Closure;
 use Eleph\Runtime\Query\ValueDecoder;
 use Psr\Container\ContainerInterface;
@@ -52,15 +60,21 @@ final class Wiring
             InventoryInput::class => static fn (ContainerInterface $c): object => new InventoryInput(self::resolve($c, ValueDecoder::class)),
             InventoryTriggers::class => static fn (ContainerInterface $c): object => new InventoryTriggers(),
             InventoryVerifiers::class => static fn (ContainerInterface $c): object => new InventoryVerifiers(),
+            InventoryReadPolicies::class => static fn (ContainerInterface $c): object => new InventoryReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
+            InventoryWritePolicies::class => static fn (ContainerInterface $c): object => new InventoryWritePolicies(),
             ItemHydrator::class => static fn (ContainerInterface $c): object => new ItemHydrator(self::resolve($c, ValueDecoder::class)),
             ItemInput::class => static fn (ContainerInterface $c): object => new ItemInput(self::resolve($c, ValueDecoder::class)),
             ItemTriggers::class => static fn (ContainerInterface $c): object => new ItemTriggers(),
             ItemVerifiers::class => static fn (ContainerInterface $c): object => new ItemVerifiers(self::resolve($c, ItemDefaultExpiryUnitVerifier::class), self::resolve($c, ItemDefaultExpiryValueVerifier::class)),
+            ItemReadPolicies::class => static fn (ContainerInterface $c): object => new ItemReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
+            ItemWritePolicies::class => static fn (ContainerInterface $c): object => new ItemWritePolicies(self::resolve($c, ItemStaffWritePolicy::class)),
             ItemFinder::class => static fn (ContainerInterface $c): object => new ItemFinder(self::resolve($c, ItemSearchQuery::class)),
             LocationHydrator::class => static fn (ContainerInterface $c): object => new LocationHydrator(self::resolve($c, ValueDecoder::class)),
             LocationInput::class => static fn (ContainerInterface $c): object => new LocationInput(self::resolve($c, ValueDecoder::class)),
             LocationTriggers::class => static fn (ContainerInterface $c): object => new LocationTriggers(),
             LocationVerifiers::class => static fn (ContainerInterface $c): object => new LocationVerifiers(),
+            LocationReadPolicies::class => static fn (ContainerInterface $c): object => new LocationReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
+            LocationWritePolicies::class => static fn (ContainerInterface $c): object => new LocationWritePolicies(),
         ];
     }
 

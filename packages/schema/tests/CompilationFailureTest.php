@@ -24,6 +24,24 @@ final class CompilationFailureTest extends TestCase
         self::assertContains('pattern.collision', $codes);
     }
 
+    public function testPoliciesCannotBeRedeclaredByAnEntity(): void
+    {
+        self::assertContains('pattern.collision', $this->codesFor('policy-collision'));
+    }
+
+    public function testTerminalRulesRequirePolicies(): void
+    {
+        self::assertContains('policy.terminalWithoutPolicies', $this->codesFor('policy-terminal'));
+    }
+
+    public function testPolicyPatternsMustOptIntoInterfaces(): void
+    {
+        $result = $this->compile('policy-pattern-interface');
+
+        self::assertContains('policy.patternWithoutInterface', $this->codes($result));
+        self::assertStringContainsString('Pattern "Owned"', implode("\n", array_map(static fn ($e) => $e->message, $result->errors)));
+    }
+
     public function testPatternCyclesAreReportedRatherThanHungOn(): void
     {
         self::assertContains('pattern.cycle', $this->codesFor('cycle'));

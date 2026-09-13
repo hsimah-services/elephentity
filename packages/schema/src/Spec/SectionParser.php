@@ -15,6 +15,7 @@ use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Managed;
 use Eleph\Schema\Ir\OnDelete;
 use Eleph\Schema\Ir\Origin;
+use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\ReturnDefinition;
 use Eleph\Schema\Ir\TriggerDefinition;
@@ -39,7 +40,27 @@ final readonly class SectionParser
             $this->queries($reader, $origin),
             $this->actions($reader, $origin),
             $this->triggers($reader, $origin),
+            $this->policies($reader, $origin, 'readPolicies'),
+            $this->policies($reader, $origin, 'writePolicies'),
         );
+    }
+
+    /**
+     * @return array<string, PolicyDefinition>
+     */
+    private function policies(SpecReader $reader, Origin $origin, string $section): array
+    {
+        $policies = [];
+
+        foreach ($reader->readers($section) as $name => $policy) {
+            $policies[$name] = new PolicyDefinition(
+                name: $name,
+                origin: $origin,
+                description: $policy->optionalString('description'),
+            );
+        }
+
+        return $policies;
     }
 
     /**

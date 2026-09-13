@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/Location.php
- * digest: sha256:09515c49656190143fdcbf5bd36e7560fd48ccefed2a8a019eae60102ea3a36c
+ * digest: sha256:3d5994c450e3f5023d9f1544245d2722d27acf6e3c5ec7ce07cca3608a916274
  */
 
 namespace Clog\Entity\Location;
 
 use Clog\Entity\Inventory\Inventory;
+use Clog\Entity\Pattern\ClogPost\ClogPost;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EdgeLoader;
@@ -23,7 +24,7 @@ use Eleph\Runtime\Query\EntityQuery;
 /**
  * Somewhere inventory can be kept.
  */
-final class Location
+final class Location implements ClogPost
 {
     private function __construct(
         private readonly EntityId $id,

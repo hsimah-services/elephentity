@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemInput.php
- * digest: sha256:cb2e2872b4984d6ae32c73c9e81a70d074234b6fa733ddac6b888ee44b8a34cc
+ * digest: sha256:52cc742d732ef274fce001138c91ca1fdd4d1106f18240e5367140dde6e631b3
  */
 
 namespace Clog\Entity\Item;
@@ -17,6 +17,7 @@ namespace Clog\Entity\Item;
 use Clog\Entity\Enum\ExpiryUnit;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
+use InvalidArgumentException;
 
 /**
  * Turns raw input into pending Item changes.
@@ -100,5 +101,17 @@ final readonly class ItemInput
         if (array_key_exists('defaultExpiryValue', $input)) {
             $buffer->set('defaultExpiryValue', $this->defaultExpiryValue($input['defaultExpiryValue']));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    public function decodeAction(string $action, array $args): array
+    {
+        return match ($action) {
+
+            default => throw new InvalidArgumentException(sprintf('Unknown action %s.', $action)),
+        };
     }
 }

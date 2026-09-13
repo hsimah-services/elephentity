@@ -11,6 +11,7 @@ use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\EntityDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\PatternDeclaration;
+use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\Schema;
@@ -45,12 +46,12 @@ final readonly class IrCodec
     /**
      * The wire format's version, carried in the envelope.
      *
-     * Bumped whenever a builder that understood the old shape would misread the new one
-     * — a removed field, a renamed one, a changed meaning. Adding an optional field with
-     * a default does not qualify, because a builder that ignores it still generates
-     * correct output.
+    * Bumped whenever a builder that understood the old shape would misread the new one
+    * — a removed field, a renamed one, a changed meaning. Although the policy fields
+    * are optional, a builder that silently drops them generates an entirely ungated
+    * tree, so this change must be loud at the version boundary.
      */
-    public const VERSION = '1.0';
+    public const VERSION = '1.1';
 
     /**
      * What each array-typed constructor parameter holds.
@@ -74,10 +75,14 @@ final readonly class IrCodec
             'queries' => QueryDefinition::class,
             'actions' => ActionDefinition::class,
             'triggers' => TriggerDefinition::class,
+            'readPolicies' => PolicyDefinition::class,
+            'writePolicies' => PolicyDefinition::class,
         ],
         PatternDeclaration::class => [
             'fields' => FieldDefinition::class,
             'edges' => EdgeDefinition::class,
+            'readPolicies' => PolicyDefinition::class,
+            'writePolicies' => PolicyDefinition::class,
         ],
         QueryDefinition::class => ['arguments' => ArgumentDefinition::class],
         ActionDefinition::class => ['arguments' => ArgumentDefinition::class],
@@ -99,8 +104,8 @@ final readonly class IrCodec
      */
     private const MAPS = [
         Schema::class => ['entities', 'types', 'patterns'],
-        EntityDefinition::class => ['fields', 'edges', 'queries', 'actions', 'triggers', 'config'],
-        PatternDeclaration::class => ['fields', 'edges'],
+        EntityDefinition::class => ['fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies', 'config'],
+        PatternDeclaration::class => ['fields', 'edges', 'readPolicies', 'writePolicies'],
         ActionDefinition::class => ['arguments'],
         QueryDefinition::class => ['arguments'],
     ];

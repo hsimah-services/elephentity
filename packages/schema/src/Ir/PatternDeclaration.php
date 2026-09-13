@@ -19,11 +19,15 @@ final readonly class PatternDeclaration
     /**
      * @param array<string, FieldDefinition> $fields
      * @param array<string, EdgeDefinition>  $edges
+    * @param array<string, PolicyDefinition> $readPolicies
+    * @param array<string, PolicyDefinition> $writePolicies
      */
     public function __construct(
         public string $name,
         public array $fields = [],
         public array $edges = [],
+        public array $readPolicies = [],
+        public array $writePolicies = [],
     ) {
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Query;
 
+use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\StorageAdaptor;
 
@@ -25,6 +26,7 @@ final readonly class Queries
     public function __construct(
         private StorageAdaptor $storage,
         private EdgeLoader $edges,
+        private ReadGate $gate,
     ) {
     }
 
@@ -37,6 +39,6 @@ final readonly class Queries
      */
     public function of(Hydrator $hydrator, Criteria $criteria): EntityQuery
     {
-        return new LazyEntityQuery($this->storage, $hydrator, $this->edges, $criteria);
+        return new LazyEntityQuery($this->storage, $hydrator, $this->edges, $criteria, $this->gate);
     }
 }

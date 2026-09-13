@@ -6,6 +6,8 @@ namespace Clog;
 
 use Clog\Contract\DefaultExpiryIsPaired;
 use Clog\Contract\ItemSearch;
+use Clog\Contract\SignedInUsers;
+use Clog\Contract\StaffMayWriteItems;
 use Clog\Entity\Catalogue;
 use Clog\Entity\Inventory\InventoryHydrator;
 use Clog\Entity\Inventory\InventoryInput;
@@ -14,6 +16,7 @@ use Clog\Entity\Inventory\InventoryVerifiers;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryUnitVerifier;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryValueVerifier;
 use Clog\Entity\Item\Contract\ItemSearchQuery;
+use Clog\Entity\Item\Contract\ItemStaffWritePolicy;
 use Clog\Entity\Item\ItemFinder;
 use Clog\Entity\Item\ItemHydrator;
 use Clog\Entity\Item\ItemInput;
@@ -23,9 +26,12 @@ use Clog\Entity\Location\LocationHydrator;
 use Clog\Entity\Location\LocationInput;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
+use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
 use Eleph\Runtime\Catalogue\BootCheck;
 use Eleph\Runtime\Gateway\Runtime;
 use Eleph\Runtime\Gateway\UnitOfWorkFactory;
+use Eleph\Runtime\Policy\ReadGate;
+use Eleph\Runtime\Policy\WriteGate;
 use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Query\ValueDecoder;
 use Eleph\Runtime\Type\NullProcessorRegistry;
@@ -35,6 +41,7 @@ use Eleph\WordPress\Manifest\StorageManifest;
 use Eleph\WordPress\Migration\MigrationPlan;
 use Eleph\WordPress\Migration\SchemaInstaller;
 use Eleph\WordPress\Registration\PostTypeRegistrar;
+use Eleph\WordPress\Viewer\WordPressViewerProvider;
 use Eleph\WordPress\WordPress;
 use Eleph\WPGraphQL\Plugin;
 
@@ -98,11 +105,14 @@ final class Bootstrap
         $storage = WordPress::adaptor($this->database, $this->manifest());
         $container = new Container();
         $catalogue = new Catalogue($container);
+        $viewers = new WordPressViewerProvider();
 
         $runtime = new Runtime(
             $storage,
             $catalogue,
             new UnitOfWorkFactory($storage, $catalogue, new NullProcessorRegistry()),
+            new ReadGate($catalogue, $viewers),
+            new WriteGate($catalogue, $viewers),
         );
 
         $this->register($container, $runtime);
@@ -213,7 +223,9 @@ final class Bootstrap
             ->bind(ItemDefaultExpiryUnitVerifier::class, static fn (): object => new DefaultExpiryIsPaired())
             ->bind(ItemDefaultExpiryValueVerifier::class, static fn (Container $c): object => $c->get(
                 ItemDefaultExpiryUnitVerifier::class,
-            ));
+            ))
+            ->bind(ClogPostSignedInReadPolicy::class, static fn (): object => new SignedInUsers())
+            ->bind(ItemStaffWritePolicy::class, static fn (): object => new StaffMayWriteItems());
     }
 
     private function manifest(): StorageManifest

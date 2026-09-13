@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:be0f860cdd38b7a0555033f205dfb6b3cff061b1a153704618673e62300a2a9c
+ * digest: sha256:c40857a04a04ba979c6acd5bc4468787caef1874d42b3a7f1f792f608df106cd
  */
 
 namespace Clog\Entity;
@@ -18,6 +18,7 @@ use Clog\Entity\Inventory\InventoryDeleter;
 use Clog\Entity\Inventory\InventoryHydrator;
 use Clog\Entity\Inventory\InventoryInput;
 use Clog\Entity\Inventory\InventoryMutator;
+use Clog\Entity\Inventory\InventoryReadPolicies;
 use Clog\Entity\Inventory\InventoryTriggers;
 use Clog\Entity\Inventory\InventoryVerifiers;
 use Clog\Entity\Item\ItemDeleter;
@@ -25,18 +26,24 @@ use Clog\Entity\Item\ItemFinder;
 use Clog\Entity\Item\ItemHydrator;
 use Clog\Entity\Item\ItemInput;
 use Clog\Entity\Item\ItemMutator;
+use Clog\Entity\Item\ItemReadPolicies;
 use Clog\Entity\Item\ItemTriggers;
 use Clog\Entity\Item\ItemVerifiers;
+use Clog\Entity\Item\ItemWritePolicies;
 use Clog\Entity\Location\LocationDeleter;
 use Clog\Entity\Location\LocationHydrator;
 use Clog\Entity\Location\LocationInput;
 use Clog\Entity\Location\LocationMutator;
+use Clog\Entity\Location\LocationReadPolicies;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
 use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
+use Eleph\Runtime\Policy\EntityReadPolicies;
+use Eleph\Runtime\Policy\EntityWritePolicies;
+use Eleph\Runtime\Policy\NoPolicies;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Storage\DeletionRule;
 use Eleph\Runtime\Verification\EntityVerifiers;
@@ -104,6 +111,62 @@ final readonly class Catalogue implements EntityCatalogue
         assert($service instanceof EntityTriggers);
 
         return $service;
+    }
+
+    private function readPoliciesInventoryReadPolicies(): EntityReadPolicies
+    {
+        $policies = $this->container->get(InventoryReadPolicies::class);
+
+        assert($policies instanceof InventoryReadPolicies);
+
+        return $policies;
+    }
+
+    private function readPoliciesItemReadPolicies(): EntityReadPolicies
+    {
+        $policies = $this->container->get(ItemReadPolicies::class);
+
+        assert($policies instanceof ItemReadPolicies);
+
+        return $policies;
+    }
+
+    private function readPoliciesLocationReadPolicies(): EntityReadPolicies
+    {
+        $policies = $this->container->get(LocationReadPolicies::class);
+
+        assert($policies instanceof LocationReadPolicies);
+
+        return $policies;
+    }
+
+    public function readPolicies(string $entity): EntityReadPolicies
+    {
+        return match ($entity) {
+            'Inventory' => $this->readPoliciesInventoryReadPolicies(),
+            'Item' => $this->readPoliciesItemReadPolicies(),
+            'Location' => $this->readPoliciesLocationReadPolicies(),
+            default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
+        };
+    }
+
+    private function writePoliciesItemWritePolicies(): EntityWritePolicies
+    {
+        $policies = $this->container->get(ItemWritePolicies::class);
+
+        assert($policies instanceof ItemWritePolicies);
+
+        return $policies;
+    }
+
+    public function writePolicies(string $entity): EntityWritePolicies
+    {
+        return match ($entity) {
+            'Inventory' => new NoPolicies(),
+            'Item' => $this->writePoliciesItemWritePolicies(),
+            'Location' => new NoPolicies(),
+            default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
+        };
     }
 
     /**
@@ -239,6 +302,70 @@ final readonly class Catalogue implements EntityCatalogue
     }
 
     /**
+     * @return list<string>
+     */
+    public function actionArguments(string $entity, string $action): array
+    {
+        return match ($entity . '.' . $action) {
+
+            default => [],
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    private function decodeInventoryInputActionArguments(string $action, array $args): array
+    {
+        $input = $this->container->get(InventoryInput::class);
+
+        assert($input instanceof InventoryInput);
+
+        return $input->decodeAction($action, $args);
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    private function decodeItemInputActionArguments(string $action, array $args): array
+    {
+        $input = $this->container->get(ItemInput::class);
+
+        assert($input instanceof ItemInput);
+
+        return $input->decodeAction($action, $args);
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    private function decodeLocationInputActionArguments(string $action, array $args): array
+    {
+        $input = $this->container->get(LocationInput::class);
+
+        assert($input instanceof LocationInput);
+
+        return $input->decodeAction($action, $args);
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    public function decodeActionArguments(string $entity, string $action, array $args): array
+    {
+        return match ($entity) {
+            'Inventory' => $this->decodeInventoryInputActionArguments($action, $args),
+            'Item' => $this->decodeItemInputActionArguments($action, $args),
+            'Location' => $this->decodeLocationInputActionArguments($action, $args),
+            default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
+        };
+    }
+
+    /**
      * @param array<string, mixed> $input
      */
     public function apply(string $entity, MutationBuffer $buffer, array $input): void
@@ -262,6 +389,6 @@ final readonly class Catalogue implements EntityCatalogue
      */
     public function contracts(): array
     {
-        return ['Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery'];
+        return ['Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery', 'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy', 'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy'];
     }
 }

@@ -9,6 +9,10 @@ use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\Policy\PendingWrite;
+use Eleph\Runtime\Policy\ReadGate;
+use Eleph\Runtime\Policy\WriteGate;
+use Eleph\Runtime\Policy\WriteOperation;
 use Eleph\Runtime\Query\CachingEdgeLoader;
 use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Query\Hydrator;
@@ -35,14 +39,16 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         private StorageAdaptor $storage,
         private EntityCatalogue $catalogue,
         private UnitOfWorkFactory $units,
+        private ReadGate $reads,
+        private WriteGate $writes,
     ) {
     }
 
     public function find(string $entity, EntityId $id): ?object
     {
-        $record = $this->storage->get($entity, $id);
+        $object = $this->load($entity, $id);
 
-        return null === $record ? null : $this->get($entity)->hydrate($record, $this->edges());
+        return null === $object ? null : $this->reads->permit($entity, $object);
     }
 
     public function all(string $entity): EntityQuery
@@ -52,6 +58,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             $this->get($entity),
             $this->edges(),
             new Criteria($entity),
+            $this->reads,
         );
     }
 
@@ -80,6 +87,14 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
         $this->catalogue->apply($entity, $mutation, $input);
 
+        $this->writes->permit($entity, null, new PendingWrite(
+            $entity,
+            WriteOperation::Create,
+            null,
+            [],
+            $mutation,
+        ));
+
 
         $work = $this->units->create();
         $work->register($mutation);
@@ -89,9 +104,22 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
     public function update(string $entity, EntityId $id, array $input): void
     {
-        $mutation = new Mutation($entity, $id, $this->currentValues($entity, $id));
+        $existing = $this->load($entity, $id);
+
+        if (null === $existing) {
+            throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
+        }
+
+        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing));
 
         $this->catalogue->apply($entity, $mutation, $input);
+        $this->writes->permit($entity, $existing, new PendingWrite(
+            $entity,
+            WriteOperation::Update,
+            null,
+            [],
+            $mutation,
+        ));
 
         $work = $this->units->create();
         $work->register($mutation);
@@ -100,6 +128,20 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
     public function delete(string $entity, EntityId $id): void
     {
+        $existing = $this->load($entity, $id);
+
+        if (null === $existing) {
+            throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
+        }
+
+        $this->writes->permit($entity, $existing, new PendingWrite(
+            $entity,
+            WriteOperation::Delete,
+            null,
+            [],
+            null,
+        ));
+
         $work = $this->units->create();
         $work->delete(new Deletion($entity, $id));
         $work->commit();
@@ -107,7 +149,13 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
     public function runAction(string $entity, string $action, EntityId $id, array $args): void
     {
-        $mutation = new Mutation($entity, $id, $this->currentValues($entity, $id));
+        $existing = $this->load($entity, $id);
+
+        if (null === $existing) {
+            throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
+        }
+
+        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing));
 
         $mutator = $this->catalogue->mutatorFor($entity, $mutation);
 
@@ -115,9 +163,18 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             throw new RuntimeException(sprintf('%s declares no action "%s".', $entity, $action));
         }
 
+        $decoded = $this->catalogue->decodeActionArguments($entity, $action, $args);
+        $this->writes->permit($entity, $existing, new PendingWrite(
+            $entity,
+            WriteOperation::Action,
+            $action,
+            $decoded,
+            $mutation,
+        ));
+
         // The mutator was built against this buffer, so what the action writes lands
         // in the same mutation the unit of work is about to verify.
-        $mutator->{$action}(...array_values($args));
+        $mutator->{$action}(...array_values($decoded));
 
         $work = $this->units->create();
         $work->register($mutation);
@@ -143,12 +200,19 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
      */
     public function queries(): Queries
     {
-        return new Queries($this->storage, $this->edges());
+        return new Queries($this->storage, $this->edges(), $this->reads);
     }
 
     private function edges(): CachingEdgeLoader
     {
-        return new CachingEdgeLoader($this->storage, $this, $this->catalogue->edgeTargets());
+        return new CachingEdgeLoader($this->storage, $this, $this->catalogue->edgeTargets(), $this->reads);
+    }
+
+    private function load(string $entity, EntityId $id): ?object
+    {
+        $record = $this->storage->get($entity, $id);
+
+        return null === $record ? null : $this->get($entity)->hydrate($record, $this->edges());
     }
 
     /**
@@ -156,14 +220,8 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
      *
      * @return array<string, mixed>
      */
-    private function currentValues(string $entity, EntityId $id): array
+    private function valuesOf(string $entity, object $existing): array
     {
-        $existing = $this->find($entity, $id);
-
-        if (null === $existing) {
-            throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
-        }
-
         $values = [];
 
         foreach ($this->catalogue->fieldNames($entity) as $field) {

@@ -1,0 +1,7 @@
+entity: Post
+use: [Owned]
+storage:
+  table: post
+readPolicies:
+  owner:
+    handler: true

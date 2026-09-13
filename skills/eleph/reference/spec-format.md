@@ -272,6 +272,34 @@ WordPress hooks: reading the yaml tells you everything that happens on commit.
 A `postCommit` mutation is **not atomic** with the commit that caused it, and fires its
 own triggers. Fine for audit trails and projections; never for an invariant.
 
+## Policies
+
+```yaml
+policies:
+  terminalRule:
+    read: deny
+    write: deny
+readPolicies:
+  signedIn:
+    handler: true
+writePolicies:
+  staff:
+    handler: true
+```
+
+Policies are ordered rules. Each returns `allow`, `skip` or `deny` with a reason; the
+first non-skip result wins. Read policies gate single reads and filter denied collection
+rows. Write policies gate create, update, delete and actions. `terminalRule` is an
+entity-only fallback when all policies skip, and defaults to deny. An entity with no
+policies is not gated, so the terminal rule is irrelevant and `count()` keeps its fast
+path.
+
+Read policies receive the entity and a `Viewer`. Entity write policies receive the
+entity, generated `{Entity}WriteContext` and viewer. Pattern write policies receive the
+shared runtime `WriteContext`, so one implementation can serve every entity using the
+pattern. Policies declared by a pattern require `interface: true`; patterns may not
+declare `policies.terminalRule`.
+
 ## Patterns
 
 A pattern is a fragment of an entity spec — any section an entity may declare, it may
@@ -333,6 +361,10 @@ one file no longer tells you what a field is.
 
 Patterns may `use:` other patterns. Cycles are reported.
 
+A pattern that declares read or write policies must declare `interface: true`, because
+the generated policy contract is typed to that pattern's interface. Patterns may
+contribute policies but cannot set the entity-level terminal rule.
+
 ## Types
 
 ```yaml
@@ -350,8 +382,8 @@ values: [draft, scheduled, published]
 A type with `values:` is an enum and the generator owns the class outright. A type with
 `processors:` names a value class **you** write; the generator only references it.
 
-**No application namespaces appear in a spec.** `processors: true`, `handler: true` and
-`verify: true` all say "generate the interface" — the namespace comes from
+**No application namespaces appear in a spec.** `processors: true`, `handler: true`,
+`verify: true` and policy declarations all say "generate the interface" — the namespace comes from
 `eleph.json`, so renaming one is a config change rather than an edit to every entity.
 
 ## Canonical key order

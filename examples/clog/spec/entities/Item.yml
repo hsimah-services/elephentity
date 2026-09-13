@@ -54,3 +54,6 @@ queries:
       wpgraphql:
         field: clogItemSearch
     handler: true
+writePolicies:
+  staff:
+    handler: true
