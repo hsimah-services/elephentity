@@ -22,3 +22,11 @@ fields:
     required: true
     unique: true
     maxLength: 200
+edges:
+  sites:
+    to: Site
+    cardinality: many
+    description: >
+      Which buildings this kind of storage exists in — Deep Freezer might list only
+      Cave, where Pantry lists both. Inventory.site is checked against this list on
+      write, so an entry can never claim a combination this edge does not allow.

@@ -8,20 +8,19 @@ declare(strict_types=1);
  * Regenerate with `eleph generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Location/LocationMutationContext.php
- * digest: sha256:69f969d3588dd4a7ca0e85d686829ec2cf35075e8de0f9fe6a5deba40c1cbd66
+ * path:   Site/SiteMutationContext.php
+ * digest: sha256:053c099a99e17cb4c5366c48844d8ea99356becb2389ad474c2a13a315ab561e
  */
 
-namespace Clog\Entity\Location;
+namespace Clog\Entity\Site;
 
-use DateTimeImmutable;
 use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Mutation\MutationContext;
 
 /**
- * A pending Location mutation, with exact types.
+ * A pending Site mutation, with exact types.
  */
-final readonly class LocationMutationContext implements MutationContext
+final readonly class SiteMutationContext implements MutationContext
 {
     private function __construct(
         private MutationContext $context,
@@ -79,54 +78,6 @@ final readonly class LocationMutationContext implements MutationContext
         return $this->context->isEdgeChanged($edge);
     }
 
-    public function originalCreatedAt(): ?DateTimeImmutable
-    {
-        $value = $this->context->original('createdAt');
-        assert(null === $value || $value instanceof DateTimeImmutable);
-
-        return $value;
-    }
-
-    public function pendingCreatedAt(): ?DateTimeImmutable
-    {
-        $value = $this->context->pending('createdAt');
-        assert(null === $value || $value instanceof DateTimeImmutable);
-
-        return $value;
-    }
-
-    public function originalUpdatedAt(): ?DateTimeImmutable
-    {
-        $value = $this->context->original('updatedAt');
-        assert(null === $value || $value instanceof DateTimeImmutable);
-
-        return $value;
-    }
-
-    public function pendingUpdatedAt(): ?DateTimeImmutable
-    {
-        $value = $this->context->pending('updatedAt');
-        assert(null === $value || $value instanceof DateTimeImmutable);
-
-        return $value;
-    }
-
-    public function originalPostId(): ?int
-    {
-        $value = $this->context->original('postId');
-        assert(null === $value || is_int($value));
-
-        return $value;
-    }
-
-    public function pendingPostId(): ?int
-    {
-        $value = $this->context->pending('postId');
-        assert(null === $value || is_int($value));
-
-        return $value;
-    }
-
     public function originalName(): ?string
     {
         $value = $this->context->original('name');
@@ -141,19 +92,6 @@ final readonly class LocationMutationContext implements MutationContext
         assert(null === $value || is_string($value));
 
         return $value;
-    }
-
-    /**
-     * @return list<Identifier>
-     */
-    public function pendingSites(): array
-    {
-        return $this->context->pendingEdge('sites');
-    }
-
-    public function isSitesChanged(): bool
-    {
-        return $this->context->isEdgeChanged('sites');
     }
 
     public static function of(MutationContext $context): self

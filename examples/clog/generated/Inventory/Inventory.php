@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/Inventory.php
- * digest: sha256:45d67f2af09e4e3bdfd3d96d4c89bef915df88e8a0b32663901373498ec0a74e
+ * digest: sha256:655d75d92a96984426bbacaf97dfb2ed819a913afc34c8ab57787c12890ec15e
  */
 
 namespace Clog\Entity\Inventory;
@@ -17,9 +17,11 @@ namespace Clog\Entity\Inventory;
 use Clog\Entity\Item\Item;
 use Clog\Entity\Location\Location;
 use Clog\Entity\Pattern\ClogPost\ClogPost;
+use Clog\Entity\Site\Site;
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Query\EdgeLoader;
+use Eleph\Runtime\Query\EntityQuery;
 
 /**
  * One stocked instance of an item, in a location, with its own expiry.
@@ -109,6 +111,17 @@ final class Inventory implements ClogPost
     {
         $related = $this->edges->toOne('Inventory', $this->id, 'location');
         assert(null === $related || $related instanceof Location);
+
+        return $related;
+    }
+
+    /**
+     * @return EntityQuery<Site>
+     */
+    public function site(): EntityQuery
+    {
+        /** @var EntityQuery<Site> $related */
+        $related = $this->edges->toMany('Inventory', $this->id, 'site');
 
         return $related;
     }

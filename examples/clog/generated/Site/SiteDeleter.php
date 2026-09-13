@@ -8,11 +8,11 @@ declare(strict_types=1);
  * Regenerate with `eleph generate`. This file is machine-owned: edits are
  * detected by the build and rejected.
  *
- * path:   Inventory/InventoryDeleter.php
- * digest: sha256:b9c9a64c5ab0a0ab6d412f93443b6b78b9f895124f7934bd20b56d5c046a7d51
+ * path:   Site/SiteDeleter.php
+ * digest: sha256:29ef50e3923ba93d66ac634dbdca324ee5fd76f1647a09473e49beb144bf3b7b
  */
 
-namespace Clog\Entity\Inventory;
+namespace Clog\Entity\Site;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Mutation\Deletion;
@@ -21,9 +21,9 @@ use Eleph\Runtime\Storage\DeletionRule;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 
 /**
- * Removes a Inventory, and whatever its edges say goes with it.
+ * Removes a Site, and whatever its edges say goes with it.
  */
-final class InventoryDeleter
+final class SiteDeleter
 {
     public function __construct(
         private readonly UnitOfWork $work,
@@ -35,7 +35,7 @@ final class InventoryDeleter
      */
     public function delete(EntityId $id): void
     {
-        $this->work->delete(new Deletion('Inventory', $id));
+        $this->work->delete(new Deletion('Site', $id));
     }
 
     /**
@@ -44,7 +44,8 @@ final class InventoryDeleter
     public static function rules(): array
     {
         return [
-            new DeletionRule('Site', 'site', 'Inventory', DeletionPolicy::Restrict, true),
+            new DeletionRule('Inventory', 'site', 'Inventory', DeletionPolicy::Restrict, true),
+            new DeletionRule('Location', 'sites', 'Location', DeletionPolicy::Restrict, true),
         ];
     }
 }

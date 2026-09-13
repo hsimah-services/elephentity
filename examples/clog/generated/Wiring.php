@@ -9,11 +9,12 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Wiring.php
- * digest: sha256:014db11ef3c78e027ff036b2accaab4edb66bcfc20d5edd36629e7b00f6bbc10
+ * digest: sha256:cea251c54c104fec6a9a117995173cb126ba08c581e2fd869e2c142cf3232539
  */
 
 namespace Clog\Entity;
 
+use Clog\Entity\Inventory\Contract\InventorySiteAvailabilityTrigger;
 use Clog\Entity\Inventory\InventoryHydrator;
 use Clog\Entity\Inventory\InventoryInput;
 use Clog\Entity\Inventory\InventoryReadPolicies;
@@ -38,6 +39,12 @@ use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Clog\Entity\Location\LocationWritePolicies;
 use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
+use Clog\Entity\Site\SiteHydrator;
+use Clog\Entity\Site\SiteInput;
+use Clog\Entity\Site\SiteReadPolicies;
+use Clog\Entity\Site\SiteTriggers;
+use Clog\Entity\Site\SiteVerifiers;
+use Clog\Entity\Site\SiteWritePolicies;
 use Clog\Entity\User\UserHydrator;
 use Clog\Entity\User\UserInput;
 use Clog\Entity\User\UserReadPolicies;
@@ -64,7 +71,7 @@ final class Wiring
         return [
             InventoryHydrator::class => static fn (ContainerInterface $c): object => new InventoryHydrator(self::resolve($c, ValueDecoder::class)),
             InventoryInput::class => static fn (ContainerInterface $c): object => new InventoryInput(self::resolve($c, ValueDecoder::class)),
-            InventoryTriggers::class => static fn (ContainerInterface $c): object => new InventoryTriggers(),
+            InventoryTriggers::class => static fn (ContainerInterface $c): object => new InventoryTriggers(self::resolve($c, InventorySiteAvailabilityTrigger::class)),
             InventoryVerifiers::class => static fn (ContainerInterface $c): object => new InventoryVerifiers(),
             InventoryReadPolicies::class => static fn (ContainerInterface $c): object => new InventoryReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
             InventoryWritePolicies::class => static fn (ContainerInterface $c): object => new InventoryWritePolicies(),
@@ -81,6 +88,12 @@ final class Wiring
             LocationVerifiers::class => static fn (ContainerInterface $c): object => new LocationVerifiers(),
             LocationReadPolicies::class => static fn (ContainerInterface $c): object => new LocationReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
             LocationWritePolicies::class => static fn (ContainerInterface $c): object => new LocationWritePolicies(),
+            SiteHydrator::class => static fn (ContainerInterface $c): object => new SiteHydrator(self::resolve($c, ValueDecoder::class)),
+            SiteInput::class => static fn (ContainerInterface $c): object => new SiteInput(self::resolve($c, ValueDecoder::class)),
+            SiteTriggers::class => static fn (ContainerInterface $c): object => new SiteTriggers(),
+            SiteVerifiers::class => static fn (ContainerInterface $c): object => new SiteVerifiers(),
+            SiteReadPolicies::class => static fn (ContainerInterface $c): object => new SiteReadPolicies(),
+            SiteWritePolicies::class => static fn (ContainerInterface $c): object => new SiteWritePolicies(),
             UserHydrator::class => static fn (ContainerInterface $c): object => new UserHydrator(self::resolve($c, ValueDecoder::class)),
             UserInput::class => static fn (ContainerInterface $c): object => new UserInput(self::resolve($c, ValueDecoder::class)),
             UserTriggers::class => static fn (ContainerInterface $c): object => new UserTriggers(),

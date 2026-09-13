@@ -8,8 +8,10 @@ use Clog\Contract\DefaultExpiryIsPaired;
 use Clog\Contract\DiscontinueItem;
 use Clog\Contract\ItemSearch;
 use Clog\Contract\SignedInUsers;
+use Clog\Contract\SiteAvailableAtLocation;
 use Clog\Contract\StaffMayWriteItems;
 use Clog\Entity\Catalogue;
+use Clog\Entity\Inventory\Contract\InventorySiteAvailabilityTrigger;
 use Clog\Entity\Inventory\InventoryHydrator;
 use Clog\Entity\Inventory\InventoryInput;
 use Clog\Entity\Inventory\InventoryTriggers;
@@ -29,6 +31,10 @@ use Clog\Entity\Location\LocationInput;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
+use Clog\Entity\Site\SiteHydrator;
+use Clog\Entity\Site\SiteInput;
+use Clog\Entity\Site\SiteTriggers;
+use Clog\Entity\Site\SiteVerifiers;
 use Clog\Entity\User\UserHydrator;
 use Clog\Entity\User\UserInput;
 use Clog\Entity\User\UserTriggers;
@@ -217,8 +223,15 @@ final class Bootstrap
 
             ->set(InventoryHydrator::class, static fn (): object => new InventoryHydrator($decoder))
             ->set(InventoryInput::class, static fn (): object => new InventoryInput($decoder))
-            ->set(InventoryTriggers::class, static fn (): object => new InventoryTriggers())
+            ->set(InventoryTriggers::class, static fn (Container $c): object => new InventoryTriggers(
+                $c->get(InventorySiteAvailabilityTrigger::class),
+            ))
             ->set(InventoryVerifiers::class, static fn (): object => new InventoryVerifiers())
+
+            ->set(SiteHydrator::class, static fn (): object => new SiteHydrator($decoder))
+            ->set(SiteInput::class, static fn (): object => new SiteInput($decoder))
+            ->set(SiteTriggers::class, static fn (): object => new SiteTriggers())
+            ->set(SiteVerifiers::class, static fn (): object => new SiteVerifiers())
 
             ->set(UserHydrator::class, static fn (): object => new UserHydrator($decoder))
             ->set(UserInput::class, static fn (): object => new UserInput($decoder))
@@ -237,7 +250,11 @@ final class Bootstrap
             ))
             ->bind(ClogPostSignedInReadPolicy::class, static fn (): object => new SignedInUsers())
             ->bind(ItemStaffWritePolicy::class, static fn (): object => new StaffMayWriteItems())
-            ->bind(ItemDiscontinueAction::class, static fn (): object => new DiscontinueItem());
+            ->bind(ItemDiscontinueAction::class, static fn (): object => new DiscontinueItem())
+            ->bind(InventorySiteAvailabilityTrigger::class, static fn (Container $c): object => new SiteAvailableAtLocation(
+                $c->get(Queries::class),
+                $c->get(SiteHydrator::class),
+            ));
     }
 
     private function manifest(): StorageManifest

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryInput.php
- * digest: sha256:559ee7094a5494ebdaec7ff5d00b8cce97da77dcc87be52f58fb4fb37a9dffef
+ * digest: sha256:f4930ada53b68b604d4b21125bb3f4de91fdd605aca0d9d80d8861f327da0a87
  */
 
 namespace Clog\Entity\Inventory;
@@ -91,6 +91,28 @@ final readonly class InventoryInput
     }
 
     /**
+     * @return list<Identifier>
+     */
+    private function site(mixed $value): array
+    {
+        if (null === $value) {
+            return [];
+        }
+
+        if (!is_array($value)) {
+            throw new InvalidArgumentException(sprintf('%s takes a list of ids.', 'Inventory.site'));
+        }
+
+        $ids = [];
+
+        foreach ($value as $id) {
+            $ids[] = $this->decode->id($id, 'Inventory.site');
+        }
+
+        return $ids;
+    }
+
+    /**
      * Only what the caller supplied. A key that is absent is left alone,
      * which is what makes a partial update partial.
      *
@@ -120,6 +142,10 @@ final readonly class InventoryInput
 
         if (array_key_exists('location', $input)) {
             $buffer->edge('location')->set($this->location($input['location']));
+        }
+
+        if (array_key_exists('site', $input)) {
+            $buffer->edge('site')->set($this->site($input['site']));
         }
     }
 
