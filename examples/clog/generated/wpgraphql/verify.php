@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   verify.php
- * digest: sha256:c5f0b195385d40e8a2b19402c465555b8372377c86fc7ed7794a50513f07bcda
+ * digest: sha256:ecff7a63a904c596552540387c45afe3540539afe5d562d2b53c6d28324daf6e
  */
 
 namespace Eleph\WPGraphQL\Verification;
@@ -18,5 +18,9 @@ namespace Eleph\WPGraphQL\Verification;
  * eleph check loads this to prove the compiled manifest and the generated
  * classes still agree. Built from the manifest already on disk beside it, so a
  * stale copy of either fails here rather than at the first request.
+ *
+ * @var \Eleph\WPGraphQL\Manifest\Manifest $manifest
  */
-return new WPGraphQLVerifier(require __DIR__ . '/graphql-manifest.php');
+$manifest = require __DIR__ . '/graphql-manifest.php';
+
+return new WPGraphQLVerifier($manifest);
