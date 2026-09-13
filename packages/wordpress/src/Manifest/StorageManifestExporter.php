@@ -21,6 +21,7 @@ final readonly class StorageManifestExporter
             <<<'PHP'
                 namespace %s;
 
+                use Eleph\WordPress\Account\AccountFields;
                 use Eleph\WordPress\Sql\Column;
                 use Eleph\WordPress\Sql\EdgePlacement;
                 use Eleph\WordPress\Sql\Index;
@@ -53,6 +54,9 @@ final readonly class StorageManifestExporter
                     taxonomyPlacements: [
                 %s
                     ],
+                    accounts: [
+                %s
+                    ],
                 );
 
                 PHP,
@@ -63,7 +67,25 @@ final readonly class StorageManifestExporter
             $this->tables($manifest->joinTables),
             $this->taxonomies($manifest),
             $this->taxonomyPlacements($manifest),
+            $this->accounts($manifest),
         );
+    }
+
+    private function accounts(StorageManifest $manifest): string
+    {
+        $lines = [];
+
+        foreach ($manifest->accounts as $entity => $fields) {
+            $lines[] = sprintf(
+                "        %s => new AccountFields(\n            %s,\n            %s,\n            %s,\n        ),",
+                var_export($entity, true),
+                var_export($fields->entity, true),
+                null === $fields->createdField ? 'null' : var_export($fields->createdField, true),
+                null === $fields->modifiedField ? 'null' : var_export($fields->modifiedField, true),
+            );
+        }
+
+        return implode("\n", $lines);
     }
 
     private function taxonomies(StorageManifest $manifest): string

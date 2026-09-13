@@ -20,6 +20,8 @@ use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Runtime\Storage\Write\WriteResult;
+use Eleph\WordPress\Account\AccountFields;
+use Eleph\WordPress\Account\AccountStorage;
 use Eleph\WordPress\Database\Database;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\FieldMap;
@@ -32,13 +34,16 @@ use Throwable;
 
 /**
  * Stores entities in custom MariaDB tables inside a WordPress installation — or, for a
- * taxonomy-backed entity, as terms.
+ * taxonomy-backed entity, as terms, or for an account-backed entity, as `wp_users` and
+ * `wp_usermeta`.
  *
  * Thin by design: the interesting decisions — how the spec becomes a schema, how a
- * Criteria becomes SQL, how one becomes a term instead — live in pure classes that can
- * be tested without a database. What remains here is dispatch and the transaction
- * boundary. Dispatch is by entity name for an entity's own rows, and by "Entity.edge"
- * for an edge that turned out to be a term relationship rather than a column.
+ * Criteria becomes SQL, how one becomes a term or an account instead — live in pure
+ * classes that can be tested without a database. What remains here is dispatch and the
+ * transaction boundary. Dispatch is by entity name for an entity's own rows, and by
+ * "Entity.edge" for an edge that turned out to be a term relationship rather than a
+ * column — an edge pointing at an account-backed entity needs no such dispatch, since
+ * it is stored as an ordinary column or join table like any other.
  */
 final readonly class WordPressAdaptor implements StorageAdaptor
 {
@@ -47,6 +52,7 @@ final readonly class WordPressAdaptor implements StorageAdaptor
      * @param array<string, EdgePlacement>     $placements        Keyed by "Entity.edge".
      * @param array<string, string>            $taxonomies        Entity name => taxonomy slug.
      * @param array<string, TaxonomyPlacement> $taxonomyPlacements Keyed by "Entity.edge".
+     * @param array<string, AccountFields>      $accounts Keyed by entity name.
      */
     public function __construct(
         private Database $database,
@@ -57,6 +63,8 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         private array $taxonomies = [],
         private array $taxonomyPlacements = [],
         private TaxonomyStorage $taxonomy = new TaxonomyStorage(),
+        private array $accounts = [],
+        private AccountStorage $account = new AccountStorage(),
     ) {
     }
 
@@ -78,6 +86,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
         if (null !== $taxonomy) {
             return $this->taxonomy->get($entity, $taxonomy, $id);
+        }
+
+        $account = $this->accounts[$entity] ?? null;
+
+        if (null !== $account) {
+            return $this->account->get($entity, $account, $this->fields, $id);
         }
 
         $table = $this->table($entity);
@@ -102,6 +116,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
             return $this->taxonomy->getMany($entity, $taxonomy, $ids);
         }
 
+        $account = $this->accounts[$entity] ?? null;
+
+        if (null !== $account) {
+            return $this->account->getMany($entity, $account, $this->fields, $ids);
+        }
+
         $table = $this->table($entity);
         $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
 
@@ -119,6 +139,12 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
         if (null !== $taxonomy) {
             return $this->taxonomy->query($criteria->entity, $taxonomy, $criteria);
+        }
+
+        $account = $this->accounts[$criteria->entity] ?? null;
+
+        if (null !== $account) {
+            return $this->account->query($criteria->entity, $account, $this->fields, $criteria);
         }
 
         $table = $this->table($criteria->entity);
@@ -153,6 +179,10 @@ final readonly class WordPressAdaptor implements StorageAdaptor
 
         if (null !== $taxonomy) {
             return $this->taxonomy->count($taxonomy, $criteria);
+        }
+
+        if (isset($this->accounts[$criteria->entity])) {
+            return $this->account->count($criteria);
         }
 
         $compiled = $this->compiler->count($this->table($criteria->entity), $criteria);
@@ -195,6 +225,22 @@ final readonly class WordPressAdaptor implements StorageAdaptor
                 $this->taxonomy->unlink($placement->taxonomy, $operation);
 
                 continue;
+            }
+
+            $account = $this->accounts[$operation->entity()] ?? null;
+
+            if (null !== $account && $operation instanceof Insert) {
+                $this->account->insert();
+            }
+
+            if (null !== $account && $operation instanceof Update) {
+                $this->account->update($account, $this->fields, $operation);
+
+                continue;
+            }
+
+            if (null !== $account && $operation instanceof Delete) {
+                $this->account->delete();
             }
 
             $table = $this->table($operation->entity());

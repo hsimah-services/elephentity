@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Wiring.php
- * digest: sha256:2b20e7499679508940b9c246cd03bf9502d5532d49b128889b415c054bb63cce
+ * digest: sha256:014db11ef3c78e027ff036b2accaab4edb66bcfc20d5edd36629e7b00f6bbc10
  */
 
 namespace Clog\Entity;
@@ -38,6 +38,12 @@ use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Clog\Entity\Location\LocationWritePolicies;
 use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
+use Clog\Entity\User\UserHydrator;
+use Clog\Entity\User\UserInput;
+use Clog\Entity\User\UserReadPolicies;
+use Clog\Entity\User\UserTriggers;
+use Clog\Entity\User\UserVerifiers;
+use Clog\Entity\User\UserWritePolicies;
 use Closure;
 use Eleph\Runtime\Query\ValueDecoder;
 use Psr\Container\ContainerInterface;
@@ -75,6 +81,12 @@ final class Wiring
             LocationVerifiers::class => static fn (ContainerInterface $c): object => new LocationVerifiers(),
             LocationReadPolicies::class => static fn (ContainerInterface $c): object => new LocationReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
             LocationWritePolicies::class => static fn (ContainerInterface $c): object => new LocationWritePolicies(),
+            UserHydrator::class => static fn (ContainerInterface $c): object => new UserHydrator(self::resolve($c, ValueDecoder::class)),
+            UserInput::class => static fn (ContainerInterface $c): object => new UserInput(self::resolve($c, ValueDecoder::class)),
+            UserTriggers::class => static fn (ContainerInterface $c): object => new UserTriggers(),
+            UserVerifiers::class => static fn (ContainerInterface $c): object => new UserVerifiers(),
+            UserReadPolicies::class => static fn (ContainerInterface $c): object => new UserReadPolicies(self::resolve($c, ClogPostSignedInReadPolicy::class)),
+            UserWritePolicies::class => static fn (ContainerInterface $c): object => new UserWritePolicies(),
         ];
     }
 

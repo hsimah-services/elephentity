@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Manifest;
 
+use Eleph\WordPress\Account\AccountFields;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\Index;
 use Eleph\WordPress\Sql\TableSchema;
@@ -28,6 +29,7 @@ final readonly class StorageManifest
      * @param array<string, TableSchema>   $joinTables Keyed by table name.
      * @param array<string, string>            $taxonomies         Entity name => taxonomy slug.
      * @param array<string, TaxonomyPlacement> $taxonomyPlacements Keyed by "Entity.edge".
+     * @param array<string, AccountFields>      $accounts Keyed by entity name.
      */
     public function __construct(
         public array $tables,
@@ -41,6 +43,7 @@ final readonly class StorageManifest
         public array $joinTables = [],
         public array $taxonomies = [],
         public array $taxonomyPlacements = [],
+        public array $accounts = [],
     ) {
     }
 
@@ -130,6 +133,6 @@ final readonly class StorageManifest
             );
         }
 
-        return new self($tables, $placements, $this->columns, $joinTables, $this->taxonomies, $this->taxonomyPlacements);
+        return new self($tables, $placements, $this->columns, $joinTables, $this->taxonomies, $this->taxonomyPlacements, $this->accounts);
     }
 }

@@ -39,6 +39,7 @@ final readonly class WordPress
             ),
             $prefixed->taxonomies,
             $prefixed->taxonomyPlacements,
+            accounts: $prefixed->accounts,
         );
     }
 

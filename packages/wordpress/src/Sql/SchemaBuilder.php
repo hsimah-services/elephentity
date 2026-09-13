@@ -48,9 +48,10 @@ final readonly class SchemaBuilder
         $tables = [];
 
         foreach ($schema->entities as $entity) {
-            // A taxonomy-backed entity's rows are terms, not rows in a table of its
-            // own — there is nothing here for this builder to create.
-            if (EdgePlanner::isTaxonomy($entity)) {
+            // A taxonomy-backed entity's rows are terms, and an account-backed
+            // entity's rows are wp_users accounts — neither is a table of its own,
+            // so there is nothing here for this builder to create.
+            if (EdgePlanner::isTaxonomy($entity) || EdgePlanner::isAccount($entity)) {
                 continue;
             }
 

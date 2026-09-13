@@ -17,6 +17,8 @@ use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
+use Eleph\WordPress\Account\AccountFields;
+use Eleph\WordPress\Account\AccountStorage;
 use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\FieldMap;
@@ -300,6 +302,78 @@ final class WordPressAdaptorTest extends TestCase
         $adaptor->write(new WriteBatch(new Update('Tutorial', EntityId::of(1), ['title' => 'New'])));
 
         self::assertCount(1, $database->statements);
+    }
+
+    public function testGetDispatchesAnAccountEntityToUsers(): void
+    {
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+        $users->meta[5]['bio'] = 'Hello';
+
+        $record = $this->accountAdaptor($database, $users)->get('User', EntityId::of(5));
+
+        self::assertSame('Hello', $record?->value('bio'));
+        self::assertSame([], $database->statements, 'An account entity never touches the SQL database.');
+    }
+
+    public function testQueryDispatchesAnAccountEntityToUsers(): void
+    {
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+
+        $page = $this->accountAdaptor($database, $users)->query(new Criteria('User'));
+
+        self::assertCount(1, $page->items);
+        self::assertSame([], $database->statements);
+    }
+
+    public function testCountDispatchesAnAccountEntityToUsers(): void
+    {
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+
+        self::assertSame(1, $this->accountAdaptor($database, $users)->count(new Criteria('User')));
+        self::assertSame([], $database->statements);
+    }
+
+    public function testUpdateOnAnAccountEntityWritesUsermetaRatherThanARow(): void
+    {
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+
+        $this->accountAdaptor($database, $users)->write(new WriteBatch(
+            new Update('User', EntityId::of(5), ['bio' => 'Hello']),
+        ));
+
+        self::assertSame('Hello', $users->meta[5]['bio']);
+        self::assertSame([], $database->statements);
+    }
+
+    public function testInsertOnAnAccountEntityIsRefused(): void
+    {
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+
+        $this->expectException(RuntimeException::class);
+
+        $this->accountAdaptor($database, $users)->write(new WriteBatch(
+            new Insert('User', new PendingId('User'), ['bio' => 'Hello']),
+        ));
+    }
+
+    private function accountAdaptor(FakeDatabase $database, FakeUsers $users): WordPressAdaptor
+    {
+        return new WordPressAdaptor(
+            $database,
+            [],
+            new FieldMap(['User' => ['bio' => 'bio']]),
+            accounts: ['User' => new AccountFields('User', null, null)],
+            account: new AccountStorage($users),
+        );
     }
 
     private function taxonomyAdaptor(FakeDatabase $database, FakeTerms $terms): WordPressAdaptor

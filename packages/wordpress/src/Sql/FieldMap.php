@@ -50,6 +50,16 @@ final readonly class FieldMap
     }
 
     /**
+     * Every field an entity declares, in spec order.
+     *
+     * @return list<string>
+     */
+    public function fieldsOf(string $entity): array
+    {
+        return array_keys($this->toColumn[$entity] ?? []);
+    }
+
+    /**
      * @param array<string, scalar|null> $values Keyed by field name.
      *
      * @return array<string, scalar|null> Keyed by column name.

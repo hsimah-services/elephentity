@@ -1073,6 +1073,69 @@ WPGraphQL-native taxonomy connections — the existing manifest builder already 
 a taxonomy entity as an ordinary object type, which is enough to query but not to
 integrate with WPGraphQL's own taxonomy-aware tooling.
 
+### Account-backed entities
+
+A project's own account or user entity had no way to *be* a WordPress account rather
+than duplicate one: the only shapes available were a `ClogPost`-style projection (a
+custom table plus a `wp_posts` row) and a taxonomy term, neither of which fits "this
+row is the account `wp_users` already tracks." Once a project needs read/write
+policies — `Viewer::id()` is a `wp_users.ID` — the gap stopped being cosmetic: nothing
+answered "which row of mine is the current viewer" without a hand-added, ungated,
+duplicate-identity workaround. Resolves elephentity#51.
+
+**The marker is the same pattern configuration `taxonomy` uses**, `account: true` in
+a project's own post-shaped pattern's `config:`. `EdgePlanner::isAccount()` is the one
+new reader of it, beside `isTaxonomy()`. Unlike a taxonomy, an account-backed entity
+needs no edge-placement changes at all: an edge pointing at one is an ordinary column
+or join table storing an id that happens to be a `wp_users.ID`, which every other
+relation already knows how to place. Only the entity's *own* rows are special.
+
+**The entity's id is the `wp_users.ID` directly** — `EntityId::of($wpUserId)`, no
+separate framework-generated id, no bridge field, no lookup. This is what makes
+"is this row the current viewer" a comparison rather than a query, and it is also
+exactly how a taxonomy entity's id is already the WordPress term id
+(`TaxonomyStorage::insert()` returns `EntityId::of($termId)`) — the same precedent,
+applied to the one identity WordPress itself hands out per request.
+
+**Existence is `wp_users` having the row, nothing else.** `SchemaBuilder` creates no
+table for an account-backed entity, the same as for a taxonomy. `AccountStorage::get()`
+answers null only when `get_userdata()` does; a row this framework has never written
+to still loads, because the account existed the moment WordPress registered it, not
+the moment this framework first touched it. Declared fields are ordinary
+`wp_usermeta`, keyed by the same snake_case name `FieldMap` already gives every SQL
+column — no new naming scheme, and a field this framework never writes (`postId`,
+inherited from the post pattern like every other field it contributes) is simply
+always null, exactly as it already is for every other post-projecting entity.
+
+**The two fields the unit of work stamps need one exception each, not a
+special-cased entity.** `Managed::Created` is stamped only on insert, and this class
+refuses to insert — an account isn't created here, it already exists — so that field
+never arrives as a value to store; it is always answered from `wp_users`'s own
+`user_registered`, the one creation timestamp guaranteed to exist for a row this
+framework did not write. `Managed::Modified` is stamped on every write, insert
+included, so it arrives on every update like any other value and is `wp_usermeta`
+once written — falling back to `user_registered` before the first one, so a
+non-nullable field never sees a null this class could have avoided. Every other
+field, managed or not, is treated identically regardless of which pattern
+contributed it — the same "spec error this package has no way to report today"
+posture `postId` already lives under for a taxonomy.
+
+**Creation and deletion are refused, on purpose.** `wp_insert_user()` and
+`wp_delete_user()` are WordPress-level decisions — registration flows, capability
+checks, related-content cleanup — not something a unit of work should attempt on a
+row it does not own the lifecycle of. `AccountStorage::insert()` and `::delete()`
+throw; the only supported writes are `update()`, against `wp_usermeta`.
+
+**Deferred**: exposing `wp_users` core columns other than the registration date
+(`user_login`, `user_email`) as generated fields — the issue's own "ideally" — is a
+per-field-name mapping this pass does not attempt; every declared field beyond the
+two managed timestamps is `wp_usermeta`, full stop. Also deferred: an account entity
+declaring edges of its own (only other entities *pointing at* one is supported,
+mirroring a taxonomy's own edge-shape restriction), and a real project's way to seed
+the first `wp_usermeta` row for a newly registered account, which is presumably a
+`postCommit`-trigger-shaped concern on whatever entity WordPress's own registration
+hook fires against — the same shape the post-row-divergence problem already has.
+
 ---
 
 ## 13. Plugin layer: WPGraphQL

@@ -33,6 +33,14 @@ config:
     type: string
     description: Plural label, for the words naive inflection gets wrong.
     nullable: true
+  account:
+    type: bool
+    description: >
+      This entity's rows are WordPress accounts (wp_users/wp_usermeta), not a table
+      and post row of their own. Its id is the same wp_users.ID a Viewer resolves to,
+      by construction, and it gets no post row or admin menu entry regardless of the
+      other config keys above.
+    default: false
 use:
   - Timestamps
 fields:
