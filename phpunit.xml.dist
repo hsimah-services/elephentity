@@ -15,6 +15,7 @@
             <directory>packages/wordpress/tests</directory>
             <directory>packages/wpgraphql/tests</directory>
             <directory>packages/cli/tests</directory>
+            <directory>tools/tests</directory>
         </testsuite>
     </testsuites>
     <source>
