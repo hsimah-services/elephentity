@@ -1,0 +1,3 @@
+project: Pooled
+storage:
+  driver: wordpress

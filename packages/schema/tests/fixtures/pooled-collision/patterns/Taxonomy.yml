@@ -1,0 +1,4 @@
+pattern: Taxonomy
+fields:
+  name:
+    type: string

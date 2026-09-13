@@ -92,7 +92,11 @@ final class ValidateCommand extends Command
             return Command::FAILURE;
         }
 
-        $result = (new SchemaCompiler(integrations: $installed->integrations))->compile(new SpecSource($root));
+        $result = (new SchemaCompiler(
+            integrations: $installed->integrations,
+            pooledPatterns: $installed->patterns,
+            pooledTypes: $installed->types,
+        ))->compile(new SpecSource($root));
 
         if (!$result->isSuccess()) {
             $io->error(sprintf('%d problem(s) found in %s', count($result->errors), $root));

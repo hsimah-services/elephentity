@@ -111,7 +111,13 @@ final class CheckCommand extends Command
         $config = ProjectConfig::load($directory);
         $root = rtrim($directory, '/');
 
-        $compiled = (new SchemaCompiler(integrations: $this->installed($root, $config)->integrations))->compile(
+        $installed = $this->installed($root, $config);
+
+        $compiled = (new SchemaCompiler(
+            integrations: $installed->integrations,
+            pooledPatterns: $installed->patterns,
+            pooledTypes: $installed->types,
+        ))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );
 
