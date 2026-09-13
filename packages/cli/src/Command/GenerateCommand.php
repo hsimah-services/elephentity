@@ -98,6 +98,7 @@ final class GenerateCommand extends Command
             integrations: $installed->integrations,
             pooledPatterns: $installed->patterns,
             pooledTypes: $installed->types,
+            storageRules: $installed->storageRules,
         ))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );

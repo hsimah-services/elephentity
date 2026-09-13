@@ -44,6 +44,23 @@ const DRIVER = 'wordpress';
 const PATTERNS_DIRECTORY = __DIR__ . '/../resources/patterns';
 
 /**
+ * The rule this driver imposes on `storage.handle`: a WordPress post type slug or
+ * taxonomy name is capped at 20 characters and is silently truncated past it at
+ * registration, and must be lowercase.
+ *
+ * @return array<string, mixed>
+ */
+function storageRules(): array
+{
+    return [
+        'handle' => [
+            'maxLength' => 20,
+            'pattern' => '/^[a-z][a-z0-9_-]*$/',
+        ],
+    ];
+}
+
+/**
  * The patterns this package owns, decoded at describe time rather than embedded as PHP
  * array literals — YAML keeps a shipped pattern reviewable and diffable as the same
  * spec document a project used to hand-copy, and it is the format a project author
@@ -78,6 +95,7 @@ try {
         fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description([
             'drivers' => [DRIVER],
             'patterns' => patterns(),
+            'storage' => storageRules(),
         ])));
 
         exit(0);
