@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Clog;
 
 use Clog\Contract\DefaultExpiryIsPaired;
+use Clog\Contract\DiscontinueItem;
 use Clog\Contract\ItemSearch;
 use Clog\Contract\SignedInUsers;
 use Clog\Contract\StaffMayWriteItems;
@@ -15,6 +16,7 @@ use Clog\Entity\Inventory\InventoryTriggers;
 use Clog\Entity\Inventory\InventoryVerifiers;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryUnitVerifier;
 use Clog\Entity\Item\Contract\ItemDefaultExpiryValueVerifier;
+use Clog\Entity\Item\Contract\ItemDiscontinueAction;
 use Clog\Entity\Item\Contract\ItemSearchQuery;
 use Clog\Entity\Item\Contract\ItemStaffWritePolicy;
 use Clog\Entity\Item\ItemFinder;
@@ -225,7 +227,8 @@ final class Bootstrap
                 ItemDefaultExpiryUnitVerifier::class,
             ))
             ->bind(ClogPostSignedInReadPolicy::class, static fn (): object => new SignedInUsers())
-            ->bind(ItemStaffWritePolicy::class, static fn (): object => new StaffMayWriteItems());
+            ->bind(ItemStaffWritePolicy::class, static fn (): object => new StaffMayWriteItems())
+            ->bind(ItemDiscontinueAction::class, static fn (): object => new DiscontinueItem());
     }
 
     private function manifest(): StorageManifest

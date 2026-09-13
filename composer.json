@@ -14,7 +14,7 @@
     "require-dev": {
         "axepress/wp-graphql-stubs": "^2.22",
         "elephentity/codegen": "dev-main#1db0082",
-        "elephentity/codegen-php": "dev-main#76c04ee",
+        "elephentity/codegen-php": "dev-main#d202aac",
         "friendsofphp/php-cs-fixer": "^3.64",
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
         "phpstan/phpstan": "^2.0",

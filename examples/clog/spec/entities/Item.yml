@@ -54,6 +54,17 @@ queries:
       wpgraphql:
         field: clogItemSearch
     handler: true
+actions:
+  discontinue:
+    description: >
+      Retire an item from the catalogue. Clears the barcode so a scan stops resolving
+      to it; the item row itself stays, since existing inventory entries still point
+      at it.
+    args:
+      reason: { type: string }
+    writes:
+      fields: [barcode]
+    handler: true
 writePolicies:
   staff:
     handler: true

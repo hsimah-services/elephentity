@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   class-map.php
- * digest: sha256:60a0bc1cd6ae865fa0397b8fcc27380a1f3b59b28aca859206dfc1fd23e21a92
+ * digest: sha256:dd04abb9bfc5bb621457e66c6e24e6dd95d5680552bb69d7eb8b2f4e75fd62b4
  */
 
 /**
@@ -44,10 +44,13 @@ return [
         'Clog\\Entity\\Inventory\\InventoryWritePolicies' => 'Inventory/InventoryWritePolicies.php',
         'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier' => 'Item/Contract/ItemDefaultExpiryUnitVerifier.php',
         'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier' => 'Item/Contract/ItemDefaultExpiryValueVerifier.php',
+        'Clog\\Entity\\Item\\Contract\\ItemDiscontinueAction' => 'Item/Contract/ItemDiscontinueAction.php',
         'Clog\\Entity\\Item\\Contract\\ItemSearchQuery' => 'Item/Contract/ItemSearchQuery.php',
         'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy' => 'Item/Contract/ItemStaffWritePolicy.php',
         'Clog\\Entity\\Item\\Item' => 'Item/Item.php',
         'Clog\\Entity\\Item\\ItemDeleter' => 'Item/ItemDeleter.php',
+        'Clog\\Entity\\Item\\ItemDiscontinueArguments' => 'Item/ItemDiscontinueArguments.php',
+        'Clog\\Entity\\Item\\ItemDiscontinueContext' => 'Item/ItemDiscontinueContext.php',
         'Clog\\Entity\\Item\\ItemFinder' => 'Item/ItemFinder.php',
         'Clog\\Entity\\Item\\ItemHydrator' => 'Item/ItemHydrator.php',
         'Clog\\Entity\\Item\\ItemInput' => 'Item/ItemInput.php',

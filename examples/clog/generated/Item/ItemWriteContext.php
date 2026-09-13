@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemWriteContext.php
- * digest: sha256:a2659f26fa91bb36e1318f7859d09aaa89c84f7cf1abaebe58450e49c97ec216
+ * digest: sha256:7d8a37408dc4f579e7d5b809ed33650a62f7c888844750f331eb5f1ce315ac3e
  */
 
 namespace Clog\Entity\Item;
@@ -167,5 +167,10 @@ final readonly class ItemWriteContext implements WriteContext
         assert(null === $value || is_int($value));
 
         return $value;
+    }
+
+    public function discontinue(): ?ItemDiscontinueArguments
+    {
+        return 'discontinue' === $this->context->action() ? ItemDiscontinueArguments::of($this->context->arguments()) : null;
     }
 }

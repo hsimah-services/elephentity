@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:c40857a04a04ba979c6acd5bc4468787caef1874d42b3a7f1f792f608df106cd
+ * digest: sha256:3f0ec47d6c92ce4c773e1b98824363552de216f759ddf6b4d2003e9dad89af20
  */
 
 namespace Clog\Entity;
@@ -21,6 +21,7 @@ use Clog\Entity\Inventory\InventoryMutator;
 use Clog\Entity\Inventory\InventoryReadPolicies;
 use Clog\Entity\Inventory\InventoryTriggers;
 use Clog\Entity\Inventory\InventoryVerifiers;
+use Clog\Entity\Item\Contract\ItemDiscontinueAction;
 use Clog\Entity\Item\ItemDeleter;
 use Clog\Entity\Item\ItemFinder;
 use Clog\Entity\Item\ItemHydrator;
@@ -284,7 +285,7 @@ final readonly class Catalogue implements EntityCatalogue
     {
         return match ($entity) {
             'Inventory' => new InventoryMutator($buffer),
-            'Item' => new ItemMutator($buffer),
+            'Item' => new ItemMutator($buffer, $this->resolve(ItemDiscontinueAction::class)),
             'Location' => new LocationMutator($buffer),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
@@ -307,7 +308,7 @@ final readonly class Catalogue implements EntityCatalogue
     public function actionArguments(string $entity, string $action): array
     {
         return match ($entity . '.' . $action) {
-
+            'Item.discontinue' => ['reason'],
             default => [],
         };
     }
@@ -389,6 +390,20 @@ final readonly class Catalogue implements EntityCatalogue
      */
     public function contracts(): array
     {
-        return ['Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery', 'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy', 'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy'];
+        return ['Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier', 'Clog\\Entity\\Item\\Contract\\ItemDiscontinueAction', 'Clog\\Entity\\Item\\Contract\\ItemSearchQuery', 'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy', 'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy'];
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return T
+     */
+    private function resolve(string $class): object
+    {
+        $service = $this->container->get($class);
+
+        assert($service instanceof $class);
+
+        return $service;
     }
 }
