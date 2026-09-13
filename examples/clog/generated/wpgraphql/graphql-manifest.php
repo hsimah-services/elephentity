@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   graphql-manifest.php
- * digest: sha256:5a70764e7089e5d50c303d2f0fe241c115b4ebd2a19d7a15f90ef744ba56fa25
+ * digest: sha256:15f982ba39bf5b02b25056032300039bc733f4168e9a3b989b4a0642ee8c888c
  */
 
 namespace Eleph\WPGraphQL\Manifest;
@@ -126,6 +126,18 @@ return new Manifest(
             ],
             null,
             'Create a ClogLocation.',
+        ),
+        'discontinueClogItem' => new MutationEntry(
+            'discontinueClogItem',
+            'action',
+            'Item',
+            [
+                'id' => new GraphQLType('ID', true, false),
+                'reason' => new GraphQLType('String', true, false),
+            ],
+            'discontinue',
+            'Retire an item from the catalogue. Clears the barcode so a scan stops resolving to it; the item row itself stays, since existing inventory entries still point at it.
+',
         ),
         'updateClogInventory' => new MutationEntry(
             'updateClogInventory',

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemInput.php
- * digest: sha256:52cc742d732ef274fce001138c91ca1fdd4d1106f18240e5367140dde6e631b3
+ * digest: sha256:d11653d7d677f23e1ae4d420ccff6de56ccea3a1c22755a17bc421c97df85cd1
  */
 
 namespace Clog\Entity\Item;
@@ -110,7 +110,7 @@ final readonly class ItemInput
     public function decodeAction(string $action, array $args): array
     {
         return match ($action) {
-
+            'discontinue' => ['reason' => $this->decode->string($args['reason'], 'Item.discontinue.reason')],
             default => throw new InvalidArgumentException(sprintf('Unknown action %s.', $action)),
         };
     }

@@ -9,12 +9,13 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Item/ItemMutator.php
- * digest: sha256:a75ab7647a23b47f0cd7dd47cb02847464b5bfc97e168724a3d7d425e1eb9ccb
+ * digest: sha256:2c88dc7fc3b49984753fa0a1fa31602d8eecc58b6fa92ae93a38872e4103d8e9
  */
 
 namespace Clog\Entity\Item;
 
 use Clog\Entity\Enum\ExpiryUnit;
+use Clog\Entity\Item\Contract\ItemDiscontinueAction;
 use Clog\Entity\Pattern\ClogPost\ClogPostMutatorTrait;
 use Eleph\Runtime\Mutation\MutationBuffer;
 
@@ -27,6 +28,7 @@ final class ItemMutator
 
     public function __construct(
         private readonly MutationBuffer $buffer,
+        private readonly ItemDiscontinueAction $discontinueAction,
     ) {
     }
 
@@ -63,5 +65,13 @@ final class ItemMutator
         $this->buffer->set('defaultExpiryValue', $defaultExpiryValue);
 
         return $this;
+    }
+
+    /**
+     * Retire an item from the catalogue. Clears the barcode so a scan stops resolving to it; the item row itself stays, since existing inventory entries still point at it.
+     */
+    public function discontinue(string $reason): void
+    {
+        $this->discontinueAction->handle(ItemDiscontinueContext::of($this->buffer), $reason);
     }
 }
