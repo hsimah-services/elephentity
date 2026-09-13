@@ -6,6 +6,7 @@ namespace Eleph\WPGraphQL\Tests;
 
 use Eleph\Runtime\Gateway\EntityGateway;
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Policy\AccessDenied;
 use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Storage\Cursor;
 use Eleph\Runtime\Storage\Page;
@@ -31,9 +32,15 @@ final class FakeGateway implements EntityGateway
 
     public bool $hasMore = false;
 
+    public bool $denyReads = false;
+
     public function find(string $entity, EntityId $id): ?object
     {
         $this->calls[] = sprintf('find %s#%s', $entity, $id);
+
+        if ($this->denyReads) {
+            throw new AccessDenied($entity, 'owner', 'Not allowed.');
+        }
 
         return $this->items[0] ?? null;
     }

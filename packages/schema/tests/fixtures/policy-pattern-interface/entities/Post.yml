@@ -1,0 +1,4 @@
+entity: Post
+use: [Owned]
+storage:
+  table: post

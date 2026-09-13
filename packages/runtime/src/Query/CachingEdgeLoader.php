@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleph\Runtime\Query;
 
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\StorageAdaptor;
@@ -37,6 +38,7 @@ final class CachingEdgeLoader implements EdgeLoader
         private readonly HydratorRegistry $hydrators,
         /** @var array<string, string> "Entity.edge" => target entity name. */
         private readonly array $targets,
+        private readonly ReadGate $gate,
     ) {
     }
 
@@ -82,6 +84,7 @@ final class CachingEdgeLoader implements EdgeLoader
             $this->hydrators->get($target),
             $this,
             (new Criteria($target))->linkedTo($link),
+            $this->gate,
         );
     }
 
@@ -117,6 +120,7 @@ final class CachingEdgeLoader implements EdgeLoader
         // One filter naming every parent, so this is one query rather than one each.
         $criteria = (new Criteria($target))->linkedTo(EdgeFilter::along($entity, $edge, ...$ids));
 
+        /** @var array<string, list<object>> $grouped */
         $grouped = [];
 
         foreach ($ids as $id) {
@@ -131,6 +135,10 @@ final class CachingEdgeLoader implements EdgeLoader
             }
 
             $grouped[(string) $parent][] = $hydrator->hydrate($record, $this);
+        }
+
+        foreach ($grouped as $parent => $objects) {
+            $grouped[$parent] = array_values($this->gate->retain($target, $objects));
         }
 
         return $grouped;

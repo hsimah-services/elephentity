@@ -18,6 +18,7 @@ use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\Ir\StorageDefinition;
+use Eleph\Schema\Ir\TerminalRule;
 use Eleph\Schema\Ir\TypeDefinition;
 use Eleph\Schema\Pattern\ConfigResolver;
 use Eleph\Schema\Pattern\PatternDefinition;
@@ -215,7 +216,13 @@ final readonly class SchemaCompiler
                 continue;
             }
 
-            $declared[$name] = new PatternDeclaration($name, $pattern->sections->fields, $pattern->sections->edges);
+            $declared[$name] = new PatternDeclaration(
+                name: $name,
+                fields: $pattern->sections->fields,
+                edges: $pattern->sections->edges,
+                readPolicies: $pattern->sections->readPolicies,
+                writePolicies: $pattern->sections->writePolicies,
+            );
         }
 
         return $declared;
@@ -453,6 +460,28 @@ final readonly class SchemaCompiler
 
             $sections = $merged['sections'];
 
+            $terminalRule = $reader->reader('policies')?->reader('terminalRule');
+
+            if (null !== $terminalRule) {
+                if ($terminalRule->has('read') && [] === $sections->readPolicies) {
+                    $errors[] = new SpecError(
+                        'policy.terminalWithoutPolicies',
+                        'A terminal read rule is declared but the entity has no read policies.',
+                        $spec->file,
+                        '/policies/terminalRule/read',
+                    );
+                }
+
+                if ($terminalRule->has('write') && [] === $sections->writePolicies) {
+                    $errors[] = new SpecError(
+                        'policy.terminalWithoutPolicies',
+                        'A terminal write rule is declared but the entity has no write policies.',
+                        $spec->file,
+                        '/policies/terminalRule/write',
+                    );
+                }
+            }
+
             $queries = $this->exposeQueries(
                 $sections->queries,
                 $project,
@@ -479,6 +508,10 @@ final readonly class SchemaCompiler
                 triggers: $sections->triggers,
                 config: $configuration,
                 integrations: $integrations,
+                readPolicies: $sections->readPolicies,
+                writePolicies: $sections->writePolicies,
+                terminalRead: TerminalRule::from($terminalRule?->optionalString('read') ?? 'deny'),
+                terminalWrite: TerminalRule::from($terminalRule?->optionalString('write') ?? 'deny'),
             );
         }
 

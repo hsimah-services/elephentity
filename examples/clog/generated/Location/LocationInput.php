@@ -9,13 +9,14 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Location/LocationInput.php
- * digest: sha256:e2b13b6e68fd14f6a5a5f1bdad6b987defd1ce1c22a0c5974d2dacc86f2e8c51
+ * digest: sha256:055b364038330b2d2589a39d52d60fcece28b9383c7397d233541584a8e93146
  */
 
 namespace Clog\Entity\Location;
 
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Query\ValueDecoder;
+use InvalidArgumentException;
 
 /**
  * Turns raw input into pending Location changes.
@@ -60,5 +61,17 @@ final readonly class LocationInput
         if (array_key_exists('name', $input)) {
             $buffer->set('name', $this->name($input['name']));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    public function decodeAction(string $action, array $args): array
+    {
+        return match ($action) {
+
+            default => throw new InvalidArgumentException(sprintf('Unknown action %s.', $action)),
+        };
     }
 }

@@ -46,6 +46,23 @@ an entity may declare, a pattern may declare. **Sealed** — an entity redeclari
 member a pattern defines is a hard error, because overridable patterns would mean
 reading one file no longer tells you what a field is.
 
+**Read policy.** An ordered rule deciding whether a loaded entity may be exposed to the
+viewer. A denied single read throws; a denied collection row is filtered out.
+
+**Write policy.** An ordered rule deciding whether a create, update, delete or action
+may proceed, after pending values are available and before mutation work runs.
+
+**Viewer.** The current caller, obtained through `ViewerProvider` at gate time. It can
+report identity, authentication, roles and capabilities without entering the runtime's
+boot-time object graph.
+
+**Terminal rule.** The entity-level `policies.terminalRule` fallback used when every
+declared policy skips. It defaults to deny, but has no effect when that policy kind is
+not declared.
+
+**Decision.** A policy result: `allow`, `skip` or `deny`, with a reason. The first
+non-skip result wins.
+
 **Declared type.** A value type in `types/`, aliasing exactly one primitive. Either an
 **enum** (it has `values:`) or a **value type** (it has `processors: true`).
 
@@ -107,7 +124,7 @@ declared, and it determines where the key lives.
 **Deletion policy.** `onDelete` on an edge, governing the *dependent* side — whoever
 holds the foreign key. Generated into `ItemDeleter` rather than resolved at runtime,
 because what depends on an entity is a build-time fact found by reading every other
-entity's edges.
+entity's edges. This is unrelated to read and write authorization policies.
 
 **Placement.** Where an edge physically lives: a foreign key on one side or the other,
 or a join table. Inferred — if the framework can work it out, a human choosing it is a
@@ -214,7 +231,8 @@ primitives; domain types live above it and SQL below.
 
 **Capability.** Something an adaptor may or may not support — transactions, full-text,
 faceting. Declared per adaptor rather than the port flattening to a lowest common
-denominator.
+denominator. A viewer capability is instead a caller permission queried by a write or
+read policy.
 
 **Unit of work.** One commit. Verifies everything, orders writes by dependency, writes
 rows then links, runs preCommit triggers, commits, runs postCommit triggers.

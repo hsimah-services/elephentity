@@ -45,3 +45,7 @@ fields:
     nullable: true
     unique: true
     indexed: true
+readPolicies:
+  signedIn:
+    handler: true
+interface: true

@@ -1,0 +1,5 @@
+pattern: Owned
+interface: true
+readPolicies:
+  owner:
+    handler: true

@@ -46,8 +46,9 @@ separate program rather than a package.
 
 ## Conventions that are load bearing
 
-- **The spec carries no application namespaces.** `handler: true`, `verify: true` and
-  `processors: true` mean "generate the interface"; names come from `eleph.json`.
+- **The spec carries no application namespaces.** `handler: true`, `verify: true`,
+  `processors: true` and policy declarations all mean "generate the interface"; names
+  come from `eleph.json`.
 - **Storage placement is inferred, never declared.** If the framework can work it out,
   a human choosing it is a chance for two entities to disagree.
 - **Errors accumulate.** Compilers, verifiers and planners collect problems and report

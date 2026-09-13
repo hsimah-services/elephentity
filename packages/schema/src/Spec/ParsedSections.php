@@ -7,6 +7,7 @@ namespace Eleph\Schema\Spec;
 use Eleph\Schema\Ir\ActionDefinition;
 use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
+use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\TriggerDefinition;
 
@@ -24,6 +25,8 @@ final readonly class ParsedSections
      * @param array<string, QueryDefinition>   $queries
      * @param array<string, ActionDefinition>  $actions
      * @param array<string, TriggerDefinition> $triggers
+    * @param array<string, PolicyDefinition>  $readPolicies
+    * @param array<string, PolicyDefinition>  $writePolicies
      */
     public function __construct(
         public array $fields = [],
@@ -31,6 +34,8 @@ final readonly class ParsedSections
         public array $queries = [],
         public array $actions = [],
         public array $triggers = [],
+        public array $readPolicies = [],
+        public array $writePolicies = [],
     ) {
     }
 }

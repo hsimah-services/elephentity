@@ -1,0 +1,6 @@
+entity: Post
+storage:
+  table: post
+policies:
+  terminalRule:
+    read: allow

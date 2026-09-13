@@ -464,6 +464,10 @@ oversized `maxLength` with "use `text`" rather than letting VARCHAR creep toward
 
 ## 7. Verification
 
+Read and write policies are the authorization boundary around verification and commit;
+see [§19](#19-read-and-write-policies) for the viewer, ordered decisions and write
+context rules.
+
 ### Violations are returned, never thrown
 
 Throwing means the first invalid field aborts and the caller fixes one error per round
@@ -788,6 +792,8 @@ them takes us fully off the WP path.
 ---
 
 ## 10. Queries, actions and triggers
+
+Actions are also subject to write policies; see [§19](#19-read-and-write-policies).
 
 ### Queries — collection-level finders
 
@@ -1722,3 +1728,30 @@ Not questions — decided, just not built.
 - **An eval suite for the spec-authoring skill.** Wanted, but a corpus built before the
   interview has met real specs would enshrine today's guesses as the expected answers.
   See [DECISIONS-FOR-REVIEW.md](DECISIONS-FOR-REVIEW.md) §6.
+
+## 19. Read and write policies
+
+Policies are ordered, named maps in an entity spec. A read or write policy returns
+`allow`, `skip` or `deny`; the first non-skip decision wins, and the entity's terminal
+rule decides when every policy skips. Policies are opt-in per entity: an entity with no
+policies is not gated, so its existing reads and `count()` fast path remain unchanged.
+The terminal rule therefore cannot default to deny for entities that declare nothing.
+
+Patterns may contribute policies, but may not contribute the terminal rule. A pattern
+that declares policies must be an interface pattern, so its generated contract has a
+stable shape. Reuse belongs in patterns rather than free-floating policy classes: the
+pattern describes the shared entity shape, which keeps generated interfaces exactly
+typed while keeping application namespaces out of the spec.
+
+Read policies gate single loads with `AccessDenied` and filter denied rows from
+collections and preloads. A gated `count()` hydrates and filters the unbounded result,
+so it costs more and a page may be shorter than its limit. The viewer is resolved per
+call through `ViewerProvider`; WordPress supplies it from the current user.
+
+Write policies run for create, update, delete and actions. Entity-declared policies get
+the exact generated `{Entity}WriteContext`; pattern-declared policies get the runtime
+`WriteContext`. This two-tier context follows the shared-processor precedent: a shared
+pattern implementation must not depend on one entity's generated field accessors.
+`currentValues()` deliberately uses an ungated load because it retrieves the original
+state for authorization and never hands that state to the viewer; read policy controls
+exposure, not the write path.

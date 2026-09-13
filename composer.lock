@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "00f5fdb52e335e4b6207ab2a5c72d51c",
+    "content-hash": "d50a4c11665bbd053b0e1803315456a5",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -1401,12 +1401,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen.git",
-                "reference": "95020d70b1356e10b6da02cdd6cc623539cbdb1e"
+                "reference": "1db0082"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/95020d70b1356e10b6da02cdd6cc623539cbdb1e",
-                "reference": "95020d70b1356e10b6da02cdd6cc623539cbdb1e",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/1db0082",
+                "reference": "1db0082",
                 "shasum": ""
             },
             "require": {
@@ -1445,12 +1445,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3"
+                "reference": "76c04ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3",
-                "reference": "fcf267eeb9f0d660b67fa528b2f8d36307a5a5e3",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/76c04ee",
+                "reference": "76c04ee",
                 "shasum": ""
             },
             "require": {

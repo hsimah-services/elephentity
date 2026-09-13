@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   class-map.php
- * digest: sha256:68abcfb864b6f3cbe4e348d7a9f8a18c9607fe5bdbf8620e8622cc8b10d55704
+ * digest: sha256:60a0bc1cd6ae865fa0397b8fcc27380a1f3b59b28aca859206dfc1fd23e21a92
  */
 
 /**
@@ -37,11 +37,15 @@ return [
         'Clog\\Entity\\Inventory\\InventoryInput' => 'Inventory/InventoryInput.php',
         'Clog\\Entity\\Inventory\\InventoryMutationContext' => 'Inventory/InventoryMutationContext.php',
         'Clog\\Entity\\Inventory\\InventoryMutator' => 'Inventory/InventoryMutator.php',
+        'Clog\\Entity\\Inventory\\InventoryReadPolicies' => 'Inventory/InventoryReadPolicies.php',
         'Clog\\Entity\\Inventory\\InventoryTriggers' => 'Inventory/InventoryTriggers.php',
         'Clog\\Entity\\Inventory\\InventoryVerifiers' => 'Inventory/InventoryVerifiers.php',
+        'Clog\\Entity\\Inventory\\InventoryWriteContext' => 'Inventory/InventoryWriteContext.php',
+        'Clog\\Entity\\Inventory\\InventoryWritePolicies' => 'Inventory/InventoryWritePolicies.php',
         'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryUnitVerifier' => 'Item/Contract/ItemDefaultExpiryUnitVerifier.php',
         'Clog\\Entity\\Item\\Contract\\ItemDefaultExpiryValueVerifier' => 'Item/Contract/ItemDefaultExpiryValueVerifier.php',
         'Clog\\Entity\\Item\\Contract\\ItemSearchQuery' => 'Item/Contract/ItemSearchQuery.php',
+        'Clog\\Entity\\Item\\Contract\\ItemStaffWritePolicy' => 'Item/Contract/ItemStaffWritePolicy.php',
         'Clog\\Entity\\Item\\Item' => 'Item/Item.php',
         'Clog\\Entity\\Item\\ItemDeleter' => 'Item/ItemDeleter.php',
         'Clog\\Entity\\Item\\ItemFinder' => 'Item/ItemFinder.php',
@@ -49,16 +53,25 @@ return [
         'Clog\\Entity\\Item\\ItemInput' => 'Item/ItemInput.php',
         'Clog\\Entity\\Item\\ItemMutationContext' => 'Item/ItemMutationContext.php',
         'Clog\\Entity\\Item\\ItemMutator' => 'Item/ItemMutator.php',
+        'Clog\\Entity\\Item\\ItemReadPolicies' => 'Item/ItemReadPolicies.php',
         'Clog\\Entity\\Item\\ItemTriggers' => 'Item/ItemTriggers.php',
         'Clog\\Entity\\Item\\ItemVerifiers' => 'Item/ItemVerifiers.php',
+        'Clog\\Entity\\Item\\ItemWriteContext' => 'Item/ItemWriteContext.php',
+        'Clog\\Entity\\Item\\ItemWritePolicies' => 'Item/ItemWritePolicies.php',
         'Clog\\Entity\\Location\\Location' => 'Location/Location.php',
         'Clog\\Entity\\Location\\LocationDeleter' => 'Location/LocationDeleter.php',
         'Clog\\Entity\\Location\\LocationHydrator' => 'Location/LocationHydrator.php',
         'Clog\\Entity\\Location\\LocationInput' => 'Location/LocationInput.php',
         'Clog\\Entity\\Location\\LocationMutationContext' => 'Location/LocationMutationContext.php',
         'Clog\\Entity\\Location\\LocationMutator' => 'Location/LocationMutator.php',
+        'Clog\\Entity\\Location\\LocationReadPolicies' => 'Location/LocationReadPolicies.php',
         'Clog\\Entity\\Location\\LocationTriggers' => 'Location/LocationTriggers.php',
         'Clog\\Entity\\Location\\LocationVerifiers' => 'Location/LocationVerifiers.php',
+        'Clog\\Entity\\Location\\LocationWriteContext' => 'Location/LocationWriteContext.php',
+        'Clog\\Entity\\Location\\LocationWritePolicies' => 'Location/LocationWritePolicies.php',
+        'Clog\\Entity\\Pattern\\ClogPost\\ClogPost' => 'Pattern/ClogPost/ClogPost.php',
+        'Clog\\Entity\\Pattern\\ClogPost\\ClogPostMutatorTrait' => 'Pattern/ClogPost/ClogPostMutatorTrait.php',
+        'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy' => 'Pattern/ClogPost/Contract/ClogPostSignedInReadPolicy.php',
         'Clog\\Entity\\Wiring' => 'Wiring.php',
     ],
 ];

@@ -23,8 +23,8 @@ final readonly class CanonicalOrder
     private const ORDERS = [
         'project' => ['project', 'description', 'storage', 'integrations'],
         'projectStorage' => ['driver', 'tablePrefix'],
-        'entity' => ['entity', 'description', 'use', 'configure', 'integrations', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
-        'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers'],
+        'entity' => ['entity', 'description', 'use', 'configure', 'integrations', 'storage', 'policies', 'fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies'],
+        'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies'],
         'type' => ['type', 'description', 'primitive', 'processors', 'values'],
         'storage' => ['table', 'handle'],
         'requires' => ['driver'],
@@ -36,6 +36,8 @@ final readonly class CanonicalOrder
         'action' => ['description', 'args', 'writes', 'handler'],
         'writes' => ['fields', 'edges'],
         'trigger' => ['description', 'on', 'phase', 'handler'],
+        'policy' => ['description', 'handler'],
+        'terminalRule' => ['read', 'write'],
         'argument' => ['type', 'nullable'],
         'configParameter' => ['type', 'description', 'of', 'values', 'nullable', 'default'],
     ];

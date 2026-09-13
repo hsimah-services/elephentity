@@ -17,7 +17,7 @@ Boot time is deliberate. Later than generate time, so codegen stays a pure funct
 the spec and never scans your source; earlier than call time, so a missing handler
 cannot lurk in production until the wrong request arrives.
 
-## The five kinds
+## The seven kinds
 
 ### 1. Query handlers — `{Entity}{Query}Query`
 
@@ -111,6 +111,31 @@ interface MoneyWriteProcessor extends WriteProcessor
 `read` turns the stored primitive into the domain value; `verify` then `write` go the
 other way. **Null never reaches any of them** — a nullable field holding null
 short-circuits, so no processor needs to open with the same null check.
+
+### 6. Read policy handlers — `{Entity}{Policy}ReadPolicy`
+
+Read policy contracts decide whether an entity may be exposed to the current viewer.
+Pattern policies live under `Pattern/{P}/Contract/` and are typed to the pattern shape,
+so one implementation can serve every entity using that pattern.
+
+```php
+interface PostOwnerReadPolicy
+{
+    public function decide(Post $entity, Viewer $viewer): PolicyDecision;
+}
+```
+
+### 7. Write policy handlers — `{Entity}{Policy}WritePolicy`
+
+Write policy contracts decide whether a mutation may proceed. Entity policies receive the
+generated write context; pattern policies receive the shared runtime `WriteContext`.
+
+```php
+interface PostStaffWritePolicy
+{
+    public function decide(?Post $entity, PostWriteContext $context, Viewer $viewer): PolicyDecision;
+}
+```
 
 ## Value classes
 

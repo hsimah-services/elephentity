@@ -57,6 +57,12 @@
         },
         "triggers": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/triggers"
+        },
+        "readPolicies": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/policies"
+        },
+        "writePolicies": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/policies"
         }
     }
 }

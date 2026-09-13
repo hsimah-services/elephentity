@@ -16,6 +16,8 @@ final readonly class EntityDefinition
      * @param array<string, QueryDefinition>   $queries
      * @param array<string, ActionDefinition>  $actions
      * @param array<string, TriggerDefinition> $triggers Ordered; declaration order is execution order.
+    * @param array<string, PolicyDefinition>  $readPolicies Ordered; declaration order is execution order.
+    * @param array<string, PolicyDefinition>  $writePolicies Ordered; declaration order is execution order.
      * @param array<string, mixed>                $config       Pattern configuration, resolved and defaulted.
      * @param array<string, array<string, mixed>> $integrations Keyed by integration name.
      * @param list<string>                        $appliedPatterns Every pattern that actually
@@ -39,6 +41,10 @@ final readonly class EntityDefinition
         public array $config = [],
         public array $integrations = [],
         public array $appliedPatterns = [],
+        public array $readPolicies = [],
+        public array $writePolicies = [],
+        public TerminalRule $terminalRead = TerminalRule::Deny,
+        public TerminalRule $terminalWrite = TerminalRule::Deny,
     ) {
     }
 

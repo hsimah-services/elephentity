@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Inventory/InventoryInput.php
- * digest: sha256:40f7f2478565e4f85ca391d3b12a78254c7f5700df51e42d2b501f5d753a1c11
+ * digest: sha256:559ee7094a5494ebdaec7ff5d00b8cce97da77dcc87be52f58fb4fb37a9dffef
  */
 
 namespace Clog\Entity\Inventory;
@@ -121,5 +121,17 @@ final readonly class InventoryInput
         if (array_key_exists('location', $input)) {
             $buffer->edge('location')->set($this->location($input['location']));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    public function decodeAction(string $action, array $args): array
+    {
+        return match ($action) {
+
+            default => throw new InvalidArgumentException(sprintf('Unknown action %s.', $action)),
+        };
     }
 }

@@ -7,6 +7,8 @@ namespace Eleph\Runtime\Catalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
 use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
+use Eleph\Runtime\Policy\EntityReadPolicies;
+use Eleph\Runtime\Policy\EntityWritePolicies;
 use Eleph\Runtime\Query\Hydrator;
 use Eleph\Runtime\Storage\DeletionRule;
 use Eleph\Runtime\Verification\EntityVerifiers;
@@ -38,6 +40,10 @@ interface EntityCatalogue
     public function verifiers(string $entity): EntityVerifiers;
 
     public function triggers(string $entity): EntityTriggers;
+
+    public function readPolicies(string $entity): EntityReadPolicies;
+
+    public function writePolicies(string $entity): EntityWritePolicies;
 
     /**
      * @return list<DeletionRule>
@@ -117,6 +123,21 @@ interface EntityCatalogue
      * @return list<string>
      */
     public function queryArguments(string $entity, string $query): array;
+
+    /**
+     * A declared action's arguments, in declaration order.
+     *
+     * @return list<string>
+     */
+    public function actionArguments(string $entity, string $action): array;
+
+    /**
+     * Decode raw action arguments into the declared domain values.
+     *
+     * @param array<array-key, mixed> $args
+     * @return array<string, mixed>
+     */
+    public function decodeActionArguments(string $entity, string $action, array $args): array;
 
     /**
      * Apply raw input to a mutation.

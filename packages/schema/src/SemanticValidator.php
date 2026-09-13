@@ -70,6 +70,7 @@ final readonly class SemanticValidator
 
             $this->checkQueries($schema, $entity, $errors);
             $this->checkActions($entity, $errors);
+            $this->checkPolicies($schema, $entity, $errors);
         }
 
         return $errors;
@@ -558,6 +559,28 @@ final readonly class SemanticValidator
                 }
             }
         }
+    }
+
+    /**
+     * @param list<SpecError> $errors
+     */
+    private function checkPolicies(Schema $schema, EntityDefinition $entity, array &$errors): void
+    {
+        foreach (['read' => $entity->readPolicies, 'write' => $entity->writePolicies] as $kind => $policies) {
+            foreach ($policies as $policy) {
+                if (!$policy->origin->isPattern() || null !== $schema->pattern((string) $policy->origin->pattern)) {
+                    continue;
+                }
+
+                $errors[] = new SpecError(
+                    'policy.patternWithoutInterface',
+                    sprintf('Pattern "%s" declares a %s policy but does not declare interface: true. Add interface: true to the pattern.', $policy->origin->pattern, $kind),
+                    $entity->sourceFile,
+                    sprintf('/%sPolicies/%s', $kind, $policy->name),
+                );
+            }
+        }
+
     }
 
     /**
