@@ -165,7 +165,7 @@ final class WordPressAdaptorTest extends TestCase
             ['id' => 3, 'created_at' => 'c'],
         ];
 
-        $page = $this->adaptor($database)->query((new Criteria('Post'))->take(2));
+        $page = $this->adaptor($database)->query(Criteria::for('Post')->take(2));
 
         self::assertCount(2, $page->items);
         self::assertTrue($page->hasMore());
@@ -177,7 +177,7 @@ final class WordPressAdaptorTest extends TestCase
         $database = new FakeDatabase();
         $database->rows = [['id' => 1, 'created_at' => 'a']];
 
-        $page = $this->adaptor($database)->query((new Criteria('Post'))->take(2));
+        $page = $this->adaptor($database)->query(Criteria::for('Post')->take(2));
 
         self::assertCount(1, $page->items);
         self::assertFalse($page->hasMore());
@@ -225,7 +225,7 @@ final class WordPressAdaptorTest extends TestCase
         $terms = new FakeTerms();
         $terms->insert('aka', 'Sparky');
 
-        $page = $this->taxonomyAdaptor($database, $terms)->query(new Criteria('Aka'));
+        $page = $this->taxonomyAdaptor($database, $terms)->query(Criteria::for('Aka'));
 
         self::assertCount(1, $page->items);
         self::assertSame([], $database->statements);
@@ -237,7 +237,7 @@ final class WordPressAdaptorTest extends TestCase
         $terms = new FakeTerms();
         $terms->insert('aka', 'Sparky');
 
-        self::assertSame(1, $this->taxonomyAdaptor($database, $terms)->count(new Criteria('Aka')));
+        self::assertSame(1, $this->taxonomyAdaptor($database, $terms)->count(Criteria::for('Aka')));
         self::assertSame([], $database->statements);
     }
 
@@ -323,7 +323,7 @@ final class WordPressAdaptorTest extends TestCase
         $users = new FakeUsers();
         $users->registered[5] = '2026-01-01 00:00:00';
 
-        $page = $this->accountAdaptor($database, $users)->query(new Criteria('User'));
+        $page = $this->accountAdaptor($database, $users)->query(Criteria::for('User'));
 
         self::assertCount(1, $page->items);
         self::assertSame([], $database->statements);
@@ -335,7 +335,7 @@ final class WordPressAdaptorTest extends TestCase
         $users = new FakeUsers();
         $users->registered[5] = '2026-01-01 00:00:00';
 
-        self::assertSame(1, $this->accountAdaptor($database, $users)->count(new Criteria('User')));
+        self::assertSame(1, $this->accountAdaptor($database, $users)->count(Criteria::for('User')));
         self::assertSame([], $database->statements);
     }
 

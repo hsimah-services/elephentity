@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Eleph\Runtime\Tests\Policy;
 
 use Eleph\Runtime\Catalogue\EntityCatalogue;
+use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Mutation\Mutation;
 use Eleph\Runtime\Policy\AccessDenied;
 use Eleph\Runtime\Policy\AnonymousViewerProvider;
 use Eleph\Runtime\Policy\PendingWrite;
 use Eleph\Runtime\Policy\PolicyDecision;
 use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Policy\WriteGate;
-use Eleph\Runtime\Policy\WriteOperation;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -55,6 +56,6 @@ final class PolicyGateTest extends TestCase
         $gate = new WriteGate($catalogue, new AnonymousViewerProvider());
 
         $this->expectException(AccessDenied::class);
-        $gate->permit('Post', null, new PendingWrite('Post', WriteOperation::Create, null, [], null));
+        $gate->permit('Post', null, PendingWrite::create('Post', new Mutation('Post', new PendingId('Post'))));
     }
 }

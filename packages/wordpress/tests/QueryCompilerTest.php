@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Eleph\WordPress\Tests;
 
 use Eleph\Runtime\Identity\EntityId;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Cursor;
-use Eleph\Runtime\Storage\Direction;
 use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\Offset;
@@ -29,7 +27,7 @@ final class QueryCompilerTest extends TestCase
 {
     public function testAnUnfilteredSelectIsJustTheTable(): void
     {
-        $compiled = $this->compile(new Criteria('Post'));
+        $compiled = $this->compile(Criteria::for('Post'));
 
         self::assertSame('SELECT `wp_phe_post`.* FROM `wp_phe_post`', $compiled->sql);
         self::assertSame([], $compiled->bindings);
@@ -38,7 +36,7 @@ final class QueryCompilerTest extends TestCase
     public function testValuesBecomePlaceholdersAndNeverReachTheSql(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('title', Comparison::Equals, "'; DROP TABLE --")),
+            Criteria::for('Post')->where(Filter::equals('title', "'; DROP TABLE --")),
         );
 
         self::assertSame(
@@ -51,7 +49,7 @@ final class QueryCompilerTest extends TestCase
     public function testCamelCaseFieldsResolveToSnakeCaseColumns(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('createdAt', Comparison::GreaterThan, '2026-01-01')),
+            Criteria::for('Post')->where(Filter::greaterThan('createdAt', '2026-01-01')),
         );
 
         self::assertStringContainsString('`wp_phe_post`.`created_at` > %s', $compiled->sql);
@@ -64,13 +62,13 @@ final class QueryCompilerTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('has no column for field "nope"');
 
-        $this->compile((new Criteria('Post'))->where(new Filter('nope', Comparison::Equals, 1)));
+        $this->compile(Criteria::for('Post')->where(Filter::equals('nope', 1)));
     }
 
     public function testNullChecksTakeNoBindings(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('title', Comparison::IsNull)),
+            Criteria::for('Post')->where(Filter::isNull('title')),
         );
 
         self::assertStringContainsString('`wp_phe_post`.`title` IS NULL', $compiled->sql);
@@ -81,13 +79,13 @@ final class QueryCompilerTest extends TestCase
     {
         // IN () does not parse in MySQL, and an empty set matches nothing.
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('id', Comparison::In, [])),
+            Criteria::for('Post')->where(Filter::in('id', [])),
         );
 
         self::assertStringContainsString('1 = 0', $compiled->sql);
 
         $negated = $this->compile(
-            (new Criteria('Post'))->where(new Filter('id', Comparison::NotIn, [])),
+            Criteria::for('Post')->where(Filter::notIn('id', [])),
         );
 
         self::assertStringContainsString('1 = 1', $negated->sql);
@@ -96,7 +94,7 @@ final class QueryCompilerTest extends TestCase
     public function testAnInSetGetsOnePlaceholderPerValue(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('id', Comparison::In, [1, 2, 3])),
+            Criteria::for('Post')->where(Filter::in('id', [1, 2, 3])),
         );
 
         self::assertStringContainsString('`wp_phe_post`.`id` IN (%s, %s, %s)', $compiled->sql);
@@ -106,7 +104,7 @@ final class QueryCompilerTest extends TestCase
     public function testLikeWildcardsInTheValueAreEscaped(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->where(new Filter('title', Comparison::StartsWith, '100%')),
+            Criteria::for('Post')->where(Filter::startsWith('title', '100%')),
         );
 
         self::assertSame(['100\\%%'], $compiled->bindings);
@@ -115,10 +113,10 @@ final class QueryCompilerTest extends TestCase
     public function testFiltersAreConjunctiveAndOrderedAsGiven(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))
-                ->where(new Filter('title', Comparison::Equals, 'a'))
-                ->where(new Filter('id', Comparison::GreaterThan, 5))
-                ->orderBy(new Order('createdAt', Direction::Descending)),
+            Criteria::for('Post')
+                ->where(Filter::equals('title', 'a'))
+                ->where(Filter::greaterThan('id', 5))
+                ->orderBy(Order::descending('createdAt')),
         );
 
         self::assertSame(
@@ -135,7 +133,7 @@ final class QueryCompilerTest extends TestCase
         // A page without a ceiling is how a lazy query stops being lazy. The extra row
         // is deliberate: its presence is how hasNextPage is answered without a second
         // query, and the adaptor drops it before anyone sees the page.
-        $compiled = $this->compile((new Criteria('Post'))->take(999_999));
+        $compiled = $this->compile(Criteria::for('Post')->take(999_999));
 
         self::assertStringEndsWith(' LIMIT 1001', $compiled->sql);
     }
@@ -143,7 +141,7 @@ final class QueryCompilerTest extends TestCase
     public function testACursorBecomesAnOffset(): void
     {
         $compiled = $this->compile(
-            (new Criteria('Post'))->take(20, (new Offset(40))->toCursor()),
+            Criteria::for('Post')->take(20, (new Offset(40))->toCursor()),
         );
 
         self::assertStringEndsWith(' LIMIT 21 OFFSET 40', $compiled->sql);
@@ -152,7 +150,7 @@ final class QueryCompilerTest extends TestCase
     public function testAnUnreadableCursorRestartsTheListRatherThanFailing(): void
     {
         // A cursor from an older format should not break a page someone is looking at.
-        $compiled = $this->compile((new Criteria('Post'))->take(20, Cursor::of('nonsense')));
+        $compiled = $this->compile(Criteria::for('Post')->take(20, Cursor::of('nonsense')));
 
         self::assertStringEndsWith(' LIMIT 21', $compiled->sql);
     }
@@ -161,9 +159,9 @@ final class QueryCompilerTest extends TestCase
     {
         $compiled = (new QueryCompiler())->count(
             $this->table(),
-            (new Criteria('Post'))
-                ->where(new Filter('title', Comparison::Equals, 'a'))
-                ->orderBy(new Order('id'))
+            Criteria::for('Post')
+                ->where(Filter::equals('title', 'a'))
+                ->orderBy(Order::ascending('id'))
                 ->take(10),
         );
 
@@ -179,7 +177,7 @@ final class QueryCompilerTest extends TestCase
         // comments is a filter on the table already being read.
         $compiled = $this->compileFor(
             $this->commentTable(),
-            (new Criteria('Comment'))->linkedTo(EdgeFilter::along('Post', 'comments', EntityId::of(1))),
+            Criteria::for('Comment')->linkedTo(EdgeFilter::along('Post', 'comments', EntityId::of(1))),
         );
 
         self::assertSame(
@@ -194,7 +192,7 @@ final class QueryCompilerTest extends TestCase
         // from the far end, and the key has not moved.
         $compiled = $this->compileFor(
             $this->table(),
-            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'comments', EntityId::of(10))),
+            Criteria::for('Post')->linkedTo(EdgeFilter::back('Post', 'comments', EntityId::of(10))),
         );
 
         self::assertSame(
@@ -212,7 +210,7 @@ final class QueryCompilerTest extends TestCase
         // a filter on the inventory table — the mirror of the first case.
         $compiled = $this->compileFor(
             $this->commentTable(),
-            (new Criteria('Comment'))->linkedTo(EdgeFilter::back('Comment', 'post', EntityId::of(1))),
+            Criteria::for('Comment')->linkedTo(EdgeFilter::back('Comment', 'post', EntityId::of(1))),
         );
 
         self::assertSame(
@@ -225,12 +223,12 @@ final class QueryCompilerTest extends TestCase
     {
         $forward = $this->compileFor(
             $this->tagTable(),
-            (new Criteria('Tag'))->linkedTo(EdgeFilter::along('Post', 'tags', EntityId::of(1))),
+            Criteria::for('Tag')->linkedTo(EdgeFilter::along('Post', 'tags', EntityId::of(1))),
         );
 
         $backward = $this->compileFor(
             $this->table(),
-            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'tags', EntityId::of(7))),
+            Criteria::for('Post')->linkedTo(EdgeFilter::back('Post', 'tags', EntityId::of(7))),
         );
 
         self::assertStringContainsString('ON `l1`.`tag_id` = `wp_phe_tag`.`id`', $forward->sql);
@@ -247,7 +245,7 @@ final class QueryCompilerTest extends TestCase
         // reach wp_term_relationships / wp_term_taxonomy directly.
         $compiled = $this->compileTaxonomyFor(
             $this->table(),
-            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'akas', EntityId::of(5))),
+            Criteria::for('Post')->linkedTo(EdgeFilter::back('Post', 'akas', EntityId::of(5))),
         );
 
         self::assertSame(
@@ -269,7 +267,7 @@ final class QueryCompilerTest extends TestCase
 
         $this->compileTaxonomyFor(
             $this->table(),
-            (new Criteria('Post'))->linkedTo(EdgeFilter::along('Post', 'akas', EntityId::of(5))),
+            Criteria::for('Post')->linkedTo(EdgeFilter::along('Post', 'akas', EntityId::of(5))),
         );
     }
 
@@ -277,7 +275,7 @@ final class QueryCompilerTest extends TestCase
     {
         $compiled = $this->compileTaxonomyFor(
             $this->table(),
-            (new Criteria('Post'))->linkedTo(EdgeFilter::back('Post', 'akas', EntityId::of(1), EntityId::of(2))),
+            Criteria::for('Post')->linkedTo(EdgeFilter::back('Post', 'akas', EntityId::of(1), EntityId::of(2))),
         );
 
         self::assertStringContainsString('`tt1`.`term_id` AS `__parent`', $compiled->sql);

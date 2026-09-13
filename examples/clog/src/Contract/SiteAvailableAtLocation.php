@@ -46,7 +46,7 @@ final readonly class SiteAvailableAtLocation implements InventorySiteAvailabilit
             return;
         }
 
-        $criteria = (new Criteria('Site'))->linkedTo(EdgeFilter::along('Location', 'sites', $location));
+        $criteria = Criteria::for('Site')->linkedTo(EdgeFilter::along('Location', 'sites', $location));
 
         /** @var list<Site> $allowed */
         $allowed = $this->queries->of($this->hydrator, $criteria)->all();

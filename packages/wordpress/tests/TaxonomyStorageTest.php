@@ -6,7 +6,6 @@ namespace Eleph\WordPress\Tests;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
@@ -144,7 +143,7 @@ final class TaxonomyStorageTest extends TestCase
         $terms->insert(self::TAXONOMY, 'B');
         $terms->insert(self::TAXONOMY, 'A');
 
-        $page = $storage->query('Aka', self::TAXONOMY, new Criteria('Aka'));
+        $page = $storage->query('Aka', self::TAXONOMY, Criteria::for('Aka'));
 
         self::assertCount(2, $page->items);
         self::assertFalse($page->hasMore());
@@ -157,13 +156,13 @@ final class TaxonomyStorageTest extends TestCase
         $terms->insert(self::TAXONOMY, 'B');
         $terms->insert(self::TAXONOMY, 'C');
 
-        $page = $storage->query('Aka', self::TAXONOMY, (new Criteria('Aka'))->take(2));
+        $page = $storage->query('Aka', self::TAXONOMY, Criteria::for('Aka')->take(2));
 
         self::assertCount(2, $page->items);
         self::assertTrue($page->hasMore());
         self::assertSame($a, $page->items[0]->id->raw());
 
-        $next = $storage->query('Aka', self::TAXONOMY, (new Criteria('Aka'))->take(2, $page->next));
+        $next = $storage->query('Aka', self::TAXONOMY, Criteria::for('Aka')->take(2, $page->next));
 
         self::assertCount(1, $next->items);
         self::assertFalse($next->hasMore());
@@ -175,7 +174,7 @@ final class TaxonomyStorageTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        $storage->query('Aka', self::TAXONOMY, (new Criteria('Aka'))->where(new Filter('name', Comparison::Equals, 'x')));
+        $storage->query('Aka', self::TAXONOMY, Criteria::for('Aka')->where(Filter::equals('name', 'x')));
     }
 
     public function testQueryLinkedToReturnsTheAttachedTerms(): void
@@ -187,7 +186,7 @@ final class TaxonomyStorageTest extends TestCase
         $page = $storage->query(
             'Aka',
             self::TAXONOMY,
-            (new Criteria('Aka'))->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5))),
+            Criteria::for('Aka')->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5))),
         );
 
         self::assertCount(1, $page->items);
@@ -206,7 +205,7 @@ final class TaxonomyStorageTest extends TestCase
         $page = $storage->query(
             'Aka',
             self::TAXONOMY,
-            (new Criteria('Aka'))->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5), EntityId::of(6))),
+            Criteria::for('Aka')->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5), EntityId::of(6))),
         );
 
         $byParent = [];
@@ -228,7 +227,7 @@ final class TaxonomyStorageTest extends TestCase
         $storage->query(
             'Aka',
             self::TAXONOMY,
-            (new Criteria('Aka'))->linkedTo(EdgeFilter::back('Tutorial', 'akas', EntityId::of(5))),
+            Criteria::for('Aka')->linkedTo(EdgeFilter::back('Tutorial', 'akas', EntityId::of(5))),
         );
     }
 
@@ -238,7 +237,7 @@ final class TaxonomyStorageTest extends TestCase
         $terms->insert(self::TAXONOMY, 'A');
         $terms->insert(self::TAXONOMY, 'B');
 
-        self::assertSame(2, $storage->count(self::TAXONOMY, new Criteria('Aka')));
+        self::assertSame(2, $storage->count(self::TAXONOMY, Criteria::for('Aka')));
     }
 
     public function testCountLinkedToCountsAttachedTerms(): void
@@ -249,7 +248,7 @@ final class TaxonomyStorageTest extends TestCase
 
         $count = $storage->count(
             self::TAXONOMY,
-            (new Criteria('Aka'))->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5))),
+            Criteria::for('Aka')->linkedTo(EdgeFilter::along('Tutorial', 'akas', EntityId::of(5))),
         );
 
         self::assertSame(1, $count);

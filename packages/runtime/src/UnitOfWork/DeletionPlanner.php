@@ -82,7 +82,7 @@ final readonly class DeletionPlanner
 
         foreach ($this->rules->for($deletion->entity) as $rule) {
             $link = EdgeFilter::along($rule->declaredBy, $rule->edge, $deletion->id);
-            $criteria = (new Criteria($rule->dependent))->linkedTo($link);
+            $criteria = Criteria::for($rule->dependent)->linkedTo($link);
 
             if (DeletionPolicy::Restrict === $rule->policy) {
                 $remaining = $this->storage->count($criteria);

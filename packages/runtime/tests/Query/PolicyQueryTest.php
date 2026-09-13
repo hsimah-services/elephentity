@@ -40,7 +40,7 @@ final class PolicyQueryTest extends TestCase
         ));
         $gate = new ReadGate($catalogue, new AnonymousViewerProvider());
         $hydrator = $this->hydrator();
-        $query = new LazyEntityQuery($storage, $hydrator, $this->createMock(EdgeLoader::class), new Criteria('Post'), $gate);
+        $query = new LazyEntityQuery($storage, $hydrator, $this->createMock(EdgeLoader::class), Criteria::for('Post'), $gate);
 
         self::assertCount(1, $query->all());
         self::assertSame(1, $query->count());

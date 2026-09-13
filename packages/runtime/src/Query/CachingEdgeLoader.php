@@ -83,7 +83,7 @@ final class CachingEdgeLoader implements EdgeLoader
             $this->storage,
             $this->hydrators->get($target),
             $this,
-            (new Criteria($target))->linkedTo($link),
+            Criteria::for($target)->linkedTo($link),
             $this->gate,
         );
     }
@@ -118,7 +118,7 @@ final class CachingEdgeLoader implements EdgeLoader
         $hydrator = $this->hydrators->get($target);
 
         // One filter naming every parent, so this is one query rather than one each.
-        $criteria = (new Criteria($target))->linkedTo(EdgeFilter::along($entity, $edge, ...$ids));
+        $criteria = Criteria::for($target)->linkedTo(EdgeFilter::along($entity, $edge, ...$ids));
 
         /** @var array<string, list<object>> $grouped */
         $grouped = [];

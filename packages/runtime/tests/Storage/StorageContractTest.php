@@ -6,7 +6,6 @@ namespace Eleph\Runtime\Tests\Storage;
 
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Cursor;
 use Eleph\Runtime\Storage\Direction;
@@ -33,11 +32,11 @@ final class StorageContractTest extends TestCase
 {
     public function testCriteriaBuildersDoNotMutateTheOriginal(): void
     {
-        $base = new Criteria('Post');
+        $base = Criteria::for('Post');
 
         $narrowed = $base
-            ->where(new Filter('status', Comparison::Equals, 'published'))
-            ->orderBy(new Order('createdAt', Direction::Descending))
+            ->where(Filter::equals('status', 'published'))
+            ->orderBy(Order::descending('createdAt'))
             ->take(20);
 
         self::assertSame([], $base->filters);
@@ -47,11 +46,10 @@ final class StorageContractTest extends TestCase
         self::assertSame(Direction::Descending, $narrowed->order[0]->direction);
     }
 
-    public function testAValuelessComparisonRejectsAValue(): void
+    public function testAValuelessComparisonCarriesNoValue(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-
-        new Filter('deletedAt', Comparison::IsNull, 'something');
+        self::assertNull(Filter::isNull('deletedAt')->value);
+        self::assertNull(Filter::isNotNull('deletedAt')->value);
     }
 
     public function testACursorCannotBeEmpty(): void

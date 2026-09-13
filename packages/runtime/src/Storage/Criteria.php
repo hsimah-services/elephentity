@@ -14,7 +14,7 @@ final readonly class Criteria
      * @param list<Order>      $order
      * @param list<EdgeFilter> $links   Also conjunctive with the filters.
      */
-    public function __construct(
+    private function __construct(
         public string $entity,
         public array $filters = [],
         public array $order = [],
@@ -22,6 +22,14 @@ final readonly class Criteria
         public ?Cursor $after = null,
         public array $links = [],
     ) {
+    }
+
+    /**
+     * What to fetch of `$entity`, before any filtering, ordering or paging.
+     */
+    public static function for(string $entity): self
+    {
+        return new self($entity);
     }
 
     public function where(Filter $filter): self

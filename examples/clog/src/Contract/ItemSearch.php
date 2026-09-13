@@ -9,9 +9,7 @@ use Clog\Entity\Item\Item;
 use Clog\Entity\Item\ItemHydrator;
 use Eleph\Runtime\Query\EntityQuery;
 use Eleph\Runtime\Query\Queries;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
-use Eleph\Runtime\Storage\Direction;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\Order;
 
@@ -42,11 +40,11 @@ final readonly class ItemSearch implements ItemSearchQuery
         // through the port. Scanning produces digits and typing produces words, so the
         // shape of the term is the honest way to pick — and it keeps both paths on an
         // index rather than making one of them a table scan.
-        $criteria = (new Criteria('Item'))
+        $criteria = Criteria::for('Item')
             ->where(1 === preg_match('/^\d+$/', $term)
-                ? new Filter('barcode', Comparison::Equals, $term)
-                : new Filter('name', Comparison::Contains, $term))
-            ->orderBy(new Order('name', Direction::Ascending));
+                ? Filter::equals('barcode', $term)
+                : Filter::contains('name', $term))
+            ->orderBy(Order::ascending('name'));
 
         return $this->queries->of($this->hydrator, $criteria);
     }

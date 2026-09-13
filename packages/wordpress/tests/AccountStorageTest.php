@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Eleph\WordPress\Tests;
 
 use Eleph\Runtime\Identity\EntityId;
-use Eleph\Runtime\Storage\Comparison;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Filter;
 use Eleph\Runtime\Storage\Write\Update;
@@ -138,7 +137,7 @@ final class AccountStorageTest extends TestCase
         $users->registered[5] = '2026-01-01 00:00:00';
         $users->registered[6] = '2026-01-02 00:00:00';
 
-        $page = $storage->query('User', $fields, $map, new Criteria('User'));
+        $page = $storage->query('User', $fields, $map, Criteria::for('User'));
 
         self::assertCount(2, $page->items);
         self::assertFalse($page->hasMore());
@@ -151,12 +150,12 @@ final class AccountStorageTest extends TestCase
         $users->registered[6] = '2026-01-02 00:00:00';
         $users->registered[7] = '2026-01-03 00:00:00';
 
-        $page = $storage->query('User', $fields, $map, (new Criteria('User'))->take(2));
+        $page = $storage->query('User', $fields, $map, Criteria::for('User')->take(2));
 
         self::assertCount(2, $page->items);
         self::assertTrue($page->hasMore());
 
-        $next = $storage->query('User', $fields, $map, (new Criteria('User'))->take(2, $page->next));
+        $next = $storage->query('User', $fields, $map, Criteria::for('User')->take(2, $page->next));
 
         self::assertCount(1, $next->items);
         self::assertFalse($next->hasMore());
@@ -168,7 +167,7 @@ final class AccountStorageTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        $storage->query('User', $fields, $map, (new Criteria('User'))->where(new Filter('bio', Comparison::Equals, 'x')));
+        $storage->query('User', $fields, $map, Criteria::for('User')->where(Filter::equals('bio', 'x')));
     }
 
     public function testCountCountsEveryRegisteredUser(): void
@@ -177,7 +176,7 @@ final class AccountStorageTest extends TestCase
         $users->registered[5] = '2026-01-01 00:00:00';
         $users->registered[6] = '2026-01-02 00:00:00';
 
-        self::assertSame(2, $storage->count(new Criteria('User')));
+        self::assertSame(2, $storage->count(Criteria::for('User')));
     }
 
     /**
