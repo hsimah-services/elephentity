@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   Catalogue.php
- * digest: sha256:3f0ec47d6c92ce4c773e1b98824363552de216f759ddf6b4d2003e9dad89af20
+ * digest: sha256:447e29800ed606df5e97b3690b4ae04f6fb438300d6b2792499129b04d3d1ed6
  */
 
 namespace Clog\Entity;
@@ -38,6 +38,13 @@ use Clog\Entity\Location\LocationMutator;
 use Clog\Entity\Location\LocationReadPolicies;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
+use Clog\Entity\User\UserDeleter;
+use Clog\Entity\User\UserHydrator;
+use Clog\Entity\User\UserInput;
+use Clog\Entity\User\UserMutator;
+use Clog\Entity\User\UserReadPolicies;
+use Clog\Entity\User\UserTriggers;
+use Clog\Entity\User\UserVerifiers;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Mutation\EntityTriggers;
 use Eleph\Runtime\Mutation\Managed;
@@ -66,7 +73,7 @@ final readonly class Catalogue implements EntityCatalogue
      */
     public function entities(): array
     {
-        return ['Inventory', 'Item', 'Location'];
+        return ['Inventory', 'Item', 'Location', 'User'];
     }
 
     /**
@@ -78,6 +85,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryHydrator::class),
             'Item' => $this->container->get(ItemHydrator::class),
             'Location' => $this->container->get(LocationHydrator::class),
+            'User' => $this->container->get(UserHydrator::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
 
@@ -92,6 +100,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryVerifiers::class),
             'Item' => $this->container->get(ItemVerifiers::class),
             'Location' => $this->container->get(LocationVerifiers::class),
+            'User' => $this->container->get(UserVerifiers::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
 
@@ -106,6 +115,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryTriggers::class),
             'Item' => $this->container->get(ItemTriggers::class),
             'Location' => $this->container->get(LocationTriggers::class),
+            'User' => $this->container->get(UserTriggers::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
 
@@ -141,12 +151,22 @@ final readonly class Catalogue implements EntityCatalogue
         return $policies;
     }
 
+    private function readPoliciesUserReadPolicies(): EntityReadPolicies
+    {
+        $policies = $this->container->get(UserReadPolicies::class);
+
+        assert($policies instanceof UserReadPolicies);
+
+        return $policies;
+    }
+
     public function readPolicies(string $entity): EntityReadPolicies
     {
         return match ($entity) {
             'Inventory' => $this->readPoliciesInventoryReadPolicies(),
             'Item' => $this->readPoliciesItemReadPolicies(),
             'Location' => $this->readPoliciesLocationReadPolicies(),
+            'User' => $this->readPoliciesUserReadPolicies(),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
     }
@@ -166,6 +186,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => new NoPolicies(),
             'Item' => $this->writePoliciesItemWritePolicies(),
             'Location' => new NoPolicies(),
+            'User' => new NoPolicies(),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
     }
@@ -198,6 +219,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['createdAt', 'updatedAt', 'postId', 'name', 'dateAdded', 'dateExpiry'],
             'Item' => ['createdAt', 'updatedAt', 'postId', 'name', 'barcode', 'defaultExpiryUnit', 'defaultExpiryValue'],
             'Location' => ['createdAt', 'updatedAt', 'postId', 'name'],
+            'User' => ['createdAt', 'updatedAt', 'postId', 'bio'],
             default => [],
         };
     }
@@ -211,6 +233,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['name', 'dateAdded'],
             'Item' => ['name'],
             'Location' => ['name'],
+            'User' => [],
             default => [],
         };
     }
@@ -224,6 +247,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => [],
             'Item' => [],
             'Location' => [],
+            'User' => [],
             default => [],
         };
     }
@@ -237,6 +261,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => ['postId'],
             'Item' => ['postId', 'barcode'],
             'Location' => ['postId', 'name'],
+            'User' => ['postId'],
             default => [],
         };
     }
@@ -253,6 +278,8 @@ final readonly class Catalogue implements EntityCatalogue
             'Item.updatedAt' => Managed::Modified,
             'Location.createdAt' => Managed::Created,
             'Location.updatedAt' => Managed::Modified,
+            'User.createdAt' => Managed::Created,
+            'User.updatedAt' => Managed::Modified,
         ];
     }
 
@@ -265,6 +292,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => InventoryDeleter::rules(),
             'Item' => ItemDeleter::rules(),
             'Location' => LocationDeleter::rules(),
+            'User' => UserDeleter::rules(),
             default => [],
         };
     }
@@ -287,6 +315,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => new InventoryMutator($buffer),
             'Item' => new ItemMutator($buffer, $this->resolve(ItemDiscontinueAction::class)),
             'Location' => new LocationMutator($buffer),
+            'User' => new UserMutator($buffer),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
     }
@@ -356,12 +385,26 @@ final readonly class Catalogue implements EntityCatalogue
      * @param array<string, mixed> $args
      * @return array<string, mixed>
      */
+    private function decodeUserInputActionArguments(string $action, array $args): array
+    {
+        $input = $this->container->get(UserInput::class);
+
+        assert($input instanceof UserInput);
+
+        return $input->decodeAction($action, $args);
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
     public function decodeActionArguments(string $entity, string $action, array $args): array
     {
         return match ($entity) {
             'Inventory' => $this->decodeInventoryInputActionArguments($action, $args),
             'Item' => $this->decodeItemInputActionArguments($action, $args),
             'Location' => $this->decodeLocationInputActionArguments($action, $args),
+            'User' => $this->decodeUserInputActionArguments($action, $args),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
     }
@@ -375,6 +418,7 @@ final readonly class Catalogue implements EntityCatalogue
             'Inventory' => $this->container->get(InventoryInput::class),
             'Item' => $this->container->get(ItemInput::class),
             'Location' => $this->container->get(LocationInput::class),
+            'User' => $this->container->get(UserInput::class),
             default => throw new RuntimeException(sprintf('No entity named "%s".', $entity)),
         };
 

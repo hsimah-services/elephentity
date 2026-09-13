@@ -9,11 +9,12 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   storage-manifest.php
- * digest: sha256:9da7363fc1cc6c3f944dbe327d9e3854c678b5a5a8e9b93824b75129e0678b98
+ * digest: sha256:2241859661884c8d94839ee30e44cd07f4934fbe92d07297869cc3d827879124
  */
 
 namespace Eleph\WordPress\Manifest;
 
+use Eleph\WordPress\Account\AccountFields;
 use Eleph\WordPress\Sql\Column;
 use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\Index;
@@ -110,6 +111,7 @@ return new StorageManifest(
         'Inventory' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'dateAdded' => 'date_added', 'dateExpiry' => 'date_expiry'],
         'Item' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name', 'barcode' => 'barcode', 'defaultExpiryUnit' => 'default_expiry_unit', 'defaultExpiryValue' => 'default_expiry_value'],
         'Location' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'name' => 'name'],
+        'User' => ['createdAt' => 'created_at', 'updatedAt' => 'updated_at', 'postId' => 'post_id', 'bio' => 'bio'],
     ],
     joinTables: [
 
@@ -119,5 +121,12 @@ return new StorageManifest(
     ],
     taxonomyPlacements: [
 
+    ],
+    accounts: [
+        'User' => new AccountFields(
+            'User',
+            'createdAt',
+            'updatedAt',
+        ),
     ],
 );

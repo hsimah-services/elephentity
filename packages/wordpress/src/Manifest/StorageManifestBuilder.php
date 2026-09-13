@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Manifest;
 
+use Eleph\Schema\Ir\EntityDefinition;
+use Eleph\Schema\Ir\Managed;
 use Eleph\Schema\Ir\Schema;
+use Eleph\WordPress\Account\AccountFields;
 use Eleph\WordPress\Sql\EdgePlanner;
 use Eleph\WordPress\Sql\Naming;
 use Eleph\WordPress\Sql\SchemaBuilder;
@@ -50,10 +53,15 @@ final readonly class StorageManifestBuilder
         $joinTables = array_diff_key($byTable, $claimed);
 
         $taxonomies = [];
+        $accounts = [];
 
         foreach ($schema->entities as $entity) {
             if (EdgePlanner::isTaxonomy($entity)) {
                 $taxonomies[$entity->name] = (string) $entity->storage->handle;
+            }
+
+            if (EdgePlanner::isAccount($entity)) {
+                $accounts[$entity->name] = $this->accountFields($entity);
             }
         }
 
@@ -63,6 +71,7 @@ final readonly class StorageManifestBuilder
         ksort($columns);
         ksort($joinTables);
         ksort($taxonomies);
+        ksort($accounts);
 
         return new StorageManifest(
             $byEntity,
@@ -71,6 +80,25 @@ final readonly class StorageManifestBuilder
             $joinTables,
             $taxonomies,
             $planner->planTaxonomies($schema),
+            $accounts,
         );
+    }
+
+    private function accountFields(EntityDefinition $entity): AccountFields
+    {
+        $created = null;
+        $modified = null;
+
+        foreach ($entity->fields as $field) {
+            if (Managed::Created === $field->managed) {
+                $created = $field->name;
+            }
+
+            if (Managed::Modified === $field->managed) {
+                $modified = $field->name;
+            }
+        }
+
+        return new AccountFields($entity->name, $created, $modified);
     }
 }

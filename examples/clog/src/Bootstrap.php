@@ -29,6 +29,10 @@ use Clog\Entity\Location\LocationInput;
 use Clog\Entity\Location\LocationTriggers;
 use Clog\Entity\Location\LocationVerifiers;
 use Clog\Entity\Pattern\ClogPost\Contract\ClogPostSignedInReadPolicy;
+use Clog\Entity\User\UserHydrator;
+use Clog\Entity\User\UserInput;
+use Clog\Entity\User\UserTriggers;
+use Clog\Entity\User\UserVerifiers;
 use Eleph\Runtime\Catalogue\BootCheck;
 use Eleph\Runtime\Gateway\Runtime;
 use Eleph\Runtime\Gateway\UnitOfWorkFactory;
@@ -215,6 +219,11 @@ final class Bootstrap
             ->set(InventoryInput::class, static fn (): object => new InventoryInput($decoder))
             ->set(InventoryTriggers::class, static fn (): object => new InventoryTriggers())
             ->set(InventoryVerifiers::class, static fn (): object => new InventoryVerifiers())
+
+            ->set(UserHydrator::class, static fn (): object => new UserHydrator($decoder))
+            ->set(UserInput::class, static fn (): object => new UserInput($decoder))
+            ->set(UserTriggers::class, static fn (): object => new UserTriggers())
+            ->set(UserVerifiers::class, static fn (): object => new UserVerifiers())
 
             // Yours. `ls generated/*/Contract/` is exactly this list, and BootCheck
             // fails by name for anything missing from it.

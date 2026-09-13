@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b72692b866e5dfaf543c5d59404ae64c",
+    "content-hash": "cb728ba6b491a5e5c8cf839f14879b8a",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -1445,12 +1445,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "d202aac"
+                "reference": "e49152b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/d202aac",
-                "reference": "d202aac",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/e49152b",
+                "reference": "e49152b",
                 "shasum": ""
             },
             "require": {
@@ -1482,7 +1482,7 @@
                 "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
                 "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
             },
-            "time": "2026-09-13T03:35:22+00:00"
+            "time": "2026-09-13T14:25:40+00:00"
         },
         {
             "name": "ergebnis/agent-detector",

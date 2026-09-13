@@ -9,7 +9,7 @@ declare(strict_types=1);
  * detected by the build and rejected.
  *
  * path:   class-map.php
- * digest: sha256:dd04abb9bfc5bb621457e66c6e24e6dd95d5680552bb69d7eb8b2f4e75fd62b4
+ * digest: sha256:a73199f7f731ea232024b823da1efcee92fea137c39a8a0e9109abff59b8c470
  */
 
 /**
@@ -27,6 +27,7 @@ return [
         'Inventory' => 'Clog\\Entity\\Inventory\\Inventory',
         'Item' => 'Clog\\Entity\\Item\\Item',
         'Location' => 'Clog\\Entity\\Location\\Location',
+        'User' => 'Clog\\Entity\\User\\User',
     ],
     'classes' => [
         'Clog\\Entity\\Catalogue' => 'Catalogue.php',
@@ -75,6 +76,17 @@ return [
         'Clog\\Entity\\Pattern\\ClogPost\\ClogPost' => 'Pattern/ClogPost/ClogPost.php',
         'Clog\\Entity\\Pattern\\ClogPost\\ClogPostMutatorTrait' => 'Pattern/ClogPost/ClogPostMutatorTrait.php',
         'Clog\\Entity\\Pattern\\ClogPost\\Contract\\ClogPostSignedInReadPolicy' => 'Pattern/ClogPost/Contract/ClogPostSignedInReadPolicy.php',
+        'Clog\\Entity\\User\\User' => 'User/User.php',
+        'Clog\\Entity\\User\\UserDeleter' => 'User/UserDeleter.php',
+        'Clog\\Entity\\User\\UserHydrator' => 'User/UserHydrator.php',
+        'Clog\\Entity\\User\\UserInput' => 'User/UserInput.php',
+        'Clog\\Entity\\User\\UserMutationContext' => 'User/UserMutationContext.php',
+        'Clog\\Entity\\User\\UserMutator' => 'User/UserMutator.php',
+        'Clog\\Entity\\User\\UserReadPolicies' => 'User/UserReadPolicies.php',
+        'Clog\\Entity\\User\\UserTriggers' => 'User/UserTriggers.php',
+        'Clog\\Entity\\User\\UserVerifiers' => 'User/UserVerifiers.php',
+        'Clog\\Entity\\User\\UserWriteContext' => 'User/UserWriteContext.php',
+        'Clog\\Entity\\User\\UserWritePolicies' => 'User/UserWritePolicies.php',
         'Clog\\Entity\\Wiring' => 'Wiring.php',
     ],
 ];

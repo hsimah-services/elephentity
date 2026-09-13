@@ -150,4 +150,20 @@ final readonly class EdgePlanner
     {
         return true === $entity->configured('taxonomy', false);
     }
+
+    /**
+     * Whether a pattern has marked this entity's rows as WordPress accounts rather
+     * than rows in a table of its own.
+     *
+     * The same extension point `taxonomy` uses, and for the same reason: the core
+     * schema never learns what `wp_users` is, and this package stays the only thing
+     * that does. Unlike a taxonomy, an account-backed entity needs no edge placement
+     * of its own — an edge pointing at one is an ordinary column or join table storing
+     * an id that happens to be a `wp_users.ID`, which every other relation already
+     * knows how to place.
+     */
+    public static function isAccount(EntityDefinition $entity): bool
+    {
+        return true === $entity->configured('account', false);
+    }
 }

@@ -163,6 +163,26 @@ final class SchemaBuilderTest extends TestCase
         self::assertCount(1, $tables, 'only the Tutorial table exists');
     }
 
+    public function testAnAccountBackedEntityGetsNoTableOfItsOwn(): void
+    {
+        $user = new EntityDefinition(
+            name: 'User',
+            storage: new StorageDefinition('wordpress', 'user'),
+            sourceFile: 'entities/User.yml',
+            fields: ['bio' => new FieldDefinition('bio', TypeReference::primitive(Primitive::String), Origin::entity('entities/User.yml'), nullable: true)],
+            config: ['account' => true],
+        );
+
+        $schema = new Schema(
+            project: new ProjectDefinition('test', 'wordpress', 'project.yml'),
+            entities: ['User' => $user],
+        );
+
+        $tables = (new SchemaBuilder(new Naming()))->build($schema);
+
+        self::assertSame([], $tables);
+    }
+
     private function schemaWithATaxonomy(): Schema
     {
         $aka = new EntityDefinition(
