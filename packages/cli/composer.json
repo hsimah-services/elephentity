@@ -10,7 +10,7 @@
         "symfony/console": "^7.0 || ^8.0",
         "elephentity/schema": "self.version",
         "elephentity/runtime": "self.version",
-        "elephentity/codegen": "self.version"
+        "elephentity/codegen": "^0.4"
     },
     "autoload": {
         "psr-4": {
