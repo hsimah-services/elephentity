@@ -9,6 +9,7 @@ use Eleph\Runtime\Capability\Capability;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Page;
 use Eleph\Runtime\Storage\Record;
@@ -144,7 +145,7 @@ final readonly class WordPressAdaptor implements StorageAdaptor
         $account = $this->accounts[$criteria->entity] ?? null;
 
         if (null !== $account) {
-            return $this->account->query($criteria->entity, $account, $this->fields, $criteria);
+            return $this->accountQuery($criteria->entity, $account, $criteria);
         }
 
         $table = $this->table($criteria->entity);
@@ -181,13 +182,130 @@ final readonly class WordPressAdaptor implements StorageAdaptor
             return $this->taxonomy->count($taxonomy, $criteria);
         }
 
-        if (isset($this->accounts[$criteria->entity])) {
-            return $this->account->count($criteria);
+        $account = $this->accounts[$criteria->entity] ?? null;
+
+        if (null !== $account) {
+            return $this->accountCount($criteria->entity, $account, $criteria);
         }
 
         $compiled = $this->compiler->count($this->table($criteria->entity), $criteria);
 
         return (int) $this->database->scalar($compiled->sql, $compiled->bindings);
+    }
+
+    /**
+     * An account-backed entity has no table of its own to join into, so `AccountStorage`
+     * can only ever offer a plain, unfiltered listing. That is a real limitation for a
+     * root query — but a "linked to" criteria whose key already sits on the other
+     * (ordinary) table is not a filter on the account at all: it is a to-one or
+     * many-to-one edge pointing at the account, and answering it means reading the
+     * declaring row's own key column, the same thing a SQL join would do if the account
+     * had a table to join into.
+     *
+     * Anything else — a reversed link or one crossing a join table — still has no
+     * column to read, and falls through to `AccountStorage`, which refuses it.
+     *
+     * @return Page<Record>
+     */
+    private function accountQuery(string $entity, AccountFields $account, Criteria $criteria): Page
+    {
+        $pairs = $this->linkedAccountIds($entity, $criteria);
+
+        if (null === $pairs) {
+            return $this->account->query($entity, $account, $this->fields, $criteria);
+        }
+
+        $targets = array_values(array_unique(array_column($pairs, 'target'), SORT_REGULAR));
+        $records = $this->account->getMany(
+            $entity,
+            $account,
+            $this->fields,
+            array_map(static fn (int|string $id): EntityId => EntityId::of($id), $targets),
+        );
+
+        $byTarget = [];
+
+        foreach ($records as $record) {
+            $byTarget[(string) $record->id->raw()] = $record;
+        }
+
+        $projectParent = 1 === count($criteria->links) && $criteria->links[0]->needsParentColumn();
+        $items = [];
+
+        foreach ($pairs as $pair) {
+            $record = $byTarget[(string) $pair['target']] ?? null;
+
+            if (null === $record) {
+                continue;
+            }
+
+            $items[] = $projectParent
+                ? new Record($record->entity, $record->id, [...$record->values, EdgeFilter::PARENT_COLUMN => $pair['parent']])
+                : $record;
+        }
+
+        return new Page($items);
+    }
+
+    private function accountCount(string $entity, AccountFields $account, Criteria $criteria): int
+    {
+        $pairs = $this->linkedAccountIds($entity, $criteria);
+
+        if (null === $pairs) {
+            return $this->account->count($criteria);
+        }
+
+        return count($this->accountQuery($entity, $account, $criteria)->items);
+    }
+
+    /**
+     * Resolve a "linked to" criteria against an account-backed entity to the pairs of
+     * (parent id, account id) it names, by reading the key straight off the declaring
+     * entity's own table — or null when the criteria is not that one resolvable shape,
+     * so the caller falls back to `AccountStorage`'s own, narrower, refusal.
+     *
+     * @return list<array{parent: int|string, target: int|string}>|null
+     */
+    private function linkedAccountIds(string $entity, Criteria $criteria): ?array
+    {
+        if ([] !== $criteria->filters || [] !== $criteria->order || 1 !== count($criteria->links)) {
+            return null;
+        }
+
+        $link = $criteria->links[0];
+        $placement = $this->placements[$link->entity . '.' . $link->edge] ?? null;
+
+        if (null === $placement || $link->reversed || !$placement->keyIsLocal() || $placement->target !== $entity) {
+            return null;
+        }
+
+        $parentIds = array_map($this->rawId(...), $link->from);
+        $placeholders = implode(', ', array_fill(0, count($parentIds), '%d'));
+
+        $rows = $this->database->select(
+            sprintf(
+                'SELECT `id`, `%s` FROM `%s` WHERE `id` IN (%s)',
+                $placement->localColumn,
+                $placement->table,
+                $placeholders,
+            ),
+            $parentIds,
+        );
+
+        $pairs = [];
+
+        foreach ($rows as $row) {
+            $parent = $row['id'] ?? null;
+            $target = $row[$placement->localColumn] ?? null;
+
+            if ((!is_int($parent) && !is_string($parent)) || (!is_int($target) && !is_string($target))) {
+                continue;
+            }
+
+            $pairs[] = ['parent' => $parent, 'target' => $target];
+        }
+
+        return $pairs;
     }
 
     public function write(WriteBatch $batch): WriteResult
