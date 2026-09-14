@@ -90,13 +90,18 @@ The Elephentity-specific gates — `validate`, `generate --check`, signature ver
 ```
 docs/                  PLAN.md — every design decision and its reasoning
 packages/
-  schema/              spec parser, JSON Schema, pattern resolution, IR   (dev-only)
-  codegen/             IR → locked, signed PHP                            (dev-only)
-  runtime/             storage port, unit of work, verification, loaders  (shipped)
-  wordpress/           the one adaptor; only package that may name WP_*   (shipped)
-  wpgraphql/           IR → compiled registration manifest                (shipped)
-  cli/                 the eleph command                                  (dev-only)
+  schema/              spec parser, JSON Schema, pattern resolution, IR       (dev-only)
+  runtime/             storage port, unit of work, verification, loaders     (shipped, mirrored)
+  memory/              the neutral driver; no physical schema                (shipped)
+  cli/                 the eleph command                                     (dev-only)
 tools/
   php                  run a command in the throwaway PHP container
   check-architecture.php  enforces the platform-free core
 ```
+
+The code generator, the WordPress adaptor and the WPGraphQL runtime are separate
+repositories now — `elephentity-codegen(-php)`, `elephentity-wordpress` and
+`elephentity-wpgraphql` — not packages here. `packages/runtime` stays in this
+repository (`schema`, `cli` and `memory` all build on it in-process) but is also
+mirrored out, read-only, so it is installable without the rest of this repository —
+see [`.llms/cross-repo.md`](../.llms/cross-repo.md).

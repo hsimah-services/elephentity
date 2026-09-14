@@ -7,8 +7,11 @@ declare(strict_types=1);
  * Architecture rules that static analysis cannot express yet.
  *
  * Rule 1 — the platform-free core.
- *   packages/schema, runtime and cli must not reference WordPress at all.
- *   Only packages/wordpress and packages/wpgraphql may.
+ *   No package in this repository may reference WordPress at all. The WordPress and
+ *   WPGraphQL adaptors moved to their own repositories — `elephentity-wordpress` and
+ *   `elephentity-wpgraphql` — in elephentity#79; this rule is what would now catch this
+ *   repository reaching back into either of them, alongside catching WordPress leaking
+ *   in directly.
  *
  *   This is what keeps the storage abstraction honest. WordPress concepts leak
  *   quietly, and by the time they are load-bearing a second adaptor is no longer
@@ -26,11 +29,13 @@ declare(strict_types=1);
  *     `Eleph\WPGraphQL\Conformance\ConformanceChecker` directly, and neither the WP_*
  *     check nor the vocabulary check above catches a namespace: it only broke the day
  *     `eleph check` was resolved as its own package, without the monorepo's autoloader
- *     pulling `Eleph\WPGraphQL\` in for free.
+ *     pulling `Eleph\WPGraphQL\` in for free. `PLATFORM_NAMESPACES` below still names
+ *     both, even with neither package present here any more — an import of either is a
+ *     missing-class error at best and a stale copy resurrected at worst.
  *
  * Rule 2 — the schema-free runtime.
- *   The packages that ship — runtime, wordpress, wpgraphql — must not reference
- *   `Eleph\Schema` except from the build-time classes named below.
+ *   The packages that ship — runtime, memory — must not reference `Eleph\Schema`
+ *   except from the build-time classes named below.
  *
  *   `elephentity/schema` is dev-only: it parses YAML and exists to produce the IR, and
  *   the plan says dev packages never reach production. A shipped class naming one is
@@ -40,20 +45,21 @@ declare(strict_types=1);
  *
  *   The allowlist is deliberately a list of files rather than a namespace convention.
  *   Each entry is a class that runs at build time and could not run at any other, and
- *   adding one should take a moment's thought rather than a directory choice. When
- *   these move to packages of their own the list empties and the rule stays.
+ *   adding one should take a moment's thought rather than a directory choice.
  *
  * Uses the tokenizer rather than grep, so prose in a doc comment discussing WordPress
  * is not mistaken for a dependency on it — and neither is a string literal.
  *
  * The code generator used to be checked here too. It lives in its own repository now
- * and has no WordPress stubs to reach for even by accident, so the rule went with it.
+ * and has no WordPress stubs to reach for even by accident, so the rule went with it —
+ * the WordPress and WPGraphQL adaptors going the same way (elephentity#79) is the same
+ * move for the same reason.
  */
 
 const CORE_PACKAGES = ['schema', 'runtime', 'cli'];
 
 /** The packages that ship, and so may not reach for the spec compiler. */
-const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql', 'memory'];
+const SHIPPED_PACKAGES = ['runtime', 'memory'];
 
 /**
  * Build-time classes inside a shipped package, allowed to read the IR.
@@ -128,8 +134,9 @@ foreach (CORE_PACKAGES as $package) {
 }
 
 if ([] !== $violations) {
-    fwrite(STDERR, "ERROR: the core packages must stay platform-free.\n");
-    fwrite(STDERR, "Only packages/wordpress and packages/wpgraphql may reference WordPress.\n\n");
+    fwrite(STDERR, "ERROR: this repository must stay platform-free.\n");
+    fwrite(STDERR, "The WordPress and WPGraphQL adaptors live in elephentity-wordpress and\n");
+    fwrite(STDERR, "elephentity-wpgraphql now; nothing here may reference either.\n\n");
 
     foreach ($violations as $violation) {
         fwrite(STDERR, '  ' . $violation . "\n");

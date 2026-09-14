@@ -1,6 +1,6 @@
 # The contract surface
 
-Everything the five repositories share. A change to anything on this list needs issues
+Everything the nine repositories share. A change to anything on this list needs issues
 on the repositories named beside it; a change to anything else does not.
 
 Read the row for what you touched, not the whole table.
@@ -16,6 +16,17 @@ ships since a driver with no physical schema needs no repository of its own),
 (elephentity#62) changed which repository they live in and nothing about the protocol
 they speak.
 
+The other four repositories speak no protocol themselves, but are still on this
+surface: **`elephentity-runtime`** is a read-only mirror of `elephentity`'s
+`packages/runtime`, so anything that reaches `packages/runtime` reaches it for free on
+the next split — it is never a place to file an issue *against*.
+**`elephentity-wordpress`** and **`elephentity-wpgraphql`** are runtime packages
+(elephentity#79) that the two matching builders name classes from, as strings, in their
+own `src/Runtime.php` — the coupling a version gate cannot catch, covered below.
+**`elephentity-examples`** consumes all of it as a real product; regenerating `clog`
+there is the end-to-end check that a class rename or a drifted answer to `describe`
+actually surfaces somewhere, since nothing type-checks across any of these gaps.
+
 ---
 
 ## Changing `elephentity`
@@ -27,6 +38,7 @@ they speak.
 | the compiler request (`GenerateCommand::request()`) | update `Protocol/CompilerRequest` | — |
 | what `provides` may contain (`packages/cli/src/Installed.php`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
 | a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php`, if it names that class |
+| an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
 | `eleph.json` keys **it** reads (`spec`, `codegen`) | only if the key is also the orchestrator's | — |
 
 **Every builder repository** currently means `elephentity-codegen-php`,
@@ -44,8 +56,8 @@ would technically still run.
 
 **Renaming a runtime class is invisible to every test in every repository.** A builder
 emits the name as a string; nothing in that repository loads it. It fails in a
-*project*, at boot, after generating. Regenerating `examples/clog` is what catches it —
-and it only catches it if the class is one the example actually uses.
+*project*, at boot, after generating. Regenerating `clog` in `elephentity-examples` is
+what catches it — and it only catches it if the class is one the example actually uses.
 
 ---
 
@@ -65,7 +77,7 @@ it also ships, and the three standalone builder repositories.
 | the `targets` command's JSON | update `CheckCommand::outputDirectory()` | — |
 | the `describe` command's JSON | update `Installed::fromJson()` | — |
 | `Signing/HeaderStyle` — the rendered header or its line count | regenerate **every** tree and commit it | re-freeze golden fixtures |
-| `Config/ProjectConfig` — which `eleph.json` keys are required | update the docs and `examples/clog/eleph.json` | — |
+| `Config/ProjectConfig` — which `eleph.json` keys are required | update the docs and `elephentity-examples`'s `clog/eleph.json` | — |
 
 **A header change invalidates every signature ever written.** Not just here: every
 generated file in every project using Elephentity fails verification at once, because the
@@ -79,20 +91,39 @@ expensive change available in this system. Say so in the issue title.
 The three builder repositories reach the rest of the ecosystem the same way; read the
 row for the one you changed.
 
-| You changed | `elephentity` must | `elephentity-codegen` must |
+| You changed | `elephentity-examples` must | `elephentity-codegen` must |
 |---|---|---|
-| the bytes of any generated file | regenerate `examples/clog` and commit the diff | — |
-| the shape of `class-map.php` (php builder only) | update `packages/cli/src/ClassMap.php` | — |
-| what it answers to `describe` | update `Installed` and whatever consumes the relevant part of `provides` | — |
-| `Envelope::IR_VERSION` or its `src/Ir/*` | keep `IrCodec::VERSION` and `packages/schema/src/Ir/*` in step | bump `Envelope::IR_VERSION` |
-| its `src/Runtime.php` constants | keep the matching runtime package (`packages/runtime`, `packages/wordpress` or `packages/wpgraphql`) in step | — |
-| which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `examples/clog/eleph.json` and the docs | — |
+| the bytes of any generated file | regenerate `clog` and commit the diff | — |
+| the shape of `class-map.php` (php builder only) | — (`packages/cli/src/ClassMap.php` lives in `elephentity`; open an issue there too) | — |
+| what it answers to `describe` | — (`Installed` lives in `elephentity`; open an issue there too) | — |
+| `Envelope::IR_VERSION` or its `src/Ir/*` | keep `IrCodec::VERSION` and `elephentity`'s `packages/schema/src/Ir/*` in step | bump `Envelope::IR_VERSION` |
+| its `src/Runtime.php` constants | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
+| which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
 | a package pattern it ships (wordpress builder: `resources/patterns/*.yml`) | none, if the pattern's shape is unchanged; regenerate if it is | — |
 
-**Generated-byte changes always reach `elephentity`,** even the cosmetic ones. Its
-committed `examples/clog/generated/` tree is signed, so a whitespace change is a digest
+**Generated-byte changes always reach `elephentity-examples`,** even the cosmetic ones.
+Its committed `clog/generated/` tree is signed, so a whitespace change is a digest
 change is a failing `generate --check` on the next `composer update`. There is no such
 thing as a change in a builder that the example does not notice.
+
+---
+
+## Changing `elephentity-wordpress` or `elephentity-wpgraphql`
+
+The two runtime adaptor repositories (elephentity#79). Neither speaks the wire protocol
+itself — a builder names their classes as strings, not imports — so nothing here bumps
+`Envelope::VERSION` or `IrCodec::VERSION`.
+
+| You changed | the matching builder repository must | `elephentity-examples` must |
+|---|---|---|
+| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
+| a class implementing `Eleph\Runtime\Storage\StorageAdaptor`, `Conformance\Verifier`, `Policy\Viewer` or `Policy\ViewerProvider` | — | run the four gates; `eleph check` exercises the verifier for real |
+| its own `composer.json` version constraint on `elephentity/runtime` | — | bump the matching constraint in `clog/composer.json` once a new version is tagged |
+
+**A rename here is invisible to every test in this repository, in the matching builder
+repository, and in `elephentity`.** It fails in a real project, at boot, when the
+exported manifest or verifier names a class that no longer exists. Regenerating `clog`
+in `elephentity-examples` is the only thing that actually runs that path.
 
 ---
 

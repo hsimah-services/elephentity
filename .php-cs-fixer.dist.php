@@ -3,11 +3,8 @@
 declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
-    ->in([__DIR__ . '/packages', __DIR__ . '/examples'])
-    ->exclude('vendor')
-    // Generated files carry a signed header whose digest covers everything after it,
-    // so reformatting one would break the signature the build checks.
-    ->notPath('#/generated/#');
+    ->in([__DIR__ . '/packages'])
+    ->exclude('vendor');
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)

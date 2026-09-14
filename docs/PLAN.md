@@ -82,14 +82,24 @@ spec field mean", and drift from each other rather than from the spec.
 
 ### Package boundaries
 
-| Package | Responsibility |
+> Stale as a description of what is *in this repository* since elephentity#79: the
+> code generator (`codegen/`) left first, for the reasons §15 records, and the
+> WordPress and WPGraphQL adaptors followed. The table below is the topology as it
+> stands — eight repositories, not one package tree.
+
+| Package/repository | Responsibility |
 |---|---|
-| `schema/` | spec parser, JSON Schema, pattern resolution, IR, semantic validation |
-| `codegen/` | IR → PHP (entity, mutator, finder, handler interfaces, migrations) |
-| `runtime/` | StorageAdaptor port, capabilities, unit of work, loaders, verification |
-| `wordpress/` | the one adapter — the **only** package allowed to name `WP_*` |
-| `wpgraphql/` | IR → compiled registration manifest |
-| `cli/` | `eleph generate` / `validate` / `check` / `migrate` |
+| `schema/` (this repo) | spec parser, JSON Schema, pattern resolution, IR, semantic validation |
+| `runtime/` (this repo, mirrored to `elephentity-runtime`) | StorageAdaptor port, capabilities, unit of work, loaders, verification |
+| `memory/` (this repo) | the neutral driver — no physical schema, no platform |
+| `cli/` (this repo) | `eleph generate` / `validate` / `check` / `fmt` |
+| `elephentity-codegen` | the orchestrator: resolves builders, runs them, signs and writes |
+| `elephentity-codegen-php` | IR → PHP (entity, mutator, finder, handler interfaces, migrations) |
+| `elephentity-codegen-wordpress` | IR → the physical schema `elephentity-wordpress` loads |
+| `elephentity-codegen-wpgraphql` | IR → compiled registration manifest |
+| `elephentity-wordpress` | the one storage adapter — the **only** package allowed to name `WP_*` |
+| `elephentity-wpgraphql` | loads the compiled manifest, registers it with WPGraphQL |
+| `elephentity-examples` | worked examples (`clog`), built and tested as real products |
 
 ### The project spec
 
@@ -160,8 +170,14 @@ several, making the abstraction nominal.
 
 The packages split cleanly by lifecycle:
 
-- **Dev-only, build time:** `schema`, `codegen`, `cli` — never ship to production.
-- **Runtime, shipped:** `runtime`, `wordpress`, `wpgraphql`.
+- **Dev-only, build time:** `schema`, `codegen(-*)`, `cli` — never ship to production.
+- **Runtime, shipped:** `runtime`, `memory`, `wordpress`, `wpgraphql`.
+
+Since elephentity#79 that split is a fact about which *repository* a package lives in,
+not only a convention inside one: `elephentity/wordpress` and `elephentity/wpgraphql`
+are their own repositories, requiring only `elephentity/runtime`, and a project
+installs them only if it wants them. Nobody who does not ask for WordPress gets
+WordPress.
 
 **Known risk.** WordPress has no dependency manager and no class isolation — every
 plugin loads into one shared PHP process, and PHP class names are global. If two
@@ -193,18 +209,20 @@ that turn a compiled spec into something the runtime loads later. A list of file
 than a namespace convention, so adding one takes a moment's thought; when those move to
 packages of their own the list empties and the rule stays.
 
-**What this does not yet do is change the Composer declaration.** `packages/wordpress`
-still requires `elephentity/schema`, because it still contains its own builder — the bin
-and the four classes behind it. Splitting those out, as `codegen-php` was split out, is
-what would let the requirement become a dev one. The boundary is now enforced, which is
-the precondition; the move is mechanical after it.
+**Done, in two steps.** The builder split (#62) moved `packages/wordpress`'s own
+builder — the bin and the manifest-building classes — out to
+`elephentity-codegen-wordpress`, letting `elephentity/wordpress`'s `elephentity/schema`
+requirement become a dev one it no longer needed at all. elephentity#79 then moved the
+now-schema-free runtime package itself to its own repository. The boundary this section
+enforced was the precondition for both; each move was mechanical once it held.
 
 ### Storage port
 
 The storage port is defined **now**, with exactly one adapter, rather than retrofitted
 later — WP concepts (int post IDs, postmeta as untyped KV, taxonomies-as-edges,
 `WP_Query` semantics) leak quietly otherwise. Enforced statically: no `WP_*` symbol
-outside `wordpress/`.
+anywhere in this repository (`tools/check-architecture.php`) — the adapter that may use
+them lives in `elephentity-wordpress` now.
 
 Adaptors **declare capabilities** (transactions, full-text, faceting) rather than the
 port flattening to a lowest common denominator.
@@ -1497,11 +1515,12 @@ stays PHP, and the generator becomes Rust. A rewrite cannot happen inside a repo
 whose CI, autoloader and package boundaries are all PHP, so the split is a precondition
 rather than a tidy-up, and the tax above is paid knowingly.
 
-Three programs now:
+Three programs at the time this was written; eight now — see "Package boundaries" in
+§3, current as of elephentity#79:
 
 | Repository | Holds |
 |---|---|
-| `elephentity` | the spec format, compiler, IR, runtime and adaptors |
+| `elephentity` | the spec format, compiler, IR, runtime — no adaptor |
 | `elephentity-codegen` | the orchestrator: resolves builders, runs them, signs and writes |
 | `elephentity-codegen-php` | the PHP builder: IR → locked PHP |
 
@@ -1578,11 +1597,10 @@ it. In process there is nothing to serialise, and the envelope's `schema` field 
 assembled only when a request actually crosses a process boundary — so an in-process
 build never pays for encoding a schema nobody is going to decode.
 
-`packages/cli/src/Targets.php` is the built-in registry, mirroring `Integrations`. The
-WordPress and WPGraphQL manifests are still appended to the PHP target's file list rather
-than being targets of their own; with one directory per target now enforced, promoting
-them would move those files to new locations that the WordPress plugin loads by path at
-boot, so it is a change with a runtime consequence rather than a tidy-up.
+> Superseded: `Targets.php` no longer exists. `wordpress` and `wpgraphql` became targets
+> of their own, each writing its own directory, well before elephentity#79 moved their
+> adaptors to separate repositories — see `GenerateCommand.php`'s `'files' => (object)
+> [],` and the comment beside it for where this paragraph's proposal actually landed.
 
 ---
 
@@ -1698,6 +1716,11 @@ implementation, so a common base declaring `verify(mixed, MutationContext)` woul
 the concrete type and call it directly, which is what keeps the typing exact.
 
 ### Step 4 — `packages/wordpress`
+
+> This package's own history continues in
+> [`elephentity-wordpress`](https://github.com/hsimah-services/elephentity-wordpress),
+> which it moved to in elephentity#79. Left here as the record of how it was built.
+
 - `SchemaBuilder`: the spec's physical schema — columns, indexes, edge placement
 - `QueryCompiler`: a Criteria as a parameterised SELECT
 - `MigrationPlanner`: the diff, split into what can be applied and what cannot
@@ -1788,6 +1811,11 @@ already lists every contract the spec produced, so there is no list to register 
 to drift.
 
 ### Step 6 — `packages/wpgraphql`
+
+> This package's own history continues in
+> [`elephentity-wpgraphql`](https://github.com/hsimah-services/elephentity-wpgraphql),
+> which it moved to in elephentity#79. Left here as the record of how it was built.
+
 - `ManifestBuilder`: schema → the whole API surface, pure and therefore tested
 - `ManifestExporter`: the manifest as PHP source, emitted by `eleph generate`
 - `TypeRegistrar`: the thin translation into WPGraphQL's arrays

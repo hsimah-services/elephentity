@@ -10,9 +10,14 @@ The command is `eleph`; the PHP namespace is `Eleph\`.
 ## Quick start
 
 ```bash
-composer require elephentity/elephentity
-composer require --dev elephentity/codegen elephentity/codegen-php
+composer require elephentity/runtime elephentity/memory
+composer require --dev elephentity/elephentity elephentity/codegen elephentity/codegen-php
 ```
+
+`elephentity/memory` is the neutral driver: raw PHP objects, no platform. Want
+WordPress instead? `composer require elephentity/wordpress` and
+`composer require --dev elephentity/codegen-wordpress` — see
+[elephentity-wordpress](https://github.com/hsimah-services/elephentity-wordpress).
 
 Two files. The project, and one entity:
 
@@ -20,8 +25,7 @@ Two files. The project, and one entity:
 # spec/project.yml
 project: MyApp
 storage:
-  driver: wordpress
-  tablePrefix: app_
+  driver: memory
 ```
 
 ```yaml
@@ -50,9 +54,9 @@ without a `builder` is refused:
             "namespace": "App\\Entity",
             "typeNamespace": "App\\Type"
         },
-        "wordpress": {
-            "builder": "vendor/bin/eleph-gen-wordpress",
-            "output": "generated/wordpress"
+        "memory": {
+            "builder": "vendor/bin/eleph-gen-memory",
+            "output": "generated/memory"
         }
     }
 }
@@ -77,11 +81,13 @@ generated/
     NoteDeleter.php
     NoteVerifiers.php            dispatch to your field verifiers
     NoteTriggers.php             dispatch to your triggers
-  wordpress/
-    storage-manifest.php         the physical schema
-    post-types.php
-    taxonomies.php
 ```
+
+`memory` compiles to no physical schema — there is no `generated/memory/` beyond that
+directory existing, since `MemoryAdaptor` has no table or post type to provision.
+Install `elephentity/wordpress` instead and the `wordpress` target writes
+`generated/wordpress/storage-manifest.php`, `post-types.php` and `taxonomies.php`
+alongside it.
 
 Every file carries a `sha256` digest in its header. Editing one is detected and
 rejected by the next build.
@@ -102,7 +108,7 @@ public function getBody(): string
 ```
 
 ```php
-// generated/wordpress/storage-manifest.php
+// generated/wordpress/storage-manifest.php  (with elephentity/wordpress installed)
 'body' => new Column('body', 'LONGTEXT', false, false, null),
 ```
 
@@ -201,24 +207,27 @@ vendor/bin/eleph check               # every exposed GraphQL field resolves
 
 ## The worked example
 
-[examples/clog](examples/clog) is three real WordPress post types written as specs,
-with the generated tree committed so the two can be read side by side.
+[`clog`](https://github.com/hsimah-services/elephentity-examples/tree/main/clog), in
+[elephentity-examples](https://github.com/hsimah-services/elephentity-examples), is
+three real WordPress post types written as specs, with the generated tree committed so
+the two can be read side by side — built and tested as a real, independent WordPress
+plugin rather than a fixture inside this repository (elephentity#79).
 
 | Path | What it shows |
 |---|---|
-| [`spec/`](examples/clog/spec) | Three entities, two patterns, one type. |
-| [`generated/`](examples/clog/generated) | The 36 files they produce, across three targets. |
-| [`src/Bootstrap.php`](examples/clog/src/Bootstrap.php) | The assembly order, written down once. |
-| [`src/Container.php`](examples/clog/src/Container.php) | Thirty lines, so it depends on no particular container. |
-| [`src/Contract/ItemSearch.php`](examples/clog/src/Contract/ItemSearch.php) | A hand-written finder, and how it gets a lazy query. |
-| [`src/Contract/DefaultExpiryIsPaired.php`](examples/clog/src/Contract/DefaultExpiryIsPaired.php) | A cross-field rule, as one class implementing both halves. |
-| [`clog.php`](examples/clog/clog.php) | The WordPress plugin around it, and nothing else. |
+| `spec/` | Three entities, two patterns, one type. |
+| `generated/` | The 36 files they produce, across three targets. |
+| `src/Bootstrap.php` | The assembly order, written down once. |
+| `src/Container.php` | Thirty lines, so it depends on no particular container. |
+| `src/Contract/ItemSearch.php` | A hand-written finder, and how it gets a lazy query. |
+| `src/Contract/DefaultExpiryIsPaired.php` | A cross-field rule, as one class implementing both halves. |
+| `clog.php` | The WordPress plugin around it, and nothing else. |
 
 Both the wiring and the generated tree are analysed at PHPStan level max, so a
 reference that stops compiling is a build failure.
 
-[examples/clog/README.md](examples/clog/README.md) covers what the port to a spec
-captured cleanly, and what it did not.
+[`clog`'s own README](https://github.com/hsimah-services/elephentity-examples/blob/main/clog/README.md)
+covers what the port to a spec captured cleanly, and what it did not.
 
 ## Docs
 
