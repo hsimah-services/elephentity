@@ -40,7 +40,7 @@
                 },
                 "handle": {
                     "type": "string",
-                    "description": "The name the storage system knows this entity by. A post type slug under the wordpress driver; a collection name elsewhere."
+                    "description": "The name the storage system knows this entity by. What shape it must take, if any, is the driver's own rule."
                 }
             },
             "description": "Where an entity's rows live. The driver is declared once for the project, not here."

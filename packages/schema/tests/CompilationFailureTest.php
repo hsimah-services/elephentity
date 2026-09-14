@@ -8,6 +8,7 @@ use Eleph\Schema\Error\CompilationResult;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
+use Eleph\Schema\Tests\Support\TestStorageRules;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
@@ -124,7 +125,10 @@ final class CompilationFailureTest extends TestCase
 
     private function compile(string $fixture): CompilationResult
     {
-        return (new SchemaCompiler(integrations: TestIntegrations::registry()))->compile(
+        return (new SchemaCompiler(
+            integrations: TestIntegrations::registry(),
+            storageRules: TestStorageRules::registry(),
+        ))->compile(
             new SpecSource(__DIR__ . '/fixtures/' . $fixture),
         );
     }

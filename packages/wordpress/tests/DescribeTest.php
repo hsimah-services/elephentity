@@ -40,6 +40,13 @@ final class DescribeTest extends TestCase
         self::assertSame('wordpress', $requires['driver'] ?? null);
 
         self::assertSame(['wordpress'], $provides['drivers'] ?? null);
+
+        $storage = $provides['storage'] ?? null;
+        self::assertIsArray($storage);
+
+        $handle = $storage['handle'] ?? null;
+        self::assertIsArray($handle);
+        self::assertSame(20, $handle['maxLength'] ?? null);
     }
 
     private function describe(): string

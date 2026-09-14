@@ -60,6 +60,67 @@ final class InstalledTest extends TestCase
 
         self::assertSame([], $installed->patterns);
         self::assertSame([], $installed->types);
+        self::assertNull($installed->storageRules->forDriver('wordpress'));
+    }
+
+    public function testPoolsStorageRulesAgainstEveryDriverTheTargetDeclares(): void
+    {
+        $installed = Installed::fromJson(json_encode([
+            'targets' => [
+                'wordpress' => [
+                    'drivers' => ['wordpress'],
+                    'storage' => [
+                        'handle' => [
+                            'maxLength' => 20,
+                            'pattern' => '/^[a-z][a-z0-9_-]*$/',
+                            'reserved' => ['post', 'page'],
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        $rules = $installed->storageRules->forDriver('wordpress');
+
+        self::assertNotNull($rules);
+        self::assertSame(20, $rules->maxHandleLength);
+        self::assertSame('/^[a-z][a-z0-9_-]*$/', $rules->handlePattern);
+        self::assertSame(['post', 'page'], $rules->reservedHandles);
+    }
+
+    public function testADriverWithNoStorageDeclarationHasNoPooledRules(): void
+    {
+        $installed = Installed::fromJson(json_encode([
+            'targets' => [
+                'memory' => ['drivers' => ['memory']],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertNull($installed->storageRules->forDriver('memory'));
+    }
+
+    public function testStorageDeclaredAsSomethingOtherThanAnObjectFailsNamingTheTarget(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/^The wordpress builder declared "storage" as something other than an object\.$/');
+
+        Installed::fromJson(json_encode([
+            'targets' => [
+                'wordpress' => ['drivers' => ['wordpress'], 'storage' => 'nope'],
+            ],
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function testAMalformedStorageDeclarationFailsNamingTheTarget(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/^The wordpress builder declared storage rules unusably: /');
+
+        Installed::fromJson(json_encode([
+            'targets' => [
+                'wordpress' => ['drivers' => ['wordpress'], 'storage' => ['handle' => ['maxLength' => 'nope']]],
+            ],
+        ], JSON_THROW_ON_ERROR));
     }
 
     public function testPatternsDeclaredAsSomethingOtherThanAnObjectFailsNamingTheTarget(): void

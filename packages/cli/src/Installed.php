@@ -8,7 +8,9 @@ use Eleph\Schema\Integration\IntegrationDefinition;
 use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\Spec\RawSpec;
 use Eleph\Schema\Spec\SpecKind;
+use Eleph\Schema\Storage\StorageRuleRegistry;
 use Eleph\Schema\Wire\IntegrationCodec;
+use Eleph\Schema\Wire\StorageRulesCodec;
 use Eleph\Schema\Wire\WireException;
 use JsonException;
 use RuntimeException;
@@ -41,6 +43,7 @@ final readonly class Installed
         public array $drivers,
         public array $patterns = [],
         public array $types = [],
+        public StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
     ) {
     }
 
@@ -92,6 +95,7 @@ final readonly class Installed
         $drivers = [];
         $patterns = [];
         $types = [];
+        $storageRules = [];
 
         /** @var mixed $declared */
         foreach ($targets as $target => $declared) {
@@ -101,28 +105,57 @@ final readonly class Installed
 
             /** @var array<string, mixed> $provides */
             $provides = $declared;
+            $target = (string) $target;
 
-            foreach (self::integrationsIn($provides, (string) $target) as $definition) {
+            foreach (self::integrationsIn($provides, $target) as $definition) {
                 $definitions[] = $definition;
             }
 
-            foreach (self::driversIn($provides) as $driver) {
+            $declaredDrivers = self::driversIn($provides);
+
+            foreach ($declaredDrivers as $driver) {
                 $drivers[$driver] = true;
             }
 
-            foreach (self::specsIn($provides, (string) $target, 'patterns', SpecKind::Pattern) as $pattern) {
+            foreach (self::specsIn($provides, $target, 'patterns', SpecKind::Pattern) as $pattern) {
                 $patterns[] = $pattern;
             }
 
-            foreach (self::specsIn($provides, (string) $target, 'types', SpecKind::Type) as $type) {
+            foreach (self::specsIn($provides, $target, 'types', SpecKind::Type) as $type) {
                 $types[] = $type;
+            }
+
+            // Storage rules are the driver's own declaration, not the compiler's, so
+            // they land against every driver this target declares rather than against
+            // the target's name.
+            $storage = $provides['storage'] ?? null;
+
+            if (null !== $storage) {
+                if (!is_array($storage)) {
+                    throw new RuntimeException(sprintf('The %s builder declared "storage" as something other than an object.', $target));
+                }
+
+                try {
+                    /** @var array<string, mixed> $storage */
+                    $rules = StorageRulesCodec::decode($target, $storage);
+                } catch (WireException $exception) {
+                    throw new RuntimeException(sprintf(
+                        'The %s builder declared storage rules unusably: %s',
+                        $target,
+                        $exception->getMessage(),
+                    ), previous: $exception);
+                }
+
+                foreach ($declaredDrivers as $driver) {
+                    $storageRules[$driver] = $rules;
+                }
             }
         }
 
         $names = array_keys($drivers);
         sort($names);
 
-        return new self(new IntegrationRegistry(...$definitions), $names, $patterns, $types);
+        return new self(new IntegrationRegistry(...$definitions), $names, $patterns, $types, new StorageRuleRegistry($storageRules));
     }
 
     /**

@@ -31,6 +31,7 @@ use Eleph\Schema\Spec\SectionParser;
 use Eleph\Schema\Spec\SpecKind;
 use Eleph\Schema\Spec\SpecLoader;
 use Eleph\Schema\Spec\SpecReader;
+use Eleph\Schema\Storage\StorageRuleRegistry;
 
 /**
  * Compiles a directory of specs into the IR.
@@ -64,6 +65,11 @@ final readonly class SchemaCompiler
         private array $pooledPatterns = [],
         /** @var list<RawSpec> */
         private array $pooledTypes = [],
+        /**
+         * Empty by default: the compiler knows of no driver's storage rules until a
+         * composition root tells it which builders are installed.
+         */
+        private StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
     ) {
     }
 
@@ -102,7 +108,7 @@ final readonly class SchemaCompiler
 
         $schema = new Schema($project, $entities, $types, $this->declaredPatterns($patterns, $entities));
 
-        $semantic = (new SemanticValidator())->validate($schema);
+        $semantic = (new SemanticValidator($this->storageRules))->validate($schema);
 
         return [] === $semantic
             ? CompilationResult::success($schema)
