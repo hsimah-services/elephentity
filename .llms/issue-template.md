@@ -48,5 +48,5 @@ Filed from hsimah-services/<source repo>@<sha>. Contract: `.llms/cross-repo.md`.
 - **Say what happens if it is ignored**, when the answer is worse than "nothing yet".
   "Builds refuse" and "generated code silently loses the field" want different urgency
   and the reader cannot infer which from a checklist.
-- **One issue per repository**, cross-linked, not one issue mentioning three. Each is a
-  different piece of work with a different owner and a different definition of done.
+- **One issue per repository**, cross-linked, not one issue mentioning several. Each is
+  a different piece of work with a different owner and a different definition of done.

@@ -6,12 +6,7 @@ namespace Eleph\WPGraphQL\Tests;
 
 use Closure;
 use Eleph\Runtime\Policy\AccessDenied;
-use Eleph\Schema\Integration\IntegrationRegistry;
-use Eleph\Schema\SchemaCompiler;
-use Eleph\Schema\SpecSource;
-use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\Manifest;
-use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Registration\MutationRegistrar;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
 use Eleph\WPGraphQL\Relay\GlobalId;
@@ -30,8 +25,6 @@ use stdClass;
 #[CoversClass(Connections::class)]
 final class ResolverTest extends TestCase
 {
-    private static ?Manifest $manifest = null;
-
     public function testARootFieldFetchesById(): void
     {
         $gateway = new FakeGateway();
@@ -216,15 +209,6 @@ final class ResolverTest extends TestCase
 
     private function manifest(): Manifest
     {
-        if (null !== self::$manifest) {
-            return self::$manifest;
-        }
-
-        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))
-            ->compile(new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'));
-
-        self::assertTrue($compiled->isSuccess());
-
-        return self::$manifest = (new ManifestBuilder())->build($compiled->schema());
+        return Fixture::manifest();
     }
 }

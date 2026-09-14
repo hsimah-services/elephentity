@@ -196,11 +196,11 @@ final class PipelineTest extends TestCase
                 // nothing installed provides — which is now a compile error, and the
                 // whole point of the handshake.
                 'wordpress' => [
-                    'builder' => $root . '/packages/wordpress/bin/eleph-gen-wordpress',
+                    'builder' => $root . '/vendor/bin/eleph-gen-wordpress',
                     'output' => 'generated/wordpress',
                 ],
                 'wpgraphql' => [
-                    'builder' => $root . '/packages/wpgraphql/bin/eleph-gen-wpgraphql',
+                    'builder' => $root . '/vendor/bin/eleph-gen-wpgraphql',
                     'output' => 'generated/wpgraphql',
                 ],
             ],

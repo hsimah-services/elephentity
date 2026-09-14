@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace Eleph\WPGraphQL\Tests;
 
-use Eleph\Schema\Integration\IntegrationRegistry;
-use Eleph\Schema\SchemaCompiler;
-use Eleph\Schema\SpecSource;
-use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\Manifest;
-use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use RuntimeException;
 
 /**
- * The canonical spec, compiled once.
+ * The canonical spec's compiled GraphQL manifest, frozen as a fixture rather than
+ * compiled here: the builder that produces it (elephentity-codegen-wpgraphql) is a
+ * separate repository now (elephentity#62), and these tests are about the runtime
+ * reading a manifest, not about compiling one.
  *
- * Shared because more than one test needs the whole surface and compiling it is the
+ * Shared because more than one test needs the whole surface and loading it is the
  * slowest thing in the package.
  */
 final class Fixture
@@ -28,14 +26,13 @@ final class Fixture
             return self::$manifest;
         }
 
-        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))->compile(
-            new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
-        );
+        /** @var mixed $manifest */
+        $manifest = require __DIR__ . '/fixtures/graphql-manifest.php';
 
-        if (!$compiled->isSuccess()) {
-            throw new RuntimeException('The canonical spec no longer compiles.');
+        if (!$manifest instanceof Manifest) {
+            throw new RuntimeException('fixtures/graphql-manifest.php did not return a Manifest.');
         }
 
-        return self::$manifest = (new ManifestBuilder())->build($compiled->schema());
+        return self::$manifest = $manifest;
     }
 }

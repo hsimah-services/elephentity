@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Registration;
 
-use Eleph\WordPress\Manifest\TaxonomyManifestBuilder;
 use RuntimeException;
 
 /**
  * Registers the taxonomies the spec compiled to.
  *
  * As thin as `PostTypeRegistrar`, and for the same reason: every decision was made when
- * the manifest was compiled, so all that is left is the loop that calls WordPress.
- *
- * @see TaxonomyManifestBuilder
+ * the manifest was compiled, so all that is left is the loop that calls WordPress. The
+ * derivation lives in `elephentity-codegen-wordpress`'s `TaxonomyManifestBuilder`, at
+ * build time, in a separate repository (elephentity#62).
  */
 final readonly class TaxonomyRegistrar
 {

@@ -8,11 +8,11 @@
             "typeNamespace": "Clog\\Type"
         },
         "wordpress": {
-            "builder": "../../packages/wordpress/bin/eleph-gen-wordpress",
+            "builder": "../../vendor/bin/eleph-gen-wordpress",
             "output": "generated/wordpress"
         },
         "wpgraphql": {
-            "builder": "../../packages/wpgraphql/bin/eleph-gen-wpgraphql",
+            "builder": "../../vendor/bin/eleph-gen-wpgraphql",
             "output": "generated/wpgraphql"
         }
     }

@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Tests;
 
-use Eleph\Schema\Integration\IntegrationRegistry;
-use Eleph\Schema\SchemaCompiler;
-use Eleph\Schema\SpecSource;
 use Eleph\WordPress\Manifest\StorageManifest;
-use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Migration\Introspector;
 use Eleph\WordPress\Migration\SchemaInstaller;
-use Eleph\WPGraphQL\Integration\WpGraphQL;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 #[CoversClass(SchemaInstaller::class)]
 #[CoversClass(Introspector::class)]
@@ -184,18 +180,25 @@ final class SchemaInstallerTest extends TestCase
         return (new SchemaInstaller($database, $this->manifest()))->tables();
     }
 
+    /**
+     * The manifest the canonical `valid` spec compiles to, frozen as a fixture rather
+     * than compiled here: the builder that produces it (elephentity-codegen-wordpress)
+     * is a separate repository now, and this test is about `SchemaInstaller` reading a
+     * manifest, not about compiling one.
+     */
     private function manifest(): StorageManifest
     {
         if (null !== self::$manifest) {
             return self::$manifest;
         }
 
-        $compiled = (new SchemaCompiler(integrations: new IntegrationRegistry(WpGraphQL::definition())))->compile(
-            new SpecSource(__DIR__ . '/../../schema/tests/fixtures/valid'),
-        );
+        /** @var mixed $manifest */
+        $manifest = require __DIR__ . '/fixtures/storage-manifest.php';
 
-        self::assertTrue($compiled->isSuccess());
+        if (!$manifest instanceof StorageManifest) {
+            throw new RuntimeException('fixtures/storage-manifest.php did not return a StorageManifest.');
+        }
 
-        return self::$manifest = (new StorageManifestBuilder())->build($compiled->schema());
+        return self::$manifest = $manifest;
     }
 }

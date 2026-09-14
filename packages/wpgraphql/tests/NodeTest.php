@@ -7,7 +7,6 @@ namespace Eleph\WPGraphQL\Tests;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\WPGraphQL\Manifest\GraphQLType;
 use Eleph\WPGraphQL\Manifest\Manifest;
-use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\MutationEntry;
 use Eleph\WPGraphQL\Manifest\ObjectTypeEntry;
 use Eleph\WPGraphQL\Manifest\RootFieldEntry;
@@ -31,7 +30,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TypeRegistrar::class)]
 #[CoversClass(MutationRegistrar::class)]
 #[CoversClass(ObjectTypeEntry::class)]
-#[CoversClass(ManifestBuilder::class)]
 final class NodeTest extends TestCase
 {
     public function testEveryTypeDeclaresNode(): void
