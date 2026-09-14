@@ -31,9 +31,15 @@ jobs:
             repo: hsimah-services/elephentity-runtime
 
     steps:
+      # persist-credentials: false is load bearing. actions/checkout otherwise writes
+      # the default GITHUB_TOKEN into http.https://github.com/.extraheader, and that
+      # silently wins over the SPLIT_PUSH_TOKEN embedded in the push URL below --
+      # every push then authenticates as github-actions[bot] regardless, and fails
+      # with a permission error that looks exactly like the secret was never set.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Split packages/${{ matrix.package }}
         run: |
