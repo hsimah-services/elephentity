@@ -21,7 +21,7 @@ final class PolicyGateTest extends TestCase
     public function testAllowWinsAndUngatedEntitiesDoNotRunPolicies(): void
     {
         $policies = new StubPolicies(static fn (): PolicyDecision => PolicyDecision::allow());
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('readPolicies')->willReturnMap([
             ['Post', $policies],
             ['PublicPost', new \Eleph\Runtime\Policy\NoPolicies()],
@@ -37,7 +37,7 @@ final class PolicyGateTest extends TestCase
     public function testDenyAndSkipAreDeniedAtTheGate(): void
     {
         $policies = new StubPolicies(static fn (): PolicyDecision => PolicyDecision::deny('Not allowed.'));
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('readPolicies')->willReturn($policies);
         $gate = new ReadGate($catalogue, new AnonymousViewerProvider());
 
@@ -51,7 +51,7 @@ final class PolicyGateTest extends TestCase
         $policies = new StubWritePolicies(static function (): PolicyDecision {
             return PolicyDecision::deny('Writes are closed.');
         });
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('writePolicies')->willReturn($policies);
         $gate = new WriteGate($catalogue, new AnonymousViewerProvider());
 
