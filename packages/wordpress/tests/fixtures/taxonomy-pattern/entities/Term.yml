@@ -1,0 +1,6 @@
+entity: Term
+use:
+  - Taxonomy
+storage:
+  table: term
+  handle: term
