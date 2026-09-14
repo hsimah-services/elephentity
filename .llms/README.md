@@ -1,25 +1,29 @@
 # Rules for agents working across the Elephentity repositories
 
-Elephentity is five published programs, and they talk over a wire format rather than a
-shared classpath. That is deliberate — it is what lets a builder be written in any
-language — but it means the compiler cannot fail to build when a builder falls behind
-it. Nothing type-checks across the gap. The version gate turns a mismatch into a
-refusal at run time, which is late.
+Elephentity is eight published programs plus one read-only mirror, and they talk over a
+wire format rather than a shared classpath. That is deliberate — it is what lets a
+builder be written in any language — but it means the compiler cannot fail to build
+when a builder falls behind it. Nothing type-checks across the gap. The version gate
+turns a mismatch into a refusal at run time, which is late.
 
 **So the coupling is tracked by hand, and this directory is how.**
 
-**These three files are identical in all five repositories.** Deliberately: a contract
-described differently on each side of it is a contract with five versions and no
-authority. Change one, change all five, in the same batch of commits — and that batch
+**These three files are identical in all nine repositories.** Deliberately: a contract
+described differently on each side of it is a contract with nine versions and no
+authority. Change one, change all nine, in the same batch of commits — and that batch
 is itself the thing this directory is about, so it needs its own issues.
 
 | Repository | Is | Speaks |
 |---|---|---|
-| `hsimah-services/elephentity` | the compiler, runtime and adaptors | produces the IR; ships `eleph-gen-memory` |
+| `hsimah-services/elephentity` | the spec compiler, the runtime port, the `eleph` command, the neutral `memory` driver — no platform adaptor | produces the IR; ships `eleph-gen-memory` |
+| `hsimah-services/elephentity-runtime` | a read-only subtree mirror of `elephentity`'s `packages/runtime` | nothing of its own — PRs go to `elephentity` |
 | `hsimah-services/elephentity-codegen` | the orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | the PHP builder, `eleph-gen-php` | implements the protocol |
 | `hsimah-services/elephentity-codegen-wordpress` | the WordPress builder, `eleph-gen-wordpress` | implements the protocol |
 | `hsimah-services/elephentity-codegen-wpgraphql` | the WPGraphQL builder, `eleph-gen-wpgraphql` | implements the protocol |
+| `hsimah-services/elephentity-wordpress` | the WordPress storage adaptor, runtime-only | implements `Eleph\Runtime\Storage\StorageAdaptor`; named by `elephentity-codegen-wordpress`'s `Runtime.php` as strings |
+| `hsimah-services/elephentity-wpgraphql` | the WPGraphQL runtime, runtime-only | implements `Eleph\Runtime\Conformance\Verifier`; named by `elephentity-codegen-wpgraphql`'s `Runtime.php` as strings |
+| `hsimah-services/elephentity-examples` | worked examples (`clog`), built and tested as real products | consumes all of the above; regenerating it is the end-to-end proof |
 
 ## The rule
 

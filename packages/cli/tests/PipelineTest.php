@@ -30,6 +30,15 @@ use Symfony\Component\Console\Tester\CommandTester;
  * boundaries: this compiles, `eleph-codegen` orchestrates, `eleph-gen-php` builds. That
  * makes this a better assertion than it was and a more expensive one — it needs both
  * dev dependencies installed, which is exactly how a real project has them.
+ *
+ * The fixture is small and owned by this test, not borrowed from
+ * `schema/tests/fixtures/valid/` — that fixture is driver- and integration-neutral for
+ * every *other* consumer, and this is the one place that actually runs a builder
+ * against it, so it declares `driver: memory` and speaks no integration. `memory` ships
+ * from this repository (`packages/memory/bin/eleph-gen-memory`) and needs nothing
+ * installed beyond it; proving a real WordPress/WPGraphQL build stays end to end stays
+ * `elephentity-examples`'s job now (elephentity#79) — regenerating `clog` there is what
+ * catches a runtime class renamed out from under a builder.
  */
 #[CoversNothing]
 final class PipelineTest extends TestCase
@@ -51,21 +60,37 @@ final class PipelineTest extends TestCase
         $this->project = sys_get_temp_dir() . '/eleph-pipeline-' . $suffix;
         $this->namespace = 'PipelineFixture' . $suffix . '\\Elephentity';
 
-        mkdir($this->project . '/spec', 0o775, true);
-
-        foreach (['entities', 'patterns', 'types'] as $directory) {
-            $this->copy(
-                __DIR__ . '/../../schema/tests/fixtures/valid/' . $directory,
-                $this->project . '/spec/' . $directory,
-            );
-        }
-
-        copy(
-            __DIR__ . '/../../schema/tests/fixtures/valid/project.yml',
-            $this->project . '/spec/project.yml',
-        );
-
+        mkdir($this->project . '/spec/entities', 0o775, true);
+        $this->writeSpec();
         $this->writeConfig();
+    }
+
+    /**
+     * One entity, on the `memory` driver, with just enough shape to exercise every
+     * gate: a field to hand-edit, an action so `generate` writes a contract too.
+     */
+    private function writeSpec(): void
+    {
+        file_put_contents($this->project . '/spec/project.yml', <<<'YAML'
+            project: Fixture
+            storage:
+              driver: memory
+            YAML);
+
+        file_put_contents($this->project . '/spec/entities/Post.yml', <<<'YAML'
+            entity: Post
+            storage:
+              table: post
+            fields:
+              title:
+                type: string
+                required: true
+            actions:
+              publish:
+                writes:
+                  fields: [title]
+                handler: true
+            YAML);
     }
 
     protected function tearDown(): void
@@ -114,35 +139,25 @@ final class PipelineTest extends TestCase
         self::assertStringContainsString('Hand-edited', $tester->getDisplay());
     }
 
-    public function testRenamingAnAccessorFailsConformanceEvenThoughTheFileStillParses(): void
+    public function testCheckSucceedsQuietlyWithNoIntegrationInstalled(): void
     {
-        // Drift detection and conformance answer different questions: this file is
-        // valid PHP and would load happily, but the API it backs no longer resolves.
-        // `eleph check` no longer rebuilds the manifest from the compiled spec to find
-        // that out — it walks the tree for WPGraphQL's own verify.php and asks it.
+        // No integration means no verify.php anywhere in the tree, and `eleph check`
+        // says so rather than mistaking silence for failure — the same claim
+        // `CheckCommandTest::testATreeWithNoVerifiersSucceedsQuietly` makes in
+        // isolation, proven here against a real generated tree.
         $this->exec(new GenerateCommand());
-
-        self::assertFileExists($this->project . '/generated/wpgraphql/verify.php');
-
-        $post = $this->project . '/generated/Post/Post.php';
-        file_put_contents(
-            $post,
-            str_replace('function getTitle(', 'function getHeadline(', (string) file_get_contents($post)),
-        );
 
         $tester = $this->tester(new CheckCommand());
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('Post.title resolves via', $tester->getDisplay());
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
     }
 
-    public function testTheGraphQLManifestIsGeneratedAlongsideTheClasses(): void
+    public function testTheActionContractIsGeneratedAlongsideTheClass(): void
     {
         $this->exec(new GenerateCommand());
 
-        self::assertFileExists($this->project . '/generated/wpgraphql/graphql-manifest.php');
-        self::assertFileExists($this->project . '/generated/Post/PostHydrator.php');
-        self::assertFileExists($this->project . '/generated/Post/Contract/PostPriceVerifier.php');
+        self::assertFileExists($this->project . '/generated/Post/Post.php');
+        self::assertFileExists($this->project . '/generated/Post/Contract/PostPublishAction.php');
     }
 
     public function testNarrowingToAConfiguredTargetStillGeneratesIt(): void
@@ -191,17 +206,17 @@ final class PipelineTest extends TestCase
                     'typeNamespace' => 'PipelineFixture\\Type',
                     ...$extra,
                 ],
-                // The fixture spec declares `driver: wordpress` and exposes entities to
-                // wpgraphql, so both have to be configured or the spec names things
-                // nothing installed provides — which is now a compile error, and the
-                // whole point of the handshake.
-                'wordpress' => [
-                    'builder' => $root . '/vendor/bin/eleph-gen-wordpress',
-                    'output' => 'generated/wordpress',
-                ],
-                'wpgraphql' => [
-                    'builder' => $root . '/vendor/bin/eleph-gen-wpgraphql',
-                    'output' => 'generated/wpgraphql',
+                // The fixture declares `driver: memory`, so this has to be configured
+                // or the spec names a driver nothing installed provides — which is now
+                // a compile error, and the whole point of the handshake. `memory`
+                // compiles to no physical schema, so it never writes anything.
+                //
+                // Its bin is this repository's own, not a dependency's, so unlike
+                // eleph-gen-php it is never symlinked into vendor/bin — Composer only
+                // does that for installed packages.
+                'memory' => [
+                    'builder' => $root . '/packages/memory/bin/eleph-gen-memory',
+                    'output' => 'generated/memory',
                 ],
             ],
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -225,17 +240,6 @@ final class PipelineTest extends TestCase
         $tester->execute([...$input, ...($command instanceof ValidateCommand ? [] : ['--project' => $this->project])]);
 
         return $tester;
-    }
-
-    private function copy(string $from, string $to): void
-    {
-        mkdir($to, 0o775, true);
-
-        foreach ((array) glob($from . '/*.yml') as $file) {
-            if (is_string($file)) {
-                copy($file, $to . '/' . basename($file));
-            }
-        }
     }
 
     private function remove(string $directory): void

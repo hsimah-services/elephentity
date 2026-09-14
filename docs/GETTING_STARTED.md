@@ -3,15 +3,24 @@
 ## Install
 
 ```bash
-composer require elephentity/elephentity
-composer require --dev elephentity/codegen elephentity/codegen-php
+composer require elephentity/runtime elephentity/memory
+composer require --dev elephentity/elephentity elephentity/codegen elephentity/codegen-php
 ```
 
-**The framework ships as one package.** `elephentity/elephentity` carries the runtime and
-the WordPress and WPGraphQL adaptors, which your application uses at run time, and also
-the spec compiler and the `eleph` command, which it only uses at build time. Splitting
-those apart is worth doing and has not been done; until it is, requiring the whole thing
-is the honest instruction rather than five package names that do not resolve.
+**Installation is additive, by driver and by integration.** `elephentity/runtime`
+carries the storage port, the unit of work and the `eleph` command's dependencies.
+`elephentity/memory` is the neutral driver — raw PHP objects, no platform — so a project
+that installs nothing else still has somewhere to write. Want WordPress instead?
+
+```bash
+composer require elephentity/wordpress
+composer require --dev elephentity/codegen-wordpress
+```
+
+and drop `elephentity/memory` if you are not keeping it as a second driver. Want
+WPGraphQL on top of that? `composer require elephentity/wpgraphql` and
+`composer require --dev elephentity/codegen-wpgraphql`. Nobody who does not ask for
+WordPress gets WordPress.
 
 **The code generator is separate software**, which is why it is a second line and a dev
 dependency. `elephentity/codegen` runs your builders and writes the tree;
@@ -20,9 +29,10 @@ types from the same spec, you add a builder for it and a target in `eleph.json` 
 else changes, and no part of the framework learns what TypeScript is.
 
 That gives you three commands in `vendor/bin`: `eleph`, `eleph-codegen` and
-`eleph-gen-php`, plus `eleph-gen-wordpress` and `eleph-gen-wpgraphql` from the framework
-package. `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all
-where the config expects.
+`eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/elephentity` and whichever of
+`eleph-gen-wordpress` / `eleph-gen-wpgraphql` you installed.
+`vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all where the
+config expects.
 
 ## Lay out the project
 
@@ -47,17 +57,16 @@ generated/           machine-owned, committed, never edited
             "namespace": "App\\Entity",
             "typeNamespace": "App\\Type"
         },
-        "wordpress": {
-            "builder": "vendor/bin/eleph-gen-wordpress",
-            "output": "generated/wordpress"
-        },
-        "wpgraphql": {
-            "builder": "vendor/bin/eleph-gen-wpgraphql",
-            "output": "generated/wpgraphql"
+        "memory": {
+            "builder": "vendor/bin/eleph-gen-memory",
+            "output": "generated/memory"
         }
     }
 }
 ```
+
+Add a `wordpress` target (`vendor/bin/eleph-gen-wordpress`) and a `wpgraphql` target
+(`vendor/bin/eleph-gen-wpgraphql`) if you installed those packages above.
 
 Every target names the program that produces it. Elephentity generates nothing itself, so
 a target without a `builder` is one nothing can produce and `eleph.json` refuses it.
@@ -68,8 +77,8 @@ a target without a `builder` is one nothing can produce and `eleph.json` refuses
 declares those things exist: `eleph generate` asks every configured builder what it
 provides *before* it reads a spec, so `driver: wordpress` with no wordpress target is an
 error naming the drivers that are installed, and `integrations: { wpgraphql: … }` with
-no wpgraphql target is an unknown integration. A project on another driver configures
-neither and installs neither.
+no wpgraphql target is an unknown integration. A project on the neutral `memory` driver
+configures neither and installs neither.
 
 They write **inside** the PHP tree, each in its own directory. The manifests are PHP the
 runtime loads by path, so that is where they belong — but the PHP builder cannot produce
@@ -94,11 +103,11 @@ Add both namespaces to Composer's PSR-4 autoload map:
 # spec/project.yml
 project: MyApp
 storage:
-  driver: wordpress
-  tablePrefix: app_
+  driver: memory
 ```
 
-Required. It holds the settings no entity can sensibly vary.
+Required. It holds the settings no entity can sensibly vary. On `driver: wordpress`,
+`storage` also takes `tablePrefix`, from `elephentity/wordpress`'s own declaration.
 
 ## Write the first entity
 
@@ -147,10 +156,15 @@ the whole workflow.
 
 Codegen produces classes; something has to assemble them. The order matters, so the
 example carries a working one rather than this page describing it:
-[`examples/clog/src/Bootstrap.php`](../examples/clog/src/Bootstrap.php), with
-[`examples/clog/clog.php`](../examples/clog/clog.php) as the WordPress plugin around
-it. Both are analysed at PHPStan level max against the committed generated tree, so a
-reference that no longer compiles is a build failure rather than a surprise.
+[`clog/src/Bootstrap.php`](https://github.com/hsimah-services/elephentity-examples/blob/main/clog/src/Bootstrap.php),
+with
+[`clog/clog.php`](https://github.com/hsimah-services/elephentity-examples/blob/main/clog/clog.php)
+as the WordPress plugin around it, in
+[elephentity-examples](https://github.com/hsimah-services/elephentity-examples). Both
+are analysed at PHPStan level max against the committed generated tree, so a reference
+that no longer compiles is a build failure rather than a surprise. It requires
+`elephentity/wordpress` and `elephentity/wpgraphql` — the outline below does too, past
+the first three lines.
 
 In outline:
 

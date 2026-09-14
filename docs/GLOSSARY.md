@@ -15,7 +15,8 @@ Two words carry real ambiguity, so they are always qualified.
   file may contain;
 - the **compiled schema** — `Eleph\Schema\Ir\Schema`, the in-memory result of compiling
   every spec file, also called the IR;
-- the **database schema** — tables and columns, produced by the WordPress adaptor.
+- the **database schema** — tables and columns, produced by whichever driver's adaptor
+  is installed (`elephentity/wordpress`, today; `elephentity/memory` has none).
 
 Never write "the schema" unqualified.
 
@@ -78,7 +79,9 @@ which is what lets a WordPress pattern carry WordPress settings without the core
 learning what any of them mean.
 
 **Driver.** Which storage backend the project uses. Declared once in the project spec,
-because a unit of work has one adaptor. Only `wordpress` exists.
+because a unit of work has one adaptor. `memory` (no physical schema) and `wordpress`
+exist; each ships from its own package (`elephentity/memory`, `elephentity/wordpress`)
+and is answered over the wire, at `describe`, by the matching builder.
 
 **Handle.** What the storage system calls this entity — a post type slug under
 WordPress, a collection name elsewhere. Deliberately driver-agnostic in name, and
@@ -293,17 +296,6 @@ fails only here.
 **members** — trigger declaration order is execution order, so sorting members would
 change behaviour.
 
----
-
-## WordPress
-
-**Projection.** The `wp_posts` row standing in for an entity. The custom table is
-authoritative; the post row exists so the ecosystem has something to hold on to.
-
-**Orphan guard.** The `before_delete_post` hook. Nothing in the framework sees someone
-empty the trash in wp-admin, and without it the post row goes while the custom row
-survives pointing at nothing.
-
-**Refusal.** A migration the planner will not make unattended. A column in the database
-but not the spec is either a rename or a drop, and the diff cannot tell which — so it
-stops and asks for an explicit migration rather than guessing and destroying data.
+**WordPress-specific vocabulary** — Projection, Orphan guard, Refusal — moved to
+[`elephentity-wordpress`'s own glossary](https://github.com/hsimah-services/elephentity-wordpress/blob/main/docs/GLOSSARY.md)
+when the adaptor did (elephentity#79). Nothing above this line is WordPress-specific.
