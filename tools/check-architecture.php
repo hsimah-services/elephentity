@@ -53,7 +53,7 @@ declare(strict_types=1);
 const CORE_PACKAGES = ['schema', 'runtime', 'cli'];
 
 /** The packages that ship, and so may not reach for the spec compiler. */
-const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql'];
+const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql', 'memory'];
 
 /**
  * Build-time classes inside a shipped package, allowed to read the IR.
@@ -72,6 +72,7 @@ const COMPILERS = [
     'wpgraphql/src/Integration/WpGraphQL.php',
     'wpgraphql/src/Manifest/ManifestBuilder.php',
     'wpgraphql/src/Manifest/TypeMapper.php',
+    'memory/bin/eleph-gen-memory',
 ];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */

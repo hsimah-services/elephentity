@@ -14,6 +14,7 @@
             <directory>packages/runtime/tests</directory>
             <directory>packages/wordpress/tests</directory>
             <directory>packages/wpgraphql/tests</directory>
+            <directory>packages/memory/tests</directory>
             <directory>packages/cli/tests</directory>
             <directory>tools/tests</directory>
         </testsuite>
@@ -24,6 +25,7 @@
             <directory>packages/runtime/src</directory>
             <directory>packages/wordpress/src</directory>
             <directory>packages/wpgraphql/src</directory>
+            <directory>packages/memory/src</directory>
             <directory>packages/cli/src</directory>
         </include>
     </source>

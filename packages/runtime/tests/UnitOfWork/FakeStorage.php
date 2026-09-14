@@ -16,6 +16,18 @@ use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Runtime\Storage\Write\WriteResult;
 use Throwable;
 
+/**
+ * A spy, not a store: `get()` and `getMany()` never see what `write()` recorded, and
+ * `query()` answers only what a test seeded into `$records` directly. What this exists
+ * to prove is that `UnitOfWork` calls the port correctly and in the right order —
+ * `$log` and `$batches` are the point — never that a write and a later read agree.
+ *
+ * That is `elephentity/memory`'s `MemoryAdaptor` job, proven for real against
+ * `Eleph\Runtime\Storage\Testing\AdaptorConformance` (#52 M5). The two are not the
+ * drift a second in-memory implementation usually is: this one could not answer the
+ * conformance suite honestly if it tried, because call-order inspection and real
+ * read-after-write are different questions, and `UnitOfWork`'s tests need the former.
+ */
 final class FakeStorage implements StorageAdaptor
 {
     /** @var list<WriteBatch> */
