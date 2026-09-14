@@ -7,8 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "self.version",
-        "elephentity/schema": "self.version"
+        "elephentity/runtime": "self.version"
     },
     "require-dev": {
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
@@ -23,8 +22,5 @@
         "psr-4": {
             "Eleph\\WPGraphQL\\Tests\\": "tests/"
         }
-    },
-    "bin": [
-        "bin/eleph-gen-wpgraphql"
-    ]
+    }
 }

@@ -15,6 +15,8 @@
         "axepress/wp-graphql-stubs": "^2.22",
         "elephentity/codegen": "dev-main#1db0082",
         "elephentity/codegen-php": "dev-main#e49152b",
+        "elephentity/codegen-wordpress": "dev-initial-import#8a32fe8",
+        "elephentity/codegen-wpgraphql": "dev-initial-import#2c18244",
         "friendsofphp/php-cs-fixer": "^3.64",
         "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
         "phpstan/phpstan": "^2.0",
@@ -44,8 +46,6 @@
     },
     "bin": [
         "packages/cli/bin/eleph",
-        "packages/wordpress/bin/eleph-gen-wordpress",
-        "packages/wpgraphql/bin/eleph-gen-wpgraphql",
         "packages/memory/bin/eleph-gen-memory"
     ],
     "scripts": {

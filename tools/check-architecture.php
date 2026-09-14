@@ -62,16 +62,6 @@ const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql', 'memory'];
  * reachable from a request. Paths are relative to packages/.
  */
 const COMPILERS = [
-    'wordpress/bin/eleph-gen-wordpress',
-    'wordpress/src/Manifest/PostTypeManifestBuilder.php',
-    'wordpress/src/Manifest/StorageManifestBuilder.php',
-    'wordpress/src/Manifest/TaxonomyManifestBuilder.php',
-    'wordpress/src/Sql/EdgePlanner.php',
-    'wordpress/src/Sql/SchemaBuilder.php',
-    'wpgraphql/bin/eleph-gen-wpgraphql',
-    'wpgraphql/src/Integration/WpGraphQL.php',
-    'wpgraphql/src/Manifest/ManifestBuilder.php',
-    'wpgraphql/src/Manifest/TypeMapper.php',
     'memory/bin/eleph-gen-memory',
 ];
 

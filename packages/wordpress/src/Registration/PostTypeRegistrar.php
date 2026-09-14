@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Eleph\WordPress\Registration;
 
-use Eleph\WordPress\Manifest\PostTypeManifestBuilder;
 use RuntimeException;
 
 /**
@@ -14,7 +13,8 @@ use RuntimeException;
  * when the manifest was compiled, so all that is left is the loop that calls WordPress.
  * It used to take the compiled `Schema` and derive the arguments per request, which
  * meant a plugin registering post types shipped the spec compiler and parsed YAML on
- * every request. The derivation now lives in `PostTypeManifestBuilder`, at build time.
+ * every request. The derivation now lives in `elephentity-codegen-wordpress`'s
+ * `PostTypeManifestBuilder`, at build time, in a separate repository (elephentity#62).
  *
  * Registering the type is all this does. **Nothing here creates or maintains a post
  * row** — the custom table is the entity, and a `postId` field is a column like any
@@ -25,8 +25,6 @@ use RuntimeException;
  * they can diverge, the custom table is authoritative, and keeping the projection in
  * step is the application's job. Delete events are dispatched for cascades too, so
  * that job is at least possible to do.
- *
- * @see PostTypeManifestBuilder
  */
 final readonly class PostTypeRegistrar
 {

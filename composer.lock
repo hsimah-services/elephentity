@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb728ba6b491a5e5c8cf839f14879b8a",
+    "content-hash": "6141fd09798f2487e946b1cd5530854c",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -1483,6 +1483,91 @@
                 "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
             },
             "time": "2026-09-13T14:25:40+00:00"
+        },
+        {
+            "name": "elephentity/codegen-wordpress",
+            "version": "dev-initial-import",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hsimah-services/elephentity-codegen-wordpress.git",
+                "reference": "8a32fe8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-wordpress/zipball/8a32fe8",
+                "reference": "8a32fe8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "symfony/yaml": "^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.64",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^11.0 || ^12.0"
+            },
+            "bin": [
+                "bin/eleph-gen-wordpress"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Eleph\\Gen\\WordPress\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The WordPress builder for Elephentity: compiles the IR into the physical schema WordPress needs. Build-time only.",
+            "support": {
+                "issues": "https://github.com/hsimah-services/elephentity-codegen-wordpress/issues",
+                "source": "https://github.com/hsimah-services/elephentity-codegen-wordpress/tree/initial-import"
+            },
+            "time": "2026-09-14T01:36:05+00:00"
+        },
+        {
+            "name": "elephentity/codegen-wpgraphql",
+            "version": "dev-initial-import",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hsimah-services/elephentity-codegen-wpgraphql.git",
+                "reference": "2c18244"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-wpgraphql/zipball/2c18244",
+                "reference": "2c18244",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.64",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^11.0 || ^12.0"
+            },
+            "bin": [
+                "bin/eleph-gen-wpgraphql"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Eleph\\Gen\\WPGraphQL\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The WPGraphQL builder for Elephentity: compiles the IR into a GraphQL manifest and a conformance verifier. Build-time only.",
+            "support": {
+                "issues": "https://github.com/hsimah-services/elephentity-codegen-wpgraphql/issues",
+                "source": "https://github.com/hsimah-services/elephentity-codegen-wpgraphql/tree/initial-import"
+            },
+            "time": "2026-09-14T01:37:06+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
@@ -5069,7 +5154,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "elephentity/codegen": 20,
-        "elephentity/codegen-php": 20
+        "elephentity/codegen-php": 20,
+        "elephentity/codegen-wordpress": 20,
+        "elephentity/codegen-wpgraphql": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
