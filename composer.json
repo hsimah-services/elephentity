@@ -26,6 +26,7 @@
             "Eleph\\Runtime\\": "packages/runtime/src/",
             "Eleph\\WordPress\\": "packages/wordpress/src/",
             "Eleph\\WPGraphQL\\": "packages/wpgraphql/src/",
+            "Eleph\\Memory\\": "packages/memory/src/",
             "Eleph\\Cli\\": "packages/cli/src/"
         }
     },
@@ -35,6 +36,7 @@
             "Eleph\\Runtime\\Tests\\": "packages/runtime/tests/",
             "Eleph\\WordPress\\Tests\\": "packages/wordpress/tests/",
             "Eleph\\WPGraphQL\\Tests\\": "packages/wpgraphql/tests/",
+            "Eleph\\Memory\\Tests\\": "packages/memory/tests/",
             "Eleph\\Cli\\Tests\\": "packages/cli/tests/",
             "Clog\\Entity\\": "examples/clog/generated/",
             "Clog\\": "examples/clog/src/"
@@ -43,7 +45,8 @@
     "bin": [
         "packages/cli/bin/eleph",
         "packages/wordpress/bin/eleph-gen-wordpress",
-        "packages/wpgraphql/bin/eleph-gen-wpgraphql"
+        "packages/wpgraphql/bin/eleph-gen-wpgraphql",
+        "packages/memory/bin/eleph-gen-memory"
     ],
     "scripts": {
         "test": "phpunit",

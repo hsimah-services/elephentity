@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Schema\Wire\BuilderEnvelope;
+use Eleph\Schema\Wire\IrCodec;
+use Eleph\Schema\Wire\WireException;
+
+/**
+ * The memory builder: the driver's declaration, and nothing else.
+ *
+ * A driver rather than an integration for the same reason `eleph-gen-wordpress` is:
+ * it is named once in `project.yml` and decides what every entity's storage means.
+ * Unlike WordPress, it compiles to no physical schema — `MemoryAdaptor` has no table,
+ * no post type, nothing to provision — so a project on this driver still needs this
+ * builder configured only to answer the describe handshake honestly. A `generate`
+ * request always succeeds with nothing to write.
+ *
+ * See PROTOCOL.md in elephentity-codegen for the contract this implements.
+ */
+
+// Works both when this is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+const DRIVER = 'memory';
+
+try {
+    $request = BuilderEnvelope::read((string) file_get_contents('php://stdin'));
+
+    BuilderEnvelope::assertVersions($request);
+
+    if (BuilderEnvelope::REQUEST_DESCRIBE === BuilderEnvelope::kindOf($request)) {
+        fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description(['drivers' => [DRIVER]])));
+
+        exit(0);
+    }
+
+    $schema = IrCodec::decode(BuilderEnvelope::schemaOf($request));
+
+    // Configured but not chosen, the same courtesy eleph-gen-wordpress extends: saying
+    // so beats silence, which looks exactly like a builder that ran and had nothing to
+    // do. Chosen or not, there is never anything to write — this driver compiles to no
+    // physical schema at all.
+    $errors = DRIVER === $schema->project->driver ? [] : [sprintf(
+        'This project declares driver "%s", so the memory target has nothing to generate. '
+        . 'Remove it from eleph.json, or change the driver in project.yml.',
+        $schema->project->driver,
+    )];
+
+    fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response([], $errors)));
+} catch (WireException $exception) {
+    fwrite(STDERR, 'eleph-gen-memory: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+}
+
+exit(0);
