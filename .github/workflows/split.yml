@@ -4,12 +4,24 @@ name: Subtree split
 # repositories, so `elephentity/runtime` (and later `/schema`, `/cli`, `/memory` —
 # elephentity#63) is installable without the rest of this repository along with it.
 #
-# Runs on push to main (keeps each mirror's `main` current) and on tags (re-tags the
-# split commit so the mirror's own tag line matches this repository's, since a mirror
-# is not an independently-versioned product — see .llms/cross-repo.md).
+# Runs on push to main (keeps each mirror's `src/`+`tests/` current) and on tags (tags
+# the mirror's own main at whatever it synced to, matching this repository's tag line
+# — a mirror is not an independently-versioned product, see .llms/cross-repo.md).
+#
+# Syncs only src/ and tests/. Everything else on the mirror — composer.json, docs, its
+# own CI, tools/, .llms/ — is that repository's own, never touched here. The mirror
+# needs a working composer.json (require-dev tools, scripts) and a CI workflow of its
+# own to be buildable at all, and neither exists under packages/runtime/ here for a
+# subtree split to carry over. An earlier version of this workflow force-pushed the
+# raw split as the mirror's entire main and silently deleted all of that on the first
+# run after it landed — this is the fix. packages/runtime/composer.json's own
+# `require` block is NOT synced either: port dependency changes there by hand, per the
+# matching row in .llms/cross-repo.md.
 #
 # Requires a secret named SPLIT_PUSH_TOKEN: a token with push access to every mirror
-# repository listed below. The default GITHUB_TOKEN cannot push to another repository.
+# repository listed below. The default GITHUB_TOKEN cannot push to another repository,
+# and actions/checkout's own persisted credentials silently shadow it if not disabled
+# (persist-credentials: false, below) — both steps are load bearing.
 
 on:
   push:
@@ -31,32 +43,48 @@ jobs:
             repo: hsimah-services/elephentity-runtime
 
     steps:
-      # persist-credentials: false is load bearing. actions/checkout otherwise writes
-      # the default GITHUB_TOKEN into http.https://github.com/.extraheader, and that
-      # silently wins over the SPLIT_PUSH_TOKEN embedded in the push URL below --
-      # every push then authenticates as github-actions[bot] regardless, and fails
-      # with a permission error that looks exactly like the secret was never set.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+          path: source
 
-      - name: Split packages/${{ matrix.package }}
-        run: |
-          git config user.name "elephentity-bot"
-          git config user.email "noreply@elephentity.dev"
-          git subtree split --prefix="packages/${{ matrix.package }}" -b split-branch
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.SPLIT_PUSH_TOKEN }}
+          persist-credentials: true
+          path: mirror
 
-      - name: Push to mirror's main
+      - name: Sync src/ and tests/ into the mirror
         if: github.ref == 'refs/heads/main'
         run: |
-          git push "https://x-access-token:${{ secrets.SPLIT_PUSH_TOKEN }}@github.com/${{ matrix.repo }}.git" split-branch:main --force
+          set -euo pipefail
+          rm -rf "mirror/src" "mirror/tests"
+          cp -r "source/packages/${{ matrix.package }}/src" "mirror/src"
+          cp -r "source/packages/${{ matrix.package }}/tests" "mirror/tests"
 
-      - name: Re-tag the mirror
+          cd mirror
+          git config user.name "elephentity-bot"
+          git config user.email "noreply@elephentity.dev"
+          git add src tests
+
+          if git diff --cached --quiet; then
+            echo "Nothing to sync."
+            exit 0
+          fi
+
+          git commit -m "Sync src/ and tests/ from elephentity@${GITHUB_SHA}
+
+          Automated: packages/${{ matrix.package }} in elephentity.
+          composer.json and everything else here is this repository's own."
+          git push origin main
+
+      - name: Tag the mirror to match
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
-          split_sha="$(git rev-parse split-branch)"
-          remote="https://x-access-token:${{ secrets.SPLIT_PUSH_TOKEN }}@github.com/${{ matrix.repo }}.git"
-          git push "$remote" split-branch:main --force
-          git push "$remote" "$split_sha:refs/tags/$tag"
+          cd mirror
+          git tag "$tag"
+          git push origin "$tag"

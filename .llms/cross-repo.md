@@ -59,6 +59,16 @@ emits the name as a string; nothing in that repository loads it. It fails in a
 *project*, at boot, after generating. Regenerating `clog` in `elephentity-examples` is
 what catches it — and it only catches it if the class is one the example actually uses.
 
+**`elephentity-runtime` only syncs `src/` and `tests/`, automatically, on every push
+to `main`.** `packages/runtime/composer.json`'s own `require` block — `php`, `psr/log`,
+`psr/container` — is not part of that sync. Adding or changing a real dependency there
+needs the matching edit made by hand in `elephentity-runtime`'s own `composer.json`, or
+that mirror silently falls behind what its own source actually needs to run. Everything
+else on that repository — `composer.json`'s `require-dev`/`scripts`/`config`, its docs,
+its CI, `tools/`, `.docker/` — is that repository's own outright, never touched by the
+sync; an earlier version of the split workflow force-pushed all of it away once
+(elephentity#79) precisely by not making this distinction.
+
 ---
 
 ## Changing `elephentity-codegen`
