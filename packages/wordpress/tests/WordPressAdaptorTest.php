@@ -8,7 +8,9 @@ use Eleph\Runtime\Capability\Capability;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Offset;
+use Eleph\Runtime\Storage\RelationKind;
 use Eleph\Runtime\Storage\Write\Insert;
 use Eleph\Runtime\Storage\Write\Link;
 use Eleph\Runtime\Storage\Write\Unlink;
@@ -17,6 +19,7 @@ use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\WordPress\Account\AccountFields;
 use Eleph\WordPress\Account\AccountStorage;
 use Eleph\WordPress\Sql\Column;
+use Eleph\WordPress\Sql\EdgePlacement;
 use Eleph\WordPress\Sql\FieldMap;
 use Eleph\WordPress\Sql\TableSchema;
 use Eleph\WordPress\Taxonomy\TaxonomyPlacement;
@@ -361,12 +364,116 @@ final class WordPressAdaptorTest extends TestCase
         ));
     }
 
-    private function accountAdaptor(FakeDatabase $database, FakeUsers $users): WordPressAdaptor
+    public function testQueryResolvesAToOneEdgeIntoAnAccountByReadingTheDeclaringRowsOwnKey(): void
+    {
+        // Instructor.user is a plain-column, many-to-one edge, so Instructor #4's own
+        // row is what says which account it points at — the same thing a SQL join
+        // would read if the account had a table to join into.
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 4, 'user_id' => 5]];
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+        $users->meta[5]['bio'] = 'Hello';
+
+        $page = $this->instructorAdaptor($database, $users)->query(
+            Criteria::for('User')->linkedTo(EdgeFilter::along('Instructor', 'user', EntityId::of(4))),
+        );
+
+        self::assertCount(1, $page->items);
+        self::assertSame('Hello', $page->items[0]->value('bio'));
+        self::assertTrue(EntityId::of(5)->equals($page->items[0]->id));
+        self::assertStringContainsString('wp_phe_instructor', $database->statements[0]['sql']);
+    }
+
+    public function testQueryProjectsTheParentColumnWhenSeveralInstructorsAreBatched(): void
+    {
+        // The batching entry point (CachingEdgeLoader::preload) resolves one edge for
+        // many parents in a single call, and groups results by parent id — so a
+        // resolved account row must still carry which instructor it came from.
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 4, 'user_id' => 5], ['id' => 9, 'user_id' => 6]];
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+        $users->registered[6] = '2026-01-02 00:00:00';
+
+        $page = $this->instructorAdaptor($database, $users)->query(
+            Criteria::for('User')->linkedTo(EdgeFilter::along('Instructor', 'user', EntityId::of(4), EntityId::of(9))),
+        );
+
+        self::assertCount(2, $page->items);
+        self::assertSame(4, $page->items[0]->value(EdgeFilter::PARENT_COLUMN));
+        self::assertSame(9, $page->items[1]->value(EdgeFilter::PARENT_COLUMN));
+    }
+
+    public function testQueryIntoAnAccountWithNoLinkedRowComesBackEmpty(): void
+    {
+        // An instructor whose FK never resolves (e.g. it was cleared) is not an error
+        // — it is the same "nothing there" a join would report.
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 4, 'user_id' => null]];
+        $users = new FakeUsers();
+
+        $page = $this->instructorAdaptor($database, $users)->query(
+            Criteria::for('User')->linkedTo(EdgeFilter::along('Instructor', 'user', EntityId::of(4))),
+        );
+
+        self::assertSame([], $page->items);
+    }
+
+    public function testCountResolvesAToOneEdgeIntoAnAccountTheSameWay(): void
+    {
+        $database = new FakeDatabase();
+        $database->rows = [['id' => 4, 'user_id' => 5]];
+        $users = new FakeUsers();
+        $users->registered[5] = '2026-01-01 00:00:00';
+
+        $count = $this->instructorAdaptor($database, $users)->count(
+            Criteria::for('User')->linkedTo(EdgeFilter::along('Instructor', 'user', EntityId::of(4))),
+        );
+
+        self::assertSame(1, $count);
+    }
+
+    public function testAReversedLinkIntoAnAccountStillFallsThroughToAccountStorage(): void
+    {
+        // A mapped placement exists for Instructor.user, but this criteria asks for it
+        // backwards — a shape with no column to read on either table — so the
+        // fallback's own, narrower, refusal still applies.
+        $database = new FakeDatabase();
+        $users = new FakeUsers();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('An account-backed entity supports listing and paging only');
+
+        $this->instructorAdaptor($database, $users)->query(
+            Criteria::for('User')->linkedTo(EdgeFilter::back('Instructor', 'user', EntityId::of(4))),
+        );
+    }
+
+    private function instructorAdaptor(FakeDatabase $database, FakeUsers $users): WordPressAdaptor
+    {
+        return $this->accountAdaptor($database, $users, [
+            'Instructor.user' => new EdgePlacement(
+                'Instructor',
+                'user',
+                'User',
+                RelationKind::ManyToOne,
+                'wp_phe_instructor',
+                'user_id',
+            ),
+        ]);
+    }
+
+    /**
+     * @param array<string, EdgePlacement> $placements
+     */
+    private function accountAdaptor(FakeDatabase $database, FakeUsers $users, array $placements = []): WordPressAdaptor
     {
         return new WordPressAdaptor(
             $database,
             [],
             new FieldMap(['User' => ['bio' => 'bio']]),
+            placements: $placements,
             accounts: ['User' => new AccountFields('User', null, null)],
             account: new AccountStorage($users),
         );
