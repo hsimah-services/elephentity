@@ -1,0 +1,5 @@
+entity: Term
+use:
+  - Taxonomy
+storage:
+  table: terms

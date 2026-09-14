@@ -14,6 +14,20 @@ declare(strict_types=1);
  *   quietly, and by the time they are load-bearing a second adaptor is no longer
  *   possible. Enforcing it from day one costs nothing; retrofitting it costs a rewrite.
  *
+ *   Symbols (WP_*, wp_*, $wpdb, the hook functions) are one leak vector; two others
+ *   walked straight past that check because neither is a symbol:
+ *
+ *   - A word, not a symbol. `SemanticValidator` once carried
+ *     `WORDPRESS_HANDLE_LIMIT` and a message naming WordPress in prose — a constant
+ *     name and a string literal, not a bare identifier `wp_*` would catch. Checked
+ *     against string literals and constant names only, so a driver-agnostic field
+ *     merely *describing* what a handle is for stays legal.
+ *   - An import, not a call. `CheckCommand` named
+ *     `Eleph\WPGraphQL\Conformance\ConformanceChecker` directly, and neither the WP_*
+ *     check nor the vocabulary check above catches a namespace: it only broke the day
+ *     `eleph check` was resolved as its own package, without the monorepo's autoloader
+ *     pulling `Eleph\WPGraphQL\` in for free.
+ *
  * Rule 2 — the schema-free runtime.
  *   The packages that ship — runtime, wordpress, wpgraphql — must not reference
  *   `Eleph\Schema` except from the build-time classes named below.
@@ -39,7 +53,7 @@ declare(strict_types=1);
 const CORE_PACKAGES = ['schema', 'runtime', 'cli'];
 
 /** The packages that ship, and so may not reach for the spec compiler. */
-const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql'];
+const SHIPPED_PACKAGES = ['runtime', 'wordpress', 'wpgraphql', 'memory'];
 
 /**
  * Build-time classes inside a shipped package, allowed to read the IR.
@@ -58,6 +72,7 @@ const COMPILERS = [
     'wpgraphql/src/Integration/WpGraphQL.php',
     'wpgraphql/src/Manifest/ManifestBuilder.php',
     'wpgraphql/src/Manifest/TypeMapper.php',
+    'memory/bin/eleph-gen-memory',
 ];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */
@@ -66,7 +81,17 @@ const WORDPRESS_FUNCTIONS = [
     'get_option', 'update_option', 'delete_option', 'register_post_type',
 ];
 
-$root = dirname(__DIR__);
+/**
+ * Words a core package's string literals and constant names may not contain,
+ * case-insensitively. Prose in a doc comment is not scanned at all — only the two
+ * places a driver's own vocabulary has actually leaked in.
+ */
+const WORDPRESS_VOCABULARY = ['wordpress'];
+
+/** Namespaces a core package may not import a class from, at all. */
+const PLATFORM_NAMESPACES = ['Eleph\\WordPress\\', 'Eleph\\WPGraphQL\\'];
+
+$root = $argv[1] ?? dirname(__DIR__);
 $violations = [];
 
 foreach (CORE_PACKAGES as $package) {
@@ -80,6 +105,30 @@ foreach (CORE_PACKAGES as $package) {
         foreach (wordpressSymbolsIn($file) as $line => $symbol) {
             $violations[] = sprintf(
                 '%s:%d references %s',
+                substr($file, strlen($root) + 1),
+                $line,
+                $symbol,
+            );
+        }
+    }
+
+    // Vocabulary and platform imports are checked against what ships, not what proves
+    // it works: a test naming the one real driver by its actual name is exercising
+    // driver-agnostic code with real data, not leaking platform knowledge into it — the
+    // same reasoning sourceFilesIn() already applies to the schema-free-runtime rule.
+    foreach (sourceFilesIn($directory) as $file) {
+        foreach (wordpressVocabularyIn($file) as $line => $word) {
+            $violations[] = sprintf(
+                '%s:%d names "%s", which is WordPress vocabulary',
+                substr($file, strlen($root) + 1),
+                $line,
+                $word,
+            );
+        }
+
+        foreach (platformImportsIn($file) as $line => $symbol) {
+            $violations[] = sprintf(
+                '%s:%d imports %s, a platform package',
                 substr($file, strlen($root) + 1),
                 $line,
                 $symbol,
@@ -265,6 +314,118 @@ function wordpressSymbolsIn(string $file): array
 
         if (T_VARIABLE === $id && '$wpdb' === $text) {
             $found[$line] = '$wpdb';
+        }
+    }
+
+    return $found;
+}
+
+/**
+ * A driver's own vocabulary, in a string literal or a constant name — the two places
+ * it leaked in before either was a bare `wp_*` symbol. Doc comments are never
+ * tokenised as strings, so prose explaining a driver-agnostic field stays legal.
+ *
+ * @return array<int, string> line number => offending text
+ */
+function wordpressVocabularyIn(string $file): array
+{
+    $source = file_get_contents($file);
+
+    if (false === $source) {
+        return [];
+    }
+
+    $found = [];
+    $tokens = token_get_all($source);
+
+    foreach ($tokens as $index => $token) {
+        if (!is_array($token)) {
+            continue;
+        }
+
+        [$id, $text, $line] = $token;
+
+        if (T_CONSTANT_ENCAPSED_STRING === $id) {
+            if (containsVocabulary(trim($text, '\'"'))) {
+                $found[$line] = $text;
+            }
+
+            continue;
+        }
+
+        if (T_CONST !== $id) {
+            continue;
+        }
+
+        // The constant's name: the next non-whitespace token after `const`.
+        for ($cursor = $index + 1; $cursor < count($tokens); ++$cursor) {
+            $next = $tokens[$cursor];
+
+            if (is_array($next) && T_WHITESPACE === $next[0]) {
+                continue;
+            }
+
+            if (is_array($next) && T_STRING === $next[0] && containsVocabulary($next[1])) {
+                $found[$next[2]] = $next[1];
+            }
+
+            break;
+        }
+    }
+
+    return $found;
+}
+
+function containsVocabulary(string $text): bool
+{
+    $lower = strtolower($text);
+
+    foreach (WORDPRESS_VOCABULARY as $word) {
+        if (str_contains($lower, $word)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * A reference to a class in a platform package — `Eleph\WordPress\` or
+ * `Eleph\WPGraphQL\` — from a core package. Not a symbol and not a function call, so
+ * neither of the other checks in this file sees it; a core package importing one is
+ * exactly the leak `eleph check` shipped with once.
+ *
+ * @return array<int, string> line number => offending symbol
+ */
+function platformImportsIn(string $file): array
+{
+    $source = file_get_contents($file);
+
+    if (false === $source) {
+        return [];
+    }
+
+    $found = [];
+
+    foreach (token_get_all($source) as $token) {
+        if (!is_array($token)) {
+            continue;
+        }
+
+        [$id, $text, $line] = $token;
+
+        if (T_NAME_QUALIFIED !== $id && T_NAME_FULLY_QUALIFIED !== $id) {
+            continue;
+        }
+
+        $qualified = ltrim($text, '\\');
+
+        foreach (PLATFORM_NAMESPACES as $namespace) {
+            if (str_starts_with($qualified, $namespace)) {
+                $found[$line] = $text;
+
+                break;
+            }
         }
     }
 

@@ -950,7 +950,7 @@ whichever whitespace the LLM felt like that day.
 
 ---
 
-## 12. Storage: WordPress adapter
+## 12. Storage: the adapters
 
 **Custom tables, WP-native where needed.** Real typed columns and indexes for entity
 fields; register a post type only where WP ecosystem integration (FacetWP, admin,
@@ -1135,6 +1135,56 @@ mirroring a taxonomy's own edge-shape restriction), and a real project's way to 
 the first `wp_usermeta` row for a newly registered account, which is presumably a
 `postCommit`-trigger-shaped concern on whatever entity WordPress's own registration
 hook fires against — the same shape the post-row-divergence problem already has.
+
+### The memory adapter, and the conformance suite that proves it
+
+`StorageAdaptor` was defined before a second implementation existed, deliberately, to
+keep it honest (§12 above). `elephentity/memory` is that second implementation: no
+table, no post type, no process boundary — a `Record` per entity in a PHP array — and
+it declares only `Capability::Transactions`, which is the honest answer for a store
+with no disk, no network and no other process to disagree with it (#52 G6 stays
+closed: nothing here forces `Capability` open).
+
+**Edges need no schema because they are stored as facts, not columns.** WordPress
+knows whether an edge is a foreign-key column or a join table because a compiled
+`TableSchema`/`EdgePlacement` manifest tells it so — knowledge this adaptor has no
+manifest to receive, by design. Instead, a `Link($entity, $edge, $from, $to)` is kept
+verbatim: an adjacency list keyed by `"$entity.$edge"`, mapping the declaring row's id
+to every id it points at. Multiplicity falls out of this for free — a to-one edge just
+happens to keep one target at a time, because the unit of work unlinks the old one
+before linking the new — so the adaptor never needs to know which kind of edge it is
+storing.
+
+Reading it back means recovering `EdgeFilter`'s two directions from first principles,
+since there is no `EdgePlacement.keyIsLocal()` to ask. Reverse-engineered from
+`QueryCompiler`'s actual SQL (its doc comments alone do not disambiguate this):
+`EdgeFilter::back($declaring, $edge, ...$targets)` filters rows *of the declaring
+entity* whose own id maps to one of `$targets`; `EdgeFilter::along($declaring, $edge,
+...$declaringRowIds)` filters rows *of the target entity* that appear among what those
+declaring rows point at. Both are one pass over the adjacency list — a union for
+`along`, an intersection per row for `back` — with no join planning at all.
+
+**The conformance suite lives in `elephentity/runtime`**
+(`Storage\Testing\AdaptorConformance`), not in a test framework: it returns a
+`list<string>` of failures rather than asserting, so a third-party adaptor can run it
+from any test tool or none. It is exercised for real, round-trip, against
+`MemoryAdaptor` — write, get, getMany, filter, order, page, link, count and a
+transaction that genuinely rolls back on throw.
+
+**It is not run for real against `WordPressAdaptor`.** That adaptor's tests
+(`FakeDatabase`) are a spy that records the SQL `QueryCompiler` produced; it does not
+execute it, so it cannot honestly answer "did a write and a later read agree." Proving
+`WordPressAdaptor` against this suite needs a real MySQL-compatible database, which
+this repository's test harness does not have. The suite is written to be that proof
+the day such a harness exists — most plausibly when a PDO adaptor lands and brings a
+reason to stand one up — rather than deferred further.
+
+**`FakeStorage`, in `packages/runtime/tests/UnitOfWork/`, stays.** It answers a
+different question than either adaptor: not "does a write round-trip," which it
+deliberately fails (`get()` always returns null), but "does `UnitOfWork` call the port
+in the right order," via a `$log`/`$batches` a real adaptor has no reason to expose.
+Two in-memory adaptors would be the drift #52 M5 exists to stop; a spy and a store are
+not the same claim.
 
 ---
 

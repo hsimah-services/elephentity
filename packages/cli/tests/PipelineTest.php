@@ -118,7 +118,11 @@ final class PipelineTest extends TestCase
     {
         // Drift detection and conformance answer different questions: this file is
         // valid PHP and would load happily, but the API it backs no longer resolves.
+        // `eleph check` no longer rebuilds the manifest from the compiled spec to find
+        // that out — it walks the tree for WPGraphQL's own verify.php and asks it.
         $this->exec(new GenerateCommand());
+
+        self::assertFileExists($this->project . '/generated/wpgraphql/verify.php');
 
         $post = $this->project . '/generated/Post/Post.php';
         file_put_contents(

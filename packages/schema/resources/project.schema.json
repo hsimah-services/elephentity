@@ -31,7 +31,7 @@
                 "tablePrefix": {
                     "type": "string",
                     "pattern": "^[a-z][a-z0-9_]*_$",
-                    "description": "Prepended to every entity's table. Stacks with any prefix the driver adds of its own \u2014 under WordPress the real table is $wpdb->prefix, then this, then the entity's table."
+                    "description": "Prepended to every entity's table. Stacks with any prefix the driver adds of its own, ahead of the entity's own table name."
                 }
             }
         },

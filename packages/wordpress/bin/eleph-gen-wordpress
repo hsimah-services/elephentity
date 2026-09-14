@@ -12,6 +12,7 @@ use Eleph\WordPress\Manifest\StorageManifestBuilder;
 use Eleph\WordPress\Manifest\StorageManifestExporter;
 use Eleph\WordPress\Manifest\TaxonomyManifestBuilder;
 use Eleph\WordPress\Manifest\TaxonomyManifestExporter;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * The WordPress builder: the driver's declaration, and the physical schema it compiles to.
@@ -40,6 +41,50 @@ foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../
 }
 
 const DRIVER = 'wordpress';
+const PATTERNS_DIRECTORY = __DIR__ . '/../resources/patterns';
+
+/**
+ * The rule this driver imposes on `storage.handle`: a WordPress post type slug or
+ * taxonomy name is capped at 20 characters and is silently truncated past it at
+ * registration, and must be lowercase.
+ *
+ * @return array<string, mixed>
+ */
+function storageRules(): array
+{
+    return [
+        'handle' => [
+            'maxLength' => 20,
+            'pattern' => '/^[a-z][a-z0-9_-]*$/',
+        ],
+    ];
+}
+
+/**
+ * The patterns this package owns, decoded at describe time rather than embedded as PHP
+ * array literals — YAML keeps a shipped pattern reviewable and diffable as the same
+ * spec document a project used to hand-copy, and it is the format a project author
+ * already reads.
+ *
+ * @return array<string, mixed>
+ */
+function patterns(): array
+{
+    $patterns = [];
+
+    foreach (glob(PATTERNS_DIRECTORY . '/*.yml') ?: [] as $file) {
+        /** @var mixed $parsed */
+        $parsed = Yaml::parseFile($file);
+
+        if (!is_array($parsed) || !is_string($parsed['pattern'] ?? null)) {
+            throw new RuntimeException(sprintf('%s does not declare a "pattern" name.', $file));
+        }
+
+        $patterns[$parsed['pattern']] = $parsed;
+    }
+
+    return $patterns;
+}
 
 try {
     $request = BuilderEnvelope::read((string) file_get_contents('php://stdin'));
@@ -47,7 +92,11 @@ try {
     BuilderEnvelope::assertVersions($request);
 
     if (BuilderEnvelope::REQUEST_DESCRIBE === BuilderEnvelope::kindOf($request)) {
-        fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description(['drivers' => [DRIVER]])));
+        fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::description([
+            'drivers' => [DRIVER],
+            'patterns' => patterns(),
+            'storage' => storageRules(),
+        ])));
 
         exit(0);
     }

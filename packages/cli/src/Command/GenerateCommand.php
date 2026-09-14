@@ -94,7 +94,12 @@ final class GenerateCommand extends Command
             return Command::FAILURE;
         }
 
-        $compiled = (new SchemaCompiler(integrations: $installed->integrations))->compile(
+        $compiled = (new SchemaCompiler(
+            integrations: $installed->integrations,
+            pooledPatterns: $installed->patterns,
+            pooledTypes: $installed->types,
+            storageRules: $installed->storageRules,
+        ))->compile(
             new SpecSource($root . '/' . $config->specDirectory),
         );
 

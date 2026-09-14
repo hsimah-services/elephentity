@@ -31,6 +31,7 @@ use Eleph\Schema\Spec\SectionParser;
 use Eleph\Schema\Spec\SpecKind;
 use Eleph\Schema\Spec\SpecLoader;
 use Eleph\Schema\Spec\SpecReader;
+use Eleph\Schema\Storage\StorageRuleRegistry;
 
 /**
  * Compiles a directory of specs into the IR.
@@ -53,6 +54,22 @@ final readonly class SchemaCompiler
          * root tells it which packages are installed.
          */
         private IntegrationRegistry $integrations = new IntegrationRegistry(),
+        /**
+         * Patterns and types a builder ships, pooled from the `describe` handshake
+         * before any spec on disk is read. Listed first so a project document
+         * colliding with one of these is the offender, not the incumbent — the same
+         * sealing a project-local duplicate already gets.
+         *
+         * @var list<RawSpec>
+         */
+        private array $pooledPatterns = [],
+        /** @var list<RawSpec> */
+        private array $pooledTypes = [],
+        /**
+         * Empty by default: the compiler knows of no driver's storage rules until a
+         * composition root tells it which builders are installed.
+         */
+        private StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
     ) {
     }
 
@@ -61,9 +78,11 @@ final readonly class SchemaCompiler
         $loaded = $this->loader->load($source);
         $errors = $loaded['errors'];
 
+        $specs = [...$this->pooledPatterns, ...$this->pooledTypes, ...$loaded['specs']];
+
         $validator = new SchemaValidator();
 
-        foreach ($loaded['specs'] as $spec) {
+        foreach ($specs as $spec) {
             foreach ($validator->validate($spec) as $error) {
                 $errors[] = $error;
             }
@@ -73,15 +92,15 @@ final readonly class SchemaCompiler
             return CompilationResult::failure($errors);
         }
 
-        $project = $this->buildProject($loaded['specs'], $source, $errors);
+        $project = $this->buildProject($specs, $source, $errors);
 
         if (null === $project) {
             return CompilationResult::failure($errors);
         }
 
-        $types = $this->buildTypes($loaded['specs'], $errors);
-        $patterns = $this->buildPatterns($loaded['specs'], $errors);
-        $entities = $this->buildEntities($project, $loaded['specs'], $patterns, $errors);
+        $types = $this->buildTypes($specs, $errors);
+        $patterns = $this->buildPatterns($specs, $errors);
+        $entities = $this->buildEntities($project, $specs, $patterns, $errors);
 
         if ([] !== $errors) {
             return CompilationResult::failure($errors);
@@ -89,7 +108,7 @@ final readonly class SchemaCompiler
 
         $schema = new Schema($project, $entities, $types, $this->declaredPatterns($patterns, $entities));
 
-        $semantic = (new SemanticValidator())->validate($schema);
+        $semantic = (new SemanticValidator($this->storageRules))->validate($schema);
 
         return [] === $semantic
             ? CompilationResult::success($schema)

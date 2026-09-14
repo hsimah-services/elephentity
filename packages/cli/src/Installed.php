@@ -6,7 +6,11 @@ namespace Eleph\Cli;
 
 use Eleph\Schema\Integration\IntegrationDefinition;
 use Eleph\Schema\Integration\IntegrationRegistry;
+use Eleph\Schema\Spec\RawSpec;
+use Eleph\Schema\Spec\SpecKind;
+use Eleph\Schema\Storage\StorageRuleRegistry;
 use Eleph\Schema\Wire\IntegrationCodec;
+use Eleph\Schema\Wire\StorageRulesCodec;
 use Eleph\Schema\Wire\WireException;
 use JsonException;
 use RuntimeException;
@@ -30,11 +34,16 @@ use RuntimeException;
 final readonly class Installed
 {
     /**
-     * @param list<string> $drivers Storage drivers some installed builder can generate for.
+     * @param list<string>   $drivers  Storage drivers some installed builder can generate for.
+     * @param list<RawSpec>  $patterns Patterns some installed builder ships, pooled from `describe`.
+     * @param list<RawSpec>  $types    Types some installed builder ships, pooled from `describe`.
      */
     private function __construct(
         public IntegrationRegistry $integrations,
         public array $drivers,
+        public array $patterns = [],
+        public array $types = [],
+        public StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
     ) {
     }
 
@@ -84,6 +93,9 @@ final readonly class Installed
 
         $definitions = [];
         $drivers = [];
+        $patterns = [];
+        $types = [];
+        $storageRules = [];
 
         /** @var mixed $declared */
         foreach ($targets as $target => $declared) {
@@ -93,20 +105,57 @@ final readonly class Installed
 
             /** @var array<string, mixed> $provides */
             $provides = $declared;
+            $target = (string) $target;
 
-            foreach (self::integrationsIn($provides, (string) $target) as $definition) {
+            foreach (self::integrationsIn($provides, $target) as $definition) {
                 $definitions[] = $definition;
             }
 
-            foreach (self::driversIn($provides) as $driver) {
+            $declaredDrivers = self::driversIn($provides);
+
+            foreach ($declaredDrivers as $driver) {
                 $drivers[$driver] = true;
+            }
+
+            foreach (self::specsIn($provides, $target, 'patterns', SpecKind::Pattern) as $pattern) {
+                $patterns[] = $pattern;
+            }
+
+            foreach (self::specsIn($provides, $target, 'types', SpecKind::Type) as $type) {
+                $types[] = $type;
+            }
+
+            // Storage rules are the driver's own declaration, not the compiler's, so
+            // they land against every driver this target declares rather than against
+            // the target's name.
+            $storage = $provides['storage'] ?? null;
+
+            if (null !== $storage) {
+                if (!is_array($storage)) {
+                    throw new RuntimeException(sprintf('The %s builder declared "storage" as something other than an object.', $target));
+                }
+
+                try {
+                    /** @var array<string, mixed> $storage */
+                    $rules = StorageRulesCodec::decode($target, $storage);
+                } catch (WireException $exception) {
+                    throw new RuntimeException(sprintf(
+                        'The %s builder declared storage rules unusably: %s',
+                        $target,
+                        $exception->getMessage(),
+                    ), previous: $exception);
+                }
+
+                foreach ($declaredDrivers as $driver) {
+                    $storageRules[$driver] = $rules;
+                }
             }
         }
 
         $names = array_keys($drivers);
         sort($names);
 
-        return new self(new IntegrationRegistry(...$definitions), $names);
+        return new self(new IntegrationRegistry(...$definitions), $names, $patterns, $types, new StorageRuleRegistry($storageRules));
     }
 
     /**
@@ -171,5 +220,48 @@ final readonly class Installed
         return is_array($declared)
             ? array_values(array_filter($declared, is_string(...)))
             : [];
+    }
+
+    /**
+     * Patterns or types a builder ships, as the same document shape `SpecLoader` would
+     * have parsed off disk — the wire shape is the spec document, as JSON, so pooling
+     * needs no parser of its own and the result gets `SchemaValidator` and everything
+     * after it unchanged.
+     *
+     * @param array<string, mixed> $provides
+     *
+     * @return list<RawSpec>
+     */
+    private static function specsIn(array $provides, string $target, string $key, SpecKind $kind): array
+    {
+        $declared = $provides[$key] ?? [];
+
+        if (!is_array($declared)) {
+            throw new RuntimeException(sprintf('The %s builder declared "%s" as something other than an object.', $target, $key));
+        }
+
+        $specs = [];
+
+        /** @var mixed $data */
+        foreach ($declared as $name => $data) {
+            if (!is_string($name) || !is_array($data)) {
+                throw new RuntimeException(sprintf('The %s builder declared an unnamed %s.', $target, $kind->value));
+            }
+
+            if (!array_key_exists($kind->value, $data)) {
+                throw new RuntimeException(sprintf(
+                    'The %s builder declared %s "%s" without a "%s" key.',
+                    $target,
+                    $kind->value,
+                    $name,
+                    $kind->value,
+                ));
+            }
+
+            /** @var array<string, mixed> $data */
+            $specs[] = new RawSpec($kind, sprintf('%s:%s/%s.yml', $target, (string) $kind->directory(), $name), $data);
+        }
+
+        return $specs;
     }
 }

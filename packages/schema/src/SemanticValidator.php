@@ -12,6 +12,7 @@ use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\Ir\TypeReference;
+use Eleph\Schema\Storage\StorageRuleRegistry;
 
 /**
  * Checks that a structurally valid schema also means something.
@@ -23,12 +24,6 @@ use Eleph\Schema\Ir\TypeReference;
  */
 final readonly class SemanticValidator
 {
-    /**
-     * WordPress post type slugs are capped at 20 characters and must be lowercase.
-     * Exceeding it means WP silently truncates at registration.
-     */
-    private const WORDPRESS_HANDLE_LIMIT = 20;
-
     /**
      * MariaDB with DYNAMIC row format allows 3072 bytes per index, and utf8mb4 is
      * 4 bytes per character.
@@ -45,6 +40,16 @@ final readonly class SemanticValidator
      * too vague to be a real entity anyway, so refusing them costs nothing.
      */
     private const RESERVED_ENTITY_NAMES = ['Enum', 'Type'];
+
+    public function __construct(
+        /**
+         * Empty by default: the validator knows of no driver's storage rules until a
+         * composition root tells it which builders are installed. A driver declaring
+         * nothing here means an entity on it validates without handle errors.
+         */
+        private StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
+    ) {
+    }
 
     /**
      * @return list<SpecError>
@@ -158,28 +163,45 @@ final readonly class SemanticValidator
     {
         $handle = $entity->storage->handle;
 
-        if ('wordpress' !== $entity->storage->driver || null === $handle) {
+        if (null === $handle) {
             return;
         }
 
-        if (strlen($handle) > self::WORDPRESS_HANDLE_LIMIT) {
+        $driver = $entity->storage->driver;
+        $rules = $this->storageRules->forDriver($driver);
+
+        if (null === $rules) {
+            return;
+        }
+
+        if (null !== $rules->maxHandleLength && strlen($handle) > $rules->maxHandleLength) {
             $errors[] = new SpecError(
                 'storage.handleTooLong',
                 sprintf(
-                    'Handle "%s" is %d characters; WordPress post type slugs are capped at %d and are silently truncated at registration.',
+                    'Handle "%s" is %d characters; driver "%s" caps handles at %d.',
                     $handle,
                     strlen($handle),
-                    self::WORDPRESS_HANDLE_LIMIT,
+                    $driver,
+                    $rules->maxHandleLength,
                 ),
                 $entity->sourceFile,
                 '/storage/handle',
             );
         }
 
-        if (1 !== preg_match('/^[a-z][a-z0-9_-]*$/', $handle)) {
+        if (null !== $rules->handlePattern && 1 !== preg_match($rules->handlePattern, $handle)) {
             $errors[] = new SpecError(
                 'storage.handleInvalid',
-                sprintf('Handle "%s" must be lowercase and may contain only letters, digits, hyphens and underscores.', $handle),
+                sprintf('Handle "%s" does not match the shape driver "%s" requires (%s).', $handle, $driver, $rules->handlePattern),
+                $entity->sourceFile,
+                '/storage/handle',
+            );
+        }
+
+        if (in_array($handle, $rules->reservedHandles, true)) {
+            $errors[] = new SpecError(
+                'storage.handleReserved',
+                sprintf('Handle "%s" is reserved by driver "%s".', $handle, $driver),
                 $entity->sourceFile,
                 '/storage/handle',
             );

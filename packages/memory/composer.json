@@ -1,0 +1,25 @@
+{
+    "name": "elephentity/memory",
+    "description": "An in-process StorageAdaptor with no backend of its own. The neutral driver for a project that wants raw PHP objects rather than WordPress.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.3",
+        "elephentity/runtime": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eleph\\Memory\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Eleph\\Memory\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/eleph-gen-memory"
+    ]
+}
