@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Eleph\WPGraphQL\Tests;
 
 use DateTimeImmutable;
-use Eleph\WPGraphQL\Conformance\ConformanceChecker;
 use Eleph\WPGraphQL\Manifest\Manifest;
 use Eleph\WPGraphQL\Registration\TypeRegistrar;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -14,8 +13,7 @@ use RuntimeException;
 use stdClass;
 
 #[CoversClass(TypeRegistrar::class)]
-#[CoversClass(ConformanceChecker::class)]
-final class RegistrarAndConformanceTest extends TestCase
+final class TypeRegistrarTest extends TestCase
 {
     public function testEnumConfigsCarryTheStoredValueBehindTheGraphQLName(): void
     {
@@ -209,33 +207,6 @@ final class RegistrarAndConformanceTest extends TestCase
         }
 
         self::fail(sprintf('No connection registered for %s.%s.', $from, $field));
-    }
-
-    public function testConformanceFailsLoudlyWhenTheEntityClassIsMissing(): void
-    {
-        // The case the IR cannot see: a spec that changed and code that was not
-        // regenerated.
-        $problems = (new ConformanceChecker(
-            $this->manifest(),
-            static fn (string $entity): string => 'Nonexistent\\' . $entity,
-        ))->check();
-
-        self::assertNotSame([], $problems);
-        self::assertStringContainsString('Run `eleph generate`', $problems[0]);
-    }
-
-    public function testConformanceFailsWhenAnAccessorIsMissing(): void
-    {
-        $problems = (new ConformanceChecker(
-            $this->manifest(),
-            static fn (): string => ConformanceSubject::class,
-        ))->check();
-
-        $joined = implode("\n", $problems);
-
-        // The subject has getTitle() but not getPrice().
-        self::assertStringNotContainsString('Post.title resolves', $joined);
-        self::assertStringContainsString('Post.price resolves', $joined);
     }
 
     /**

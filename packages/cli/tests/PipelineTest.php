@@ -114,19 +114,26 @@ final class PipelineTest extends TestCase
         self::assertStringContainsString('Hand-edited', $tester->getDisplay());
     }
 
-    public function testCheckWalksTheTreeRatherThanCompilingTheSpec(): void
+    public function testRenamingAnAccessorFailsConformanceEvenThoughTheFileStillParses(): void
     {
-        // `eleph check` used to rebuild the GraphQL manifest from the compiled spec and
-        // compare it against the classes on disk. Now it walks the tree for
-        // generated/*/verify.php and asks whatever it finds — no spec compiled, no
-        // builder resolved to describe itself. The WPGraphQL builder does not write a
-        // verify.php yet (that lands with the verifier itself), so a project with only
-        // that integration installed passes quietly, which is the correct behaviour for
-        // a tree with nothing to check rather than a false pass.
+        // Drift detection and conformance answer different questions: this file is
+        // valid PHP and would load happily, but the API it backs no longer resolves.
+        // `eleph check` no longer rebuilds the manifest from the compiled spec to find
+        // that out — it walks the tree for WPGraphQL's own verify.php and asks it.
         $this->exec(new GenerateCommand());
 
-        self::assertFileDoesNotExist($this->project . '/generated/wpgraphql/verify.php');
-        self::assertSame(Command::SUCCESS, $this->exec(new CheckCommand()));
+        self::assertFileExists($this->project . '/generated/wpgraphql/verify.php');
+
+        $post = $this->project . '/generated/Post/Post.php';
+        file_put_contents(
+            $post,
+            str_replace('function getTitle(', 'function getHeadline(', (string) file_get_contents($post)),
+        );
+
+        $tester = $this->tester(new CheckCommand());
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Post.title resolves via', $tester->getDisplay());
     }
 
     public function testTheGraphQLManifestIsGeneratedAlongsideTheClasses(): void

@@ -10,6 +10,7 @@ use Eleph\Schema\Wire\WireException;
 use Eleph\WPGraphQL\Integration\WpGraphQL;
 use Eleph\WPGraphQL\Manifest\ManifestBuilder;
 use Eleph\WPGraphQL\Manifest\ManifestExporter;
+use Eleph\WPGraphQL\Verification\VerifierExporter;
 
 /**
  * The WPGraphQL builder: the integration's declaration, and the manifest it compiles to.
@@ -52,9 +53,13 @@ try {
 
     // A project that speaks no GraphQL gets no files rather than an empty manifest.
     // Finding one in the tree and wondering where it came from is worse than not
-    // configuring the target at all.
+    // configuring the target at all. verify.php rides along for the same reason: with
+    // no manifest beside it, it would have nothing to check and no way to check it.
     $files = $schema->project->speaks(WpGraphQL::NAME)
-        ? ['graphql-manifest.php' => (new ManifestExporter())->export((new ManifestBuilder())->build($schema))]
+        ? [
+            'graphql-manifest.php' => (new ManifestExporter())->export((new ManifestBuilder())->build($schema)),
+            'verify.php' => (new VerifierExporter())->export(),
+        ]
         : [];
 
     fwrite(STDOUT, BuilderEnvelope::write(BuilderEnvelope::response($files)));
