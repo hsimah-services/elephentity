@@ -24,9 +24,9 @@ final class RuntimeTest extends TestCase
 {
     public function testFindThrowsWhenTheReadPolicyDenies(): void
     {
-        $storage = $this->createMock(StorageAdaptor::class);
+        $storage = $this->createStub(StorageAdaptor::class);
         $storage->method('get')->willReturn(new Record('Post', EntityId::of(1), []));
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('hydrator')->willReturn(new class () implements Hydrator {
             public function hydrate(Record $record, EdgeLoader $edges): object
             {

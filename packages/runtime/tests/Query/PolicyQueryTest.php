@@ -32,7 +32,7 @@ final class PolicyQueryTest extends TestCase
         $storage = $this->createMock(StorageAdaptor::class);
         $storage->method('query')->willReturn(new Page($records));
         $storage->expects(self::never())->method('count');
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('readPolicies')->willReturn(new StubPolicies(
             static fn (object $entity): PolicyDecision => $entity instanceof PolicyEntity && $entity->allowed
                 ? PolicyDecision::allow()
@@ -40,7 +40,7 @@ final class PolicyQueryTest extends TestCase
         ));
         $gate = new ReadGate($catalogue, new AnonymousViewerProvider());
         $hydrator = $this->hydrator();
-        $query = new LazyEntityQuery($storage, $hydrator, $this->createMock(EdgeLoader::class), Criteria::for('Post'), $gate);
+        $query = new LazyEntityQuery($storage, $hydrator, $this->createStub(EdgeLoader::class), Criteria::for('Post'), $gate);
 
         self::assertCount(1, $query->all());
         self::assertSame(1, $query->count());
@@ -52,9 +52,9 @@ final class PolicyQueryTest extends TestCase
             new Record('Comment', EntityId::of(1), ['__parent' => 1, 'allowed' => 1]),
             new Record('Comment', EntityId::of(2), ['__parent' => 1, 'allowed' => 0]),
         ];
-        $storage = $this->createMock(StorageAdaptor::class);
+        $storage = $this->createStub(StorageAdaptor::class);
         $storage->method('query')->willReturn(new Page($records));
-        $catalogue = $this->createMock(EntityCatalogue::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
         $catalogue->method('readPolicies')->willReturn(new StubPolicies(
             static fn (object $entity): PolicyDecision => $entity instanceof PolicyEntity && $entity->allowed
                 ? PolicyDecision::allow()
@@ -62,7 +62,7 @@ final class PolicyQueryTest extends TestCase
         ));
         $gate = new ReadGate($catalogue, new AnonymousViewerProvider());
         $hydrator = $this->hydrator();
-        $registry = $this->createMock(HydratorRegistry::class);
+        $registry = $this->createStub(HydratorRegistry::class);
         $registry->method('get')->willReturn($hydrator);
         $loader = new CachingEdgeLoader($storage, $registry, ['Post.comments' => 'Comment'], $gate);
 
