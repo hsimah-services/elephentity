@@ -1,0 +1,56 @@
+name: Subtree split
+
+# Mirrors packages that are published as their own Composer package out to read-only
+# repositories, so `elephentity/runtime` (and later `/schema`, `/cli`, `/memory` —
+# elephentity#63) is installable without the rest of this repository along with it.
+#
+# Runs on push to main (keeps each mirror's `main` current) and on tags (re-tags the
+# split commit so the mirror's own tag line matches this repository's, since a mirror
+# is not an independently-versioned product — see .llms/cross-repo.md).
+#
+# Requires a secret named SPLIT_PUSH_TOKEN: a token with push access to every mirror
+# repository listed below. The default GITHUB_TOKEN cannot push to another repository.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  split:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: runtime
+            repo: hsimah-services/elephentity-runtime
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split packages/${{ matrix.package }}
+        run: |
+          git config user.name "elephentity-bot"
+          git config user.email "noreply@elephentity.dev"
+          git subtree split --prefix="packages/${{ matrix.package }}" -b split-branch
+
+      - name: Push to mirror's main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git push "https://x-access-token:${{ secrets.SPLIT_PUSH_TOKEN }}@github.com/${{ matrix.repo }}.git" split-branch:main --force
+
+      - name: Re-tag the mirror
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          split_sha="$(git rev-parse split-branch)"
+          remote="https://x-access-token:${{ secrets.SPLIT_PUSH_TOKEN }}@github.com/${{ matrix.repo }}.git"
+          git push "$remote" split-branch:main --force
+          git push "$remote" "$split_sha:refs/tags/$tag"

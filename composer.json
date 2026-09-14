@@ -12,22 +12,19 @@
         "symfony/yaml": "^7.0 || ^8.0"
     },
     "require-dev": {
-        "axepress/wp-graphql-stubs": "^2.22",
         "elephentity/codegen": "dev-main#1db0082",
         "elephentity/codegen-php": "dev-main#e49152b",
-        "elephentity/codegen-wordpress": "dev-initial-import#8a32fe8",
-        "elephentity/codegen-wpgraphql": "dev-initial-import#2c18244",
         "friendsofphp/php-cs-fixer": "^3.64",
-        "php-stubs/wordpress-stubs": "^6.7 || ^7.0",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^11.0 || ^12.0"
+    },
+    "replace": {
+        "elephentity/runtime": "self.version"
     },
     "autoload": {
         "psr-4": {
             "Eleph\\Schema\\": "packages/schema/src/",
             "Eleph\\Runtime\\": "packages/runtime/src/",
-            "Eleph\\WordPress\\": "packages/wordpress/src/",
-            "Eleph\\WPGraphQL\\": "packages/wpgraphql/src/",
             "Eleph\\Memory\\": "packages/memory/src/",
             "Eleph\\Cli\\": "packages/cli/src/"
         }
@@ -36,12 +33,8 @@
         "psr-4": {
             "Eleph\\Schema\\Tests\\": "packages/schema/tests/",
             "Eleph\\Runtime\\Tests\\": "packages/runtime/tests/",
-            "Eleph\\WordPress\\Tests\\": "packages/wordpress/tests/",
-            "Eleph\\WPGraphQL\\Tests\\": "packages/wpgraphql/tests/",
             "Eleph\\Memory\\Tests\\": "packages/memory/tests/",
-            "Eleph\\Cli\\Tests\\": "packages/cli/tests/",
-            "Clog\\Entity\\": "examples/clog/generated/",
-            "Clog\\": "examples/clog/src/"
+            "Eleph\\Cli\\Tests\\": "packages/cli/tests/"
         }
     },
     "bin": [
@@ -50,7 +43,7 @@
     ],
     "scripts": {
         "test": "phpunit",
-        "stan": "phpstan analyse --memory-limit=1G",
+        "stan": "phpstan analyse",
         "style": "php-cs-fixer fix --dry-run --diff",
         "style:fix": "php-cs-fixer fix",
         "arch": "@php tools/check-architecture.php",
