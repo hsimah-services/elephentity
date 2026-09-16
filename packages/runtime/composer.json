@@ -2,7 +2,7 @@
     "name": "elephentity/runtime",
     "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

@@ -2,7 +2,7 @@
     "name": "elephentity/elephentity",
     "description": "An AI-native framework for building PHP business logic from human-readable specs.",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "require": {
         "php": ">=8.3",
         "opis/json-schema": "^2.3",

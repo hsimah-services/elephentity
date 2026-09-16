@@ -2,7 +2,7 @@
     "name": "elephentity/cli",
     "description": "The eleph command: validate, generate, check, fmt. Build-time only.",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

@@ -2,7 +2,7 @@
     "name": "elephentity/schema",
     "description": "Spec parser, JSON Schema, pattern resolution and IR for Elephentity. Build-time only.",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
