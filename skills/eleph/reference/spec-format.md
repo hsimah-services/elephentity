@@ -394,3 +394,38 @@ comments, and deleting an author's notes to fix an ordering nit is the wrong tra
 
 Order applies to **keys**, never to **members**: trigger declaration order is execution
 order, so sorting members would change behaviour.
+
+## WordPress integration settings
+
+With the WordPress builder installed, `integrations.wordpress` accepts
+`adminTemplates` (default `true`) and `linkPosts` (default `false`) on the project.
+Entities can override either boolean; omitted or null entity values inherit the
+project setting. Declare the integration on the project before entity overrides.
+Admin list/detail views use Elephentity records and read policies. Linked posts are
+optional projections with a storage-owned `wp_post_id`; entity relationships keep
+using Elephentity IDs. Do not declare a post ID field to enable linking.
+
+```yaml
+# project.yml
+integrations:
+  wordpress:
+    adminTemplates: true
+    linkPosts: false
+```
+
+```yaml
+# entities/Item.yml
+entity: Item
+storage:
+  table: item
+  handle: item
+integrations:
+  wordpress:
+    linkPosts: true
+```
+
+The builder emits `admin-pages.php` plus list/detail templates. Hook the runtime's
+`Eleph\WordPress\Admin\Pages` registrar on `admin_menu`. When templates are enabled,
+native post admin screens are hidden. With templates disabled and linking enabled,
+WordPress's native post screens remain available. Accounts and taxonomy entities
+retain their native WordPress storage and are excluded from these generated views.
