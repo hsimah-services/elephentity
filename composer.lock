@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5b6ec89c82f274628b8c78d643f0f56e",
+    "content-hash": "b0aedd306cb3580d25e96d3d6b307955",
     "packages": [
         {
             "name": "opis/json-schema",
@@ -301,16 +301,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.4.18",
+            "version": "v7.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "23d6f88a29f6d0eac45bd77d70307adf83ba7ab0"
+                "reference": "3a1973458b153f566a8d7499bc06ece323d60063"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/23d6f88a29f6d0eac45bd77d70307adf83ba7ab0",
-                "reference": "23d6f88a29f6d0eac45bd77d70307adf83ba7ab0",
+                "url": "https://api.github.com/repos/symfony/console/zipball/3a1973458b153f566a8d7499bc06ece323d60063",
+                "reference": "3a1973458b153f566a8d7499bc06ece323d60063",
                 "shasum": ""
             },
             "require": {
@@ -375,7 +375,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.4.18"
+                "source": "https://github.com/symfony/console/tree/v7.4.19"
             },
             "funding": [
                 {
@@ -395,7 +395,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-25T14:18:37+00:00"
+            "time": "2026-09-13T10:38:41+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -892,16 +892,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v7.4.15",
+            "version": "v7.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "e394af32256bf9e7bf80849d95e589167c10097b"
+                "reference": "02731ce2bd26514bec9efc0baef2cd0b0cf67f46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/e394af32256bf9e7bf80849d95e589167c10097b",
-                "reference": "e394af32256bf9e7bf80849d95e589167c10097b",
+                "url": "https://api.github.com/repos/symfony/string/zipball/02731ce2bd26514bec9efc0baef2cd0b0cf67f46",
+                "reference": "02731ce2bd26514bec9efc0baef2cd0b0cf67f46",
                 "shasum": ""
             },
             "require": {
@@ -959,7 +959,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v7.4.15"
+                "source": "https://github.com/symfony/string/tree/v7.4.19"
             },
             "funding": [
                 {
@@ -979,7 +979,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-28T07:33:02+00:00"
+            "time": "2026-09-11T14:46:58+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -1344,16 +1344,16 @@
         },
         {
             "name": "elephentity/codegen",
-            "version": "dev-main",
+            "version": "v0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen.git",
-                "reference": "1db0082"
+                "reference": "12dac3296ca0c3a2aed108751efa9f23ae7c20bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/1db0082",
-                "reference": "1db0082",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen/zipball/12dac3296ca0c3a2aed108751efa9f23ae7c20bc",
+                "reference": "12dac3296ca0c3a2aed108751efa9f23ae7c20bc",
                 "shasum": ""
             },
             "require": {
@@ -1365,7 +1365,6 @@
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^11.0 || ^12.0"
             },
-            "default-branch": true,
             "bin": [
                 "bin/eleph-codegen"
             ],
@@ -1377,27 +1376,27 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "Apache-2.0"
             ],
             "description": "The Elephentity code generator: runs a project's language builders, then signs and writes what they return.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-codegen/issues",
-                "source": "https://github.com/hsimah-services/elephentity-codegen/tree/main"
+                "source": "https://github.com/hsimah-services/elephentity-codegen/tree/v0.6.0"
             },
-            "time": "2026-09-14T01:58:52+00:00"
+            "time": "2026-09-21T18:50:00+00:00"
         },
         {
             "name": "elephentity/codegen-php",
-            "version": "dev-main",
+            "version": "v0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "e49152b"
+                "reference": "3c9d4d7d1a29b961f44f898d9d4ba6df56261977"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/e49152b",
-                "reference": "e49152b",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/3c9d4d7d1a29b961f44f898d9d4ba6df56261977",
+                "reference": "3c9d4d7d1a29b961f44f898d9d4ba6df56261977",
                 "shasum": ""
             },
             "require": {
@@ -1410,7 +1409,6 @@
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^11.0 || ^12.0"
             },
-            "default-branch": true,
             "bin": [
                 "bin/eleph-gen-php"
             ],
@@ -1422,14 +1420,14 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "Apache-2.0"
             ],
             "description": "The PHP builder for Elephentity: compiles the IR into locked PHP. Build-time only.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
-                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/main"
+                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/v0.6.0"
             },
-            "time": "2026-09-14T01:56:48+00:00"
+            "time": "2026-09-21T18:50:05+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
@@ -4962,10 +4960,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "elephentity/codegen": 20,
-        "elephentity/codegen-php": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
