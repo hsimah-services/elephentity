@@ -44,7 +44,7 @@ and persisted in the same transaction before removal.
 
 ## Migration (IR 1.2)
 
-- Rename spec `triggers:` to `sideEffects:`. Keep `events`, `phase`, and `handler`.
+- Rename spec `triggers:` to `sideEffects:`. Keep `on`, `phase`, and `handler`.
 - Regenerate using the compiler, orchestrator, and all builders supporting IR 1.2.
   IR 1.1 is rejected rather than silently dropping side-effect declarations.
 - Replace generated `*Trigger`/`*Triggers` references with `*SideEffect`/`*SideEffects`.
