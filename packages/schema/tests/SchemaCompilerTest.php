@@ -8,8 +8,8 @@ use Eleph\Schema\Error\CompilationResult;
 use Eleph\Schema\Ir\Cardinality;
 use Eleph\Schema\Ir\Primitive;
 use Eleph\Schema\Ir\RelationKind;
+use Eleph\Schema\Ir\SideEffectPhase;
 use Eleph\Schema\Ir\TerminalRule;
-use Eleph\Schema\Ir\TriggerPhase;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\SpecSource;
 use Eleph\Schema\Tests\Support\TestIntegrations;
@@ -59,7 +59,7 @@ final class SchemaCompilerTest extends TestCase
         // Auditable uses Timestamps, which Post never names directly.
         self::assertNotContains('Timestamps', $post->uses);
         self::assertArrayHasKey('updatedAt', $post->fields);
-        self::assertSame(TriggerPhase::PostCommit, $post->triggers['audit']->phase);
+        self::assertSame(SideEffectPhase::PostCommit, $post->sideEffects['audit']->phase);
 
         // appliedPatterns is the other list: everything that actually applies,
         // transitively pulled-in patterns included — what a consumer wanting to know

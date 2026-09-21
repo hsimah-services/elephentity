@@ -12,6 +12,9 @@ interface WriteContext
 
     public function operation(): WriteOperation;
 
+    /** @return list<\Eleph\Runtime\Mutation\ActionCall> */
+    public function actions(): array;
+
     public function action(): ?string;
 
     /** @return array<string, mixed> */

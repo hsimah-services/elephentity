@@ -14,7 +14,7 @@ use Eleph\Runtime\Identity\Identifier;
  * Both interfaces on one object because they are two views of the same state. Setters
  * write into it, verifiers read from it, and neither touches storage until commit.
  */
-final class Mutation implements MutationBuffer, MutationContext
+final class Mutation implements MutableMutationContext
 {
     /** @var array<string, mixed> */
     private array $changes = [];
@@ -30,18 +30,31 @@ final class Mutation implements MutationBuffer, MutationContext
     private ?EntityId $resolvedId = null;
 
     /**
+     * @param list<ActionCall> $actions
      * @param array<string, mixed> $original The entity as it was, in domain form. Empty on create.
      */
     public function __construct(
         private readonly string $entity,
         private readonly Identifier $target,
         private readonly array $original = [],
+        private readonly array $actions = [],
+        private readonly ?object $originalEntity = null,
     ) {
     }
 
     public function entity(): string
     {
         return $this->entity;
+    }
+
+    public function actions(): array
+    {
+        return $this->actions;
+    }
+
+    public function originalEntity(): ?object
+    {
+        return $this->originalEntity;
     }
 
     public function target(): Identifier
@@ -55,10 +68,8 @@ final class Mutation implements MutationBuffer, MutationContext
     }
 
     /**
-     * Told the real id once, by the unit of work, right after a create's row is
-     * inserted — before either trigger phase dispatches. A mutation that was never
-     * pending (every update, every delete context) never needs this: its target was a
-     * real EntityId from the start.
+     * Called after insertion, before post-commit side effects. Existing-row mutations already have an
+     * EntityId.
      */
     public function resolveId(EntityId $id): void
     {
@@ -129,7 +140,7 @@ final class Mutation implements MutationBuffer, MutationContext
 
     public function isEmpty(): bool
     {
-        return [] === $this->changes && [] === $this->edgeChanges();
+        return !$this->isCreate() && [] === $this->changes && [] === $this->edgeChanges();
     }
 
     /**

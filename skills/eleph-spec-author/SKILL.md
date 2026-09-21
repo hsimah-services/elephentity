@@ -57,7 +57,7 @@ hand corrections. Subsequent changes edit the yaml directly.
 3. **Find the shared parts.** Fields appearing on three entities are a pattern. Do not
    invent patterns for two.
 4. **Write the types first** — enums and value types — so entities can reference them.
-5. **Write each entity**: storage, fields, edges, then queries, actions, triggers.
+5. **Write each entity**: storage, fields, edges, then queries, actions, sideEffects.
 6. **Run the gates.** `fmt`, `validate`. They will find what you got wrong, precisely.
 7. **Report what you assumed**, and what Elephentity could not express.
 
@@ -70,7 +70,7 @@ hand corrections. Subsequent changes edit the yaml directly.
 | "one of: a, b, c" | an enum, declared in `types/` if reused, inline if not |
 | "an amount of money" / "an email" | a declared type with `processors: true` |
 | "you can publish/approve/archive an X" | an action, with `writes:` naming its reach |
-| "when an X is created, also …" | a trigger — and pick the phase deliberately |
+| "when an X is created, also …" | a sideEffect — and pick the phase deliberately |
 | "an X's start must be before its end" | `verify: true` on one of the two fields |
 | "set once when created" | `immutable: true` |
 | "we look things up by this" | `indexed: true` |

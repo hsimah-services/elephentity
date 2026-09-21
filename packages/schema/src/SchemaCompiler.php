@@ -524,7 +524,7 @@ final readonly class SchemaCompiler
                 edges: $sections->edges,
                 queries: $queries,
                 actions: $sections->actions,
-                triggers: $sections->triggers,
+                sideEffects: $sections->sideEffects,
                 config: $configuration,
                 integrations: $integrations,
                 readPolicies: $sections->readPolicies,

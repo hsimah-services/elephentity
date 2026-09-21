@@ -51,8 +51,8 @@
         "actions": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/actions"
         },
-        "triggers": {
-            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/triggers"
+        "sideEffects": {
+            "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/sideEffects"
         },
         "readPolicies": {
             "$ref": "https://dev.hbla.ke/elephentity/v0/common.schema.json#/$defs/policies"

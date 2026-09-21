@@ -5,7 +5,7 @@ schema is right.
 
 ```
 vendor/elephentity/elephentity/packages/schema/resources/
-  common.schema.json    shared definitions — fields, edges, queries, actions, triggers
+  common.schema.json    shared definitions — fields, edges, queries, actions, sideEffects
   project.schema.json   project.yml
   entity.schema.json    entities/*.yml
   pattern.schema.json   patterns/*.yml
@@ -91,7 +91,7 @@ fields: { }
 edges: { }
 queries: { }
 actions: { }
-triggers: { }
+sideEffects: { }
 ```
 
 `handle` is driver-agnostic — a WordPress post type slug here, a collection name
@@ -249,10 +249,10 @@ The handler does **not** receive the mutator. It receives a context generated fr
 it did not declare, and PHPStan enforces it. Widening an action means editing the spec,
 which is the point: blast radius is reviewable in the diff.
 
-## Triggers
+## SideEffects
 
 ```yaml
-triggers:
+sideEffects:
   audit:
     on: [create, update]
     phase: postCommit
@@ -266,11 +266,11 @@ WordPress hooks: reading the yaml tells you everything that happens on commit.
 
 | phase | when | a throw | may mutate |
 |---|---|---|---|
-| `preCommit` (default) | inside the transaction, after the flush so ids exist | rolls back everything | no |
-| `postCommit` | after `COMMIT` | logged; remaining triggers still run | yes — as a new unit of work |
+| `preCommit` (default) | after actions, before verification and storage | cancels before writes | yes — pending fields and relationships |
+| `postCommit` | after `COMMIT` | logged; remaining sideEffects still run | yes — as a new unit of work |
 
 A `postCommit` mutation is **not atomic** with the commit that caused it, and fires its
-own triggers. Fine for audit trails and projections; never for an invariant.
+own sideEffects. Fine for audit trails and projections; never for an invariant.
 
 ## Policies
 
@@ -392,7 +392,7 @@ A type with `values:` is an enum and the generator owns the class outright. A ty
 and nothing else. It reports rather than rewrites — PHP's YAML parsers discard
 comments, and deleting an author's notes to fix an ordering nit is the wrong trade.
 
-Order applies to **keys**, never to **members**: trigger declaration order is execution
+Order applies to **keys**, never to **members**: sideEffect declaration order is execution
 order, so sorting members would change behaviour.
 
 ## WordPress integration settings

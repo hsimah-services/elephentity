@@ -7,8 +7,11 @@ namespace Eleph\Runtime\Gateway;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
+use Eleph\Runtime\Mutation\ActionCall;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\Mutation\MutationResult;
+use Eleph\Runtime\Policy\AccessDenied;
 use Eleph\Runtime\Policy\PendingWrite;
 use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Policy\WriteGate;
@@ -20,6 +23,7 @@ use Eleph\Runtime\Query\LazyEntityQuery;
 use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\StorageAdaptor;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -79,23 +83,21 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         return $result;
     }
 
-    public function create(string $entity, array $input): EntityId
+    public function create(string $entity, array $input): MutationResult
     {
         $target = new PendingId($entity);
-        $mutation = new Mutation($entity, $target);
+        $mutation = new Mutation($entity, $target, actions: [new ActionCall('create', $input)]);
 
+        $this->writes->permit($entity, null, PendingWrite::create($entity, $mutation, $input));
         $this->catalogue->apply($entity, $mutation, $input);
-
-        $this->writes->permit($entity, null, PendingWrite::create($entity, $mutation));
-
 
         $work = $this->units->create();
         $work->register($mutation);
 
-        return $work->commit()->idFor($target);
+        return $this->result($entity, $work->commit()->idFor($target));
     }
 
-    public function update(string $entity, EntityId $id, array $input): void
+    public function update(string $entity, EntityId $id, array $input): MutationResult
     {
         $existing = $this->load($entity, $id);
 
@@ -103,14 +105,16 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
         }
 
-        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing));
+        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing), [new ActionCall('update', $input)], $existing);
 
+        $this->writes->permit($entity, $existing, PendingWrite::update($entity, $mutation, $input));
         $this->catalogue->apply($entity, $mutation, $input);
-        $this->writes->permit($entity, $existing, PendingWrite::update($entity, $mutation));
 
         $work = $this->units->create();
         $work->register($mutation);
         $work->commit();
+
+        return $this->result($entity, $id);
     }
 
     public function delete(string $entity, EntityId $id): void
@@ -128,32 +132,59 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         $work->commit();
     }
 
-    public function runAction(string $entity, string $action, EntityId $id, array $args): void
+    public function runAction(string $entity, string $action, EntityId $id, array $args): MutationResult
     {
+        return $this->runActions($entity, $id, [new ActionCall($action, $args)]);
+    }
+
+    public function runActions(string $entity, EntityId $id, array $actions): MutationResult
+    {
+        if ([] === $actions) {
+            throw new InvalidArgumentException('A mutation must request at least one action.');
+        }
         $existing = $this->load($entity, $id);
 
         if (null === $existing) {
             throw new RuntimeException(sprintf('There is no %s with id %s.', $entity, $id));
         }
 
-        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing));
-
-        $mutator = $this->catalogue->mutatorFor($entity, $mutation);
-
-        if (!method_exists($mutator, $action)) {
-            throw new RuntimeException(sprintf('%s declares no action "%s".', $entity, $action));
+        $decoded = [];
+        foreach ($actions as $action) {
+            $decoded[] = new ActionCall($action->name, $this->catalogue->decodeActionArguments($entity, $action->name, $action->arguments));
         }
 
-        $decoded = $this->catalogue->decodeActionArguments($entity, $action, $args);
-        $this->writes->permit($entity, $existing, PendingWrite::forAction($entity, $action, $decoded, $mutation));
+        $mutation = new Mutation($entity, $id, $this->valuesOf($entity, $existing), $decoded, $existing);
+        $mutator = $this->catalogue->mutatorFor($entity, $mutation);
 
-        // The mutator was built against this buffer, so what the action writes lands
-        // in the same mutation the unit of work is about to verify.
-        $mutator->{$action}(...array_values($decoded));
+        foreach ($decoded as $action) {
+            if (!method_exists($mutator, $action->name)) {
+                throw new RuntimeException(sprintf('%s declares no action "%s".', $entity, $action->name));
+            }
+            $this->writes->permit($entity, $existing, PendingWrite::forAction($entity, $action->name, $action->arguments, $mutation));
+        }
+        foreach ($decoded as $action) {
+            $mutator->{$action->name}(...array_values($action->arguments));
+        }
 
         $work = $this->units->create();
         $work->register($mutation);
         $work->commit();
+
+        return $this->result($entity, $id);
+    }
+
+    private function result(string $entity, EntityId $id): MutationResult
+    {
+        $object = $this->load($entity, $id);
+        if (null !== $object) {
+            try {
+                $object = $this->reads->permit($entity, $object);
+            } catch (AccessDenied) {
+                $object = null;
+            }
+        }
+
+        return new MutationResult($id, $object);
     }
 
     public function has(string $entity): bool

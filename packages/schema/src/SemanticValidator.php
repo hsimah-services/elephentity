@@ -295,7 +295,7 @@ final readonly class SemanticValidator
             $errors[] = new SpecError(
                 'field.managedNotSupported',
                 sprintf(
-                    'Field "%s" is managed but is of type %s. The framework only knows how to fill a datetime; anything else needs a trigger.',
+                    'Field "%s" is managed but is of type %s. The framework only knows how to fill a datetime; anything else needs a sideEffect.',
                     $field->name,
                     $field->type->name(),
                 ),

@@ -5,17 +5,8 @@ declare(strict_types=1);
 namespace Eleph\Schema\Spec;
 
 /**
- * The order keys are written in, everywhere.
- *
- * The spec is the entity's changelog, so a diff should show what changed and nothing
- * else. Two authors — or the same LLM on two different days — will otherwise write the
- * same field with its keys in a different order, and every review starts by deciding
- * which lines matter.
- *
- * Ordering applies to the keys of a mapping, never to the members of a section.
- * Declaration order is *semantic* for triggers, which run in the order the spec lists
- * them, and meaningful to a reader everywhere else. Sorting members would quietly
- * change behaviour.
+ * Canonical mapping-key order. Section members retain declaration order, which is semantic for
+ * sideEffects.
  */
 final readonly class CanonicalOrder
 {
@@ -23,8 +14,8 @@ final readonly class CanonicalOrder
     private const ORDERS = [
         'project' => ['project', 'description', 'storage', 'integrations'],
         'projectStorage' => ['driver', 'tablePrefix'],
-        'entity' => ['entity', 'description', 'use', 'configure', 'integrations', 'storage', 'policies', 'fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies'],
-        'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies'],
+        'entity' => ['entity', 'description', 'use', 'configure', 'integrations', 'storage', 'policies', 'fields', 'edges', 'queries', 'actions', 'sideEffects', 'readPolicies', 'writePolicies'],
+        'pattern' => ['pattern', 'description', 'requires', 'config', 'use', 'storage', 'fields', 'edges', 'queries', 'actions', 'sideEffects', 'readPolicies', 'writePolicies'],
         'type' => ['type', 'description', 'primitive', 'processors', 'values'],
         'storage' => ['table', 'handle'],
         'requires' => ['driver'],
@@ -35,7 +26,7 @@ final readonly class CanonicalOrder
         'returns' => ['type', 'cardinality'],
         'action' => ['description', 'args', 'writes', 'handler'],
         'writes' => ['fields', 'edges'],
-        'trigger' => ['description', 'on', 'phase', 'handler'],
+        'sideEffect' => ['description', 'on', 'phase', 'handler'],
         'policy' => ['description', 'handler'],
         'terminalRule' => ['read', 'write'],
         'argument' => ['type', 'nullable'],

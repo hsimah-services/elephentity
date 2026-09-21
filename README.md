@@ -76,11 +76,11 @@ generated/
     Note.php                     immutable, constructor-private, getters only
     NoteMutator.php              setters, one per writable field
     NoteInput.php                raw array → typed pending changes
-    NoteMutationContext.php      what a verifier or trigger can read mid-commit
+    NoteMutationContext.php      what a verifier or sideEffect can read mid-commit
     NoteHydrator.php             row → Note
     NoteDeleter.php
     NoteVerifiers.php            dispatch to your field verifiers
-    NoteTriggers.php             dispatch to your triggers
+    NoteSideEffects.php             dispatch to your sideEffects
 ```
 
 `memory` compiles to no physical schema — there is no `generated/memory/` beyond that

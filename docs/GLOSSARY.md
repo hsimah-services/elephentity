@@ -147,13 +147,14 @@ touch anything else.
 **Blast radius.** What an action is permitted to change. Reviewable in the spec diff
 rather than discoverable by reading the implementation.
 
-**Trigger.** Something that runs as part of a commit. Declared in the entity spec and
+**SideEffect.** Something that runs as part of a commit. Declared in the entity spec and
 nowhere else, which is the difference between this and WordPress hooks.
 
-**preCommit.** Inside the transaction, after the writes are flushed so ids exist. A
-throw rolls the whole commit back. May not mutate.
+**preCommit.** After actions, before verification and storage. Side effects may change
+pending fields and relationships; a throw cancels before writes. Creates still have
+pending IDs.
 
-**postCommit.** After `COMMIT`. A throw is logged and the remaining triggers still run.
+**postCommit.** After `COMMIT`. A throw is logged and the remaining sideEffects still run.
 May mutate — as a *new* unit of work, so it is not atomic with the commit that caused
 it.
 
@@ -185,7 +186,7 @@ and nothing reaches storage until commit.
 can be faked in a test and so the entity stays exactly one thing.
 
 **Mutation context.** `ItemMutationContext`. A pending mutation with exact types —
-`pendingPrice()`, `originalStatus()` — handed to verifiers and triggers.
+`pendingPrice()`, `originalStatus()` — handed to verifiers and sideEffects.
 
 **Action context.** `ItemPublishContext`. An action's narrow write surface, generated
 from its `writes:` block.
@@ -193,7 +194,7 @@ from its `writes:` block.
 **Hydrator.** `ItemHydrator`. Turns a stored row into a read model, running read
 processors on the way.
 
-**Bridge.** `ItemVerifiers` and `ItemTriggers`. Adapters between a generic runtime and
+**Bridge.** `ItemVerifiers` and `ItemSideEffects`. Adapters between a generic runtime and
 your exactly-typed interfaces — PHP forbids narrowing a parameter, so only generated
 code can stand between the two.
 
@@ -237,8 +238,9 @@ faceting. Declared per adaptor rather than the port flattening to a lowest commo
 denominator. A viewer capability is instead a caller permission queried by a write or
 read policy.
 
-**Unit of work.** One commit. Verifies everything, orders writes by dependency, writes
-rows then links, runs preCommit triggers, commits, runs postCommit triggers.
+**Unit of work.** One commit. Runs pre-commit side effects, verifies and encodes,
+orders writes by dependency, writes rows then links, commits,
+and runs post-commit side effects.
 
 **Mutation buffer.** Where a mutator's pending changes accumulate. The same object,
 seen from the write side, that a verifier sees as a mutation context.
@@ -293,7 +295,7 @@ resolves to a method that exists. A renamed accessor still parses and still load
 fails only here.
 
 **Canonical order.** The fixed order keys are written in. Applies to **keys**, never to
-**members** — trigger declaration order is execution order, so sorting members would
+**members** — sideEffect declaration order is execution order, so sorting members would
 change behaviour.
 
 **WordPress-specific vocabulary** — Projection, Orphan guard, Refusal — moved to

@@ -58,7 +58,7 @@ final readonly class FormatChecker
             'edges' => 'edge',
             'queries' => 'query',
             'actions' => 'action',
-            'triggers' => 'trigger',
+            'sideEffects' => 'sideEffect',
             'readPolicies' => 'policy',
             'writePolicies' => 'policy',
         ];

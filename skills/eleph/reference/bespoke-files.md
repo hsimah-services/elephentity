@@ -47,21 +47,22 @@ The context exposes only what the action declared it `writes:`. If you need a me
 that is not there, add it to the spec's `writes:` block and regenerate — do not reach
 around the context.
 
-### 3. Trigger handlers — `{Entity}{Trigger}Trigger`
+### 3. SideEffect handlers — `{Entity}{SideEffect}SideEffect`
 
 ```php
-interface PostAuditTrigger
+interface PostAuditSideEffect
 {
     public function handle(PostMutationContext $context): void;
 }
 ```
 
 **Decide what a failure means and act accordingly.** The framework does not classify
-triggers as critical: throw to abort, catch to continue. In `preCommit` a throw rolls
+sideEffects as critical: throw to abort, catch to continue. In `preCommit` a throw rolls
 the whole commit back; in `postCommit` there is nothing left to roll back, so it is
-logged and the remaining triggers still run.
+logged and the remaining sideEffects still run.
 
-`preCommit` may not mutate. `postCommit` may, as a separate unit of work.
+`preCommit` receives the writable `EntityPreCommitContext` before verification and storage.
+`postCommit` receives `EntityMutationContext`; new writes use a separate unit of work.
 
 ### 4. Field verifiers — `{Entity}{Field}Verifier`
 

@@ -11,7 +11,7 @@
         "memberName": {
             "type": "string",
             "pattern": "^[a-z][A-Za-z0-9]*$",
-            "description": "camelCase name of a field, edge, query, action or trigger."
+            "description": "camelCase name of a field, edge, query, action or sideEffect."
         },
         "primitive": {
             "enum": [
@@ -297,13 +297,13 @@
                 }
             }
         },
-        "triggers": {
+        "sideEffects": {
             "type": "object",
             "propertyNames": {
                 "$ref": "#/$defs/memberName"
             },
             "additionalProperties": {
-                "$ref": "#/$defs/trigger"
+                "$ref": "#/$defs/sideEffect"
             }
         },
         "policies": {
@@ -348,7 +348,7 @@
                 }
             }
         },
-        "trigger": {
+        "sideEffect": {
             "type": "object",
             "required": [
                 "on",

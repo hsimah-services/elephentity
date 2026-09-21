@@ -18,14 +18,16 @@ final readonly class PendingWrite implements WriteContext
     ) {
     }
 
-    public static function create(string $entity, MutationContext $mutation): self
+    /** @param array<string, mixed> $arguments */
+    public static function create(string $entity, MutationContext $mutation, array $arguments = []): self
     {
-        return new self($entity, WriteOperation::Create, null, [], $mutation);
+        return new self($entity, WriteOperation::Create, null, $arguments, $mutation);
     }
 
-    public static function update(string $entity, MutationContext $mutation): self
+    /** @param array<string, mixed> $arguments */
+    public static function update(string $entity, MutationContext $mutation, array $arguments = []): self
     {
-        return new self($entity, WriteOperation::Update, null, [], $mutation);
+        return new self($entity, WriteOperation::Update, null, $arguments, $mutation);
     }
 
     public static function delete(string $entity): self
@@ -49,6 +51,11 @@ final readonly class PendingWrite implements WriteContext
     public function operation(): WriteOperation
     {
         return $this->operation;
+    }
+
+    public function actions(): array
+    {
+        return $this->mutation?->actions() ?? [];
     }
 
     public function action(): ?string

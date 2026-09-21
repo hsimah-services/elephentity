@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Runtime\Trigger;
+namespace Eleph\Runtime\SideEffect;
 
-enum TriggerEvent: string
+enum SideEffectEvent: string
 {
     case Create = 'create';
     case Update = 'update';

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Eleph\Runtime\Gateway;
 
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Mutation\ActionCall;
+use Eleph\Runtime\Mutation\MutationResult;
 use Eleph\Runtime\Query\EntityQuery;
 
 /**
@@ -43,17 +45,19 @@ interface EntityGateway
     /**
      * @param array<string, mixed> $input Field name to raw value; coercion is the implementation's job.
      */
-    public function create(string $entity, array $input): EntityId;
+    public function create(string $entity, array $input): MutationResult;
 
     /**
      * @param array<string, mixed> $input Only the fields to change.
      */
-    public function update(string $entity, EntityId $id, array $input): void;
+    public function update(string $entity, EntityId $id, array $input): MutationResult;
 
     public function delete(string $entity, EntityId $id): void;
 
     /**
-     * @param array<array-key, mixed> $args
+     * @param array<string, mixed> $args
      */
-    public function runAction(string $entity, string $action, EntityId $id, array $args): void;
+    public function runAction(string $entity, string $action, EntityId $id, array $args): MutationResult;
+    /** @param list<ActionCall> $actions */
+    public function runActions(string $entity, EntityId $id, array $actions): MutationResult;
 }

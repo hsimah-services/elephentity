@@ -18,9 +18,9 @@ use Eleph\Schema\Ir\Origin;
 use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\ReturnDefinition;
-use Eleph\Schema\Ir\TriggerDefinition;
-use Eleph\Schema\Ir\TriggerEvent;
-use Eleph\Schema\Ir\TriggerPhase;
+use Eleph\Schema\Ir\SideEffectDefinition;
+use Eleph\Schema\Ir\SideEffectEvent;
+use Eleph\Schema\Ir\SideEffectPhase;
 use Eleph\Schema\Ir\TypeReference;
 
 /**
@@ -39,7 +39,7 @@ final readonly class SectionParser
             $this->edges($reader, $origin),
             $this->queries($reader, $origin),
             $this->actions($reader, $origin),
-            $this->triggers($reader, $origin),
+            $this->sideEffects($reader, $origin),
             $this->policies($reader, $origin, 'readPolicies'),
             $this->policies($reader, $origin, 'writePolicies'),
         );
@@ -222,33 +222,33 @@ final readonly class SectionParser
     }
 
     /**
-     * @return array<string, TriggerDefinition>
+     * @return array<string, SideEffectDefinition>
      */
-    private function triggers(SpecReader $reader, Origin $origin): array
+    private function sideEffects(SpecReader $reader, Origin $origin): array
     {
-        $triggers = [];
+        $sideEffects = [];
 
-        foreach ($reader->readers('triggers') as $name => $trigger) {
-            $phase = $trigger->optionalString('phase');
+        foreach ($reader->readers('sideEffects') as $name => $sideEffect) {
+            $phase = $sideEffect->optionalString('phase');
 
             $events = [];
 
-            foreach ($trigger->stringList('on') as $event) {
-                $events[] = TriggerEvent::from($event);
+            foreach ($sideEffect->stringList('on') as $event) {
+                $events[] = SideEffectEvent::from($event);
             }
 
-            $triggers[$name] = new TriggerDefinition(
+            $sideEffects[$name] = new SideEffectDefinition(
                 name: $name,
                 events: $events,
                 origin: $origin,
                 phase: null === $phase
-                    ? TriggerPhase::PreCommit
-                    : TriggerPhase::from($phase),
-                description: $trigger->optionalString('description'),
+                    ? SideEffectPhase::PreCommit
+                    : SideEffectPhase::from($phase),
+                description: $sideEffect->optionalString('description'),
             );
         }
 
-        return $triggers;
+        return $sideEffects;
     }
 
     /**

@@ -15,8 +15,8 @@ use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
 use Eleph\Schema\Ir\Schema;
-use Eleph\Schema\Ir\TriggerDefinition;
-use Eleph\Schema\Ir\TriggerEvent;
+use Eleph\Schema\Ir\SideEffectDefinition;
+use Eleph\Schema\Ir\SideEffectEvent;
 use Eleph\Schema\Ir\TypeDefinition;
 use ReflectionClass;
 use ReflectionNamedType;
@@ -51,7 +51,7 @@ final readonly class IrCodec
     * are optional, a builder that silently drops them generates an entirely ungated
     * tree, so this change must be loud at the version boundary.
      */
-    public const VERSION = '1.1';
+    public const VERSION = '1.2';
 
     /**
      * What each array-typed constructor parameter holds.
@@ -74,7 +74,7 @@ final readonly class IrCodec
             'edges' => EdgeDefinition::class,
             'queries' => QueryDefinition::class,
             'actions' => ActionDefinition::class,
-            'triggers' => TriggerDefinition::class,
+            'sideEffects' => SideEffectDefinition::class,
             'readPolicies' => PolicyDefinition::class,
             'writePolicies' => PolicyDefinition::class,
         ],
@@ -86,25 +86,18 @@ final readonly class IrCodec
         ],
         QueryDefinition::class => ['arguments' => ArgumentDefinition::class],
         ActionDefinition::class => ['arguments' => ArgumentDefinition::class],
-        TriggerDefinition::class => ['events' => TriggerEvent::class],
+        SideEffectDefinition::class => ['events' => SideEffectEvent::class],
     ];
 
     /**
-     * Array parameters that are string-keyed maps rather than lists.
-     *
-     * JSON tells them apart and PHP does not: an empty map and an empty list are both
-     * `[]`, and `json_encode` picks the wrong one half the time. A builder in another
-     * language then gets `[]` where its types say object, which is exactly the kind of
-     * papercut that makes a format hostile to the languages it exists to serve.
-     *
-     * Every collection in COLLECTIONS is a map except one — a trigger's `events` is a
-     * list — so this is declared separately rather than derived.
+     * Map-shaped parameters encoded as JSON objects, including empty maps. SideEffect events
+     * remain a list.
      *
      * @var array<class-string, list<string>>
      */
     private const MAPS = [
         Schema::class => ['entities', 'types', 'patterns'],
-        EntityDefinition::class => ['fields', 'edges', 'queries', 'actions', 'triggers', 'readPolicies', 'writePolicies', 'config'],
+        EntityDefinition::class => ['fields', 'edges', 'queries', 'actions', 'sideEffects', 'readPolicies', 'writePolicies', 'config'],
         PatternDeclaration::class => ['fields', 'edges', 'readPolicies', 'writePolicies'],
         ActionDefinition::class => ['arguments'],
         QueryDefinition::class => ['arguments'],

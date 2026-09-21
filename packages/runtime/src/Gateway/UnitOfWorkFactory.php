@@ -11,7 +11,7 @@ use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Type\ProcessorRegistry;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
 use Eleph\Runtime\UnitOfWork\ManagedFields;
-use Eleph\Runtime\UnitOfWork\TriggerDispatcher;
+use Eleph\Runtime\UnitOfWork\SideEffectDispatcher;
 use Eleph\Runtime\UnitOfWork\UniquenessCheck;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
@@ -42,14 +42,14 @@ final readonly class UnitOfWorkFactory implements DeletionRules
     public function create(): UnitOfWork
     {
         $verifiers = [];
-        $triggers = [];
+        $sideEffects = [];
         $required = [];
         $requiredEdges = [];
         $unique = [];
 
         foreach ($this->catalogue->entities() as $entity) {
             $verifiers[$entity] = $this->catalogue->verifiers($entity);
-            $triggers[$entity] = $this->catalogue->triggers($entity);
+            $sideEffects[$entity] = $this->catalogue->sideEffects($entity);
             $required[$entity] = $this->catalogue->requiredFields($entity);
             $requiredEdges[$entity] = $this->catalogue->requiredEdges($entity);
             $unique[$entity] = $this->catalogue->uniqueFields($entity);
@@ -62,7 +62,7 @@ final readonly class UnitOfWorkFactory implements DeletionRules
             $this->storage,
             new VerificationPipeline($verifiers, $fieldTypes, $this->processors, $required, $requiredEdges),
             $encoder,
-            new TriggerDispatcher($triggers, $this->logger),
+            new SideEffectDispatcher($sideEffects, $this->logger),
             planner: new DeletionPlanner($this->storage, $this),
             managed: new ManagedFields($this->catalogue->managedFields()),
             unique: new UniquenessCheck($this->storage, $encoder, $unique),

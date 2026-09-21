@@ -59,9 +59,9 @@ final readonly class SectionMerger
             $errors,
         );
 
-        $triggers = $this->mergeSection(
-            array_map(static fn (ParsedSections $s): array => $s->triggers, $contributions),
-            'trigger',
+        $sideEffects = $this->mergeSection(
+            array_map(static fn (ParsedSections $s): array => $s->sideEffects, $contributions),
+            'sideEffect',
             $entityName,
             $entityFile,
             $errors,
@@ -84,7 +84,7 @@ final readonly class SectionMerger
         );
 
         return [
-            'sections' => new ParsedSections($fields, $edges, $queries, $actions, $triggers, $readPolicies, $writePolicies),
+            'sections' => new ParsedSections($fields, $edges, $queries, $actions, $sideEffects, $readPolicies, $writePolicies),
             'errors' => $errors,
         ];
     }
