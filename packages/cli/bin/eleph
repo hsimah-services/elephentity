@@ -10,7 +10,7 @@ use Eleph\Cli\Command\ValidateCommand;
 use Symfony\Component\Console\Application;
 
 // Works both when Elephentity is the root project and when it is installed as a dependency.
-foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../autoload.php'] as $autoload) {
+foreach ([$_composer_autoload_path ?? '', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php', __DIR__ . '/../../../vendor/autoload.php'] as $autoload) {
     if (file_exists($autoload)) {
         require $autoload;
 
@@ -19,8 +19,10 @@ foreach ([__DIR__ . '/../../../vendor/autoload.php', __DIR__ . '/../../../../../
 }
 
 $application = new Application('eleph', '0.1.0');
-$application->add(new ValidateCommand());
-$application->add(new GenerateCommand());
-$application->add(new CheckCommand());
-$application->add(new FmtCommand());
+$application->addCommands([
+    new ValidateCommand(),
+    new GenerateCommand(),
+    new CheckCommand(),
+    new FmtCommand(),
+]);
 $application->run();

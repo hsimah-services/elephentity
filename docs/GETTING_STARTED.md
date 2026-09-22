@@ -4,7 +4,7 @@
 
 ```bash
 composer require elephentity/runtime elephentity/memory
-composer require --dev elephentity/elephentity elephentity/codegen elephentity/codegen-php
+composer require --dev elephentity/cli elephentity/codegen elephentity/codegen-php
 ```
 
 **Installation is additive, by driver and by integration.** `elephentity/runtime`
@@ -29,7 +29,7 @@ types from the same spec, you add a builder for it and a target in `eleph.json` 
 else changes, and no part of the framework learns what TypeScript is.
 
 That gives you three commands in `vendor/bin`: `eleph`, `eleph-codegen` and
-`eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/elephentity` and whichever of
+`eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/cli` and whichever of
 `eleph-gen-wordpress` / `eleph-gen-wpgraphql` you installed.
 `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all where the
 config expects.
@@ -206,7 +206,7 @@ is the answer. A half-migrated schema is worse than an unmigrated one.
 ## Wire up your editor
 
 ```bash
-cp vendor/elephentity/elephentity/.vscode/settings.json.example .vscode/settings.json
+curl -fsSL https://raw.githubusercontent.com/hsimah-services/elephentity/main/.vscode/settings.json.example -o .vscode/settings.json
 ```
 
 Validates spec files as you type against the published schemas, and marks `generated/`
@@ -222,7 +222,8 @@ See [CI.md](CI.md). Four gates, in order.
 Elephentity ships skills that teach an agent how to use it:
 
 ```bash
-cp -r vendor/elephentity/elephentity/skills/* .claude/skills/
+git clone --depth 1 https://github.com/hsimah-services/elephentity.git /tmp/elephentity-skills
+cp -r /tmp/elephentity-skills/skills/* .claude/skills/
 ```
 
 - `eleph` — the spec format, the build loop, and how to find what is left to implement
