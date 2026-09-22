@@ -27,3 +27,4 @@ jobs:
           cargo build --release --locked --manifest-path vendor/elephentity/codegen/Cargo.toml
           cargo build --release --locked --manifest-path vendor/elephentity/codegen-php/Cargo.toml
       - run: composer ci
+      - run: php bin/eleph --version
