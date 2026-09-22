@@ -154,3 +154,8 @@ Listed because guessing wrong in this direction is the expensive one.
 - **One builder's `src/Runtime.php`, `src/Ir/*` or `src/Protocol/*` copy is invisible to
   every other builder.** Each is independent; `elephentity-codegen-wordpress` falling
   behind the IR does not reach `elephentity-codegen-wpgraphql` or vice versa.
+
+Schema, CLI and memory mirrors are entirely owned by `packages/<name>` here, including
+Composer metadata, resources, bins and CI. Change those in the source repository;
+the split workflow synchronizes them on main pushes and source tags. The memory
+builder lives in the CLI package so memory has no compiler dependency at runtime.

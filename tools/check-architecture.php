@@ -67,9 +67,7 @@ const SHIPPED_PACKAGES = ['runtime', 'memory'];
  * Each turns a compiled spec into something the runtime loads later; none of them is
  * reachable from a request. Paths are relative to packages/.
  */
-const COMPILERS = [
-    'memory/bin/eleph-gen-memory',
-];
+const COMPILERS = [];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */
 const WORDPRESS_FUNCTIONS = [

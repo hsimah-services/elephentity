@@ -194,7 +194,7 @@ final class PipelineTest extends TestCase
      */
     private function writeConfig(array $extra = []): void
     {
-        $root = dirname(__DIR__, 3);
+        $root = is_dir(dirname(__DIR__) . '/vendor') ? dirname(__DIR__) : dirname(__DIR__, 3);
 
         file_put_contents($this->project . '/eleph.json', json_encode([
             'spec' => 'spec',
@@ -215,7 +215,7 @@ final class PipelineTest extends TestCase
                 // eleph-gen-php it is never symlinked into vendor/bin — Composer only
                 // does that for installed packages.
                 'memory' => [
-                    'builder' => $root . '/packages/memory/bin/eleph-gen-memory',
+                    'builder' => __DIR__ . '/../bin/eleph-gen-memory',
                     'output' => 'generated/memory',
                 ],
             ],

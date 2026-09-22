@@ -11,7 +11,7 @@ The command is `eleph`; the PHP namespace is `Eleph\`.
 
 ```bash
 composer require elephentity/runtime elephentity/memory
-composer require --dev elephentity/elephentity elephentity/codegen elephentity/codegen-php
+composer require --dev elephentity/cli elephentity/codegen elephentity/codegen-php
 ```
 
 `elephentity/memory` is the neutral driver: raw PHP objects, no platform. Want
@@ -247,5 +247,6 @@ Elephentity ships skills that teach an agent to use it, in [skills/](skills):
 - `eleph-spec-author` — turning a written description into a spec, and what to ask first
 
 ```bash
-cp -r vendor/elephentity/elephentity/skills/* .claude/skills/
+git clone --depth 1 https://github.com/hsimah-services/elephentity.git /tmp/elephentity-skills
+cp -r /tmp/elephentity-skills/skills/* .claude/skills/
 ```

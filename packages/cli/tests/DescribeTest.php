@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Eleph\Memory\Tests;
+namespace Eleph\Cli\Tests;
 
 use Eleph\Schema\Ir\ProjectDefinition;
 use Eleph\Schema\Ir\Schema;

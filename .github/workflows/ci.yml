@@ -58,3 +58,6 @@ jobs:
 
       - name: Tests
         run: vendor/bin/phpunit
+
+      - name: Standalone package installation
+        run: tools/test-package-install.sh
