@@ -90,7 +90,7 @@ jobs:
             For each entity spec changed in this pull request, compare the .yml against
             its companion .md and report exactly two lists:
 
-            1. Fields, edges, queries, actions and triggers present in the yaml with no
+            1. Fields, edges, queries, actions and sideEffects present in the yaml with no
                counterpart described in the md.
             2. Statements in the md describing behaviour that the yaml does not declare.
 

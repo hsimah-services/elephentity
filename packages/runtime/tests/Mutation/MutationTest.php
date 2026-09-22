@@ -83,7 +83,7 @@ final class MutationTest extends TestCase
 
     public function testExactlyOneOfSeveralEdgesCanBeCheckedFromTheContext(): void
     {
-        // The motivating case: a preCommit trigger enforcing "exactly one of
+        // The motivating case: a preCommit sideEffect enforcing "exactly one of
         // tutorial/quiz/commodity is set" has no field to attach verify: true to, and
         // needed pendingEdge() to read edge state at all.
         $mutation = new Mutation('PointsTransaction', new PendingId('PointsTransaction'));

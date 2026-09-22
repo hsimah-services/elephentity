@@ -15,7 +15,7 @@ final readonly class EntityDefinition
      * @param array<string, EdgeDefinition>    $edges
      * @param array<string, QueryDefinition>   $queries
      * @param array<string, ActionDefinition>  $actions
-     * @param array<string, TriggerDefinition> $triggers Ordered; declaration order is execution order.
+     * @param array<string, SideEffectDefinition> $sideEffects Ordered; declaration order is execution order.
     * @param array<string, PolicyDefinition>  $readPolicies Ordered; declaration order is execution order.
     * @param array<string, PolicyDefinition>  $writePolicies Ordered; declaration order is execution order.
      * @param array<string, mixed>                $config       Pattern configuration, resolved and defaulted.
@@ -37,7 +37,7 @@ final readonly class EntityDefinition
         public array $edges = [],
         public array $queries = [],
         public array $actions = [],
-        public array $triggers = [],
+        public array $sideEffects = [],
         public array $config = [],
         public array $integrations = [],
         public array $appliedPatterns = [],

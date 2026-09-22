@@ -73,7 +73,7 @@ actions:
       fields: [status]
       edges: [comments]
     handler: true
-triggers:
+sideEffects:
   reindex:
     on: [create, update]
     phase: postCommit

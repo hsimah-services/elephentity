@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Catalogue;
 
-use Eleph\Runtime\Mutation\EntityTriggers;
+use Eleph\Runtime\Mutation\EntitySideEffects;
 use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\MutationBuffer;
 use Eleph\Runtime\Policy\EntityReadPolicies;
@@ -39,7 +39,7 @@ interface EntityCatalogue
 
     public function verifiers(string $entity): EntityVerifiers;
 
-    public function triggers(string $entity): EntityTriggers;
+    public function sideEffects(string $entity): EntitySideEffects;
 
     public function readPolicies(string $entity): EntityReadPolicies;
 

@@ -197,7 +197,7 @@ It had. `EdgePlacement` typed a property as `Schema\Ir\RelationKind`, and a comp
 storage manifest contains `RelationKind::OneToMany` as a literal — so *loading* the
 manifest pulled the spec compiler into every request of every WordPress project.
 `RelationKind` is now mirrored into `Runtime\Storage` alongside `Managed` and
-`TriggerPhase`, with the IR's own enum owning the correspondence.
+`SideEffectPhase`, with the IR's own enum owning the correspondence.
 
 Two classes were loaded at run time while carrying build-time signatures, which is the
 same leak one call away from happening. `Naming` took `EntityDefinition` and now takes
@@ -317,7 +317,7 @@ deduplicate within a single entity.
   not apply.
 
 - **A pattern is a fragment of an entity spec.** Any section an entity may declare, a
-  pattern may declare: fields, edges, storage, queries, actions and triggers. Sealed
+  pattern may declare: fields, edges, storage, queries, actions and sideEffects. Sealed
   collisions apply uniformly, with no per-section special cases.
 
   This is more powerful than it first appears. A `Publishable` pattern can carry a
@@ -347,7 +347,7 @@ own fields and edges — `Auditable`, not `PostAuditable`, because every entity 
 gets the same one. Opt-in, and rare: most patterns need nothing beyond their fields
 landing on the entity, which already happens without this.
 
-Everything it produces is fully generated, unlike a field verifier or a trigger — there
+Everything it produces is fully generated, unlike a field verifier or a sideEffect — there
 is nothing for an application to implement. An entity's own getters already have the
 exact signatures the pattern's fields require, so `implements Auditable` costs the
 generator an `implements` clause and nothing else. This is why a *shared* interface
@@ -529,7 +529,7 @@ Values in the bag are domain-typed (`TOut`) on both sides: `write()` has not run
 at verify time, and old values come from the Entity.
 
 **Edges get a pending-only counterpart, not a symmetric one.** `pendingEdge(string):
-list<Identifier>` and `isEdgeChanged(string): bool` exist so a `preCommit` trigger can
+list<Identifier>` and `isEdgeChanged(string): bool` exist so a `preCommit` sideEffect can
 implement a cross-edge rule such as "exactly one of tutorial/quiz/commodity is set" —
 the case that has no field to attach `verify: true` to. There is deliberately no
 `originalEdge()`: nothing in the write path loads an entity's currently-attached edges
@@ -542,16 +542,16 @@ wraps. Generated per-entity contexts get typed accessors the same way fields do:
 `pending{Edge}(): ?Identifier` for a to-one edge, `pending{Edge}(): list<Identifier>`
 for a to-many one, plus `is{Edge}Changed(): bool`.
 
-**`id(): Identifier` is how a trigger finds out which row it was called about.** The
+**`id(): Identifier` is how a sideEffect finds out which row it was called about.** The
 gap was not just a missing interface method: `Mutation::$target` is the `PendingId` a
 create started with, and it stays that object — `readonly`, never reassigned — for the
 whole commit, because `isCreate()` depends on `$target->isPersisted()` staying
 answerable the same way throughout. Overwriting it the moment the insert flushes would
 flip `isCreate()` mid-dispatch, which is worse than the gap this fixes. A second,
 separate slot (`resolveId(EntityId)`, called by the unit of work right after the row
-write, before either trigger phase) carries the real id instead, and `id()` reads
+write, before either sideEffect phase) carries the real id instead, and `id()` reads
 whichever is available — the resolved one if a create has happened, `$target` itself
-otherwise (which is already real for an update or a delete context). Both trigger
+otherwise (which is already real for an update or a delete context). Both sideEffect
 phases run after that resolution, so neither ever sees a placeholder.
 
 ### Two tiers
@@ -809,7 +809,7 @@ them takes us fully off the WP path.
 
 ---
 
-## 10. Queries, actions and triggers
+## 10. Queries, actions and sideEffects
 
 Actions are also subject to write policies; see [§19](#19-read-and-write-policies).
 
@@ -862,20 +862,20 @@ This makes blast radius reviewable in the yaml rather than discoverable only by
 reading the implementation. Widening an action is a spec edit and a regeneration —
 which is the point, not the cost (see *The spec as changelog* below).
 
-There is no `writes.entities`. Cross-cutting side effects are triggers, not actions.
-Clean line: **actions are this entity's business operations; triggers are what happens
+There is no `writes.entities`. Cross-cutting side effects are sideEffects, not actions.
+Clean line: **actions are this entity's business operations; sideEffects are what happens
 on commit.**
 
-### Triggers
+### SideEffects
 
 Classes that receive the mutation context and run as part of the commit.
 
 ```yaml
-triggers:
+sideEffects:
   audit:
     on: [create, update]
     phase: preCommit        # default
-    handler: true           # → PostAuditTrigger
+    handler: true           # → PostAuditSideEffect
   reindex:
     on: [create, update]
     phase: postCommit
@@ -884,73 +884,44 @@ triggers:
 
 #### Declared in the entity spec, never registered elsewhere
 
-This is the whole difference between triggers and WordPress hooks. If a trigger could
+This is the whole difference between sideEffects and WordPress hooks. If a sideEffect could
 be registered anywhere, reading `Post.yml` would no longer tell you what a commit
 does, and debugging becomes "grep for anything that might fire". Registration lives in
 the spec; only the implementation is a class.
 
 Reuse without copypasta is already solved by patterns: `use: [Auditable]` and the
-pattern carries the trigger.
+pattern carries the sideEffect.
 
 #### Ordering
 
 **Declaration order in the yaml.** Deterministic, visible in the diff, and no
 `add_action($hook, $fn, 10)` priority-number archaeology.
 
-#### Phases — precise semantics
+#### Mutation lifecycle (2026-09-21)
+
+The lifecycle is authorization, ordered actions on one entity, writable pre-commit
+side effects, final verification and encoding, transactional storage, post-commit
+side effects, then result read-policy evaluation. See
+[MUTATION-LIFECYCLE.md](MUTATION-LIFECYCLE.md) for contracts and migration.
 
 | Phase | When | A thrown exception |
 |---|---|---|
-| `preCommit` | inside the transaction, **after** the entity's writes are flushed, before `COMMIT` | rolls back the entire commit |
-| `postCommit` | after `COMMIT`; data is durable | logged; remaining triggers still run |
+| `preCommit` | after actions, before verification and storage; may edit pending fields and relationships | cancels the mutation before writes |
+| `postCommit` | after `COMMIT`; additional mutations have independent transactions | logged per handler; remaining handlers continue |
 
-`preCommit` deliberately runs *after* the flush, not before it: with auto-increment
-IDs a create trigger that ran earlier would have no ID to work with. This way the row
-exists, the ID is real, and a throw still rolls everything back.
+Pre-commit side effects on creates see pending IDs. Post-commit side effects see the
+storage-assigned IDs. Pattern side effects compose into the entity's declaration
+order. A deletion notifies planned cascades before persistence and rechecks the plan
+inside the transaction.
 
-**A `delete` event is the exception, and runs before its DELETE.** The argument above
-is about a row that does not exist yet; a deletion is the mirror case, where waiting
-means the row is gone and the trigger has nothing to read. Both orderings put the
-trigger where the data is, and both stay inside the transaction, so a throw undoes
-everything either way. Every planned removal is announced — cascaded rows included,
-since an audit trail or an external projection that only heard about the row someone
-asked to delete would be silently incomplete.
-
-A delete context carries identity and nothing else: there are no pending values, and
-the original row is still there to be read for as long as the trigger is running.
-
-Anything slow or external (email, HTTP, search indexing) belongs in `postCommit` —
-holding DB locks while calling a third party is how transactions die.
-
-#### Failure handling is the trigger's job
-
-The framework does not classify triggers as critical or not. Throw to abort, swallow
-to continue. The trigger knows; the framework shouldn't guess.
-
-#### Mutation is allowed in `postCommit` only
-
-| Phase | May mutate? | Why |
-|---|---|---|
-| `preCommit` | **No** | keeps the in-transaction path a single pass — no cascades, no re-triggering, no cycle detection. It is a veto-and-observe phase. |
-| `postCommit` | **Yes** | the transaction is already closed, so a write here is simply a *new* unit of work rather than an extension of the current one. |
-
-This is what makes audit logging work: an `AuditLog` **entity** is written by a
-`postCommit` trigger like any other entity, with no special framework support and no
-writing below the entity layer.
-
-Two properties of a `postCommit` mutation to be aware of:
-
-- **It is not atomic with the commit that caused it.** It can fail after the original
-  succeeded. Fine for audit trails, denormalised counters and projections; never use
-  it to enforce an invariant.
-- **It is an ordinary commit, so it fires its own triggers.** Genuine cascades are
-  therefore possible (`Post` → writes `Comment` → whose `postCommit` writes `Post`).
-  Nothing detects that today; a depth limit is the obvious guard if it bites.
+The full action list and original entity remain available throughout the mutation.
+A successful mutation whose result fails read policy returns a null entity, without
+turning the completed write into an authorization error.
 
 ### The spec as changelog
 
 The yaml is the record of the entity's history — widening an action or adding a
-trigger shows up in a commit diff, which is the intent.
+sideEffect shows up in a commit diff, which is the intent.
 
 That makes diff noise a real cost, so a canonical formatter (`eleph fmt`, enforced in
 CI) keeps key order and style stable and every diff semantic, rather than recording
@@ -1025,7 +996,7 @@ such code ever existed, which is worse than the gap itself: an entity declaring 
 
 The projection stays the application's, for a reason that outlives the missing code. A
 post row is a WordPress-shaped side effect of a commit, and side effects on commit are
-already a thing the framework has: a `postCommit` trigger. Building a second,
+already a thing the framework has: a `postCommit` sideEffect. Building a second,
 adaptor-level mechanism for the one platform that needs it would put a WordPress
 concept inside the unit of work, which is exactly what the storage port exists to
 prevent.
@@ -1038,7 +1009,7 @@ Two consequences, both deliberate:
 - **Delete events fire for cascades.** An application maintaining a projection has to
   see every row that goes, not only the one it asked to delete, so the unit of work
   announces every planned removal — and announces it *before* the DELETE, since a
-  trigger that cannot read the row it is being told about cannot project it.
+  sideEffect that cannot read the row it is being told about cannot project it.
 
 ### Taxonomy-backed entities
 
@@ -1067,7 +1038,7 @@ a table for the taxonomy entity itself, for the same reason.
 alternative — using the real `wp_posts.ID` so WordPress's own `tax_query` and admin
 term lists see the relationship — was rejected because nothing in this framework
 reliably has that id at write time: `postId`, per "Post-row divergence" above, is
-filled by an application's own `postCommit` trigger, asynchronously, and possibly never.
+filled by an application's own `postCommit` sideEffect, asynchronously, and possibly never.
 Keying by the framework's own id keeps this correct and fully framework-owned, at the
 cost of WordPress-native `tax_query`/admin-list integration needing the application to
 keep the two in sync itself — the identical tradeoff `postId` already makes.
@@ -1151,7 +1122,7 @@ two managed timestamps is `wp_usermeta`, full stop. Also deferred: an account en
 declaring edges of its own (only other entities *pointing at* one is supported,
 mirroring a taxonomy's own edge-shape restriction), and a real project's way to seed
 the first `wp_usermeta` row for a newly registered account, which is presumably a
-`postCommit`-trigger-shaped concern on whatever entity WordPress's own registration
+`postCommit`-sideEffect-shaped concern on whatever entity WordPress's own registration
 hook fires against — the same shape the post-row-divergence problem already has.
 
 ### The memory adapter, and the conformance suite that proves it
@@ -1659,7 +1630,7 @@ sees what the row will actually hold.
 
 ### Step 3 — code generation *(now `elephentity-codegen` and `elephentity-codegen-php`)*
 - Entity, Mutator, Finder, action contexts, typed mutation contexts, enums
-- Handler interfaces: queries, actions, triggers, field verifiers, type processors
+- Handler interfaces: queries, actions, sideEffects, field verifiers, type processors
 - Header + hash signing, with the single shared verifier
 - `eleph generate`, `eleph generate --check`, driven by `eleph.json`
 
@@ -1747,7 +1718,7 @@ keeps those symbols out of the core packages.
 - `Mutation`: the command buffer and the context, two views of one state
 - `VerificationPipeline`: both tiers, aggregated
 - `DependencySorter`: parents before the children that reference them
-- `UnitOfWork`: verify → sort → rows → links → preCommit → COMMIT → postCommit
+- `UnitOfWork`: preCommit → stamp → verify → sort → encode → rows → links → COMMIT → postCommit
 - `LazyEntityQuery` and `CachingEdgeLoader` on the read side
 
 **Verification happens before anything is written.** A rejected commit leaves no
@@ -1761,10 +1732,10 @@ placement once, and both the schema builder and the query compiler read it — t
 derivations would be two chances to disagree about the same edge.
 
 **The generated bridges close the loop.** The runtime must call a verifier and a
-trigger polymorphically, but the interfaces the application implements take concrete
+sideEffect polymorphically, but the interfaces the application implements take concrete
 types — `verify(Money, PostMutationContext)` — and PHP forbids narrowing a parameter,
 so no shared base could declare them. Generated code is allowed to know both sides:
-`PostVerifiers`, `PostTriggers` and `PostHydrator` take `mixed`, narrow with an assert,
+`PostVerifiers`, `PostSideEffects` and `PostHydrator` take `mixed`, narrow with an assert,
 wrap the context, and dispatch. The user's interface stays exactly typed and the
 runtime stays generic.
 
@@ -1857,7 +1828,7 @@ Losing someone's reasoning to fix an ordering nit is the wrong trade, so until t
 a comment-preserving emitter the fix stays manual and the report stays precise. It
 found three ordering slips in our own fixtures the first time it ran.
 
-**Ordering applies to keys, never to members.** Trigger declaration order *is*
+**Ordering applies to keys, never to members.** SideEffect declaration order *is*
 execution order, so sorting members would quietly change behaviour.
 
 **The pipeline test is the one that proves the wiring.** Every layer is unit-tested in

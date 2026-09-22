@@ -10,6 +10,7 @@ use Eleph\Runtime\Identity\Identifier;
 use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\SideEffect\SideEffectPhase;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Storage\Write\Delete;
 use Eleph\Runtime\Storage\Write\Insert;
@@ -19,31 +20,12 @@ use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
 use Eleph\Runtime\Storage\Write\WriteOperation;
 use Eleph\Runtime\Storage\Write\WriteResult;
-use Eleph\Runtime\Trigger\TriggerPhase;
 use Eleph\Runtime\Verification\CommitRejected;
 use RuntimeException;
 
 /**
- * One commit: everything registered, verified together, written in dependency order.
- *
- * The sequence is deliberate.
- *
- *   0. Stamp the fields the framework owns, before anything looks at them. A managed
- *      timestamp is part of the row from here on, so verification sees a complete one.
- *   1. Verify every mutation before writing anything, so a rejected commit leaves no
- *      partial state and reports every violation at once.
- *   2. Sort by dependency, because server-generated ids mean a Post must be inserted
- *      before the Comments that reference it.
- *   3. Inside a transaction, write rows first and links second — a link needs both
- *      ends to exist.
- *   4. Still inside the transaction, run preCommit triggers. After the flush, so ids
- *      are real; before COMMIT, so a throw still rolls everything back.
- *   5. After COMMIT, run postCommit triggers, where writes are a new unit of work.
- *
- * Delete events are the one place the ordering is reversed: a preCommit delete trigger
- * runs *before* the rows go, because a trigger told about a deletion it can no longer
- * read is no use for an audit trail or an external projection. It still runs inside the
- * transaction, so a throw still undoes everything.
+ * Commit order: pre-commit side effects, stamp, verify, encode, transactional writes,
+ * post-commit side effects. Storage failures roll back; post-commit writes are independent.
  */
 final class UnitOfWork
 {
@@ -57,7 +39,7 @@ final class UnitOfWork
         private readonly StorageAdaptor $storage,
         private readonly VerificationPipeline $verification,
         private readonly ValueEncoder $encoder,
-        private readonly TriggerDispatcher $triggers,
+        private readonly SideEffectDispatcher $sideEffects,
         private readonly DependencySorter $sorter = new DependencySorter(),
         /**
          * Empty by default: a project declaring no managed field needs nothing here,
@@ -100,57 +82,53 @@ final class UnitOfWork
      */
     public function commit(): WriteResult
     {
-        $mutations = $this->pending();
+        $mutations = $this->mutations;
         $deletions = $this->deletions;
 
         if ([] === $mutations && [] === $deletions) {
             return new WriteResult();
         }
 
-        // First, so a required field the framework fills is present by the time
-        // anything asks whether it was supplied. One instant for the whole commit.
-        $now = new DateTimeImmutable();
-
-        foreach ($mutations as $mutation) {
-            $this->managed->stamp($mutation, $now);
+        $this->sideEffects->dispatch(SideEffectPhase::PreCommit, $mutations);
+        $mutations = $this->pending();
+        if ([] === $mutations && [] === $deletions) {
+            $completed = $this->mutations;
+            $this->mutations = [];
+            $this->sideEffects->dispatch(SideEffectPhase::PostCommit, $completed);
+            return new WriteResult();
         }
 
-        $this->verify($mutations);
+        // Plan removals before custom logic, then verify that the plan still holds
+        // inside the transaction. No side effect is invoked after writes begin.
+        $plannedRemovals = $this->deletionOperations($deletions);
+        $removed = $this->deletionContexts($plannedRemovals);
+        $this->sideEffects->dispatchDeletions(SideEffectPhase::PreCommit, $removed);
+        $deletionChanges = array_values(array_filter($removed, static fn (Mutation $mutation): bool => !$mutation->isEmpty()));
+        $allChanges = [...$mutations, ...$deletionChanges];
 
-        $ordered = $this->sorter->sort($mutations);
+        $now = new DateTimeImmutable();
+        foreach ($allChanges as $mutation) {
+            $this->managed->stamp($mutation, $now);
+        }
+        $this->verify($allChanges);
+        $ordered = $this->sorter->sort($allChanges);
+        $rows = $this->rowOperations($ordered);
 
-        /** @var list<Mutation> $removed */
-        $removed = [];
-
-        $result = $this->storage->transaction(function () use ($ordered, $deletions, &$removed): WriteResult {
-            $result = $this->storage->write(new WriteBatch(...$this->rowOperations($ordered)));
-
-            // Before anything reads a mutation's id: a trigger sees a resolved EntityId
-            // for a row this same commit just created, not the PendingId it started with.
+        $result = $this->storage->transaction(function () use ($ordered, $deletions, $rows, $plannedRemovals): WriteResult {
+            $result = $this->storage->write(new WriteBatch(...$rows));
             $this->resolveIds($ordered, $result);
-
             $links = $this->linkOperations($ordered, $result);
-
             if ([] !== $links) {
                 $this->storage->write(new WriteBatch(...$links));
             }
 
-            // Deletions last: a cascade counts and reads dependents, and doing that
-            // before the writes in this same commit would see a stale graph.
             $removals = $this->deletionOperations($deletions);
-            $removed = $this->deletionContexts($removals);
-
-            // Before the rows go, so a trigger can still read what it is being told
-            // about. Every planned removal is announced, cascades included — which is
-            // the only way an application maintaining its own projection can keep up.
-            $this->triggers->dispatchDeletions(TriggerPhase::PreCommit, $removed);
-
+            if ($removals != $plannedRemovals) {
+                throw new RuntimeException('The deletion graph changed during this mutation. Retry against the current state.');
+            }
             if ([] !== $removals) {
                 $this->storage->write(new WriteBatch(...$removals));
             }
-
-            // After the flush so ids exist, before COMMIT so a throw still undoes it.
-            $this->triggers->dispatch(TriggerPhase::PreCommit, $ordered);
 
             return $result;
         });
@@ -158,8 +136,8 @@ final class UnitOfWork
         $this->mutations = [];
         $this->deletions = [];
 
-        $this->triggers->dispatch(TriggerPhase::PostCommit, $ordered);
-        $this->triggers->dispatchDeletions(TriggerPhase::PostCommit, $removed);
+        $this->sideEffects->dispatch(SideEffectPhase::PostCommit, $mutations);
+        $this->sideEffects->dispatchDeletions(SideEffectPhase::PostCommit, $removed);
 
         return $result;
     }

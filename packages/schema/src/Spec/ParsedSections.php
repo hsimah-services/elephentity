@@ -9,7 +9,7 @@ use Eleph\Schema\Ir\EdgeDefinition;
 use Eleph\Schema\Ir\FieldDefinition;
 use Eleph\Schema\Ir\PolicyDefinition;
 use Eleph\Schema\Ir\QueryDefinition;
-use Eleph\Schema\Ir\TriggerDefinition;
+use Eleph\Schema\Ir\SideEffectDefinition;
 
 /**
  * The declarable sections of a spec, parsed but not yet merged.
@@ -24,7 +24,7 @@ final readonly class ParsedSections
      * @param array<string, EdgeDefinition>    $edges
      * @param array<string, QueryDefinition>   $queries
      * @param array<string, ActionDefinition>  $actions
-     * @param array<string, TriggerDefinition> $triggers
+     * @param array<string, SideEffectDefinition> $sideEffects
     * @param array<string, PolicyDefinition>  $readPolicies
     * @param array<string, PolicyDefinition>  $writePolicies
      */
@@ -33,7 +33,7 @@ final readonly class ParsedSections
         public array $edges = [],
         public array $queries = [],
         public array $actions = [],
-        public array $triggers = [],
+        public array $sideEffects = [],
         public array $readPolicies = [],
         public array $writePolicies = [],
     ) {

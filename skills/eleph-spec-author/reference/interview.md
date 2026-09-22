@@ -122,11 +122,12 @@ not an action, it is a set of setters.
 > Anything else that must run — an audit record, a search index, a notification, a
 > cache?
 
-Each is a trigger, and the phase matters:
+Each is a sideEffect, and the phase matters:
 
 - Must it be undone if the save fails? → `preCommit`
 - Is it slow, or does it call something outside the database? → `postCommit`
-- Does it write data of its own? → `postCommit` (`preCommit` may not mutate)
+- Does it change this entity’s pending fields or relationships? → `preCommit`
+- Does it write a separate entity or contact another service? → `postCommit`
 
 ### 11. Are any of these values a thing with behaviour?
 

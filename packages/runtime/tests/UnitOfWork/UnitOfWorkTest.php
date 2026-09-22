@@ -10,18 +10,18 @@ use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Mutation\Deletion;
 use Eleph\Runtime\Mutation\Managed;
 use Eleph\Runtime\Mutation\Mutation;
+use Eleph\Runtime\SideEffect\SideEffectPhase;
 use Eleph\Runtime\Storage\DeletionPolicy;
 use Eleph\Runtime\Storage\DeletionRule;
 use Eleph\Runtime\Storage\DeletionRules;
 use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\Write\Insert;
 use Eleph\Runtime\Storage\Write\Link;
-use Eleph\Runtime\Trigger\TriggerPhase;
 use Eleph\Runtime\Type\WriteProcessor;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
 use Eleph\Runtime\UnitOfWork\DependencySorter;
 use Eleph\Runtime\UnitOfWork\ManagedFields;
-use Eleph\Runtime\UnitOfWork\TriggerDispatcher;
+use Eleph\Runtime\UnitOfWork\SideEffectDispatcher;
 use Eleph\Runtime\UnitOfWork\UnitOfWork;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use Eleph\Runtime\UnitOfWork\VerificationPipeline;
@@ -34,7 +34,7 @@ use RuntimeException;
 
 #[CoversClass(UnitOfWork::class)]
 #[CoversClass(VerificationPipeline::class)]
-#[CoversClass(TriggerDispatcher::class)]
+#[CoversClass(SideEffectDispatcher::class)]
 final class UnitOfWorkTest extends TestCase
 {
     public function testAnEmptyCommitTouchesNothing(): void
@@ -406,12 +406,12 @@ final class UnitOfWorkTest extends TestCase
         self::assertSame([], $storage->log);
     }
 
-    public function testPreCommitTriggersRunInsideTheTransaction(): void
+    public function testPreCommitSideEffectsRunBeforeTheTransaction(): void
     {
         $storage = new FakeStorage();
-        $triggers = new RecordingTriggers();
+        $sideEffects = new RecordingSideEffects();
 
-        $work = $this->unitOfWork($storage, triggers: ['Post' => $triggers]);
+        $work = $this->unitOfWork($storage, sideEffects: ['Post' => $sideEffects]);
 
         $mutation = new Mutation('Post', EntityId::of(1));
         $mutation->set('title', 'Hello');
@@ -420,23 +420,21 @@ final class UnitOfWorkTest extends TestCase
 
         self::assertSame(
             ['preCommit:update:Post:1', 'postCommit:update:Post:1'],
-            $triggers->calls,
+            $sideEffects->calls,
         );
 
-        // preCommit fired between the write and the commit; postCommit after it.
+        // Pre-commit side effects precede storage; post-commit side effects follow it.
         self::assertSame(['begin', 'update Post', 'commit'], $storage->log);
     }
 
-    public function testATriggerOnACreateSeesTheRealIdInBothPhases(): void
+    public function testCreateSideEffectsSeePendingThenResolvedIds(): void
     {
-        // The row does not exist until the insert flushes, but both trigger phases run
-        // after that — so neither should ever see the PendingId placeholder the
-        // mutation started with.
+        // Only post-commit side effects can observe the storage-assigned ID.
         $storage = new FakeStorage();
         $storage->nextId = 42;
-        $triggers = new RecordingTriggers();
+        $sideEffects = new RecordingSideEffects();
 
-        $work = $this->unitOfWork($storage, triggers: ['Post' => $triggers]);
+        $work = $this->unitOfWork($storage, sideEffects: ['Post' => $sideEffects]);
 
         $mutation = new Mutation('Post', new PendingId('Post'));
         $mutation->set('title', 'Hello');
@@ -444,20 +442,20 @@ final class UnitOfWorkTest extends TestCase
         $work->commit();
 
         self::assertSame(
-            ['preCommit:create:Post:42', 'postCommit:create:Post:42'],
-            $triggers->calls,
+            ['preCommit:create:Post:' . $mutation->target(), 'postCommit:create:Post:42'],
+            $sideEffects->calls,
         );
     }
 
-    public function testAPreCommitTriggerThrowingRollsBackTheWholeCommit(): void
+    public function testAPreCommitSideEffectThrowingPreventsAllWrites(): void
     {
         $storage = new FakeStorage();
-        $triggers = new RecordingTriggers();
-        $triggers->failOn(TriggerPhase::PreCommit, static function (): void {
+        $sideEffects = new RecordingSideEffects();
+        $sideEffects->failOn(SideEffectPhase::PreCommit, static function (): void {
             throw new RuntimeException('an invariant failed');
         });
 
-        $work = $this->unitOfWork($storage, triggers: ['Post' => $triggers]);
+        $work = $this->unitOfWork($storage, sideEffects: ['Post' => $sideEffects]);
 
         $mutation = new Mutation('Post', EntityId::of(1));
         $mutation->set('title', 'Hello');
@@ -465,26 +463,25 @@ final class UnitOfWorkTest extends TestCase
 
         try {
             $work->commit();
-            self::fail('the trigger should have aborted the commit');
+            self::fail('the sideEffect should have aborted the commit');
         } catch (RuntimeException $exception) {
             self::assertSame('an invariant failed', $exception->getMessage());
         }
 
-        self::assertContains('rollback', $storage->log);
-        self::assertNotContains('commit', $storage->log);
+        self::assertSame([], $storage->log);
     }
 
-    public function testAPostCommitTriggerThrowingDoesNotUndoTheCommit(): void
+    public function testAPostCommitSideEffectThrowingDoesNotUndoTheCommit(): void
     {
         // There is nothing left to roll back, so the failure is logged and the data
         // stays written.
         $storage = new FakeStorage();
-        $triggers = new RecordingTriggers();
-        $triggers->failOn(TriggerPhase::PostCommit, static function (): void {
+        $sideEffects = new RecordingSideEffects();
+        $sideEffects->failOn(SideEffectPhase::PostCommit, static function (): void {
             throw new RuntimeException('the search index is down');
         });
 
-        $work = $this->unitOfWork($storage, triggers: ['Post' => $triggers]);
+        $work = $this->unitOfWork($storage, sideEffects: ['Post' => $sideEffects]);
 
         $mutation = new Mutation('Post', EntityId::of(1));
         $mutation->set('title', 'Hello');
@@ -501,18 +498,18 @@ final class UnitOfWorkTest extends TestCase
         // An audit trail or an external projection needs to read the row it is being
         // told about, and after the DELETE there is nothing to read.
         $storage = new FakeStorage();
-        $triggers = new RecordingTriggers();
+        $sideEffects = new RecordingSideEffects();
 
         $work = $this->unitOfWork(
             $storage,
-            triggers: ['Tag' => $triggers],
+            sideEffects: ['Tag' => $sideEffects],
             planner: $this->planner($storage, []),
         );
 
         $work->delete(new Deletion('Tag', EntityId::of(7)));
         $work->commit();
 
-        self::assertSame(['preCommit:delete:Tag:7', 'postCommit:delete:Tag:7'], $triggers->calls);
+        self::assertSame(['preCommit:delete:Tag:7', 'postCommit:delete:Tag:7'], $sideEffects->calls);
         self::assertSame(['begin', 'delete Tag', 'commit'], $storage->log);
     }
 
@@ -523,12 +520,12 @@ final class UnitOfWorkTest extends TestCase
         $storage = new FakeStorage();
         $storage->records = ['Comment' => [new Record('Comment', EntityId::of(10), [])]];
 
-        $posts = new RecordingTriggers();
-        $comments = new RecordingTriggers();
+        $posts = new RecordingSideEffects();
+        $comments = new RecordingSideEffects();
 
         $work = $this->unitOfWork(
             $storage,
-            triggers: ['Post' => $posts, 'Comment' => $comments],
+            sideEffects: ['Post' => $posts, 'Comment' => $comments],
             planner: $this->planner($storage, [
                 'Post' => [new DeletionRule('Comment', 'comments', 'Post', DeletionPolicy::Cascade)],
             ]),
@@ -541,17 +538,56 @@ final class UnitOfWorkTest extends TestCase
         self::assertSame(['preCommit:delete:Post:1', 'postCommit:delete:Post:1'], $posts->calls);
     }
 
-    public function testADeleteTriggerThrowingRollsBackTheDeletion(): void
+    public function testAChangedDeletionGraphCannotSkipPreCommitSideEffects(): void
     {
         $storage = new FakeStorage();
-        $triggers = new RecordingTriggers();
-        $triggers->failOn(TriggerPhase::PreCommit, static function (): void {
+        $storage->records = ['Comment' => [new Record('Comment', EntityId::of(10), [])]];
+        $posts = new RecordingSideEffects();
+        $posts->failOn(SideEffectPhase::PreCommit, static function () use ($storage): void {
+            $storage->records['Comment'][] = new Record('Comment', EntityId::of(11), []);
+        });
+        $work = $this->unitOfWork(
+            $storage,
+            sideEffects: ['Post' => $posts],
+            planner: $this->planner($storage, [
+                'Post' => [new DeletionRule('Comment', 'comments', 'Post', DeletionPolicy::Cascade)],
+            ]),
+        );
+        $work->delete(new Deletion('Post', EntityId::of(1)));
+        try {
+            $work->commit();
+            self::fail('A changed deletion graph must abort.');
+        } catch (RuntimeException $exception) {
+            self::assertStringContainsString('deletion graph changed', $exception->getMessage());
+        }
+        self::assertSame(['begin', 'rollback'], $storage->log);
+        self::assertSame(['preCommit:delete:Post:1'], $posts->calls);
+    }
+
+    public function testAnUnchangedMutationStillRunsBothSideEffectPhases(): void
+    {
+        $storage = new FakeStorage();
+        $effects = new RecordingSideEffects();
+        $work = $this->unitOfWork($storage, sideEffects: ['Post' => $effects]);
+        $work->register(new Mutation('Post', EntityId::of(1)));
+        $work->commit();
+        self::assertSame(['preCommit:update:Post:1', 'postCommit:update:Post:1'], $effects->calls);
+        self::assertSame([], $storage->log);
+        $work->commit();
+        self::assertCount(2, $effects->calls);
+    }
+
+    public function testADeleteSideEffectThrowingPreventsTheDeletion(): void
+    {
+        $storage = new FakeStorage();
+        $sideEffects = new RecordingSideEffects();
+        $sideEffects->failOn(SideEffectPhase::PreCommit, static function (): void {
             throw new RuntimeException('that tag is still referenced elsewhere');
         });
 
         $work = $this->unitOfWork(
             $storage,
-            triggers: ['Tag' => $triggers],
+            sideEffects: ['Tag' => $sideEffects],
             planner: $this->planner($storage, []),
         );
 
@@ -559,13 +595,12 @@ final class UnitOfWorkTest extends TestCase
 
         try {
             $work->commit();
-            self::fail('the trigger should have aborted the commit');
+            self::fail('the sideEffect should have aborted the commit');
         } catch (RuntimeException $exception) {
             self::assertSame('that tag is still referenced elsewhere', $exception->getMessage());
         }
 
-        self::assertContains('rollback', $storage->log);
-        self::assertNotContains('delete Tag', $storage->log);
+        self::assertSame([], $storage->log);
     }
 
     public function testCommittingClearsTheUnitOfWork(): void
@@ -585,7 +620,7 @@ final class UnitOfWorkTest extends TestCase
     /**
      * @param array<string, StubVerifiers>     $verifiers
      * @param array<string, string>            $fieldTypes
-     * @param array<string, RecordingTriggers> $triggers
+     * @param array<string, RecordingSideEffects> $sideEffects
      * @param array<string, list<string>>      $required
      * @param array<string, list<string>>      $requiredEdges
      */
@@ -594,7 +629,7 @@ final class UnitOfWorkTest extends TestCase
         array $verifiers = [],
         array $fieldTypes = [],
         ?StubProcessors $processors = null,
-        array $triggers = [],
+        array $sideEffects = [],
         ?DeletionPlanner $planner = null,
         ?ManagedFields $managed = null,
         array $required = [],
@@ -606,7 +641,7 @@ final class UnitOfWorkTest extends TestCase
             $storage,
             new VerificationPipeline($verifiers, $fieldTypes, $processors, $required, $requiredEdges),
             new ValueEncoder($fieldTypes, $processors),
-            new TriggerDispatcher($triggers),
+            new SideEffectDispatcher($sideEffects),
             new DependencySorter(),
             planner: $planner,
             managed: $managed ?? new ManagedFields(),

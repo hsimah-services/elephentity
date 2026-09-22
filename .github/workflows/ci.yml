@@ -39,6 +39,14 @@ jobs:
       - name: Install dependencies
         uses: ramsey/composer-install@v3
 
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Build generators
+        run: |
+          cargo +stable build --release --locked --manifest-path vendor/elephentity/codegen/Cargo.toml
+          cargo +stable build --release --locked --manifest-path vendor/elephentity/codegen-php/Cargo.toml
+
       - name: Code style
         run: vendor/bin/php-cs-fixer fix --dry-run --diff --show-progress=none
 
