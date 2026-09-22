@@ -19,8 +19,10 @@ foreach ([$_composer_autoload_path ?? '', __DIR__ . '/../vendor/autoload.php', _
 }
 
 $application = new Application('eleph', '0.1.0');
-$application->add(new ValidateCommand());
-$application->add(new GenerateCommand());
-$application->add(new CheckCommand());
-$application->add(new FmtCommand());
+$application->addCommands([
+    new ValidateCommand(),
+    new GenerateCommand(),
+    new CheckCommand(),
+    new FmtCommand(),
+]);
 $application->run();
