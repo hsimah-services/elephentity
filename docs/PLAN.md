@@ -792,6 +792,14 @@ delete this" is worth being able to answer from what was injected.
 means reading every *other* entity's edges — a build-time fact, and one the runtime has
 no schema to discover.
 
+**Traversal follows the side being deleted.** When the deleted entity declares the
+edge, the planner reads `along`; when it is the target, the planner reads `back` to
+find dependents. An `Unlink` still names the declaring side in either case. Removing
+a target therefore emits one unlink per declaring row, with that row's ID as `from`
+and the deleted target's ID as `to`. This also preserves a surviving row's other
+many-to-many links. The planner uses the generated rules without adapter-specific
+SQL or application wrappers (elephentity#91).
+
 **Join rows always go, whatever the policy.** A link to a row that will not exist is not
 a policy choice. `cascade` on a many-to-many additionally deletes the far side, which
 for shared vocabulary is rarely wanted and is exactly why it must be asked for.

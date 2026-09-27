@@ -46,6 +46,9 @@ final class FakeStorage implements StorageAdaptor
     /** @var list<Criteria> Every criteria counted, so a caller's question can be inspected. */
     public array $counted = [];
 
+    /** @var list<Criteria> */
+    public array $queried = [];
+
     public function capabilities(): Capabilities
     {
         return new Capabilities('fake', Capability::Transactions);
@@ -63,6 +66,7 @@ final class FakeStorage implements StorageAdaptor
 
     public function query(Criteria $criteria): Page
     {
+        $this->queried[] = $criteria;
         return new Page($this->records[$criteria->entity] ?? []);
     }
 
