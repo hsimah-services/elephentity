@@ -81,7 +81,13 @@ final readonly class DeletionPlanner
         $operations = [];
 
         foreach ($this->rules->for($deletion->entity) as $rule) {
-            $link = EdgeFilter::along($rule->declaredBy, $rule->edge, $deletion->id);
+            // Rules already select the dependent side. Deleting the declaring row
+            // (Post.comments) reads along; deleting the target (Inventory.item)
+            // reads back to the declaring rows that depend on it.
+            $reversed = $deletion->entity !== $rule->declaredBy;
+            $link = $reversed
+                ? EdgeFilter::back($rule->declaredBy, $rule->edge, $deletion->id)
+                : EdgeFilter::along($rule->declaredBy, $rule->edge, $deletion->id);
             $criteria = Criteria::for($rule->dependent)->linkedTo($link);
 
             if (DeletionPolicy::Restrict === $rule->policy) {
@@ -101,23 +107,27 @@ final readonly class DeletionPlanner
                 continue;
             }
 
-            // A link to a row that will not exist is not a policy choice, so join rows
-            // go either way. Only whether the far side follows is up to the spec.
-            if ($rule->viaJoinTable) {
-                $operations[] = new Unlink($rule->declaredBy, $rule->edge, $deletion->id);
+            $dependents = null;
 
-                if (DeletionPolicy::Cascade !== $rule->policy) {
-                    continue;
+            // Unlink is always expressed from the declaring side, even when the
+            // deleted row is on the other end. Use pairs in that direction so other
+            // links of a surviving dependent are preserved.
+            if ($rule->viaJoinTable || DeletionPolicy::Nullify === $rule->policy) {
+                if ($reversed) {
+                    $dependents = $this->dependents($criteria);
+                    foreach ($dependents as $id) {
+                        $operations[] = new Unlink($rule->declaredBy, $rule->edge, $id, $deletion->id);
+                    }
+                } else {
+                    $operations[] = new Unlink($rule->declaredBy, $rule->edge, $deletion->id);
                 }
             }
 
             if (DeletionPolicy::Nullify === $rule->policy) {
-                $operations[] = new Unlink($rule->declaredBy, $rule->edge, $deletion->id);
-
                 continue;
             }
 
-            foreach ($this->dependents($criteria) as $id) {
+            foreach ($dependents ?? $this->dependents($criteria) as $id) {
                 foreach ($this->expand(new Deletion($rule->dependent, $id), $visited, $depth + 1) as $operation) {
                     $operations[] = $operation;
                 }

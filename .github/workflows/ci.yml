@@ -33,6 +33,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite, mbstring
           coverage: none
           tools: composer:v2
 
@@ -58,6 +59,18 @@ jobs:
 
       - name: Tests
         run: vendor/bin/phpunit
+
+      - name: Check out the released SQLite adapter
+        uses: actions/checkout@v4
+        with:
+          repository: hsimah-services/elephentity-sqlite
+          ref: v0.1.0-alpha.2
+          path: .integration/sqlite
+
+      - name: Deletion policies against SQLite
+        env:
+          ELEPH_SQLITE_SOURCE: ${{ github.workspace }}/.integration/sqlite/src
+        run: vendor/bin/phpunit --bootstrap tools/integration/sqlite-bootstrap.php tools/integration/DeletionPlannerSQLiteTest.php
 
       - name: Standalone package installation
         run: tools/test-package-install.sh

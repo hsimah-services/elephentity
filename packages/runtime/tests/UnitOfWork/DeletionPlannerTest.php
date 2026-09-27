@@ -15,12 +15,81 @@ use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\WriteOperation;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 #[CoversClass(DeletionPlanner::class)]
 final class DeletionPlannerTest extends TestCase
 {
+    /** @return iterable<string, array{string, string, string, bool, bool}> */
+    public static function directions(): iterable
+    {
+        yield 'to-one target' => ['Item', 'Inventory', 'Inventory', false, true];
+        yield 'to-many owner' => ['Post', 'Comment', 'Post', false, false];
+        yield 'join owner' => ['Post', 'Tag', 'Post', true, false];
+        yield 'join target' => ['Tag', 'Post', 'Post', true, true];
+    }
+
+    #[DataProvider('directions')]
+    public function testRestrictCountsTheDependentSide(string $deleted, string $dependent, string $declaredBy, bool $join, bool $reversed): void
+    {
+        $storage = new FakeStorage();
+        $this->plan(
+            [$deleted => [new DeletionRule($dependent, 'edge', $declaredBy, DeletionPolicy::Restrict, $join)]],
+            new Deletion($deleted, EntityId::of(5)),
+            $storage,
+        );
+
+        self::assertCount(1, $storage->counted);
+        $criteria = $storage->counted[0];
+        self::assertSame($dependent, $criteria->entity);
+        self::assertSame($reversed, $criteria->links[0]->reversed);
+        self::assertSame($declaredBy, $criteria->links[0]->entity);
+        self::assertEquals([EntityId::of(5)], $criteria->links[0]->from);
+    }
+
+    #[DataProvider('directions')]
+    public function testCascadeReadsTheDependentSide(string $deleted, string $dependent, string $declaredBy, bool $join, bool $reversed): void
+    {
+        $storage = new FakeStorage();
+        $storage->records[$dependent] = [new Record($dependent, EntityId::of(20), [])];
+        $operations = $this->plan(
+            [$deleted => [new DeletionRule($dependent, 'edge', $declaredBy, DeletionPolicy::Cascade, $join)]],
+            new Deletion($deleted, EntityId::of(5)),
+            $storage,
+        );
+
+        self::assertCount(1, $storage->queried);
+        self::assertSame($reversed, $storage->queried[0]->links[0]->reversed);
+        self::assertSame($dependent, $storage->queried[0]->entity);
+        $deletes = array_values(array_filter($operations, static fn ($operation) => $operation instanceof Delete));
+        self::assertEquals([new Delete($dependent, EntityId::of(20)), new Delete($deleted, EntityId::of(5))], $deletes);
+        if ($join) {
+            self::assertEquals(new Unlink($declaredBy, 'edge', EntityId::of($reversed ? 20 : 5), $reversed ? EntityId::of(5) : null), $operations[0]);
+        }
+    }
+
+    public function testNullifyFromTheTargetUnlinksEachDeclaringRow(): void
+    {
+        $storage = new FakeStorage();
+        $storage->records['Inventory'] = [
+            new Record('Inventory', EntityId::of(20), []),
+            new Record('Inventory', EntityId::of(21), []),
+        ];
+        $operations = $this->plan(
+            ['Item' => [new DeletionRule('Inventory', 'item', 'Inventory', DeletionPolicy::Nullify)]],
+            new Deletion('Item', EntityId::of(5)),
+            $storage,
+        );
+
+        self::assertEquals([
+            new Unlink('Inventory', 'item', EntityId::of(20), EntityId::of(5)),
+            new Unlink('Inventory', 'item', EntityId::of(21), EntityId::of(5)),
+            new Delete('Item', EntityId::of(5)),
+        ], $operations);
+    }
+
     public function testAnEntityNothingDependsOnIsJustDeleted(): void
     {
         $operations = $this->plan([], new Deletion('Tag', EntityId::of(1)));
