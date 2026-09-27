@@ -1,0 +1,153 @@
+format: 1
+status: implementation-notes
+updated: '2026-09-27'
+purpose: >-
+  A focused starting point for new storage adaptors, PHP integrations and their
+  generators. Read the listed contracts and nearest example before exploring
+  unrelated packages. Update these notes when implementation or tests teach us more.
+paths:
+  base: workspace containing sibling elephentity repositories
+  runtime_source: elephentity/packages/runtime
+  runtime_mirror: elephentity-runtime
+  protocol: elephentity-codegen/docs/PROTOCOL.md
+  compiler_discovery: elephentity/packages/cli/src/Installed.php
+  cross_repository_rules: elephentity/.llms/cross-repo.md
+boundaries:
+  compiler: validates specs and emits the versioned wire IR
+  orchestrator: runs builders, signs files, writes files and checks drift
+  builder: reads one JSON request on stdin and returns paths and bodies on stdout
+  runtime: loads generated PHP manifests without the compiler or Rust
+  application: owns HTTP, authentication, sessions, deployment and migrations
+  warning: Edit runtime source in elephentity/packages/runtime, never the subtree mirror.
+start_here:
+  - Read the protocol and one nearest builder's rust/main.rs and rust/provides.json.
+  - Read only the runtime constructor signatures named by the emitted manifest.
+  - Read StorageAdaptor and AdaptorConformance when adding storage.
+  - Read the integration registrar and manifest classes when adding an API integration.
+  - Check current IR_VERSION in code; README examples may lag behind.
+  - Run a real generated manifest against the runtime before freezing golden output.
+new_builder_files:
+  composer.json: Build-time package metadata; bin entry once the launcher exists.
+  Cargo.toml: Binary name and Rust dependencies; no runtime-package dependency.
+  Cargo.lock: Commit it and use --locked in CI.
+  LICENSE: Preserve the license of reused code.
+  bin/eleph-gen-NAME: Shell launcher selecting target/release then target/debug.
+  rust/main.rs: Version gate, describe/generate dispatch, envelope and diagnostics.
+  rust/ir.rs: Independent typed wire-IR copy, aligned to the compiler version.
+  rust/provides.json: Driver and/or integration declarations consumed by Installed.
+  rust/storage.rs: Storage manifest and backend-specific initial DDL, when applicable.
+  rust/manifest.rs: Integration manifest generation, when applicable.
+  rust/verify.php: Optional generated verifier using existing runtime contracts.
+  tests/fixtures: Representative requests and frozen responses.
+  tests/protocol.rs: Invoke the real binary; test failures, discovery and output.
+  tests/runtime.php: Load emitted PHP and exercise real storage/schema behavior.
+  .github/workflows/ci.yml: Formatting, clippy, protocol tests and PHP integration checks.
+  README.md: Installation, eleph.json target, project integration keys and limitations.
+protocol_lessons:
+  observed_version: {envelope: 1, ir: '1.2'}
+  source_of_truth: Recheck the compiler and orchestrator before copying this version.
+  php_body: Return PHP bodies without an opening PHP tag; the orchestrator adds headers.
+  describe: Must work without a schema or config, before spec compilation.
+  malformed_input: Nonzero exit with diagnostics on stderr; no partial stdout response.
+  generation_error: Return errors and an empty files list; never partial output.
+  filesystem: The builder returns content; it never installs or writes generated files.
+  empty_maps: PHP encodes empty maps as []; typed IR decoders must accept that form.
+  nullable_keys: A nullable wire member may still be required; preserve decoder checks.
+  independent_targets: PHP entity generation, storage generation and API generation compose.
+  naming: Repository name, Composer name, executable, target and integration key may differ.
+current_examples:
+  sqlite:
+    runtime_repository: elephentity-sqlite
+    runtime_package: elephentity/sqlite
+    builder_repository: elephentity-codegen-sqlite
+    builder_package: elephentity/codegen-sqlite
+    executable: eleph-gen-sqlite
+    driver: sqlite
+    runtime_manifest: elephentity-sqlite/src/Manifest/StorageManifest.php
+  graphql_php:
+    runtime_repository: elephentity-graphql-php
+    runtime_package: elephentity/graphql
+    builder_repository: elephentity-codegen-graphql-php
+    builder_package: elephentity/codegen-graphql-php
+    executable: eleph-gen-graphql-php
+    target: graphql-php
+    integration_key: graphql
+    runtime_manifest: elephentity-graphql-php/src/Manifest/Manifest.php
+lessons_from_sqlite:
+  - Do not copy WordPress storage generation wholesale; it emits platform-owned entities and MySQL types.
+  - INTEGER PRIMARY KEY is special in SQLite; copied AUTO_INCREMENT SQL is invalid.
+  - Table, index and column collisions must account for case-insensitive SQLite identifiers.
+  - SQL values and PHP literals need separate escaping; never interpolate schema literals as code.
+  - Prefix tables, references and indexes together; do not reapply project.tablePrefix already in IR tables.
+  - Runtime inserts entities before linking edges; required-edge foreign keys may need temporary NULL.
+  - Keep runtime deletion policies authoritative; SQL foreign keys enforce integrity underneath them.
+  - Initial installation and migration of existing data are different operations; fail on existing tables.
+lessons_from_graphql:
+  - Confirm every emitted class exists in the generic runtime; the WPGraphQL verifier class does not.
+  - Root entries also drive delete mutations in the prototype; clearing roots has consequences beyond queries.
+  - Do not advertise project options unless emitted artifacts and runtime wiring actually honor them.
+  - Test names, enum members, inverse accessors, processed values, actions and custom query returns.
+  - Snapshot equality proves stability, not that webonyx accepts or can execute the generated schema.
+local_tooling:
+  php: Use the existing PHP container; no host PHP is assumed.
+  rust: Use the installed Rust container if no host cargo is available.
+  cargo_cache: Mount a cache at /cargo and set CARGO_HOME=/cargo; do not hide /usr/local/cargo/bin.
+  runtime_tests: Use disposable fixtures and read-only runtime checkouts; do not alter live Clog.
+  package_registration: Push a validated composer.json to main before implementation if requested.
+runtime_storage_file_index:
+  composer.json: Runtime-only dependencies, extensions and PSR-4 namespace.
+  src/Database.php: Connection setup, parameter binding, transactions and savepoints.
+  src/NAMEAdaptor.php: Implements the core StorageAdaptor contract.
+  src/Manifest/StorageManifest.php: Constructor contract consumed by emitted code.
+  src/Sql/Column.php: Physical column metadata; keep dialect DDL separate where needed.
+  src/Sql/TableSchema.php: Table, primary-key and index metadata.
+  src/Sql/Index.php: Index metadata.
+  src/Sql/EdgePlacement.php: Physical owner/target/join placement for each declared edge.
+  src/Sql/FieldMap.php: Spec field names to physical column names and back.
+  src/Sql/QueryCompiler.php: Filters, ordering, pagination, edge queries and bindings.
+  tests: Adapter conformance plus backend-specific constraints, rollback and concurrency.
+runtime_integration_file_index:
+  composer.json: Runtime and integration-library dependencies; no compiler dependency.
+  src/Manifest: Typed data objects emitted by the matching generator.
+  src/Registration: Converts manifest entries into framework or library configuration.
+  src/Resolver: Calls the core gateway/query interfaces, preserving runtime policies.
+  src/SchemaBuilder.php: Library-specific schema assembly where required.
+  src/Verification: Optional reusable implementation of the core Verifier interface.
+  tests: Execute the public integration with a runtime gateway and its real host library.
+reading_shortcuts:
+  storage_contract:
+    - elephentity/packages/runtime/src/Storage/StorageAdaptor.php
+    - elephentity/packages/runtime/src/Storage/Testing/AdaptorConformance.php
+    - elephentity/packages/runtime/src/Storage/Write
+    - elephentity/packages/runtime/src/Storage/RelationKind.php
+  integration_contract:
+    - elephentity/packages/runtime/src/Gateway/EntityGateway.php
+    - elephentity/packages/runtime/src/Query/EntityQuery.php
+    - elephentity/packages/runtime/src/Conformance/Verifier.php
+  schema_output_contract:
+    - Inspect constructors in the target runtime's src/Manifest and src/Sql first.
+    - Read the registrar only for output entries you need; skip unrelated HTTP/app code.
+    - Use the source compiler's wire codec when the IR changes, not all parser/validation modules.
+verification_order:
+  - Validate and push Composer metadata first if package registration is the immediate need.
+  - Build the binary and inspect describe without needing a full project.
+  - Test protocol rejection and semantic errors with focused requests.
+  - Load generated PHP using tagged runtime test dependencies, independently of live application vendors.
+  - Execute the library behavior; freeze representative responses only after checking them.
+  - Generate a small real YAML project through the compiler and orchestrator.
+  - Run generation with --check and then eleph check; these catch different drift.
+  - Push implementations and inspect CI before declaring them complete.
+acceptance_examples:
+  sqlite: elephentity-codegen-sqlite/tests/runtime.php
+  graphql: elephentity-codegen-graphql-php/tests/runtime.php
+  complete_pipeline: elephentity-codegen-sqlite/tools/test-pipeline.php
+  standalone_spec: elephentity-codegen-sqlite/examples/standalone
+  tagged_runtime_dependencies: Each builder's tests/composer.json and tests/composer.lock.
+additional_findings:
+  - Keep test dependency locks separate from the build-time Composer package; this avoids pulling runtimes into consumers' build tooling.
+  - A fixture description may mention WordPress without depending on it; test emitted namespaces, not arbitrary prose substrings.
+  - A database-specific schema installer can be emitted without changing the runtime metadata classes.
+  - Generated verifiers may be anonymous classes implementing the core contract when the integration runtime has no verifier class yet.
+  - Place integration output under the PHP output directory; the current CheckCommand finds one-level child verify.php files.
+  - Generic GraphQL root single and collection fields need distinct names; an absent plural must not default to the singular.
+  - Initial schema checks use application-independent collations; Clog's Unicode equality rules remain application choices.
