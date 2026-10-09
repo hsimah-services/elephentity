@@ -1888,7 +1888,9 @@ typed while keeping application namespaces out of the spec.
 
 Read policies gate single loads with `AccessDenied` and filter denied rows from
 collections and preloads. A gated `count()` hydrates and filters the unbounded result,
-so it costs more and a page may be shorter than its limit. The viewer is resolved per
+so it costs more. A gated page keeps reading past denied rows until it is full, and its
+next cursor counts rows read rather than rows returned, so `first()` finds a readable
+row behind a denied one and no page repeats a row the last one already read. The viewer is resolved per
 call through `ViewerProvider`; WordPress supplies it from the current user.
 
 Write policies run for create, update, delete and actions. Entity-declared policies get

@@ -7,6 +7,7 @@ namespace Eleph\Runtime\Query;
 use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\Cursor;
+use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Page;
 use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\StorageAdaptor;
@@ -52,9 +53,37 @@ final readonly class LazyEntityQuery implements EntityQuery
 
     public function page(int $limit, ?Cursor $after = null): Page
     {
-        $page = $this->storage->query($this->criteria->take($limit, $after));
+        if (!$this->gate->guards($this->criteria->entity)) {
+            $page = $this->storage->query($this->criteria->take($limit, $after));
 
-        return new Page($this->hydrateAll($page->items), $page->next);
+            return new Page($this->hydrateAll($page->items), $page->next);
+        }
+
+        // A denied row must not shorten the page, so keep reading until it is full. The
+        // cursor then counts rows read, not rows returned, or the next page would repeat some.
+        // shortcut: reads in chunks of $limit, so first() past many denied rows costs a query per row; widen the chunk if that shows up.
+        $offset = Offset::fromCursor($after)->value;
+        $items = [];
+
+        do {
+            $page = $this->storage->query($this->criteria->take($limit, (new Offset($offset))->toCursor()));
+            $objects = $this->hydrate($page->items);
+            $allowed = $this->gate->retain($this->criteria->entity, $objects);
+
+            foreach ($objects as $index => $object) {
+                if ($limit === count($items)) {
+                    return new Page($items, (new Offset($offset + $index))->toCursor());
+                }
+
+                if (in_array($object, $allowed, true)) {
+                    $items[] = $object;
+                }
+            }
+
+            $offset += count($objects);
+        } while ($page->hasMore() && $limit > count($items));
+
+        return new Page($items, $page->hasMore() ? (new Offset($offset))->toCursor() : null);
     }
 
     public function all(): array
@@ -83,17 +112,25 @@ final readonly class LazyEntityQuery implements EntityQuery
      */
     private function hydrateAll(array $records): array
     {
-        $objects = array_map(
-            fn (Record $record): object => $this->hydrator->hydrate($record, $this->edges),
-            $records,
-        );
-
-        /** @var list<T> $objects */
-        $objects = array_values($objects);
-
         /** @var list<T> $retained */
-        $retained = $this->gate->retain($this->criteria->entity, $objects);
+        $retained = $this->gate->retain($this->criteria->entity, $this->hydrate($records));
 
         return $retained;
+    }
+
+    /**
+     * @param list<Record> $records
+     *
+     * @return list<T>
+     */
+    private function hydrate(array $records): array
+    {
+        /** @var list<T> $objects */
+        $objects = array_values(array_map(
+            fn (Record $record): object => $this->hydrator->hydrate($record, $this->edges),
+            $records,
+        ));
+
+        return $objects;
     }
 }
