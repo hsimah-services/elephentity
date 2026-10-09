@@ -249,34 +249,34 @@ final class MemoryAdaptor implements StorageAdaptor
         $key = $link->entity . '.' . $link->edge;
         $adjacency = $this->relations[$key] ?? [];
         $from = array_map(static fn ($id): string => (string) $id, $link->from);
+        $matched = [];
 
-        if ($link->reversed) {
-            // The declaring entity's own rows, kept where the row's id maps (as
-            // "from") to at least one of the given (target) ids.
-            return array_values(array_filter(
-                $records,
-                static function (Record $record) use ($adjacency, $from): bool {
-                    $linked = $adjacency[(string) $record->id] ?? [];
+        foreach ($records as $record) {
+            $id = (string) $record->id;
 
-                    return [] !== array_intersect($linked, $from);
-                },
-            ));
-        }
+            foreach ($from as $parent) {
+                // Reversed, $record declares the edge and $parent is its target; forwards,
+                // $parent declares it and $record is what it points at.
+                $linked = $link->reversed
+                    ? in_array($parent, $adjacency[$id] ?? [], true)
+                    : in_array($id, $adjacency[$parent] ?? [], true);
 
-        // The far side: $from are declaring-entity row ids, so collect what they
-        // point at and keep the rows that are among it.
-        $reachable = [];
+                if (!$linked) {
+                    continue;
+                }
 
-        foreach ($from as $id) {
-            foreach ($adjacency[$id] ?? [] as $to) {
-                $reachable[$to] = true;
+                if (!$link->needsParentColumn()) {
+                    $matched[] = $record;
+
+                    continue 2;
+                }
+
+                // One row per parent, as a join would return it, so a batch can group them.
+                $matched[] = new Record($record->entity, $record->id, [...$record->values, EdgeFilter::PARENT_COLUMN => $parent]);
             }
         }
 
-        return array_values(array_filter(
-            $records,
-            static fn (Record $record): bool => isset($reachable[(string) $record->id]),
-        ));
+        return $matched;
     }
 
     /**
