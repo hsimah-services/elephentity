@@ -116,7 +116,6 @@ final class UnitOfWork
 
         $result = $this->storage->transaction(function () use ($ordered, $deletions, $rows, $plannedRemovals): WriteResult {
             $result = $this->storage->write(new WriteBatch(...$rows));
-            $this->resolveIds($ordered, $result);
             $links = $this->linkOperations($ordered, $result);
             if ([] !== $links) {
                 $this->storage->write(new WriteBatch(...$links));
@@ -132,6 +131,9 @@ final class UnitOfWork
 
             return $result;
         });
+
+        // Only after the transaction holds: a rolled-back insert has no id to hand out.
+        $this->resolveIds($ordered, $result);
 
         $this->mutations = [];
         $this->deletions = [];

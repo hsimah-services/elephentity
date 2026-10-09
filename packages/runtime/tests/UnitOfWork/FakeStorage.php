@@ -43,6 +43,9 @@ final class FakeStorage implements StorageAdaptor
 
     public int $countResult = 0;
 
+    /** Thrown at COMMIT, after the work ran, as a database refusing to commit would. */
+    public ?Throwable $failCommit = null;
+
     /** @var list<Criteria> Every criteria counted, so a caller's question can be inspected. */
     public array $counted = [];
 
@@ -100,6 +103,10 @@ final class FakeStorage implements StorageAdaptor
 
         try {
             $value = $work();
+
+            if (null !== $this->failCommit) {
+                throw $this->failCommit;
+            }
         } catch (Throwable $exception) {
             $this->log[] = 'rollback';
 

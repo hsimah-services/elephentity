@@ -447,6 +447,28 @@ final class UnitOfWorkTest extends TestCase
         );
     }
 
+    public function testARolledBackCreateKeepsItsPendingId(): void
+    {
+        $storage = new FakeStorage();
+        $storage->nextId = 123;
+        $storage->failCommit = new RuntimeException('commit failed');
+        $work = $this->unitOfWork($storage);
+
+        $pending = new PendingId('Post');
+        $mutation = new Mutation('Post', $pending);
+        $mutation->set('title', 'Hello');
+        $work->register($mutation);
+
+        try {
+            $work->commit();
+            self::fail('the commit should have failed');
+        } catch (RuntimeException) {
+        }
+
+        self::assertSame(['begin', 'insert Post', 'rollback'], $storage->log);
+        self::assertSame($pending, $mutation->id(), 'a rolled-back row has no id');
+    }
+
     public function testAPreCommitSideEffectThrowingPreventsAllWrites(): void
     {
         $storage = new FakeStorage();
