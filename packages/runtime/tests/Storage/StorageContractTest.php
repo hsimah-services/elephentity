@@ -30,6 +30,19 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WriteResult::class)]
 final class StorageContractTest extends TestCase
 {
+    public function testPagingAddsAUniqueFinalOrderWithoutChangingExplicitIdDirection(): void
+    {
+        $criteria = Criteria::for('Post')->orderBy(Order::descending('rank'));
+        $page = $criteria->take(3);
+        self::assertCount(1, $criteria->order);
+        self::assertSame(['rank', 'id'], array_map(static fn (Order $order): string => $order->field, $page->order));
+        self::assertSame(Direction::Ascending, $page->order[1]->direction);
+        $explicit = Criteria::for('Post')->orderBy(Order::descending('id'))->take(3);
+        self::assertCount(1, $explicit->order);
+        self::assertSame(Direction::Descending, $explicit->order[0]->direction);
+        self::assertSame('id', Criteria::for('Post')->take(3)->order[0]->field);
+    }
+
     public function testCriteriaBuildersDoNotMutateTheOriginal(): void
     {
         $base = Criteria::for('Post');

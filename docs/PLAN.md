@@ -1932,3 +1932,10 @@ and refresh on package changes remain the project's responsibility.
 Regenerate with PHP builder 0.7 when upgrading the runtime. Catalogues now expose `nonNullableFields()`, and nullable field verifier methods accept nullable domain values. Field verifiers run against final mutation state, including unchanged fields whose dependencies changed and explicit nulls; type processors continue to skip null. Nonnullable explicit nulls fail before storage on creates and updates. Omitted update fields remain unchanged.
 
 Generated input appliers seed declared defaults only for new entities, through the same decoding path as explicit input. Explicit keys and values already set by an action take precedence; managed fields remain runtime-owned. Storage migrations are not provided for these alpha contracts.
+
+
+### Stable offset paging and adapter conformance (0.13.1)
+
+`Criteria::take()` ends ordering in the unique `id` term, adding ascending id when needed and preserving an explicit final id direction. Adaptors honor that order; batched relationship rows also use parent id to distinguish a target shared by several parents. SQL adaptors and Memory default unbounded listings to id order too. Offset cursors still shift when records change during a walk; keyset paging remains #102.
+
+`AdaptorConformance` now checks targeted and clear-all unlink, zero/negative/capped page sizes, effective-size cursors, complete tied/no-order page walks, and forward/reverse parent projection. Pass `sharedTargets: true` for an edge that allows shared targets. Third-party adapters failing these checks need correction before claiming conformance. These checks use up to 1,001 transient rows in the supplied test entities and clean them up.

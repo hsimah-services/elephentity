@@ -80,7 +80,16 @@ final class MemoryAdaptor implements StorageAdaptor
 
     public function query(Criteria $criteria): Page
     {
-        $matches = $this->ordered($this->matching($criteria), $criteria->order);
+        if (null !== $criteria->limit && $criteria->limit < 0) {
+            throw new RuntimeException('Page size must be non-negative.');
+        }
+        if (0 === $criteria->limit) {
+            return new Page([]);
+        }
+        if (null !== $criteria->limit) {
+            $criteria = $criteria->take(min($criteria->limit, Page::MAX_LIMIT), $criteria->after);
+        }
+        $matches = $this->ordered($this->matching($criteria), $criteria->withStableOrder()->order);
 
         if (null === $criteria->limit) {
             return new Page($matches);
@@ -293,8 +302,8 @@ final class MemoryAdaptor implements StorageAdaptor
 
         usort($records, static function (Record $a, Record $b) use ($order): int {
             foreach ($order as $clause) {
-                $left = $a->value($clause->field);
-                $right = $b->value($clause->field);
+                $left = 'id' === $clause->field ? $a->id->raw() : $a->value($clause->field);
+                $right = 'id' === $clause->field ? $b->id->raw() : $b->value($clause->field);
                 $comparison = $left <=> $right;
 
                 if (0 !== $comparison) {
@@ -302,7 +311,7 @@ final class MemoryAdaptor implements StorageAdaptor
                 }
             }
 
-            return 0;
+            return $a->value(EdgeFilter::PARENT_COLUMN) <=> $b->value(EdgeFilter::PARENT_COLUMN);
         });
 
         return $records;
