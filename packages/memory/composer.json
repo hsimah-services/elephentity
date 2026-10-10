@@ -7,7 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "^0.10 || ^0.11"
+        "elephentity/runtime": "^0.10 || ^0.11 || ^0.12"
     },
     "autoload": {
         "psr-4": {

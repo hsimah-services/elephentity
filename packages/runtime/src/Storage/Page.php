@@ -11,6 +11,8 @@ namespace Eleph\Runtime\Storage;
  */
 final readonly class Page
 {
+    public const MAX_LIMIT = 1000;
+
     /**
      * @param list<T> $items
      */

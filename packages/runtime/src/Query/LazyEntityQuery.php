@@ -12,6 +12,7 @@ use Eleph\Runtime\Storage\Page;
 use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Generator;
+use InvalidArgumentException;
 
 /**
  * A criteria that has not run yet.
@@ -57,6 +58,14 @@ final readonly class LazyEntityQuery implements EntityQuery
 
     public function page(int $limit, ?Cursor $after = null): Page
     {
+        if ($limit < 0) {
+            throw new InvalidArgumentException('Page size must be non-negative.');
+        }
+        if (0 === $limit) {
+            return new Page([]);
+        }
+        $limit = min($limit, Page::MAX_LIMIT);
+
         if (!$this->gate->guards($this->criteria->entity)) {
             $page = $this->storage->query($this->criteria->take($limit, $after));
 
