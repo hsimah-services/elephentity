@@ -47,19 +47,35 @@ final class PolicyQueryTest extends TestCase
         self::assertSame(1, $query->count());
     }
 
-    public function testAGatedPageSkipsDeniedRowsWithoutRepeatingAny(): void
+    public function testAGatedPageCountsOnlyVisibleRows(): void
     {
-        // Rows 1, 3 and 6 are denied. A page of 2 must read past them rather than come
-        // back short, and the next page must start after the last row read.
+        // Rows 1, 3 and 6 are hidden. Pages come back full, never repeat a row, and the
+        // cursor counts what the viewer saw, so it says nothing about the hidden rows.
         $query = $this->pagedQuery([1 => 0, 2 => 1, 3 => 0, 4 => 1, 5 => 1, 6 => 0]);
 
         $first = $query->page(2);
         self::assertSame([2, 4], $this->ids($first->items));
-        self::assertSame('4', (string) Offset::fromCursor($first->next)->value);
+        self::assertSame(2, Offset::fromCursor($first->next)->value);
 
         $second = $query->page(2, $first->next);
         self::assertSame([5], $this->ids($second->items));
-        self::assertNull($second->next);
+        self::assertNull($second->next, 'only hidden rows remain, so there is no next page');
+    }
+
+    public function testADeepGatedPageStartsAfterTheVisibleRowsBeforeIt(): void
+    {
+        // More rows than one storage chunk, every other one hidden.
+        $allowed = [];
+        for ($id = 1; $id <= 250; ++$id) {
+            $allowed[$id] = $id % 2;
+        }
+        $query = $this->pagedQuery($allowed);
+
+        $page = $query->page(3, (new Offset(100))->toCursor());
+
+        self::assertSame([201, 203, 205], $this->ids($page->items));
+        self::assertSame(103, Offset::fromCursor($page->next)->value);
+        self::assertSame(125, $query->count());
     }
 
     public function testFirstFindsAReadableRowBehindADeniedOne(): void
