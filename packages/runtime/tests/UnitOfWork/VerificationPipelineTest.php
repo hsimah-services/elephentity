@@ -17,6 +17,16 @@ use PHPUnit\Framework\TestCase;
 
 final class VerificationPipelineTest extends TestCase
 {
+    public function testCreatesRejectOmittedNonnullableFieldsBeforeStorage(): void
+    {
+        $pipeline = new VerificationPipeline([], [], $this->createStub(ProcessorRegistry::class), nonNullable: ['Page' => ['title', 'content']]);
+        $mutation = new Mutation('Page', new \Eleph\Runtime\Identity\PendingId('Page'));
+        self::assertSame(['title', 'content'], array_map(static fn ($v): string => $v->field, $pipeline->verify($mutation)));
+        $mutation->set('title', 'Supplied');
+        $mutation->set('content', '');
+        self::assertSame([], $pipeline->verify($mutation));
+    }
+
     public function testFinalStateVerifiesUnchangedDependenciesAndExplicitNulls(): void
     {
         $verifiers = new class () implements EntityVerifiers {
