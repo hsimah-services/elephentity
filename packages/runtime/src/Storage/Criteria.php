@@ -68,9 +68,17 @@ final readonly class Criteria
         );
     }
 
+    /** A unique final order term makes offset walks deterministic on a fixed dataset. */
+    public function withStableOrder(): self
+    {
+        $last = $this->order[array_key_last($this->order)] ?? null;
+
+        return 'id' === $last?->field ? $this : $this->orderBy(Order::ascending('id'));
+    }
+
     public function take(int $limit, ?Cursor $after = null): self
     {
-        return new self($this->entity, $this->filters, $this->order, $limit, $after, $this->links);
+        return new self($this->entity, $this->filters, $this->withStableOrder()->order, $limit, $after, $this->links);
     }
 
     /**

@@ -159,6 +159,7 @@ final class PolicyQueryTest extends TestCase
         }
         $storage = $this->createStub(StorageAdaptor::class);
         $storage->method('query')->willReturnCallback(static function (Criteria $criteria) use ($records): Page {
+            self::assertSame('id', ($criteria->order[array_key_last($criteria->order)] ?? null)?->field, 'Every policy page/chunk must carry a unique final order term.');
             $offset = Offset::fromCursor($criteria->after)->value;
             $limit = (int) $criteria->limit;
             $more = count($records) > $offset + $limit;

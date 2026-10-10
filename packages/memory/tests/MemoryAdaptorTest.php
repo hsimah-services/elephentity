@@ -29,7 +29,7 @@ final class MemoryAdaptorTest extends TestCase
 {
     public function testItConformsToTheStoragePort(): void
     {
-        $failures = (new AdaptorConformance())->check(new MemoryAdaptor(), 'ConformanceEntity', 'related', 'ConformanceRelated');
+        $failures = (new AdaptorConformance())->check(new MemoryAdaptor(), 'ConformanceEntity', 'related', 'ConformanceRelated', sharedTargets: true);
 
         self::assertSame([], $failures, implode("\n", $failures));
     }

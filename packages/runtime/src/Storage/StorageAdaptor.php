@@ -44,6 +44,10 @@ interface StorageAdaptor
     public function getMany(string $entity, array $ids): array;
 
     /**
+     * Return rows in criteria order. Paged criteria end in the unique id order term;
+     * batched relationship rows with the same id must also order by their parent id.
+     * Zero pages terminate, negative limits fail, and bounded pages cap at Page::MAX_LIMIT.
+     *
      * @return Page<Record>
      */
     public function query(Criteria $criteria): Page;

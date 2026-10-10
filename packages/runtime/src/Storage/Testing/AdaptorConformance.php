@@ -10,7 +10,10 @@ use Eleph\Runtime\Identity\PendingId;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\EdgeFilter;
 use Eleph\Runtime\Storage\Filter;
+use Eleph\Runtime\Storage\Offset;
 use Eleph\Runtime\Storage\Order;
+use Eleph\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Storage\Write\Delete;
 use Eleph\Runtime\Storage\Write\Insert;
@@ -19,6 +22,7 @@ use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\Update;
 use Eleph\Runtime\Storage\Write\WriteBatch;
 use RuntimeException;
+use Throwable;
 
 /**
  * The assertions any `StorageAdaptor` must satisfy, framework-agnostic so a
@@ -37,16 +41,17 @@ use RuntimeException;
 final readonly class AdaptorConformance
 {
     /**
+     * @param bool $sharedTargets Enable when this edge permits two owners to share a target.
      * @return list<string> Empty when the adaptor conforms.
      */
-    public function check(StorageAdaptor $adaptor, string $entity, string $edge, string $related): array
+    public function check(StorageAdaptor $adaptor, string $entity, string $edge, string $related, bool $sharedTargets = false): array
     {
         $failures = [];
 
         $this->checkCrud($adaptor, $entity, $failures);
         $this->checkQuerying($adaptor, $entity, $failures);
         $this->checkPaging($adaptor, $entity, $failures);
-        $this->checkEdges($adaptor, $entity, $edge, $related, $failures);
+        $this->checkEdges($adaptor, $entity, $edge, $related, $failures, $sharedTargets);
         $this->checkTransactions($adaptor, $entity, $failures);
 
         return $failures;
@@ -162,15 +167,66 @@ final readonly class AdaptorConformance
             }
         }
 
+        $zero = $adaptor->query(Criteria::for($entity)->take(0));
+        if ([] !== $zero->items || $zero->hasMore()) {
+            $failures[] = 'take(0) must return an empty terminal page.';
+        }
+        try {
+            $adaptor->query(Criteria::for($entity)->take(-1));
+            $failures[] = 'take(-1) must reject a negative page size.';
+        } catch (Throwable) {
+        }
         $this->cleanUp($adaptor, $entity, $ids);
+
+        $ties = $this->seed($adaptor, $entity, array_fill_keys(array_map(static fn (int $n): string => 'tie-' . $n, range(1, 10)), 1));
+        $expected = array_map(static fn (EntityId $id): int|string => $id->raw(), array_values($ties));
+        sort($expected);
+        foreach ([Criteria::for($entity), Criteria::for($entity)->orderBy(Order::ascending('rank'))] as $criteria) {
+            $seen = [];
+            $cursor = null;
+            for ($step = 0; $step < 5; ++$step) {
+                $page = $adaptor->query($criteria->take(3, $cursor));
+                foreach ($page->items as $record) {
+                    $seen[] = $record->id->raw();
+                }
+                $cursor = $page->next;
+                if (null === $cursor) {
+                    break;
+                }
+            }
+            if ($seen !== $expected || null !== $cursor) {
+                $failures[] = 'Paged tied and no-order rows must appear exactly once in ascending id order.';
+            }
+        }
+        $this->cleanUp($adaptor, $entity, $ties);
+
+        $many = [];
+        for ($i = 0; $i <= Page::MAX_LIMIT; ++$i) {
+            $many['bounded-' . $i] = $i;
+        }
+        $bounded = $this->seed($adaptor, $entity, $many);
+        $first = $adaptor->query(Criteria::for($entity)->take(Page::MAX_LIMIT + 50));
+        if (Page::MAX_LIMIT !== count($first->items) || !$first->hasMore() || Page::MAX_LIMIT !== Offset::fromCursor($first->next)->value) {
+            $failures[] = 'Oversized pages must cap at Page::MAX_LIMIT with an effective-size cursor.';
+        }
+        if ($first->hasMore()) {
+            $last = $adaptor->query(Criteria::for($entity)->take(Page::MAX_LIMIT + 50, $first->next));
+            $walk = array_map(static fn (Record $record): int|string => $record->id->raw(), [...$first->items, ...$last->items]);
+            $expected = array_map(static fn (EntityId $id): int|string => $id->raw(), array_values($bounded));
+            sort($expected);
+            if ($walk !== $expected || $last->hasMore()) {
+                $failures[] = 'A capped page walk must resume after its effective size without gaps or duplicates.';
+            }
+        }
+        $this->cleanUp($adaptor, $entity, $bounded);
     }
 
     /**
      * @param list<string> $failures
      */
-    private function checkEdges(StorageAdaptor $adaptor, string $entity, string $edge, string $related, array &$failures): void
+    private function checkEdges(StorageAdaptor $adaptor, string $entity, string $edge, string $related, array &$failures, bool $sharedTargets): void
     {
-        $ids = $this->seed($adaptor, $entity, ['owner' => 1]);
+        $ids = $this->seed($adaptor, $entity, ['owner' => 1, 'other-owner' => 2]);
         $ownerId = $ids['owner'];
 
         $relatedResult = $adaptor->write(new WriteBatch(new Insert($related, $relatedPending = new PendingId($related), ['name' => 'target'])));
@@ -190,6 +246,15 @@ final readonly class AdaptorConformance
             $failures[] = 'A Link was not visible to a query linkedTo(EdgeFilter::along()) on the target side.';
         }
 
+        $other = new PendingId($related);
+        $otherId = $adaptor->write(new WriteBatch(new Insert($related, $other, ['name' => 'other-target'])))->idFor($other);
+        $adaptor->write(new WriteBatch(new Unlink($entity, $edge, $ownerId, $otherId)));
+        foreach ([Criteria::for($entity)->linkedTo(EdgeFilter::back($entity, $edge, $relatedId)), Criteria::for($related)->linkedTo(EdgeFilter::along($entity, $edge, $ownerId))] as $criteria) {
+            if (1 !== count($adaptor->query($criteria)->items)) {
+                $failures[] = 'Targeted unlink of a different target must retain the existing link.';
+            }
+        }
+
         $adaptor->write(new WriteBatch(new Unlink($entity, $edge, $ownerId, $relatedId)));
 
         $afterUnlink = $adaptor->query(Criteria::for($entity)->linkedTo(EdgeFilter::back($entity, $edge, $relatedId)))->items;
@@ -198,8 +263,33 @@ final readonly class AdaptorConformance
             $failures[] = 'A row was still linked after an Unlink named it explicitly.';
         }
 
+        $adaptor->write(new WriteBatch(new Link($entity, $edge, $ownerId, $relatedId), new Unlink($entity, $edge, $ownerId)));
+        if ([] !== $adaptor->query(Criteria::for($related)->linkedTo(EdgeFilter::along($entity, $edge, $ownerId)))->items) {
+            $failures[] = 'Clear-all unlink must remove every link from the owner.';
+        }
+        $otherOwner = $ids['other-owner'];
+        $adaptor->write(new WriteBatch(new Link($entity, $edge, $ownerId, $relatedId), new Link($entity, $edge, $otherOwner, $otherId)));
+        $expectedForward = [[(string) $relatedId, (string) $ownerId], [(string) $otherId, (string) $otherOwner]];
+        $expectedReverse = [[(string) $ownerId, (string) $relatedId], [(string) $otherOwner, (string) $otherId]];
+        if ($sharedTargets) {
+            $adaptor->write(new WriteBatch(new Link($entity, $edge, $otherOwner, $relatedId)));
+            $expectedForward[] = [(string) $relatedId, (string) $otherOwner];
+            $expectedReverse[] = [(string) $otherOwner, (string) $relatedId];
+        }
+        foreach ([
+            [Criteria::for($related)->linkedTo(EdgeFilter::along($entity, $edge, $ownerId, $otherOwner)), $expectedForward],
+            [Criteria::for($entity)->linkedTo(EdgeFilter::back($entity, $edge, $relatedId, $otherId)), $expectedReverse],
+        ] as [$criteria, $expected]) {
+            $pairs = array_map(static fn (Record $row): array => [(string) $row->id, (string) $row->value(EdgeFilter::PARENT_COLUMN)], $adaptor->query($criteria)->items);
+            sort($pairs);
+            sort($expected);
+            if ($pairs !== $expected) {
+                $failures[] = 'Batched relationship queries must project exactly one (id, parent) pair per link in both directions.';
+            }
+        }
+        $adaptor->write(new WriteBatch(new Unlink($entity, $edge, $ownerId), new Unlink($entity, $edge, $otherOwner)));
         $this->cleanUp($adaptor, $entity, $ids);
-        $this->cleanUp($adaptor, $related, ['target' => $relatedId]);
+        $this->cleanUp($adaptor, $related, ['target' => $relatedId, 'other' => $otherId]);
     }
 
     /**
