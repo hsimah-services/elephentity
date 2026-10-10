@@ -387,6 +387,11 @@ validation) is a lookup table in the generator with no escape hatch:
 
 `string`, `text`, `int`, `float`, `bool`, `datetime`, `id`, `enum`, `json`
 
+A `datetime` is stored as `Y-m-d H:i:s` **in UTC**, and read back as UTC. The stored
+form carries no offset, so writing it in the input's zone and reading it in the
+server's moved the instant whenever the two differed. Rows written before this rule
+under a non-UTC `date.timezone` read back shifted by that offset.
+
 ### Declaration
 
 Domain types are value types aliasing a primitive. **One file per type in `types/`**,

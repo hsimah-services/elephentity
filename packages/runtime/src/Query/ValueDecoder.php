@@ -7,6 +7,7 @@ namespace Eleph\Runtime\Query;
 use BackedEnum;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use Exception;
@@ -81,7 +82,8 @@ final readonly class ValueDecoder
         $raw = $this->string($value, $field);
 
         try {
-            return new DateTimeImmutable($raw);
+            // Stored values carry no offset and were written in UTC; an explicit offset still wins.
+            return new DateTimeImmutable($raw, new DateTimeZone('UTC'));
         } catch (Exception $exception) {
             throw new RuntimeException(
                 sprintf('%s holds "%s", which is not a date.', $field, $raw),

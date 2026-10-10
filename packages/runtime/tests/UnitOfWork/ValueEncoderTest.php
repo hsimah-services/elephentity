@@ -6,6 +6,7 @@ namespace Eleph\Runtime\Tests\UnitOfWork;
 
 use DateTimeImmutable;
 use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Query\ValueDecoder;
 use Eleph\Runtime\UnitOfWork\ValueEncoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -36,6 +37,26 @@ final class ValueEncoderTest extends TestCase
             '2026-09-05 14:30:00',
             $this->encoder()->encode('Post', 'createdAt', new DateTimeImmutable('2026-09-05 14:30:00')),
         );
+    }
+
+    public function testADateKeepsItsInstantWhateverTheZones(): void
+    {
+        // The input's zone and the server's both differ from UTC, and neither may move the instant.
+        $previous = date_default_timezone_get();
+        date_default_timezone_set('Pacific/Auckland');
+
+        try {
+            $at = new DateTimeImmutable('2026-10-08T12:00:00+02:00');
+            $stored = $this->encoder()->encode('Post', 'createdAt', $at);
+
+            self::assertSame('2026-10-08 10:00:00', $stored);
+            self::assertSame(
+                $at->getTimestamp(),
+                (new ValueDecoder())->datetime($stored, 'Post.createdAt')->getTimestamp(),
+            );
+        } finally {
+            date_default_timezone_set($previous);
+        }
     }
 
     public function testAnIdStoresItsRawValue(): void

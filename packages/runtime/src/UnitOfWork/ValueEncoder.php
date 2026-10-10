@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Eleph\Runtime\UnitOfWork;
 
 use BackedEnum;
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Type\ProcessorRegistry;
 use JsonException;
@@ -21,6 +23,7 @@ use RuntimeException;
  */
 final readonly class ValueEncoder
 {
+    /** Always written in UTC: the format carries no offset, so the instant must not depend on the input's zone. */
     public const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
     /**
@@ -52,7 +55,9 @@ final readonly class ValueEncoder
         return match (true) {
             null === $value || is_scalar($value) => $value,
             $value instanceof BackedEnum => $value->value,
-            $value instanceof DateTimeInterface => $value->format(self::DATETIME_FORMAT),
+            $value instanceof DateTimeInterface => DateTimeImmutable::createFromInterface($value)
+                ->setTimezone(new DateTimeZone('UTC'))
+                ->format(self::DATETIME_FORMAT),
             $value instanceof EntityId => $value->raw(),
             is_array($value) => $this->json($value, $entity, $field),
             default => throw new RuntimeException(sprintf(
