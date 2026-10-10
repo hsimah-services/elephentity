@@ -45,12 +45,14 @@ final readonly class UnitOfWorkFactory implements DeletionRules
         $sideEffects = [];
         $required = [];
         $requiredEdges = [];
+        $nonNullable = [];
         $unique = [];
 
         foreach ($this->catalogue->entities() as $entity) {
             $verifiers[$entity] = $this->catalogue->verifiers($entity);
             $sideEffects[$entity] = $this->catalogue->sideEffects($entity);
             $required[$entity] = $this->catalogue->requiredFields($entity);
+            $nonNullable[$entity] = $this->catalogue->nonNullableFields($entity);
             $requiredEdges[$entity] = $this->catalogue->requiredEdges($entity);
             $unique[$entity] = $this->catalogue->uniqueFields($entity);
         }
@@ -60,7 +62,7 @@ final readonly class UnitOfWorkFactory implements DeletionRules
 
         return new UnitOfWork(
             $this->storage,
-            new VerificationPipeline($verifiers, $fieldTypes, $this->processors, $required, $requiredEdges),
+            new VerificationPipeline($verifiers, $fieldTypes, $this->processors, $required, $requiredEdges, $nonNullable),
             $encoder,
             new SideEffectDispatcher($sideEffects, $this->logger),
             planner: new DeletionPlanner($this->storage, $this),

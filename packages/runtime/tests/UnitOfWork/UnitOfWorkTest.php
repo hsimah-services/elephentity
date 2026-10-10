@@ -128,15 +128,14 @@ final class UnitOfWorkTest extends TestCase
         }
     }
 
-    public function testNullSkipsVerificationEntirely(): void
+    public function testNullableFieldVerifierCanRejectClearingAValue(): void
     {
-        // A nullable field holding null short-circuits, so no processor needs to open
-        // with the same null check.
+        // Nullable domain rules still see explicit clearing.
         $storage = new FakeStorage();
 
         $work = $this->unitOfWork($storage, verifiers: [
             'Post' => new StubVerifiers([
-                'price' => Verification::failed(new Violation('never', 'Should not run.')),
+                'price' => Verification::failed(new Violation('retained', 'Cannot clear the original value.')),
             ]),
         ]);
 
@@ -144,9 +143,8 @@ final class UnitOfWorkTest extends TestCase
         $mutation->set('price', null);
         $work->register($mutation);
 
+        $this->expectException(CommitRejected::class);
         $work->commit();
-
-        self::assertContains('commit', $storage->log);
     }
 
     public function testParentsAreWrittenBeforeTheChildrenThatReferenceThem(): void

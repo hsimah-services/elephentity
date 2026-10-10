@@ -1923,3 +1923,12 @@ validation continues to discover live metadata. Snapshot validation makes a
 narrower claim: validity against supplied metadata, without proving installed
 builder compatibility, artifact drift or generated conformance. Snapshot provenance
 and refresh on package changes remain the project's responsibility.
+
+
+### Runtime 0.13 query and verification contracts
+
+`EntityGateway::runQuery()` returns `?object`: a collection query returns an `EntityQuery`, while a cardinality-one query returns the entity or null directly. Custom gateways must widen their signature when they support singular queries. Application finders still perform policy-aware lookup; the gateway preserves their result.
+
+Regenerate with PHP builder 0.7 when upgrading the runtime. Catalogues now expose `nonNullableFields()`, and nullable field verifier methods accept nullable domain values. Field verifiers run against final mutation state, including unchanged fields whose dependencies changed and explicit nulls; type processors continue to skip null. Nonnullable explicit nulls fail before storage on creates and updates. Omitted update fields remain unchanged.
+
+Generated input appliers seed declared defaults only for new entities, through the same decoding path as explicit input. Explicit keys and values already set by an action take precedence; managed fields remain runtime-owned. Storage migrations are not provided for these alpha contracts.

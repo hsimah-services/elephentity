@@ -33,6 +33,7 @@ final readonly class VerificationPipeline
      * @param array<string, EntityVerifiers> $verifiers     Keyed by entity name.
      * @param array<string, string>          $fieldTypes    "Entity.field" => declared type name.
      * @param array<string, list<string>>    $required      Entity => fields that must be supplied on create.
+     * @param array<string, list<string>>    $nonNullable Entity => fields that cannot hold null.
      * @param array<string, list<string>>    $requiredEdges Entity => to-one edges that must be attached on create.
      */
     public function __construct(
@@ -41,6 +42,7 @@ final readonly class VerificationPipeline
         private ProcessorRegistry $processors,
         private array $required = [],
         private array $requiredEdges = [],
+        private array $nonNullable = [],
     ) {
     }
 
@@ -51,7 +53,12 @@ final readonly class VerificationPipeline
     {
         $violations = [...$this->verifyPresence($mutation), ...$this->verifyEdgePresence($mutation)];
 
-        foreach ($mutation->changes() as $field => $value) {
+        $fields = array_unique([...array_keys($mutation->changes()), ...(($this->verifiers[$mutation->entity()] ?? null)?->verifiedFields() ?? [])]);
+        foreach ($fields as $field) {
+            $value = $mutation->pending($field);
+            if (null === $value && in_array($field, $this->nonNullable[$mutation->entity()] ?? [], true)) {
+                continue;
+            }
             foreach ($this->verifyField($mutation, $field, $value) as $violation) {
                 $violations[] = $violation;
             }
@@ -72,12 +79,16 @@ final readonly class VerificationPipeline
      */
     private function verifyPresence(Mutation $mutation): array
     {
-        if (!$mutation->isCreate()) {
-            return [];
-        }
-
         $violations = [];
         $changes = $mutation->changes();
+        foreach ($this->nonNullable[$mutation->entity()] ?? [] as $field) {
+            if (array_key_exists($field, $changes) && null === $changes[$field]) {
+                $violations[] = new FieldViolation($mutation->entity(), $field, new Violation('field.nonNullable', 'This field cannot be null.'));
+            }
+        }
+        if (!$mutation->isCreate()) {
+            return $violations;
+        }
 
         foreach ($this->required[$mutation->entity()] ?? [] as $field) {
             if (array_key_exists($field, $changes) && null !== $changes[$field]) {
@@ -128,14 +139,10 @@ final readonly class VerificationPipeline
      */
     private function verifyField(Mutation $mutation, string $field, mixed $value): array
     {
-        // A null in a nullable field short-circuits: no processor should have to open
-        // with the same null check, and there is nothing to convert.
-        if (null === $value) {
-            return [];
+        $result = $this->fieldTier($mutation, $field, $value);
+        if (null !== $value && $mutation->isChanged($field)) {
+            $result = $result->merge($this->typeTier($mutation, $field, $value));
         }
-
-        $result = $this->fieldTier($mutation, $field, $value)
-            ->merge($this->typeTier($mutation, $field, $value));
 
         $violations = [];
 

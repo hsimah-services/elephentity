@@ -22,6 +22,34 @@ use stdClass;
 
 final class RuntimeTest extends TestCase
 {
+    public function testDeclaredQueriesPreserveTheirCardinalityAndNamedArguments(): void
+    {
+        $storage = $this->createStub(StorageAdaptor::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
+        $collection = $this->createStub(\Eleph\Runtime\Query\EntityQuery::class);
+        $finder = new class ($collection) {
+            public function __construct(private object $collection)
+            {
+            }
+            public function bySlug(string $slug): ?object
+            {
+                return 'visible' === $slug ? (object) ['slug' => $slug] : null;
+            }
+            public function search(string $slug): object
+            {
+                return $this->collection;
+            }
+        };
+        $catalogue->method('finder')->willReturn($finder);
+        $catalogue->method('queryArguments')->willReturn(['slug']);
+        $viewer = new AnonymousViewerProvider();
+        $runtime = new Runtime($storage, $catalogue, new UnitOfWorkFactory($storage, $catalogue, new NullProcessorRegistry()), new ReadGate($catalogue, $viewer), new WriteGate($catalogue, $viewer));
+        self::assertEquals((object) ['slug' => 'visible'], $runtime->runQuery('Page', 'bySlug', ['slug' => 'visible']));
+        self::assertNull($runtime->runQuery('Page', 'bySlug', ['slug' => 'missing']));
+        self::assertNull($runtime->runQuery('Page', 'bySlug', ['slug' => 'draft']));
+        self::assertSame($collection, $runtime->runQuery('Page', 'search', ['slug' => 'visible']));
+    }
+
     public function testFindThrowsWhenTheReadPolicyDenies(): void
     {
         $storage = $this->createStub(StorageAdaptor::class);
