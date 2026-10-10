@@ -4,7 +4,7 @@
     "type": "metapackage",
     "license": "Apache-2.0",
     "require": {
-        "elephentity/runtime": "^0.10 || ^0.11"
+        "elephentity/runtime": "^0.10 || ^0.11 || ^0.12"
     },
     "require-dev": {
         "php": ">=8.3",

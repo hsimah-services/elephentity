@@ -7,6 +7,7 @@ namespace Eleph\Runtime\Tests\Query;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Policy\AnonymousViewerProvider;
+use Eleph\Runtime\Policy\EntityReadPolicies;
 use Eleph\Runtime\Policy\PolicyDecision;
 use Eleph\Runtime\Policy\ReadGate;
 use Eleph\Runtime\Query\CachingEdgeLoader;
@@ -20,6 +21,7 @@ use Eleph\Runtime\Storage\Page;
 use Eleph\Runtime\Storage\Record;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use Eleph\Runtime\Tests\Policy\StubPolicies;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class PolicyQueryTest extends TestCase
@@ -84,6 +86,35 @@ final class PolicyQueryTest extends TestCase
 
         self::assertInstanceOf(PolicyEntity::class, $first);
         self::assertSame(2, $first->id);
+    }
+
+    public function testZeroPageDoesNotReadStorageOnEitherPath(): void
+    {
+        foreach ([true, false] as $gated) {
+            $storage = $this->createMock(StorageAdaptor::class);
+            $storage->expects(self::never())->method('query');
+            $catalogue = $this->createStub(EntityCatalogue::class);
+            $catalogue->method('readPolicies')->willReturn($gated ? new StubPolicies(static fn (object $entity): PolicyDecision => PolicyDecision::allow()) : $this->createStub(EntityReadPolicies::class));
+            $query = new LazyEntityQuery($storage, $this->hydrator(), $this->createStub(EdgeLoader::class), Criteria::for('Post'), new ReadGate($catalogue, new AnonymousViewerProvider()));
+            $page = $query->page(0, (new Offset(3))->toCursor());
+            self::assertSame([], $page->items);
+            self::assertNull($page->next);
+            try {
+                $query->page(-1);
+                self::fail('Negative page size must fail before storage.');
+            } catch (InvalidArgumentException $e) {
+                self::assertSame('Page size must be non-negative.', $e->getMessage());
+            }
+        }
+    }
+
+    public function testGatedPagesUseTheEffectiveLimitInTheirCursor(): void
+    {
+        $query = $this->pagedQuery(array_fill(1, Page::MAX_LIMIT + 5, 1));
+        $page = $query->page(Page::MAX_LIMIT + 1, (new Offset(2))->toCursor());
+        self::assertCount(Page::MAX_LIMIT, $page->items);
+        self::assertSame(Page::MAX_LIMIT + 2, Offset::fromCursor($page->next)->value);
+        self::assertSame([1003, 1004, 1005], $this->ids($query->page(10, $page->next)->items));
     }
 
     public function testCachingPreloadFiltersEachParentGroup(): void
