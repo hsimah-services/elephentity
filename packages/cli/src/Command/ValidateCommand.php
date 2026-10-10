@@ -49,6 +49,12 @@ final class ValidateCommand extends Command
             'Directory holding eleph.json.',
             '.',
         );
+        $this->addOption(
+            'provides',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Saved eleph-codegen describe JSON; validate without invoking builders or reading eleph.json.',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -57,13 +63,13 @@ final class ValidateCommand extends Command
 
         $root = $input->getArgument('spec');
         $project = $input->getOption('project');
+        $provides = $input->getOption('provides');
 
         if (!is_string($project)) {
             $io->error('--project must be a directory path.');
 
             return Command::INVALID;
         }
-
 
         if (!is_string($root)) {
             $io->error('The spec argument must be a directory path.');
@@ -78,16 +84,31 @@ final class ValidateCommand extends Command
         }
 
         try {
-            // Which integrations a spec may name is a property of what is installed, so
-            // validating without asking would either reject a legitimate spec or accept
-            // one that cannot be generated.
-            $installed = Installed::describedBy(
-                new Codegen($project, ProjectConfig::load($project)->codegen),
-                $project,
-            );
+            if (null === $provides) {
+                // Live discovery remains the default: the installed builders own the
+                // integrations, pooled specs and storage rules validation uses.
+                $installed = Installed::describedBy(
+                    new Codegen($project, ProjectConfig::load($project)->codegen),
+                    $project,
+                );
+            } else {
+                if (!is_string($provides) || !is_file($provides)) {
+                    throw new RuntimeException('--provides must name a readable describe JSON file.');
+                }
+
+                $json = @file_get_contents($provides);
+
+                if (false === $json) {
+                    throw new RuntimeException(sprintf('Cannot read %s.', $provides));
+                }
+
+                $installed = Installed::fromJson($json);
+            }
         } catch (RuntimeException $exception) {
             $io->error($exception->getMessage());
-            $io->writeln('Point --project at the directory holding eleph.json.');
+            if (null === $provides) {
+                $io->writeln('Point --project at the directory holding eleph.json, or use --provides with saved describe JSON.');
+            }
 
             return Command::FAILURE;
         }
@@ -118,6 +139,10 @@ final class ValidateCommand extends Command
             count($schema->types),
             1 === count($schema->types) ? '' : 's',
         ));
+
+        if (null !== $provides) {
+            $io->writeln('Validated against supplied metadata; installed builder compatibility was not checked.');
+        }
 
         return Command::SUCCESS;
     }

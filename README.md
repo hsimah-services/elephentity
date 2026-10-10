@@ -203,6 +203,11 @@ vendor/bin/eleph generate --check    # the tree matches the spec
 vendor/bin/eleph check               # every exposed GraphQL field resolves
 ```
 
+`validate` writes no generated files. To validate before builder executables are
+available, pass saved discovery metadata with
+`vendor/bin/eleph validate spec --provides provides.json`; this also works without
+`eleph.json`. See [docs/CI.md](docs/CI.md) for capturing the snapshot and its limits.
+
 [docs/CI.md](docs/CI.md) — what each one catches that the others cannot.
 
 ## The worked example
