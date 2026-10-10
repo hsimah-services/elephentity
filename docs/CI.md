@@ -27,6 +27,29 @@ closed: every edge target resolves, every declared type exists, every pattern's
 `requires` is satisfied, every action writes only members the entity declares. Errors
 accumulate, so one run reports everything.
 
+Validation never generates artifacts. By default it reads `eleph.json` and asks
+configured builders for their `describe` metadata, so those executables must exist.
+For a spec-only review before builders are available, use a saved discovery response:
+
+```bash
+# Capture once with the matching builders installed; this does not generate code.
+vendor/bin/eleph-codegen describe --project . > provides.json
+# No eleph.json, builder execution or generated files needed for this check.
+vendor/bin/eleph validate spec --provides provides.json
+```
+
+`--provides` reads the existing discovery response shape (`targets` mapping to each
+builder's provided integrations, drivers, patterns, types and storage rules). The
+same compiler checks run, including pooled-pattern resolution and integration
+settings. Missing/invalid metadata and unknown integrations still fail; there is no
+fallback to live discovery. Relative file paths resolve from the working directory,
+independently of `--project`.
+
+The result proves the specs are valid against that snapshot, not that installed
+builders match it or can generate code. Keep the snapshot with its source builder
+versions and refresh it when those packages change; retain live validation in build
+CI. This option checks neither generated accessor conformance nor artifact drift.
+
 **`generate --check`** — the generated tree matches the spec. This catches all three
 ways it drifts: a hand-edited file (its digest no longer matches), a stale file the
 spec no longer produces, and a deleted one.

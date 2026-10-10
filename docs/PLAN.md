@@ -1898,3 +1898,16 @@ pattern implementation must not depend on one entity's generated field accessors
 `currentValues()` deliberately uses an ungated load because it retrieves the original
 state for authorization and never hands that state to the viewer; read policy controls
 exposure, not the write path.
+
+## 20. Validation before building
+
+`eleph validate --provides <file>` accepts a saved orchestrator `describe` response
+instead of invoking live discovery. Specs need the integration declarations,
+pooled patterns/types and storage rules before they can be semantically validated,
+but a specification review need not have builder executables or `eleph.json`.
+Reuse `Installed::fromJson` and the existing compiler, so no alternate schema,
+partial validation mode or second description format is introduced. Ordinary
+validation continues to discover live metadata. Snapshot validation makes a
+narrower claim: validity against supplied metadata, without proving installed
+builder compatibility, artifact drift or generated conformance. Snapshot provenance
+and refresh on package changes remain the project's responsibility.

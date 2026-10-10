@@ -11,8 +11,8 @@ vendor/bin/eleph generate          # generate --check in CI
 vendor/bin/eleph check
 ```
 
-All except `validate` take `--project` (default `.`), the directory holding
-`eleph.json`. `validate` takes the spec directory as an argument instead.
+All commands take `--project` (default `.`), the directory holding `eleph.json`.
+`validate` also takes the spec directory as an argument (default `spec`).
 
 ---
 
@@ -35,7 +35,13 @@ Expected: type, required, indexed, maxLength. [format.keyOrder]
 
 ## `validate`
 
-Well-formed against the JSON Schema, then semantically closed.
+Well-formed against the JSON Schema, then semantically closed. No artifacts are
+written. Live validation asks configured builders for metadata. Before executables
+are available, use `eleph validate spec --provides provides.json` with a saved
+`eleph-codegen describe --project .` response; no project config or builder process
+is needed. The same compiler checks run against supplied metadata, including pooled
+specs and storage rules. This does not prove installed-builder compatibility; refresh
+the snapshot when packages change and use live discovery in build CI.
 
 **Catches:** unknown keys, wrong types, and then — the more interesting half — a spec
 that parses but does not mean anything. Every edge target must resolve, every declared
