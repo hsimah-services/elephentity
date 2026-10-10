@@ -1217,7 +1217,10 @@ as small as the protocol layers need, with everything behind it still typed.
 two pages and a reader can see one twice or miss one. Keyset paging avoids that but
 needs the ordering columns in the cursor and a stable total order the spec does not yet
 make anyone declare. The cursor is opaque, so replacing it later changes nothing above
-the adaptor.
+the adaptor. When it comes (#102), a cursor will carry the last row's sort values,
+encoded but not encrypted, so **ordering by a field the viewer cannot read is not
+supported**: the value would travel in the cursor, and a project that does it accepts
+that.
 
 The compiler asks for one row more than the caller wanted — its presence is how
 `hasNextPage` is answered without a second query, and the adaptor drops it before the
@@ -1892,8 +1895,12 @@ pattern describes the shared entity shape, which keeps generated interfaces exac
 typed while keeping application namespaces out of the spec.
 
 Read policies gate single loads with `AccessDenied` and filter denied rows from
-collections and preloads. A gated `count()` hydrates and filters the unbounded result,
-so it costs more and a page may be shorter than its limit. The viewer is resolved per
+collections and preloads. A gated `count()` hydrates and filters the whole result, a
+chunk at a time, so it costs more. A gated page counts only rows the viewer can see:
+its cursor is a position among visible rows, so a hidden row leaves no trace in it and
+`hasMore` means another visible row exists. Policies run in PHP, so the price is that
+each gated page re-reads and re-checks every row before it; keyset paging (#102) is
+how that goes away. The viewer is resolved per
 call through `ViewerProvider`; WordPress supplies it from the current user.
 
 Write policies run for create, update, delete and actions. Entity-declared policies get
