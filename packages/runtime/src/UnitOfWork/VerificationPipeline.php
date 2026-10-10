@@ -82,7 +82,7 @@ final readonly class VerificationPipeline
         $violations = [];
         $changes = $mutation->changes();
         foreach ($this->nonNullable[$mutation->entity()] ?? [] as $field) {
-            if (array_key_exists($field, $changes) && null === $changes[$field]) {
+            if (($mutation->isCreate() || array_key_exists($field, $changes)) && null === $mutation->pending($field)) {
                 $violations[] = new FieldViolation($mutation->entity(), $field, new Violation('field.nonNullable', 'This field cannot be null.'));
             }
         }
