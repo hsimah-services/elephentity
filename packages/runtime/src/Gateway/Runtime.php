@@ -65,7 +65,8 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         );
     }
 
-    public function runQuery(string $entity, string $query, array $args): EntityQuery
+    /** @return EntityQuery<object>|object|null */
+    public function runQuery(string $entity, string $query, array $args): ?object
     {
         $finder = $this->catalogue->finder($entity);
 
@@ -77,7 +78,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
             ));
         }
 
-        /** @var EntityQuery<object> $result */
+        /** @var EntityQuery<object>|object|null $result */
         $result = $finder->{$query}(...array_values($this->named($entity, $query, $args)));
 
         return $result;

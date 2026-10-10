@@ -4,7 +4,7 @@
     "type": "metapackage",
     "license": "Apache-2.0",
     "require": {
-        "elephentity/runtime": "^0.10 || ^0.11 || ^0.12"
+        "elephentity/runtime": "^0.10 || ^0.11 || ^0.12 || ^0.13"
     },
     "require-dev": {
         "php": ">=8.3",
@@ -21,7 +21,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "0.11.x-dev"
+            "dev-main": "0.13.x-dev"
         }
     },
     "autoload-dev": {

@@ -34,13 +34,14 @@ interface EntityGateway
     public function all(string $entity): EntityQuery;
 
     /**
-     * Run a query the spec declared, by name.
+     * Run a query the spec declared, by name. Collections return EntityQuery;
+     * singular queries return the entity or null.
      *
      * @param array<array-key, mixed> $args
      *
-     * @return EntityQuery<object>
+     * @return EntityQuery<object>|object|null
      */
-    public function runQuery(string $entity, string $query, array $args): EntityQuery;
+    public function runQuery(string $entity, string $query, array $args): ?object;
 
     /**
      * @param array<string, mixed> $input Field name to raw value; coercion is the implementation's job.

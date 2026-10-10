@@ -70,11 +70,14 @@ interface EntityCatalogue
      *
      * Exposed because nothing downstream could work it out: the runtime has no schema,
      * so without this `required: true` is a word in the spec that changes nothing.
-     * A field with a default is not listed — the column supplies one.
+     * A field with a default is not listed — generated input seeds it on create.
      *
      * @return list<string>
      */
     public function requiredFields(string $entity): array;
+
+    /** @return list<string> Fields that must never receive null, on create or update. */
+    public function nonNullableFields(string $entity): array;
 
     /**
      * To-one edges that must be attached when the row is created.
