@@ -1939,3 +1939,75 @@ Generated input appliers seed declared defaults only for new entities, through t
 `Criteria::take()` ends ordering in the unique `id` term, adding ascending id when needed and preserving an explicit final id direction. Adaptors honor that order; batched relationship rows also use parent id to distinguish a target shared by several parents. SQL adaptors and Memory default unbounded listings to id order too. Offset cursors still shift when records change during a walk; keyset paging remains #102.
 
 `AdaptorConformance` now checks targeted and clear-all unlink, zero/negative/capped page sizes, effective-size cursors, complete tied/no-order page walks, and forward/reverse parent projection. Pass `sharedTargets: true` for an edge that allows shared targets. Third-party adapters failing these checks need correction before claiming conformance. These checks use up to 1,001 transient rows in the supplied test entities and clean them up.
+
+
+## 21. .NET target and the Rust compiler
+
+The source of truth is [the .NET epic #115](https://github.com/hsimah-services/elephentity/issues/115).
+Its ordered steps implement these decisions; this section supersedes earlier PHP-only
+and distribution assumptions where they conflict.
+
+- **One .NET monorepo, `elephentity-dotnet`.** Runtime, Memory, Testing, Cosmos,
+  GraphQL and Tsquid ship as separate NuGet packages but type-check together. This
+  prevents the runtime-name drift that separate PHP repositories must track manually.
+  Builders remain separate Rust repositories and speak the existing protocol unchanged.
+- **GraphQL.NET.** Explicit type construction matches webonyx and lets `SchemaBuilder`
+  port by name with little implicit schema. C# and PHP must emit the same GraphQL
+  schema. Both builders declare the language-neutral `graphql` integration key.
+  Paging defaults match PHP: 10, maximum 100; applications can configure a different
+  default (hblake uses 20).
+- **nuget.org with trusted publishing.** GitHub OIDC avoids long-lived API keys.
+  The owner creates the repositories, registers Composer packages on Packagist and
+  configures nuget.org publishing policies and the `Elephentity.*` package prefix.
+- **Rust `eleph`, a separate binary in `compiler/`.** Removing the last PHP compiler
+  dependency lets a .NET project build without PHP. It still invokes `eleph-codegen`
+  as a subprocess, leaving the orchestrator and builder protocol intact. JSON Schemas
+  remain in `packages/schema/resources/` and are embedded at build time. PHP stays
+  frozen as the migration oracle until byte-identical IR, error-set (code + location)
+  and formatter parity are proven by `tools/compare-compiler`; then it is retired.
+  YAML parsing keeps spans and formatting uses a hand-written canonical emitter,
+  because a serde round trip cannot reproduce PHP's output exactly.
+- **GitHub Release binaries and `eleph install`.** A PHP-free distribution cannot
+  depend on Composer. The reusable `elephentity-codegen` release workflow builds
+  linux-x64, linux-arm64, osx-arm64 and win-x64 archives with `SHA256SUMS`.
+  `install.sh` and `install.ps1` bootstrap `eleph`; `eleph install` fetches versions
+  pinned as `eleph-gen-csharp@0.1.0` in `eleph.json`, verifies checksums and places
+  builders in the already-searched `tools/builders/`. Composer and cargo remain
+  available for PHP projects. This supersedes §15's refusal to acquire builders.
+- **Async-first C#.** Cosmos is asynchronous, so storage, gateways and queries use
+  `Task`/`ValueTask` with `CancellationToken`. This is the deliberate runtime
+  divergence; other contracts port by name. Libraries target `net10.0` LTS, enable
+  nullable checks, treat warnings as errors and set `IsAotCompatible`; generated
+  code uses no reflection. DI and logging use Microsoft's Abstractions packages.
+- **One Cosmos container and one logical partition per project, key `/pk`.** A
+  `WriteBatch` maps to one `TransactionalBatch`, making the Transactions capability
+  real. More than 100 operations fails before I/O rather than partially writing.
+  Document the 20 GB logical-partition ceiling. IDs are `Guid.CreateVersion7()`
+  strings for approximate insertion order; timestamps use UTC round-trip ISO-8601
+  (`"o"`) so lexical order is chronological. Synthetic unique properties contain
+  `<Entity>|<value>`; absent fields use id-based fillers to avoid collisions.
+  Unique keys are immutable: migration is export → new container → import.
+- **Keyset resume for policy-gated pages from day one.** Port #102 semantics, with
+  opaque cursors. PHP's repeated `LazyEntityQuery` walk would make successive pages
+  O(n²) and burn Cosmos RU. Gated counts still hydrate and evaluate policies.
+- **Target-delegated `eleph check`.** A builder may advertise
+  `provides.check: {"command": [...]}`. The orchestrator passes `provides` through
+  unchanged; the compiler dispatches checks. PHP's class-map and verifier checks
+  move to `eleph-check-php` in `elephentity-codegen-php`; C# runs
+  `Elephentity.Runtime.Testing.ContractCheck` via the target-configured command.
+  A target without a checker is reported, because silence would falsely pass gate 4.
+- **MIT everywhere.** The owner chose one licence for existing and new repositories,
+  Rust crates, Composer packages and NuGet packages. New packages declare `MIT`
+  (`PackageLicenseExpression` for NuGet), avoiding inconsistent published metadata.
+
+C# builders emit `.cs` only using the existing `line-comment` header; JSON has no
+header style. Builders return paths, bodies and accumulated errors, never write
+files, and return an empty file list on generation errors. Golden fixtures freeze
+only after real compilation, execution or host-library validation. No host PHP,
+cargo or dotnet is assumed: use container tooling, including `tools/dotnet` with
+`mcr.microsoft.com/dotnet/sdk:10.0`.
+
+WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
+Native AOT and application HTTP/authentication/deployment remain outside this epic.
+The final proof is the .NET example generating, checking and testing in CI where
+`command -v php` fails; releases and hblake's hand-off remain owner-approved.

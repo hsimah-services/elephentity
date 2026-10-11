@@ -1,31 +1,21 @@
 # The contract surface
 
-Everything the nine repositories share. A change to anything on this list needs issues
-on the repositories named beside it; a change to anything else does not.
+Everything shared by the repositories in [README.md](README.md). A change to anything
+on this list needs issues on the repositories named beside it; internal changes do not.
 
-Read the row for what you touched, not the whole table.
+There are nine current protocol implementations across eight repositories:
+`elephentity` (compiler client and memory builder), `elephentity-codegen` (orchestrator)
+and six Rust builders: php, wordpress, wpgraphql, sqlite, graphql-php and tsquid.
+The three planned C# builders bring this to twelve implementations across eleven
+repositories; rewriting the compiler in Rust replaces its client rather than adding one.
+Each live typed builder IR copy is `rust/ir.rs`, not the retired PHP `src/Ir/*`.
 
-There are **six protocol implementations** across five repositories:
-`elephentity` (the compiler/orchestrator client, and the `memory` builder it still
-ships since a driver with no physical schema needs no repository of its own),
-`elephentity-codegen` (the orchestrator), `elephentity-codegen-php`,
-`elephentity-codegen-wordpress` and `elephentity-codegen-wpgraphql`.
-`elephentity-codegen-wordpress` and `elephentity-codegen-wpgraphql` used to be
-`packages/wordpress/bin/eleph-gen-wordpress` and
-`packages/wpgraphql/bin/eleph-gen-wpgraphql` inside `elephentity` itself; the split
-(elephentity#62) changed which repository they live in and nothing about the protocol
-they speak.
-
-The other four repositories speak no protocol themselves, but are still on this
-surface: **`elephentity-runtime`** is a read-only mirror of `elephentity`'s
-`packages/runtime`, so anything that reaches `packages/runtime` reaches it for free on
-the next split — it is never a place to file an issue *against*.
-**`elephentity-wordpress`** and **`elephentity-wpgraphql`** are runtime packages
-(elephentity#79) that the two matching builders name classes from, as strings, in their
-own `src/Runtime.php` — the coupling a version gate cannot catch, covered below.
-**`elephentity-examples`** consumes all of it as a real product; regenerating `clog`
-there is the end-to-end check that a class rename or a drifted answer to `describe`
-actually surfaces somewhere, since nothing type-checks across any of these gaps.
+`elephentity-runtime` mirrors runtime source and tests, so source changes go to
+`elephentity`. Its licence, Composer metadata and tooling remain locally owned.
+The PHP runtime adaptors and integrations implement runtime interfaces and are named
+as strings by their builders. `elephentity-dotnet` type-checks its runtime packages
+together, but C# builders' `rust/runtime.rs` constants still cross a repository boundary.
+`elephentity-examples` consumes generated output as the end-to-end check.
 
 ---
 
@@ -33,22 +23,21 @@ actually surfaces somewhere, since nothing type-checks across any of these gaps.
 
 | You changed | `elephentity-codegen` must | every builder repository must |
 |---|---|---|
-| `IrCodec::VERSION` (`packages/schema/src/Wire/IrCodec.php`) | bump `Envelope::IR_VERSION` | bump its own `IrCodec::VERSION`/`Envelope::IR_VERSION` copy |
-| the shape of `packages/schema/src/Ir/*` | — nothing; the IR is opaque to it | copy the change into its own `src/Ir/*`, re-freeze golden fixtures |
+| Rust `IrCodec::VERSION` under `compiler/` (owns the wire version from step 3; PHP `packages/schema/src/Wire/IrCodec.php` is the oracle copy) | bump `Envelope::IR_VERSION` | bump its own `Envelope::IR_VERSION`; keep the PHP oracle version aligned |
+| the shape of the compiler IR (`compiler/` from step 3; `packages/schema/src/Ir/*` is the PHP oracle) | — nothing; the IR is opaque to it | copy the change into its own `rust/ir.rs`, re-freeze golden fixtures |
 | the compiler request (`GenerateCommand::request()`) | update `Protocol/CompilerRequest` | — |
 | what `provides` may contain (`packages/cli/src/Installed.php`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
 | a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php`, if it names that class |
 | an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
 | `eleph.json` keys **it** reads (`spec`, `codegen`) | only if the key is also the orchestrator's | — |
 
-**Every builder repository** currently means `elephentity-codegen-php`,
-`elephentity-codegen-wordpress` and `elephentity-codegen-wpgraphql` — the three that
-hold a copy of the IR. `packages/memory/bin/eleph-gen-memory` speaks the protocol too
-but reads no IR field (a driver with no physical schema needs nothing from `schema`),
-so it is unaffected by everything in this table except `Envelope::VERSION` itself.
+**Every builder repository** means php, wordpress, wpgraphql, sqlite, graphql-php
+and tsquid, plus csharp, cosmos and graphql-csharp once scaffolded. Update each
+`rust/ir.rs` copy that reads the changed fields and its version gate. The memory
+builder reads no IR fields and only needs envelope-version changes.
 
-**The IR is the one that bites.** `packages/schema/src/Ir/*` is *copied* into each
-builder's own `src/Ir/*`, not shared. Nothing fails at build time when they diverge:
+**The IR is the one that bites.** The compiler IR is *copied* into each
+builder's own `rust/ir.rs`, not shared. Nothing fails at build time when they diverge:
 the compiler encodes a field a builder silently drops, and the generated code — or
 compiled manifest — is quietly missing something. Only a version bump makes it loud,
 which is why adding a field to the IR is worth bumping for even when an old builder
@@ -73,9 +62,9 @@ sync; an earlier version of the split workflow force-pushed all of it away once
 
 ## Changing `elephentity-codegen`
 
-It owns the protocol, so its blast radius is the largest: **five** other
-implementations, not one — `elephentity`'s compiler/client side, the `memory` builder
-it also ships, and the three standalone builder repositories.
+It owns the protocol, so its blast radius is the largest: **eight** other current
+implementations — `elephentity`'s compiler client, its memory builder and six Rust
+builders — plus the three C# builders once scaffolded.
 
 | You changed | `elephentity` must | every builder repository must |
 |---|---|---|
@@ -106,7 +95,7 @@ row for the one you changed.
 | the bytes of any generated file | regenerate `clog` and commit the diff | — |
 | the shape of `class-map.php` (php builder only) | — (`packages/cli/src/ClassMap.php` lives in `elephentity`; open an issue there too) | — |
 | what it answers to `describe` | — (`Installed` lives in `elephentity`; open an issue there too) | — |
-| `Envelope::IR_VERSION` or its `src/Ir/*` | keep `IrCodec::VERSION` and `elephentity`'s `packages/schema/src/Ir/*` in step | bump `Envelope::IR_VERSION` |
+| `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `IrCodec::VERSION` and `elephentity`'s compiler IR and PHP oracle in step | bump `Envelope::IR_VERSION` |
 | its `src/Runtime.php` constants | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
 | which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
 | a package pattern it ships (wordpress builder: `resources/patterns/*.yml`) | none, if the pattern's shape is unchanged; regenerate if it is | — |
@@ -151,7 +140,7 @@ Listed because guessing wrong in this direction is the expensive one.
   a manifest's internal structure is its own business right up until the bytes change —
   at which point it is the first row of the builder table above, and it is the bytes
   that are the contract, not the decision.
-- **One builder's `src/Runtime.php`, `src/Ir/*` or `src/Protocol/*` copy is invisible to
+- **One builder's `src/Runtime.php`, `rust/ir.rs` or `src/Protocol/*` copy is invisible to
   every other builder.** Each is independent; `elephentity-codegen-wordpress` falling
   behind the IR does not reach `elephentity-codegen-wpgraphql` or vice versa.
 
@@ -159,3 +148,43 @@ Schema, CLI and memory mirrors are entirely owned by `packages/<name>` here, inc
 Composer metadata, resources, bins and CI. Change those in the source repository;
 the split workflow synchronizes them on main pushes and source tags. The memory
 builder lives in the CLI package so memory has no compiler dependency at runtime.
+
+
+## Rust compiler and target-delegated checks (steps 2–6)
+
+The Rust `eleph` lives in `elephentity/compiler/`. From step 3 its `IrCodec::VERSION`
+owns the wire version; `packages/schema/src/Wire/IrCodec.php` becomes the frozen
+oracle copy. Changes to IR shape or encoding require matching builder `rust/ir.rs`
+updates and parity verification through `tools/compare-compiler`. An IR-version bump
+must merge with the orchestrator and every builder version gate together.
+The Rust compiler request and the PHP migration-oracle request must agree with
+`elephentity-codegen`'s `Protocol/CompilerRequest` contract.
+
+| You changed | Repositories that must follow |
+|---|---|
+| `provides.check: {"command": [...]}` shape | `elephentity`'s Rust discovery/check dispatcher and PHP oracle while active; `elephentity-codegen-php`'s `rust/provides.json` and every builder advertising a checker, including C# when it advertises one |
+| `eleph-check-php` invocation or class-map/verifier input | `elephentity-codegen-php` checker; `elephentity` dispatcher; `elephentity-examples` check configuration |
+| C# target-configured `ContractCheck` command/input | `elephentity-dotnet`'s `Elephentity.Runtime.Testing`, affected C# builder checker declaration/configuration and `elephentity-examples` |
+
+`provides` remains opaque to the orchestrator: a `provides.check` change requires
+no orchestrator change. No checker means an explicit report, never silent success.
+PHP advertises `eleph-check-php`; C# runs `ContractCheck` through its configured command.
+
+## C# builders and .NET runtime type names
+
+| You changed | Matching repository must | `elephentity-examples` must |
+|---|---|---|
+| Exported type/namespace/constructor in `elephentity-dotnet` Runtime | `elephentity-codegen-csharp`: update strings in `rust/runtime.rs` and constructor output | regenerate and compile/check the .NET example |
+| Exported type/namespace/constructor in `Elephentity.Cosmos` | `elephentity-codegen-cosmos`: update `rust/runtime.rs` and emitted manifest calls | regenerate and run Cosmos conformance |
+| Exported type/namespace/constructor in `Elephentity.GraphQL` | `elephentity-codegen-graphql-csharp`: update `rust/runtime.rs` and emitted manifest calls | regenerate and execute the GraphQL schema |
+| Exported initial-data API in `Elephentity.Tsquid` | `elephentity-codegen-tsquid`: update C# runtime names and output | regenerate and verify route data before the first script |
+| Runtime-name constant or emitted C# constructor call in a builder | `elephentity-dotnet`: confirm the named type and signature exist | regenerate, compile and run the affected integration |
+| Any generated C# bytes | affected builder: re-freeze fixtures only after real compilation/execution | regenerate and commit the signed tree |
+| C# builder's `rust/ir.rs` or `Envelope::IR_VERSION` | `elephentity`: align Rust wire codec and PHP oracle; `elephentity-codegen`: align `Envelope::IR_VERSION`; other builders: align their IR/version gates | regenerate with compatible compiler and builders |
+
+C# builders use `line-comment` and emit only `.cs`, never JSON. Both GraphQL builders
+provide integration key `graphql`; changes to its declaration reach both builders,
+the compiler's discovery/validation and the examples. Schema changes reach both
+GraphQL runtimes and must preserve PHP/C# parity. The .NET monorepo's internal package
+interfaces type-check together; they do not need companion issues unless a builder
+or consuming example is affected.

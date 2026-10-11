@@ -1,8 +1,8 @@
 format: 1
 status: implementation-notes
-updated: '2026-09-27'
+updated: '2026-10-11'
 purpose: >-
-  A focused starting point for new storage adaptors, PHP integrations and their
+  A focused starting point for new storage adaptors, PHP and C# integrations and their
   generators. Read the listed contracts and nearest example before exploring
   unrelated packages. Update these notes when implementation or tests teach us more.
 paths:
@@ -16,9 +16,9 @@ boundaries:
   compiler: validates specs and emits the versioned wire IR
   orchestrator: runs builders, signs files, writes files and checks drift
   builder: reads one JSON request on stdin and returns paths and bodies on stdout
-  runtime: loads generated PHP manifests without the compiler or Rust
+  runtime: loads generated PHP or C# manifests without the compiler or Rust
   application: owns HTTP, authentication, sessions, deployment and migrations
-  warning: Edit runtime source in elephentity/packages/runtime, never the subtree mirror.
+  warning: Edit PHP runtime source in elephentity/packages/runtime, never the subtree mirror. C# runtime source lives in elephentity-dotnet/src.
 start_here:
   - Read the protocol and one nearest builder's rust/main.rs and rust/provides.json.
   - Read only the runtime constructor signatures named by the emitted manifest.
@@ -30,7 +30,7 @@ new_builder_files:
   composer.json: Build-time package metadata; bin entry once the launcher exists.
   Cargo.toml: Binary name and Rust dependencies; no runtime-package dependency.
   Cargo.lock: Commit it and use --locked in CI.
-  LICENSE: Preserve the license of reused code.
+  LICENSE: MIT for new owner-authored code; preserve third-party notices for reused code.
   bin/eleph-gen-NAME: Shell launcher selecting target/release then target/debug.
   rust/main.rs: Version gate, describe/generate dispatch, envelope and diagnostics.
   rust/ir.rs: Independent typed wire-IR copy, aligned to the compiler version.
@@ -73,6 +73,34 @@ current_examples:
     target: graphql-php
     integration_key: graphql
     runtime_manifest: elephentity-graphql-php/src/Manifest/Manifest.php
+  csharp:
+    status: planned_steps_13_14
+    runtime_repository: elephentity-dotnet
+    runtime_package: Elephentity.Runtime
+    builder_repository: elephentity-codegen-csharp
+    builder_package: elephentity/codegen-csharp
+    executable: eleph-gen-csharp
+    target: csharp
+    runtime_names: elephentity-codegen-csharp/rust/runtime.rs
+  cosmos:
+    status: planned_steps_15_16
+    runtime_repository: elephentity-dotnet
+    runtime_package: Elephentity.Cosmos
+    builder_repository: elephentity-codegen-cosmos
+    builder_package: elephentity/codegen-cosmos
+    executable: eleph-gen-cosmos
+    driver: cosmos
+    runtime_manifest: elephentity-dotnet/src/Elephentity.Cosmos/Manifest/CosmosStorageManifest.cs
+  graphql_csharp:
+    status: planned_steps_17_18
+    runtime_repository: elephentity-dotnet
+    runtime_package: Elephentity.GraphQL
+    builder_repository: elephentity-codegen-graphql-csharp
+    builder_package: elephentity/codegen-graphql-csharp
+    executable: eleph-gen-graphql-csharp
+    target: graphql-csharp
+    integration_key: graphql
+    host_library: GraphQL.NET
 lessons_from_sqlite:
   - Do not copy WordPress storage generation wholesale; it emits platform-owned entities and MySQL types.
   - INTEGER PRIMARY KEY is special in SQLite; copied AUTO_INCREMENT SQL is invalid.
@@ -90,7 +118,9 @@ lessons_from_graphql:
   - Snapshot equality proves stability, not that webonyx accepts or can execute the generated schema.
 local_tooling:
   php: Use the existing PHP container; no host PHP is assumed.
-  rust: Use the installed Rust container if no host cargo is available.
+  rust: Use the installed Rust container; no host cargo is assumed.
+  dotnet: Use tools/dotnet with mcr.microsoft.com/dotnet/sdk:10.0, podman first and docker fallback; no host dotnet is assumed.
+  nuget_cache: Mount ${XDG_CACHE_HOME:-$HOME/.cache}/eleph/nuget in the dotnet container.
   cargo_cache: Mount a cache at /cargo and set CARGO_HOME=/cargo; do not hide /usr/local/cargo/bin.
   runtime_tests: Use disposable fixtures and read-only runtime checkouts; do not alter live Clog.
   package_registration: Push a validated composer.json to main before implementation if requested.
@@ -106,6 +136,17 @@ runtime_storage_file_index:
   src/Sql/FieldMap.php: Spec field names to physical column names and back.
   src/Sql/QueryCompiler.php: Filters, ordering, pagination, edge queries and bindings.
   tests: Adapter conformance plus backend-specific constraints, rollback and concurrency.
+runtime_storage_file_index_csharp:
+  status: planned_steps_9_15
+  Directory.Build.props: net10.0, nullable, warnings as errors, AOT compatibility on src projects and MIT package metadata.
+  Directory.Packages.props: Central Package Management; runtime-only package dependencies.
+  src/Elephentity.Runtime/Storage/IStorageAdaptor.cs: Async storage port with CancellationToken; port by name from PHP.
+  src/Elephentity.Cosmos/CosmosAdaptor.cs: Implements the storage port; no I/O in constructors.
+  src/Elephentity.Cosmos/Manifest/CosmosStorageManifest.cs: Constructor contract emitted by the Cosmos builder; layouts, field maps, unique keys, edges and indexes.
+  src/Elephentity.Cosmos/CosmosInstaller.cs: Explicit installation; refuses populated containers.
+  src/Elephentity.Cosmos/CosmosBackup.cs: Export/import migration into an empty container.
+  src/Elephentity.Runtime.Testing: AdaptorConformance and ContractCheck; accumulate all failures.
+  tests/Elephentity.Cosmos.Tests: Conformance, batch limit, unique conflicts, keyset paging, install refusal and backup round-trip against emulator or documented real-account cases.
 runtime_integration_file_index:
   composer.json: Runtime and integration-library dependencies; no compiler dependency.
   src/Manifest: Typed data objects emitted by the matching generator.
