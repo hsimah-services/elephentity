@@ -59,11 +59,12 @@ impl IntegrationRegistry {
     }
 }
 
-/// Which settings an integration is being asked for.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Scope {
-    Entity,
-    Query,
+/// Where an exposure is being resolved: what to call it in messages, and where it sits.
+struct Exposure<'a> {
+    subject: &'a str,
+    file: &'a str,
+    /// The pointer the integration names are found under.
+    base: &'a str,
 }
 
 /// Integrations the project speaks, with their project-level settings.
@@ -111,14 +112,18 @@ pub fn resolve_entity_integrations(
     file: &str,
     errors: &mut Vec<SpecError>,
 ) -> IndexMap<String, Map<String, Value>> {
-    resolve_scope(
+    let exposure = Exposure {
+        subject: entity_name,
+        file,
+        base: "/integrations",
+    };
+
+    resolve_exposure(
         registry,
         declared,
         enabled,
-        entity_name,
-        file,
-        "/integrations",
-        Scope::Entity,
+        &exposure,
+        |definition| &definition.entity_config,
         errors,
     )
 }
@@ -136,29 +141,36 @@ pub fn resolve_query_integrations(
     pointer: &str,
     errors: &mut Vec<SpecError>,
 ) -> IndexMap<String, Map<String, Value>> {
-    resolve_scope(
+    let exposure = Exposure {
+        subject,
+        file,
+        base: pointer,
+    };
+
+    resolve_exposure(
         registry,
         declared,
         enabled,
-        subject,
-        file,
-        pointer,
-        Scope::Query,
+        &exposure,
+        |definition| &definition.query_config,
         errors,
     )
 }
 
-#[allow(clippy::too_many_arguments)]
-fn resolve_scope(
+/// `parameters` picks which of an integration's declared settings apply to this exposure.
+fn resolve_exposure(
     registry: &IntegrationRegistry,
     declared: Option<&Map<String, Value>>,
     enabled: &IndexMap<String, Map<String, Value>>,
-    subject: &str,
-    file: &str,
-    base: &str,
-    scope: Scope,
+    exposure: &Exposure<'_>,
+    parameters: impl Fn(&IntegrationDefinition) -> &IndexMap<String, ConfigParameter>,
     errors: &mut Vec<SpecError>,
 ) -> IndexMap<String, Map<String, Value>> {
+    let Exposure {
+        subject,
+        file,
+        base,
+    } = *exposure;
     let mut resolved = IndexMap::new();
 
     for (name, settings) in supplied(declared) {
@@ -184,13 +196,8 @@ fn resolve_scope(
             continue;
         }
 
-        let declared_parameters = match scope {
-            Scope::Query => &definition.query_config,
-            Scope::Entity => &definition.entity_config,
-        };
-
         let values = resolve_values(
-            declared_parameters,
+            parameters(definition),
             &settings,
             &format!("Integration {name}"),
             file,
