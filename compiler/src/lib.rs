@@ -3,8 +3,10 @@
 //! The PHP compiler in `packages/schema` is the migration oracle: this crate is measured
 //! against the snapshots `tools/compare-compiler` takes from it.
 
+pub mod cli;
 pub mod compile;
 pub mod error;
+pub mod fmt;
 pub mod integration;
 pub mod ir;
 pub mod model;

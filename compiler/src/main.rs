@@ -1,16 +1,15 @@
-fn main() {
-    let arguments: Vec<String> = std::env::args().skip(1).collect();
+use std::io::IsTerminal;
 
-    match arguments.as_slice() {
-        [flag] if flag == "--version" => {
-            println!("eleph {}", env!("CARGO_PKG_VERSION"));
-        }
-        _ => {
-            eprintln!("usage: eleph --version");
-            eprintln!(
-                "The compiler commands arrive in later steps; see hsimah-services/elephentity#115."
-            );
-            std::process::exit(2);
-        }
-    }
+fn main() {
+    let arguments: Vec<String> = std::env::args().collect();
+    let attached = std::io::stdout().is_terminal() && std::io::stderr().is_terminal();
+
+    let code = eleph_compiler::cli::run(
+        &arguments,
+        &mut std::io::stdout(),
+        &mut std::io::stderr(),
+        attached,
+    );
+
+    std::process::exit(code);
 }

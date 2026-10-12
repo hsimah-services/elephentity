@@ -1,0 +1,18 @@
+#!/bin/sh
+# A builder with no PHP anywhere: it reads the request on stdin and answers on stdout, which is
+# all the protocol asks (docs/PROTOCOL.md in elephentity-codegen). It provides the driver "stub"
+# and generates one file naming the project, so a run through it proves a project can go from
+# spec to generated tree without a PHP builder.
+set -eu
+
+request="$(cat)"
+
+case "$request" in
+    *'"request":"describe"'*)
+        printf '%s' '{"elephentity":1,"irVersion":"1.2","provides":{"drivers":["stub"]}}'
+        ;;
+    *)
+        project="$(printf '%s' "$request" | sed -n 's/.*"schema":{"project":{"name":"\([^"]*\)".*/\1/p')"
+        printf '{"elephentity":1,"irVersion":"1.2","headerStyle":"line-comment","extensions":["txt"],"files":[{"path":"project.txt","body":"project: %s\\n"}],"errors":[]}' "$project"
+        ;;
+esac

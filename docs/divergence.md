@@ -46,13 +46,38 @@ They are in the oracle (`loader-errors`) and match.
   or a tag other than `!!str` and `!!float` is `spec.unparseable`.
 - `.inf` and `.nan` cannot be a spec value, because JSON cannot hold them.
 
+## The command line
+
+The Rust `eleph` runs `fmt`, `validate` and `generate` with the same flags, exit codes and
+words as the PHP one, so scripts and CI do not change when the binary under them does.
+`tools/test-rust-cli` runs both on one project and requires the same exit codes, a
+byte-identical generated tree, and the same problems named for a broken spec.
+
+What differs is presentation only:
+
+- **No coloured boxes.** PHP's console library draws padded, coloured blocks. Rust prints the
+  same words as `[ERROR]` and `[OK]` lines, never coloured. `--no-ansi`, `-n` and `--ansi` are
+  accepted and change nothing.
+- **A project with no `eleph.json`** is reported on stderr with exit 1 for `fmt` and `generate`
+  (PHP prints an uncaught-exception trace); `validate` reports it on stdout with a hint, as PHP
+  does.
+- **`fmt --check`** is accepted for symmetry with `generate --check`. `fmt` only ever reports,
+  as in PHP, so the flag changes nothing.
+- **Finding `eleph-codegen`.** PHP looks beside the running script and in the nearest
+  `vendor/bin` above its own source. Rust looks beside its own binary and in the nearest
+  `vendor/bin` above the *project*, which is where a Composer-installed project has it. An
+  explicit `"codegen"` path and `PATH` work the same. `eleph install` (step 8) adds a fifth place.
+- **Handle patterns.** A driver's `storage.handle.pattern` is PCRE in PHP and runs on the
+  `regex` crate here, which has no lookaround, backreferences or possessive quantifiers. A
+  pattern it cannot read is reported once, when the builders are described, naming the builder
+  and saying why; PHP would run it. Drivers declare simple anchored classes today, so none is
+  affected.
+
 ## Not ported yet
 
-`CanonicalOrder` and `FormatChecker` (`eleph fmt`) arrive in step 4, along with the
-registries that come from the builders' `describe` (integrations and storage rules are
-data passed in for now, read from `compiler/tests/oracle/registry.json` and
-`storage-rules.json`). Everything up to the request `eleph generate` sends is ported and
-compared byte for byte.
+`eleph check` (gate 4) is step 5. Everything else the PHP CLI does is ported: the compiler up to
+the request `eleph generate` sends, compared byte for byte; `fmt`, `validate` and `generate`;
+and the `describe` handshake that supplies integrations, patterns, types and storage rules.
 
 ## Not part of the compiler
 

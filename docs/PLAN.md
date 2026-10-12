@@ -2058,6 +2058,23 @@ from PHP they cause are listed in [divergence.md](divergence.md).
   the PHP builder and checks for a second-run drift of zero. It is the proof that the builders
   accept the bytes, run in the PHP job where those binaries are already built.
 
+### The Rust command line (step 4)
+
+- **`fmt`, `validate` and `generate` are ported command for command** (`compiler/src/cli`),
+  with the PHP words, flags and exit codes. `check` is step 5. `tools/test-rust-cli` is the
+  PHP-versus-Rust comparison; `compiler/tests/cli.rs` is the behavioural suite, against a stand-in
+  `eleph-codegen` that records what it is asked.
+- **The compiler still never reads `targets`.** `ProjectConfig` takes `spec` and `codegen` and
+  leaves the rest of `eleph.json` alone; only `eleph-codegen` parses `targets`. A test hands it a
+  `targets` that is not even an object.
+- **The generator is asked twice**, as in PHP: `describe` before the specs are read, `generate`
+  after, with `--check` and `--targets` passed through and its output forwarded, not re-rendered.
+  Its stdin, stdout and stderr are drained on separate threads so a large IR cannot deadlock the
+  pipe.
+- **A project with no PHP target works end to end**, proved by a fixture whose only target is a
+  shell-script builder (`compiler/tests/fixtures/stub-project`).
+- **Output is plain.** The words match PHP's; the coloured box does not (divergence.md).
+
 WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
 The final proof is the .NET example generating, checking and testing in CI where

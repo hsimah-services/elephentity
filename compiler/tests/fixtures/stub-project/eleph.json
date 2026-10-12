@@ -1,0 +1,9 @@
+{
+    "spec": "spec",
+    "targets": {
+        "stub": {
+            "builder": "./stub-builder",
+            "output": "generated"
+        }
+    }
+}

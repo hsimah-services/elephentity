@@ -1,0 +1,6 @@
+entity: Note
+storage:
+  table: notes
+fields:
+  title:
+    type: string
