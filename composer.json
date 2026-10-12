@@ -2,7 +2,7 @@
     "name": "elephentity/elephentity",
     "description": "Compatibility package for the Elephentity runtime. Install elephentity/cli separately for development.",
     "type": "metapackage",
-    "license": "Apache-2.0",
+    "license": "MIT",
     "require": {
         "elephentity/runtime": "^0.10 || ^0.11 || ^0.12 || ^0.13"
     },
