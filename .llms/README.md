@@ -1,6 +1,7 @@
 # Rules for agents working across the Elephentity repositories
 
-Elephentity is eight published programs plus one read-only mirror, and they talk over a
+Elephentity tracks twenty-three repositories (nineteen in use, plus four for the .NET target
+that are not yet scaffolded), which talk over a
 wire format rather than a shared classpath. That is deliberate — it is what lets a
 builder be written in any language — but it means the compiler cannot fail to build
 when a builder falls behind it. Nothing type-checks across the gap. The version gate
@@ -8,22 +9,36 @@ turns a mismatch into a refusal at run time, which is late.
 
 **So the coupling is tracked by hand, and this directory is how.**
 
-**These three files are identical in all nine repositories.** Deliberately: a contract
-described differently on each side of it is a contract with nine versions and no
-authority. Change one, change all nine, in the same batch of commits — and that batch
+**These four `.llms/` files are identical in every repository that carries them.** Deliberately: a contract
+described differently on each side of it is a contract with multiple versions and no
+authority. Change one, change every existing copy, in the same batch of commits — and that batch
 is itself the thing this directory is about, so it needs its own issues.
 
 | Repository | Is | Speaks |
 |---|---|---|
-| `hsimah-services/elephentity` | the spec compiler, the runtime port, the `eleph` command, the neutral `memory` driver — no platform adaptor | produces the IR; ships `eleph-gen-memory` |
-| `hsimah-services/elephentity-runtime` | a read-only subtree mirror of `elephentity`'s `packages/runtime` | nothing of its own — PRs go to `elephentity` |
-| `hsimah-services/elephentity-codegen` | the orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
-| `hsimah-services/elephentity-codegen-php` | the PHP builder, `eleph-gen-php` | implements the protocol |
-| `hsimah-services/elephentity-codegen-wordpress` | the WordPress builder, `eleph-gen-wordpress` | implements the protocol |
-| `hsimah-services/elephentity-codegen-wpgraphql` | the WPGraphQL builder, `eleph-gen-wpgraphql` | implements the protocol |
-| `hsimah-services/elephentity-wordpress` | the WordPress storage adaptor, runtime-only | implements `Eleph\Runtime\Storage\StorageAdaptor`; named by `elephentity-codegen-wordpress`'s `Runtime.php` as strings |
-| `hsimah-services/elephentity-wpgraphql` | the WPGraphQL runtime, runtime-only | implements `Eleph\Runtime\Conformance\Verifier`; named by `elephentity-codegen-wpgraphql`'s `Runtime.php` as strings |
-| `hsimah-services/elephentity-examples` | worked examples (`clog`), built and tested as real products | consumes all of the above; regenerating it is the end-to-end proof |
+| `hsimah-services/elephentity` | spec compiler, PHP runtime source, CLI and neutral memory builder; Rust `eleph` in `compiler/` from steps 2–4 | produces the IR; ships `eleph-gen-memory` |
+| `hsimah-services/elephentity-runtime` | subtree mirror of `packages/runtime/src` and `tests`; metadata is owned locally | runtime contracts; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-schema` | subtree mirror of `packages/schema`; entirely owned by the source package | schema, resources and IR oracle; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-cli` | subtree mirror of `packages/cli`; entirely owned by the source package | `eleph` command and `eleph-gen-memory`; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
+| `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
+| `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |
+| `hsimah-services/elephentity-codegen-wpgraphql` | WPGraphQL builder | builder protocol; WPGraphQL runtime type names |
+| `hsimah-services/elephentity-codegen-sqlite` | SQLite storage builder | builder protocol; SQLite runtime type names |
+| `hsimah-services/elephentity-codegen-graphql-php` | generic PHP GraphQL builder | builder protocol; `graphql` integration; PHP GraphQL runtime type names |
+| `hsimah-services/elephentity-codegen-tsquid` | tsquid builder, adding C# output in step 20 | builder protocol; frontend and server initial-data output |
+| `hsimah-services/elephentity-codegen-typescript` | legacy TypeScript builder repository | no current protocol implementation |
+| `hsimah-services/elephentity-wordpress` | PHP WordPress storage adaptor | runtime storage contracts |
+| `hsimah-services/elephentity-wpgraphql` | PHP WPGraphQL runtime | runtime integration contracts |
+| `hsimah-services/elephentity-sqlite` | PHP SQLite storage adaptor | runtime storage contracts |
+| `hsimah-services/elephentity-graphql-php` | generic PHP GraphQL runtime | runtime integration contracts; webonyx schema |
+| `hsimah-services/elephentity-patterns` | reusable spec patterns | compiler pattern declarations |
+| `hsimah-services/elephentity-examples` | worked examples, including the step 21 .NET example | consumes generated output; end-to-end proof |
+| `hsimah-services/elephentity-dotnet` (planned) | one .NET monorepo: Runtime, Runtime.Memory, Runtime.Testing, Cosmos, GraphQL, Tsquid | async runtime contracts; NuGet; GraphQL.NET schema |
+| `hsimah-services/elephentity-codegen-csharp` (planned) | Rust entity/enum/contract/catalogue/DI builder, `eleph-gen-csharp` | unchanged builder protocol; .NET runtime type names |
+| `hsimah-services/elephentity-codegen-cosmos` (planned) | Rust Cosmos C# storage-manifest builder, `eleph-gen-cosmos` | unchanged builder protocol; .NET Cosmos runtime type names |
+| `hsimah-services/elephentity-codegen-graphql-csharp` (planned) | Rust GraphQL C# manifest builder, `eleph-gen-graphql-csharp` | unchanged builder protocol; `graphql` integration; .NET GraphQL runtime type names |
 
 ## The rule
 
