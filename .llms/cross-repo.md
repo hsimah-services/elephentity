@@ -8,7 +8,12 @@ There are nine current protocol implementations across eight repositories:
 and six Rust builders: php, wordpress, wpgraphql, sqlite, graphql-php and tsquid.
 The three planned C# builders bring this to twelve implementations across eleven
 repositories; rewriting the compiler in Rust replaces its client rather than adding one.
-Each live typed builder IR copy is `rust/ir.rs`, not the retired PHP `src/Ir/*`.
+Typed builders (php, wordpress, wpgraphql, sqlite, graphql-php) keep their live IR copy in
+`rust/ir.rs`; the PHP `src/Ir/*` those repositories still ship is not the live copy. The
+tsquid builder has no typed copy: it reads `schema.project.integrations` straight from
+the request JSON in `rust/main.rs`.
+
+Read the row for what you touched, not the whole table.
 
 `elephentity-runtime` mirrors runtime source and tests, so source changes go to
 `elephentity`. Its licence, Composer metadata and tooling remain locally owned.
@@ -27,13 +32,14 @@ together, but C# builders' `rust/runtime.rs` constants still cross a repository 
 | the shape of the compiler IR (`compiler/` from step 3; `packages/schema/src/Ir/*` is the PHP oracle) | — nothing; the IR is opaque to it | copy the change into its own `rust/ir.rs`, re-freeze golden fixtures |
 | the compiler request (`GenerateCommand::request()`) | update `Protocol/CompilerRequest` | — |
 | what `provides` may contain (`packages/cli/src/Installed.php`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
-| a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php`, if it names that class |
+| a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`), if it names that class |
 | an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
 | `eleph.json` keys **it** reads (`spec`, `codegen`) | only if the key is also the orchestrator's | — |
 
 **Every builder repository** means php, wordpress, wpgraphql, sqlite, graphql-php
 and tsquid, plus csharp, cosmos and graphql-csharp once scaffolded. Update each
-`rust/ir.rs` copy that reads the changed fields and its version gate. The memory
+typed `rust/ir.rs` copy that reads the changed fields and its version gate; for tsquid,
+check the JSON paths `rust/main.rs` reads. The memory
 builder reads no IR fields and only needs envelope-version changes.
 
 **The IR is the one that bites.** The compiler IR is *copied* into each
@@ -96,7 +102,7 @@ row for the one you changed.
 | the shape of `class-map.php` (php builder only) | — (`packages/cli/src/ClassMap.php` lives in `elephentity`; open an issue there too) | — |
 | what it answers to `describe` | — (`Installed` lives in `elephentity`; open an issue there too) | — |
 | `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `IrCodec::VERSION` and `elephentity`'s compiler IR and PHP oracle in step | bump `Envelope::IR_VERSION` |
-| its `src/Runtime.php` constants | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
+| its `src/Runtime.php` constants (php builder: `rust/runtime.rs`) | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
 | which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
 | a package pattern it ships (wordpress builder: `resources/patterns/*.yml`) | none, if the pattern's shape is unchanged; regenerate if it is | — |
 
@@ -115,7 +121,7 @@ itself — a builder names their classes as strings, not imports — so nothing 
 
 | You changed | the matching builder repository must | `elephentity-examples` must |
 |---|---|---|
-| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
+| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`) — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
 | a class implementing `Eleph\Runtime\Storage\StorageAdaptor`, `Conformance\Verifier`, `Policy\Viewer` or `Policy\ViewerProvider` | — | run the four gates; `eleph check` exercises the verifier for real |
 | its own `composer.json` version constraint on `elephentity/runtime` | — | bump the matching constraint in `clog/composer.json` once a new version is tagged |
 
@@ -162,7 +168,7 @@ The Rust compiler request and the PHP migration-oracle request must agree with
 
 | You changed | Repositories that must follow |
 |---|---|
-| `provides.check: {"command": [...]}` shape | `elephentity`'s Rust discovery/check dispatcher and PHP oracle while active; `elephentity-codegen-php`'s `rust/provides.json` and every builder advertising a checker, including C# when it advertises one |
+| `provides.check: {"command": [...]}` shape | `elephentity`'s Rust discovery/check dispatcher and PHP oracle while active; `elephentity-codegen-php`'s inline `provides` answer in `rust/main.rs` (step 6 may move it to a file) and every builder advertising a checker, including C# when it advertises one |
 | `eleph-check-php` invocation or class-map/verifier input | `elephentity-codegen-php` checker; `elephentity` dispatcher; `elephentity-examples` check configuration |
 | C# target-configured `ContractCheck` command/input | `elephentity-dotnet`'s `Elephentity.Runtime.Testing`, affected C# builder checker declaration/configuration and `elephentity-examples` |
 

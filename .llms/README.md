@@ -1,6 +1,7 @@
 # Rules for agents working across the Elephentity repositories
 
-Elephentity tracks twenty repositories (four planned for the .NET target), which talk over a
+Elephentity tracks twenty-three repositories (nineteen in use, plus four for the .NET target
+that are not yet scaffolded), which talk over a
 wire format rather than a shared classpath. That is deliberate — it is what lets a
 builder be written in any language — but it means the compiler cannot fail to build
 when a builder falls behind it. Nothing type-checks across the gap. The version gate
@@ -17,6 +18,9 @@ is itself the thing this directory is about, so it needs its own issues.
 |---|---|---|
 | `hsimah-services/elephentity` | spec compiler, PHP runtime source, CLI and neutral memory builder; Rust `eleph` in `compiler/` from steps 2–4 | produces the IR; ships `eleph-gen-memory` |
 | `hsimah-services/elephentity-runtime` | subtree mirror of `packages/runtime/src` and `tests`; metadata is owned locally | runtime contracts; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-schema` | subtree mirror of `packages/schema`; entirely owned by the source package | schema, resources and IR oracle; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-cli` | subtree mirror of `packages/cli`; entirely owned by the source package | `eleph` command and `eleph-gen-memory`; source PRs go to `elephentity` |
 | `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
 | `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |
