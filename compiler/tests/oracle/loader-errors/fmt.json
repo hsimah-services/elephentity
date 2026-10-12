@@ -1,0 +1,62 @@
+[
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Complex.yml",
+        "pointer": null,
+        "message": "Could not parse YAML: Complex mappings are not supported at line 4 (near \"? [a, b]\")."
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Dup.yml",
+        "pointer": null,
+        "message": "Could not parse YAML: Duplicate key \"entity\" detected at line 2 (near \"entity: Dup2\")."
+    },
+    {
+        "code": "spec.notAMap",
+        "file": "entities/Empty.yml",
+        "pointer": null,
+        "message": "A spec document must be a map at its root."
+    },
+    {
+        "code": "spec.wrongKind",
+        "file": "entities/List.yml",
+        "pointer": null,
+        "message": "A file in entities/ must declare \"entity:\" at its root."
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Multi.yml",
+        "pointer": null,
+        "message": "Could not parse YAML: Multiple documents are not supported in \"packages/schema/tests/fixtures/loader-errors/entities/Multi.yml\" at line 4 (near \"---\")."
+    },
+    {
+        "code": "spec.notAMap",
+        "file": "entities/Scalar.yml",
+        "pointer": null,
+        "message": "A spec document must be a map at its root."
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Syntax.yml",
+        "pointer": null,
+        "message": "Could not parse YAML: Malformed inline YAML string at line 4."
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Tagged.yml",
+        "pointer": null,
+        "message": "Could not parse YAML: The string \"!!int 5\" could not be parsed as it uses an unsupported built-in tag at line 3 (near \"table: !!int 5\")."
+    },
+    {
+        "code": "spec.wrongKind",
+        "file": "entities/Wrong.yml",
+        "pointer": null,
+        "message": "A file in entities/ must declare \"entity:\" at its root."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Merge.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: entity, storage, base."
+    }
+]

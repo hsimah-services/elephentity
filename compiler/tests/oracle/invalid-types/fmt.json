@@ -1,0 +1,8 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "types/Bad.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: type, primitive, processors, values."
+    }
+]

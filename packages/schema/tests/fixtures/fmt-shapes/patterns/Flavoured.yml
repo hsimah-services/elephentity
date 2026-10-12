@@ -1,0 +1,13 @@
+fields:
+  flavour:
+    type: string
+config:
+  scoops:
+    default: 2
+    description: How many.
+    type: int
+requires:
+  driver: stub
+use: []
+description: Adds a flavour.
+pattern: Flavoured

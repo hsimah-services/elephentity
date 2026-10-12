@@ -1,0 +1,14 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Post.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: entity, storage, fields, edges, queries, actions."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/slug",
+        "message": "Keys are out of canonical order. Expected: type, unique, maxLength."
+    }
+]

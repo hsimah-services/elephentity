@@ -1,0 +1,14 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "patterns/Auditable.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: pattern, fields, interface."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "patterns/Unused.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: pattern, fields, interface."
+    }
+]

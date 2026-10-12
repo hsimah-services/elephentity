@@ -1,0 +1,4 @@
+values: [red, green]
+primitive: string
+description: A colour.
+type: Colour

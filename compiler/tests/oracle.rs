@@ -8,6 +8,8 @@
 //! - `ir.json`: the exact bytes `eleph generate` sends to `eleph-codegen`. Compared byte for
 //!   byte.
 //! - `errors.json`: the errors, compared by code, file and pointer.
+//! - `fmt.json`: what `eleph fmt` reports, compared exactly, message included, because the
+//!   message is where the canonical order it expects is spelled out.
 //!
 //! One deliberate difference, recorded in `docs/divergence.md`: for `spec.invalid`, Rust must
 //! report every location PHP does and may report more. opis stops descending into an object
@@ -21,7 +23,7 @@ use std::path::{Path, PathBuf};
 use eleph_compiler::integration::{IntegrationDefinition, IntegrationRegistry};
 use eleph_compiler::spec::{RawSpec, SpecKind, SpecSource};
 use eleph_compiler::storage::StorageRuleRegistry;
-use eleph_compiler::{compile, resolve, Options, Schema, SpecError};
+use eleph_compiler::{compile, fmt, resolve, Options, Schema, SpecError};
 use indexmap::IndexMap;
 use serde_json::{Map, Value};
 
@@ -339,6 +341,64 @@ fn every_fixture_compiles_like_the_php_compiler() {
                     ));
                 }
             }
+        }
+    }
+
+    assert!(failures.is_empty(), "\n{}\n", failures.join("\n"));
+}
+
+/// `eleph fmt`: the same problems, in the same order, expecting the same canonical order.
+///
+/// Every shape the checker knows is out of order somewhere in `fmt-shapes`, so a wrong row in
+/// the order table fails here rather than for a user.
+#[test]
+fn every_fixture_formats_like_the_php_compiler() {
+    from_repository_root();
+
+    let mut failures = Vec::new();
+
+    for case in cases() {
+        // Only the ordering message is compared: it spells out the canonical order. A YAML parse
+        // error's wording belongs to each parser, and its code, file and pointer are compared.
+        let message = |code: &str, text: &str| {
+            if code == "format.keyOrder" {
+                text.to_string()
+            } else {
+                String::new()
+            }
+        };
+        let expected: Vec<(String, Option<String>, Option<String>, String)> =
+            read_json(&case.dir.join("fmt.json"))
+                .as_array()
+                .expect("fmt problems are a list")
+                .iter()
+                .map(|e| {
+                    (
+                        e["code"].as_str().unwrap().to_string(),
+                        e["file"].as_str().map(str::to_string),
+                        e["pointer"].as_str().map(str::to_string),
+                        message(e["code"].as_str().unwrap(), e["message"].as_str().unwrap()),
+                    )
+                })
+                .collect();
+
+        let actual: Vec<_> = fmt::check(&SpecSource::new(case.root.clone()))
+            .iter()
+            .map(|e| {
+                (
+                    e.code.clone(),
+                    e.file.as_deref().map(|f| relative(f, &case.root)),
+                    e.pointer.clone(),
+                    message(&e.code, &e.message),
+                )
+            })
+            .collect();
+
+        if expected != actual {
+            failures.push(format!(
+                "{}: fmt differs\n  php:  {expected:#?}\n  rust: {actual:#?}",
+                case.name
+            ));
         }
     }
 
