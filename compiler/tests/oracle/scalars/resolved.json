@@ -2,12 +2,11 @@
     "project": {
         "name": "Invalid",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/scalars/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Scalars": {
             "name": "Scalars",
@@ -16,17 +15,19 @@
                 "table": "scalars",
                 "handle": null
             },
-            "sourceFile": "entities/Scalars.yml",
+            "sourceFile": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml",
             "description": "Quoted: yes, no, 007, 1e3",
             "uses": [],
-            "appliedPatterns": [],
             "fields": {
                 "plainInt": {
                     "name": "plainInt",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -43,10 +44,13 @@
                 },
                 "negative": {
                     "name": "negative",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -63,10 +67,13 @@
                 },
                 "octal": {
                     "name": "octal",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -83,10 +90,13 @@
                 },
                 "hex": {
                     "name": "hex",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -103,10 +113,13 @@
                 },
                 "float": {
                     "name": "float",
-                    "type": "float",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -123,10 +136,13 @@
                 },
                 "wholeFloat": {
                     "name": "wholeFloat",
-                    "type": "float",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -143,10 +159,13 @@
                 },
                 "exp": {
                     "name": "exp",
-                    "type": "float",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -163,10 +182,13 @@
                 },
                 "yes": {
                     "name": "yes",
-                    "type": "bool",
+                    "type": {
+                        "primitive": "bool",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -183,10 +205,13 @@
                 },
                 "no": {
                     "name": "no",
-                    "type": "bool",
+                    "type": {
+                        "primitive": "bool",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -203,10 +228,13 @@
                 },
                 "trueValue": {
                     "name": "trueValue",
-                    "type": "bool",
+                    "type": {
+                        "primitive": "bool",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -223,10 +251,13 @@
                 },
                 "upperTrue": {
                     "name": "upperTrue",
-                    "type": "bool",
+                    "type": {
+                        "primitive": "bool",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -243,10 +274,13 @@
                 },
                 "nothing": {
                     "name": "nothing",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -263,10 +297,13 @@
                 },
                 "tilde": {
                     "name": "tilde",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -283,10 +320,13 @@
                 },
                 "empty": {
                     "name": "empty",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -303,10 +343,13 @@
                 },
                 "quotedNumber": {
                     "name": "quotedNumber",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -323,10 +366,13 @@
                 },
                 "bareZeros": {
                     "name": "bareZeros",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -343,10 +389,13 @@
                 },
                 "date": {
                     "name": "date",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -363,10 +412,13 @@
                 },
                 "timestamp": {
                     "name": "timestamp",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -383,10 +435,13 @@
                 },
                 "colon": {
                     "name": "colon",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -403,10 +458,13 @@
                 },
                 "unicode": {
                     "name": "unicode",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -423,10 +481,13 @@
                 },
                 "multiline": {
                     "name": "multiline",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -443,10 +504,13 @@
                 },
                 "folded": {
                     "name": "folded",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -463,10 +527,13 @@
                 },
                 "list": {
                     "name": "list",
-                    "type": "json",
+                    "type": {
+                        "primitive": "json",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -489,10 +556,13 @@
                 },
                 "map": {
                     "name": "map",
-                    "type": "json",
+                    "type": {
+                        "primitive": "json",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -515,10 +585,13 @@
                 },
                 "emptyList": {
                     "name": "emptyList",
-                    "type": "json",
+                    "type": {
+                        "primitive": "json",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -535,10 +608,13 @@
                 },
                 "plus": {
                     "name": "plus",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -555,10 +631,13 @@
                 },
                 "underscore": {
                     "name": "underscore",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -575,10 +654,13 @@
                 },
                 "leadingDot": {
                     "name": "leadingDot",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -595,10 +677,13 @@
                 },
                 "trailingDot": {
                     "name": "trailingDot",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -615,10 +700,13 @@
                 },
                 "negZero": {
                     "name": "negZero",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -635,10 +723,13 @@
                 },
                 "zero": {
                     "name": "zero",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -655,10 +746,13 @@
                 },
                 "negFloat": {
                     "name": "negFloat",
-                    "type": "float",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -675,10 +769,13 @@
                 },
                 "leadingZeroFloat": {
                     "name": "leadingZeroFloat",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -695,10 +792,13 @@
                 },
                 "big": {
                     "name": "big",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -715,10 +815,13 @@
                 },
                 "bigger": {
                     "name": "bigger",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -735,10 +838,13 @@
                 },
                 "binary": {
                     "name": "binary",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -755,10 +861,13 @@
                 },
                 "upperE": {
                     "name": "upperE",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -775,10 +884,13 @@
                 },
                 "nullWord": {
                     "name": "nullWord",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -795,10 +907,13 @@
                 },
                 "nullUpper": {
                     "name": "nullUpper",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -815,10 +930,13 @@
                 },
                 "trueCap": {
                     "name": "trueCap",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -835,10 +953,13 @@
                 },
                 "falseWord": {
                     "name": "falseWord",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -855,10 +976,13 @@
                 },
                 "onOff": {
                     "name": "onOff",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -875,10 +999,13 @@
                 },
                 "tag": {
                     "name": "tag",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -895,10 +1022,13 @@
                 },
                 "quotedBool": {
                     "name": "quotedBool",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -915,10 +1045,13 @@
                 },
                 "singleQuoted": {
                     "name": "singleQuoted",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -935,10 +1068,13 @@
                 },
                 "spaces": {
                     "name": "spaces",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -955,10 +1091,13 @@
                 },
                 "hash": {
                     "name": "hash",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
@@ -975,15 +1114,386 @@
                 },
                 "commentTail": {
                     "name": "commentTail",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Scalars.yml"
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
                     },
                     "description": null,
                     "required": false,
                     "nullable": false,
                     "default": "value",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f0": {
+                    "name": "f0",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0.1,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f1": {
+                    "name": "f1",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 100.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f2": {
+                    "name": "f2",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1000000000000000.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f3": {
+                    "name": "f3",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 10000000000000000.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f4": {
+                    "name": "f4",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.0e+17,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f5": {
+                    "name": "f5",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.0e+25,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f6": {
+                    "name": "f6",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.5e-7,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f7": {
+                    "name": "f7",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.0e-5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f8": {
+                    "name": "f8",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0.0001,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f9": {
+                    "name": "f9",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 123456789.12345679,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f10": {
+                    "name": "f10",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": -0.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f11": {
+                    "name": "f11",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f12": {
+                    "name": "f12",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 3.141592653589793,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f13": {
+                    "name": "f13",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.2345678901234568e+17,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f14": {
+                    "name": "f14",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": -2.5e-10,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "f15": {
+                    "name": "f15",
+                    "type": {
+                        "primitive": "float",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/scalars/entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0.30000000000000004,
                     "hasDefault": true,
                     "unique": false,
                     "indexed": false,
@@ -1000,10 +1510,13 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

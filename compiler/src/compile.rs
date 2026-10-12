@@ -1,15 +1,14 @@
-//! Spec documents to resolved project, types and entities.
+//! Spec documents to the compiled schema: the port of `SchemaCompiler`.
 //!
-//! This is `SchemaCompiler::compile()` up to, but not including, building the schema: load,
-//! validate against the JSON Schemas, then resolve patterns, configuration and integrations.
-//! Semantic validation and the IR come in later steps.
+//! `resolve` is the first half: load, validate against the JSON Schemas, then resolve
+//! patterns, configuration and integrations. `compile` adds semantic validation and builds
+//! the IR.
 //!
 //! Errors accumulate rather than aborting, so one run reports everything wrong with the
 //! specs. The one stage boundary is the same as the PHP compiler's: nothing is resolved
 //! while any document is malformed.
 
 use indexmap::IndexMap;
-use serde::Serialize;
 use serde_json::{Map, Value};
 
 use crate::error::SpecError;
@@ -17,14 +16,17 @@ use crate::integration::{
     resolve_entity_integrations, resolve_project_integrations, resolve_query_integrations,
     IntegrationRegistry,
 };
+use crate::ir::{PatternDeclaration, Schema};
 use crate::model::{
     parse_enum, ConfigParameter, EntityDefinition, Origin, ParsedSections, PatternDefinition,
     ProjectDefinition, QueryDefinition, StorageDefinition, TerminalRule, TypeDefinition,
 };
 use crate::pattern::{expand_patterns, merge_sections, resolve_config};
 use crate::schema::SchemaValidator;
+use crate::semantic;
 use crate::spec::sections::parse_sections;
 use crate::spec::{load, RawSpec, SpecKind, SpecReader, SpecSource};
+use crate::storage::StorageRuleRegistry;
 
 /// What the compiler is told by its caller rather than finding on disk.
 #[derive(Default)]
@@ -35,13 +37,76 @@ pub struct Options {
     /// offender, not the incumbent.
     pub pooled_patterns: Vec<RawSpec>,
     pub pooled_types: Vec<RawSpec>,
+    /// What each driver requires of a handle, pooled from the builders' `provides.storage`.
+    /// Empty by default: a driver declaring nothing means its entities validate without
+    /// handle errors.
+    pub storage_rules: StorageRuleRegistry,
 }
 
-#[derive(Debug, Serialize)]
+/// Everything that resolution produces, before semantic validation.
+#[derive(Debug)]
 pub struct Resolved {
     pub project: ProjectDefinition,
     pub types: IndexMap<String, TypeDefinition>,
+    pub patterns: IndexMap<String, PatternDefinition>,
     pub entities: IndexMap<String, EntityDefinition>,
+}
+
+impl Resolved {
+    /// The patterns worth telling a generator about: opted into an interface, and actually
+    /// applied somewhere. A pattern nobody uses generating a class nothing references would
+    /// be noise no builder asked for.
+    fn declared_patterns(&self) -> IndexMap<String, PatternDeclaration> {
+        let used: Vec<&String> = self
+            .entities
+            .values()
+            .flat_map(|entity| &entity.applied_patterns)
+            .collect();
+
+        self.patterns
+            .iter()
+            .filter(|(name, pattern)| pattern.generates_interface && used.contains(name))
+            .map(|(name, pattern)| {
+                let declaration = PatternDeclaration {
+                    name: name.clone(),
+                    fields: pattern.sections.fields.clone(),
+                    edges: pattern.sections.edges.clone(),
+                    read_policies: pattern.sections.read_policies.clone(),
+                    write_policies: pattern.sections.write_policies.clone(),
+                };
+
+                (name.clone(), declaration)
+            })
+            .collect()
+    }
+
+    /// The schema, with the patterns that asked for an interface declared on it.
+    pub fn into_schema(self) -> Schema {
+        let patterns = self.declared_patterns();
+
+        Schema {
+            project: self.project,
+            entities: self.entities,
+            types: self.types,
+            patterns,
+        }
+    }
+}
+
+/// Compile a directory of specs into the IR, or report every reason there isn't one.
+///
+/// Errors accumulate within a stage. Nothing is resolved while any document is malformed, and
+/// nothing is checked semantically while resolution is failing, because later stages would
+/// only produce noise derived from the earlier failure.
+pub fn compile(source: &SpecSource, options: &Options) -> Result<Schema, Vec<SpecError>> {
+    let schema = resolve(source, options)?.into_schema();
+    let errors = semantic::validate(&schema, &options.storage_rules);
+
+    if errors.is_empty() {
+        Ok(schema)
+    } else {
+        Err(errors)
+    }
 }
 
 pub fn resolve(source: &SpecSource, options: &Options) -> Result<Resolved, Vec<SpecError>> {
@@ -88,6 +153,7 @@ pub fn resolve(source: &SpecSource, options: &Options) -> Result<Resolved, Vec<S
     Ok(Resolved {
         project,
         types,
+        patterns,
         entities,
     })
 }

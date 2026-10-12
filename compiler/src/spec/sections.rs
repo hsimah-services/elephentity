@@ -11,7 +11,7 @@ use super::SpecReader;
 use crate::model::{
     parse_enum, ActionDefinition, ActionWrites, ArgumentDefinition, Cardinality, EdgeDefinition,
     EdgeInverse, EnumSource, FieldDefinition, Origin, ParsedSections, PolicyDefinition,
-    QueryDefinition, ReturnDefinition, SideEffectDefinition, SideEffectPhase,
+    QueryDefinition, ReturnDefinition, SideEffectDefinition, SideEffectPhase, TypeReference,
 };
 
 pub fn parse_sections(reader: SpecReader<'_>, origin: &Origin) -> ParsedSections {
@@ -53,7 +53,7 @@ fn fields(reader: SpecReader<'_>, origin: &Origin) -> IndexMap<String, FieldDefi
         .map(|(name, field)| {
             let definition = FieldDefinition {
                 name: name.clone(),
-                type_name: field.string("type"),
+                type_ref: TypeReference::parse(&field.string("type")),
                 origin: origin.clone(),
                 description: field.optional_string("description"),
                 required: field.bool("required", false),
@@ -81,8 +81,8 @@ fn enum_source(field: SpecReader<'_>) -> Option<EnumSource> {
 
     // The schema permits a string naming a declared enum, or an inline member list.
     Some(match field.raw("values") {
-        Value::String(name) => EnumSource::Declared(name),
-        _ => EnumSource::Inline(field.string_list("values")),
+        Value::String(name) => EnumSource::declared(name),
+        _ => EnumSource::inline(field.string_list("values")),
     })
 }
 
@@ -243,7 +243,7 @@ fn arguments(reader: SpecReader<'_>) -> IndexMap<String, ArgumentDefinition> {
         .map(|(name, argument)| {
             let definition = ArgumentDefinition {
                 name: name.clone(),
-                type_name: argument.string("type"),
+                type_ref: TypeReference::parse(&argument.string("type")),
                 nullable: argument.bool("nullable", false),
             };
 

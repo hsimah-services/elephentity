@@ -1,0 +1,12 @@
+{
+    "rules": {
+        "wordpress": {
+            "maxHandleLength": 20,
+            "handlePattern": "/^[a-z][a-z0-9_-]*$/",
+            "reservedHandles": [
+                "attachment",
+                "revision"
+            ]
+        }
+    }
+}

@@ -1,0 +1,67 @@
+[
+    {
+        "code": "entity.reservedName",
+        "file": "entities/Enum.yml",
+        "pointer": "/entity"
+    },
+    {
+        "code": "entity.reservedName",
+        "file": "entities/Type.yml",
+        "pointer": "/entity"
+    },
+    {
+        "code": "storage.tableConflict",
+        "file": "entities/Second.yml",
+        "pointer": "/storage/table"
+    },
+    {
+        "code": "type.enumBacking",
+        "file": "types/BadBacking.yml",
+        "pointer": "/primitive"
+    },
+    {
+        "code": "storage.handleReserved",
+        "file": "entities/First.yml",
+        "pointer": "/storage/handle"
+    },
+    {
+        "code": "field.unknownEnum",
+        "file": "entities/First.yml",
+        "pointer": "/fields/unknownEnum"
+    },
+    {
+        "code": "field.notAnEnum",
+        "file": "entities/First.yml",
+        "pointer": "/fields/notEnum"
+    },
+    {
+        "code": "field.valuesWithoutEnum",
+        "file": "entities/First.yml",
+        "pointer": "/fields/plainValues"
+    },
+    {
+        "code": "field.indexTooWide",
+        "file": "entities/First.yml",
+        "pointer": "/fields/title"
+    },
+    {
+        "code": "type.unknown",
+        "file": "entities/First.yml",
+        "pointer": "/queries/find"
+    },
+    {
+        "code": "storage.handleReserved",
+        "file": "entities/Second.yml",
+        "pointer": "/storage/handle"
+    },
+    {
+        "code": "edge.inverseCollision",
+        "file": "entities/Second.yml",
+        "pointer": "/edges/other"
+    },
+    {
+        "code": "field.enumNameCollision",
+        "file": "entities/Third.yml",
+        "pointer": "/fields/postStatus"
+    }
+]

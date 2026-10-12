@@ -2,12 +2,11 @@
     "project": {
         "name": "Pooled",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/pooled/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Term": {
             "name": "Term",
@@ -16,18 +15,18 @@
                 "table": "terms",
                 "handle": null
             },
-            "sourceFile": "entities/Term.yml",
+            "sourceFile": "packages/schema/tests/fixtures/pooled/entities/Term.yml",
             "description": null,
             "uses": [
-                "Taxonomy"
-            ],
-            "appliedPatterns": [
                 "Taxonomy"
             ],
             "fields": {
                 "name": {
                     "name": "name",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Taxonomy",
                         "file": "elephentity/codegen-wordpress:patterns/Taxonomy.yml"
@@ -52,10 +51,15 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [
+                "Taxonomy"
+            ],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

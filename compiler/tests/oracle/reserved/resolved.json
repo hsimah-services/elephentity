@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/reserved/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Enum": {
             "name": "Enum",
@@ -16,10 +15,9 @@
                 "table": "reserved_enum",
                 "handle": null
             },
-            "sourceFile": "entities/Enum.yml",
+            "sourceFile": "packages/schema/tests/fixtures/reserved/entities/Enum.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {},
             "edges": {},
             "queries": {},
@@ -27,10 +25,13 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

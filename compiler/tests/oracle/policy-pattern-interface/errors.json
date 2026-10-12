@@ -1,0 +1,7 @@
+[
+    {
+        "code": "policy.patternWithoutInterface",
+        "file": "entities/Post.yml",
+        "pointer": "/readPolicies/owner"
+    }
+]

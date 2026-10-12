@@ -1,0 +1,87 @@
+[
+    {
+        "code": "storage.handleTooLong",
+        "file": "entities/Post.yml",
+        "pointer": "/storage/handle"
+    },
+    {
+        "code": "storage.handleInvalid",
+        "file": "entities/Post.yml",
+        "pointer": "/storage/handle"
+    },
+    {
+        "code": "field.reserved",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/id"
+    },
+    {
+        "code": "field.indexTooWide",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/slug"
+    },
+    {
+        "code": "field.maxLengthNotSizable",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/body"
+    },
+    {
+        "code": "type.unknown",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/price"
+    },
+    {
+        "code": "field.enumWithoutValues",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/status"
+    },
+    {
+        "code": "field.managedAndRequired",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/stampedAt"
+    },
+    {
+        "code": "field.managedAndImmutable",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/stampedAt"
+    },
+    {
+        "code": "field.managedNotSupported",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/counter"
+    },
+    {
+        "code": "edge.unknownTarget",
+        "file": "entities/Post.yml",
+        "pointer": "/edges/comments"
+    },
+    {
+        "code": "edge.requiredNotToOne",
+        "file": "entities/Post.yml",
+        "pointer": "/edges/comments"
+    },
+    {
+        "code": "edge.inverseNotDerivable",
+        "file": "entities/Post.yml",
+        "pointer": "/edges/comments"
+    },
+    {
+        "code": "edge.unknownTarget",
+        "file": "entities/Post.yml",
+        "pointer": "/edges/ghosts"
+    },
+    {
+        "code": "query.unknownReturn",
+        "file": "entities/Post.yml",
+        "pointer": "/queries/find"
+    },
+    {
+        "code": "action.unknownWrite",
+        "file": "entities/Post.yml",
+        "pointer": "/actions/publish"
+    },
+    {
+        "code": "action.managedWrite",
+        "file": "entities/Post.yml",
+        "pointer": "/actions/publish"
+    }
+]

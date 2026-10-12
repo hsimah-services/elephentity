@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# Feed the IR the Rust compiler produces through the real orchestrator and the PHP builder.
+#
+# The oracle tests prove the Rust bytes equal the PHP compiler's. This proves the other half:
+# that the builders accept those bytes and generate from them, with a second run reporting no
+# drift. It needs the built binaries, which CI builds for the PHP tests:
+#
+#   cargo build --release --locked --manifest-path vendor/elephentity/codegen/Cargo.toml
+#   cargo build --release --locked --manifest-path vendor/elephentity/codegen-php/Cargo.toml
+#
+# The request files are compiler/tests/oracle/*/ir.json, which `cargo test` has just shown
+# the Rust compiler reproduces byte for byte.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+CODEGEN="$PWD/vendor/elephentity/codegen/target/release/eleph-codegen"
+BUILDER="$PWD/vendor/elephentity/codegen-php/target/release/eleph-gen-php"
+
+for binary in "$CODEGEN" "$BUILDER"; do
+    if [ ! -x "$binary" ]; then
+        echo "tools/test-rust-ir: $binary is not built." >&2
+        exit 1
+    fi
+done
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+count=0
+
+for request in compiler/tests/oracle/*/ir.json; do
+    case="$(basename "$(dirname "$request")")"
+    project="$work/$case"
+    mkdir -p "$project"
+
+    cat > "$project/eleph.json" <<JSON
+{
+    "spec": "spec",
+    "targets": {
+        "php": {
+            "builder": "$BUILDER",
+            "output": "generated",
+            "namespace": "Oracle\\\\Generated",
+            "typeNamespace": "Oracle\\\\Type"
+        }
+    }
+}
+JSON
+
+    "$CODEGEN" generate --project "$project" < "$request" > "$work/$case.log" 2>&1 || {
+        echo "FAIL $case: the builder refused the Rust compiler's IR:" >&2
+        cat "$work/$case.log" >&2
+        exit 1
+    }
+
+    files="$(find "$project/generated" -type f | wc -l)"
+
+    if [ "$files" -eq 0 ]; then
+        echo "FAIL $case: nothing was generated." >&2
+        exit 1
+    fi
+
+    # A second run must find nothing to change, or generation is not a pure function of the IR.
+    "$CODEGEN" generate --check --project "$project" < "$request" > "$work/$case.check.log" 2>&1 || {
+        echo "FAIL $case: a second run drifted:" >&2
+        cat "$work/$case.check.log" >&2
+        exit 1
+    }
+
+    echo "ok   $case ($files files)"
+    count=$((count + 1))
+done
+
+echo "$count IR requests accepted and generated from."

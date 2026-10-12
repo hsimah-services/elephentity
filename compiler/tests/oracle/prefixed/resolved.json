@@ -2,12 +2,11 @@
     "project": {
         "name": "Shop",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/prefixed/project.yml",
         "integrations": {},
         "tablePrefix": "shop_",
         "description": null
     },
-    "types": {},
     "entities": {
         "Widget": {
             "name": "Widget",
@@ -16,10 +15,9 @@
                 "table": "shop_widget",
                 "handle": null
             },
-            "sourceFile": "entities/Widget.yml",
+            "sourceFile": "packages/schema/tests/fixtures/prefixed/entities/Widget.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {},
             "edges": {},
             "queries": {},
@@ -27,10 +25,13 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

@@ -2,11 +2,12 @@
     "project": {
         "name": "PooledEmpty",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/pooled-empty/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
+    "entities": {},
     "types": {
         "PostStatus": {
             "name": "PostStatus",
@@ -20,5 +21,5 @@
             ]
         }
     },
-    "entities": {}
+    "patterns": {}
 }

@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/policy-pattern-interface/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Post": {
             "name": "Post",
@@ -16,12 +15,9 @@
                 "table": "post",
                 "handle": null
             },
-            "sourceFile": "entities/Post.yml",
+            "sourceFile": "packages/schema/tests/fixtures/policy-pattern-interface/entities/Post.yml",
             "description": null,
             "uses": [
-                "Owned"
-            ],
-            "appliedPatterns": [
                 "Owned"
             ],
             "fields": {},
@@ -31,12 +27,15 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [
+                "Owned"
+            ],
             "readPolicies": {
                 "owner": {
                     "name": "owner",
                     "origin": {
                         "pattern": "Owned",
-                        "file": "patterns/Owned.yml"
+                        "file": "packages/schema/tests/fixtures/policy-pattern-interface/patterns/Owned.yml"
                     },
                     "description": null
                 }
@@ -45,5 +44,7 @@
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

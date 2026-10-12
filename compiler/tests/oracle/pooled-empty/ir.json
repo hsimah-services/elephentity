@@ -1,0 +1,1 @@
+{"elephentity":1,"irVersion":"1.2","schema":{"project":{"name":"PooledEmpty","driver":"wordpress","sourceFile":"packages/schema/tests/fixtures/pooled-empty/project.yml","integrations":{},"tablePrefix":"","description":null},"entities":{},"types":{},"patterns":{}},"files":{}}

@@ -5,18 +5,19 @@ declare(strict_types=1);
 /**
  * The PHP compiler as an oracle for the Rust one.
  *
- * Runs the real SchemaCompiler stages over every fixture in packages/schema/tests/fixtures
- * and writes what they produce to compiler/tests/oracle/<case>/:
+ * Runs the real SchemaCompiler over every fixture in packages/schema/tests/fixtures and writes
+ * what it produces to compiler/tests/oracle/<case>/:
  *
  *   input.json     the fixture and any pooled documents the case supplies
- *   resolved.json  the project, types and entities after load, validation and patterns
- *   errors.json    code, file and pointer of every error, when resolution fails
+ *   resolved.json  the IR after load, validation and patterns (before semantic validation),
+ *                  as IrCodec encodes it, when that much succeeds
+ *   ir.json        the exact bytes `eleph generate` sends to eleph-codegen, when the whole
+ *                  compile succeeds
+ *   errors.json    code, file and pointer of every error, when it does not
  *
- * Rust tests read these snapshots, so Rust CI needs no PHP. The snapshot stops where step 3
- * starts: semantic validation and the IR do not run, so their errors are not here yet.
- *
- * The private build* stages are called through reflection rather than reimplemented, so the
- * oracle is the shipped code and the PHP compiler needs no changes.
+ * Rust tests read these snapshots, so Rust CI needs no PHP. The stage-2 stages are called
+ * through reflection rather than reimplemented, so the oracle is the shipped code and the PHP
+ * compiler needs no changes.
  *
  *   tools/compare-compiler             fail when the committed snapshots differ from PHP
  *   tools/compare-compiler --refresh   rewrite the snapshots from PHP
@@ -26,27 +27,26 @@ use Eleph\Schema\Error\SpecError;
 use Eleph\Schema\Integration\IntegrationDefinition;
 use Eleph\Schema\Integration\IntegrationRegistry;
 use Eleph\Schema\Ir\ConfigParameter;
-use Eleph\Schema\Ir\EdgeDefinition;
-use Eleph\Schema\Ir\EntityDefinition;
-use Eleph\Schema\Ir\EnumSource;
-use Eleph\Schema\Ir\FieldDefinition;
-use Eleph\Schema\Ir\Origin;
-use Eleph\Schema\Ir\PolicyDefinition;
-use Eleph\Schema\Ir\QueryDefinition;
-use Eleph\Schema\Ir\SideEffectDefinition;
-use Eleph\Schema\Ir\TypeDefinition;
+use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\Spec\RawSpec;
 use Eleph\Schema\Spec\SchemaValidator;
 use Eleph\Schema\Spec\SpecKind;
 use Eleph\Schema\SpecSource;
+use Eleph\Schema\Storage\StorageRuleRegistry;
+use Eleph\Schema\Storage\StorageRules;
 use Eleph\Schema\Tests\Support\TestIntegrations;
+use Eleph\Schema\Wire\IrCodec;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+// Every path in an error or the IR is relative to the repository root, so a snapshot does not
+// depend on where the repository is checked out.
 $root = dirname(__DIR__);
-$fixtures = $root . '/packages/schema/tests/fixtures';
-$oracle = $root . '/compiler/tests/oracle';
+chdir($root);
+
+$fixtures = 'packages/schema/tests/fixtures';
+$oracle = 'compiler/tests/oracle';
 $refresh = in_array('--refresh', $argv, true);
 
 /** @var array<string, array{fixture: string, pooledPatterns: list<array{file: string, data: array<string, mixed>}>, pooledTypes: list<array{file: string, data: array<string, mixed>}>}> $cases */
@@ -89,7 +89,6 @@ $cases['pooled-malformed'] = [
 
 ksort($cases);
 
-/** @param mixed $value */
 function encode(mixed $value): string
 {
     return json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR) . "\n";
@@ -133,146 +132,27 @@ function parameter(ConfigParameter $parameter): array
     ];
 }
 
-function origin(Origin $origin, string $base): array
+/** What `eleph generate` sends to eleph-codegen: GenerateCommand::request(), byte for byte. */
+function request(Schema $schema): string
 {
-    return ['pattern' => $origin->pattern, 'file' => relative($origin->file, $base)];
-}
-
-function enumSource(?EnumSource $enum): ?array
-{
-    if (null === $enum) {
-        return null;
-    }
-
-    return $enum->isInline() ? ['inline' => $enum->inlineValues] : ['declared' => $enum->declaredType];
-}
-
-function arguments(array $arguments): stdClass
-{
-    return object(array_map(static fn ($a): array => [
-        'name' => $a->name,
-        'type' => $a->type->name(),
-        'nullable' => $a->nullable,
-    ], $arguments));
-}
-
-function field(FieldDefinition $f, string $base): array
-{
-    return [
-        'name' => $f->name,
-        'type' => $f->type->name(),
-        'origin' => origin($f->origin, $base),
-        'description' => $f->description,
-        'required' => $f->required,
-        'nullable' => $f->nullable,
-        'default' => $f->default,
-        'hasDefault' => $f->hasDefault,
-        'unique' => $f->unique,
-        'indexed' => $f->indexed,
-        'immutable' => $f->immutable,
-        'managed' => $f->managed?->value,
-        'maxLength' => $f->maxLength,
-        'enum' => enumSource($f->enum),
-        'verify' => $f->verify,
-    ];
-}
-
-function edge(EdgeDefinition $e, string $base): array
-{
-    return [
-        'name' => $e->name,
-        'to' => $e->to,
-        'cardinality' => $e->cardinality->value,
-        'origin' => origin($e->origin, $base),
-        'description' => $e->description,
-        'inverse' => null === $e->inverse ? null : [
-            'derived' => $e->inverse->derived,
-            'name' => $e->inverse->name,
-            'unique' => $e->inverse->unique,
-        ],
-        'onDelete' => $e->onDelete->value,
-        'required' => $e->required,
-    ];
-}
-
-function query(QueryDefinition $q, string $base): array
-{
-    return [
-        'name' => $q->name,
-        'returns' => ['type' => $q->returns->type, 'cardinality' => $q->returns->cardinality->value],
-        'origin' => origin($q->origin, $base),
-        'arguments' => arguments($q->arguments),
-        'description' => $q->description,
-        'integrations' => object(array_map(object(...), $q->integrations)),
-    ];
-}
-
-function sideEffect(SideEffectDefinition $s, string $base): array
-{
-    return [
-        'name' => $s->name,
-        'events' => array_map(static fn ($e): string => $e->value, $s->events),
-        'origin' => origin($s->origin, $base),
-        'phase' => $s->phase->value,
-        'description' => $s->description,
-    ];
-}
-
-function policy(PolicyDefinition $p, string $base): array
-{
-    return ['name' => $p->name, 'origin' => origin($p->origin, $base), 'description' => $p->description];
-}
-
-function entity(EntityDefinition $e, string $base): array
-{
-    return [
-        'name' => $e->name,
-        'storage' => ['driver' => $e->storage->driver, 'table' => $e->storage->table, 'handle' => $e->storage->handle],
-        'sourceFile' => relative($e->sourceFile, $base),
-        'description' => $e->description,
-        'uses' => $e->uses,
-        'appliedPatterns' => $e->appliedPatterns,
-        'fields' => object(array_map(static fn ($f): array => field($f, $base), $e->fields)),
-        'edges' => object(array_map(static fn ($x): array => edge($x, $base), $e->edges)),
-        'queries' => object(array_map(static fn ($x): array => query($x, $base), $e->queries)),
-        'actions' => object(array_map(static fn ($a): array => [
-            'name' => $a->name,
-            'writes' => ['fields' => $a->writes->fields, 'edges' => $a->writes->edges],
-            'origin' => origin($a->origin, $base),
-            'arguments' => arguments($a->arguments),
-            'description' => $a->description,
-        ], $e->actions)),
-        'sideEffects' => object(array_map(static fn ($x): array => sideEffect($x, $base), $e->sideEffects)),
-        'config' => object($e->config),
-        'integrations' => object(array_map(object(...), $e->integrations)),
-        'readPolicies' => object(array_map(static fn ($x): array => policy($x, $base), $e->readPolicies)),
-        'writePolicies' => object(array_map(static fn ($x): array => policy($x, $base), $e->writePolicies)),
-        'terminalRead' => $e->terminalRead->value,
-        'terminalWrite' => $e->terminalWrite->value,
-    ];
-}
-
-function type(TypeDefinition $t, string $base): array
-{
-    return [
-        'name' => $t->name,
-        'primitive' => $t->primitive->value,
-        'sourceFile' => relative($t->sourceFile, $base),
-        'description' => $t->description,
-        'hasProcessors' => $t->hasProcessors,
-        'values' => $t->values,
-    ];
+    return json_encode([
+        'elephentity' => 1,
+        'irVersion' => IrCodec::VERSION,
+        'schema' => IrCodec::encode($schema),
+        'files' => (object) [],
+    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 }
 
 /**
- * SchemaCompiler::compile() up to, but not including, building the Schema.
+ * SchemaCompiler::compile() up to, but not including, building the Schema and validating it
+ * semantically.
  *
  * @param list<RawSpec> $pooledPatterns
  * @param list<RawSpec> $pooledTypes
  *
- * @return array{errors: list<SpecError>, resolved: ?array<string, mixed>}
+ * @return array{errors: list<SpecError>, schema: ?Schema}
  */
-function resolve(SpecSource $source, IntegrationRegistry $registry, array $pooledPatterns, array $pooledTypes, string $base): array
+function resolve(SpecSource $source, IntegrationRegistry $registry, array $pooledPatterns, array $pooledTypes): array
 {
     $compiler = new SchemaCompiler(
         integrations: $registry,
@@ -303,7 +183,7 @@ function resolve(SpecSource $source, IntegrationRegistry $registry, array $poole
     }
 
     if ([] !== $errors) {
-        return ['errors' => $errors, 'resolved' => null];
+        return ['errors' => $errors, 'schema' => null];
     }
 
     $stage = static function (string $method, array $arguments) use ($reflection, $compiler): mixed {
@@ -313,7 +193,7 @@ function resolve(SpecSource $source, IntegrationRegistry $registry, array $poole
     $project = $stage('buildProject', [$specs, $source, &$errors]);
 
     if (null === $project) {
-        return ['errors' => $errors, 'resolved' => null];
+        return ['errors' => $errors, 'schema' => null];
     }
 
     $types = $stage('buildTypes', [$specs, &$errors]);
@@ -321,24 +201,32 @@ function resolve(SpecSource $source, IntegrationRegistry $registry, array $poole
     $entities = $stage('buildEntities', [$project, $specs, $patterns, &$errors]);
 
     if ([] !== $errors) {
-        return ['errors' => $errors, 'resolved' => null];
+        return ['errors' => $errors, 'schema' => null];
     }
 
-    return ['errors' => [], 'resolved' => [
-        'project' => [
-            'name' => $project->name,
-            'driver' => $project->driver,
-            'sourceFile' => relative($project->sourceFile, $base),
-            'integrations' => object(array_map(object(...), $project->integrations)),
-            'tablePrefix' => $project->tablePrefix,
-            'description' => $project->description,
-        ],
-        'types' => object(array_map(static fn ($t): array => type($t, $base), $types)),
-        'entities' => object(array_map(static fn ($e): array => entity($e, $base), $entities)),
-    ]];
+    // No declared patterns yet: those are built by the stage after this one.
+    return ['errors' => [], 'schema' => new Schema($project, $entities, $types)];
+}
+
+function errorList(array $errors, string $base): array
+{
+    return array_map(static fn (SpecError $e): array => [
+        'code' => $e->code,
+        'file' => relative($e->file, $base),
+        'pointer' => $e->pointer,
+    ], $errors);
 }
 
 $registry = TestIntegrations::registry();
+// The rules the WordPress builder declares, plus reserved handles so that rule is exercised
+// too: TestStorageRules reserves none.
+$storageRules = new StorageRuleRegistry([
+    'wordpress' => new StorageRules(
+        maxHandleLength: 20,
+        handlePattern: '/^[a-z][a-z0-9_-]*$/',
+        reservedHandles: ['attachment', 'revision'],
+    ),
+]);
 $files = [];
 
 $files['registry.json'] = encode(['integrations' => array_map(
@@ -354,17 +242,20 @@ $files['registry.json'] = encode(['integrations' => array_map(
     $registry->names(),
 )]);
 
+/** @var array<string, \Eleph\Schema\Storage\StorageRules> $rules */
+$rules = (new ReflectionProperty(StorageRuleRegistry::class, 'rules'))->getValue($storageRules);
+
+$files['storage-rules.json'] = encode(['rules' => object(array_map(static fn ($r): array => [
+    'maxHandleLength' => $r->maxHandleLength,
+    'handlePattern' => $r->handlePattern,
+    'reservedHandles' => $r->reservedHandles,
+], $rules))]);
+
 foreach ($cases as $name => $case) {
     $directory = $fixtures . '/' . $case['fixture'];
     $raw = static fn (SpecKind $kind): Closure => static fn (array $d): RawSpec => new RawSpec($kind, $d['file'], $d['data']);
-
-    $result = resolve(
-        new SpecSource($directory),
-        $registry,
-        array_map($raw(SpecKind::Pattern), $case['pooledPatterns']),
-        array_map($raw(SpecKind::Type), $case['pooledTypes']),
-        $directory,
-    );
+    $patterns = array_map($raw(SpecKind::Pattern), $case['pooledPatterns']);
+    $types = array_map($raw(SpecKind::Type), $case['pooledTypes']);
 
     $files[$name . '/input.json'] = encode([
         'fixture' => $case['fixture'],
@@ -372,14 +263,29 @@ foreach ($cases as $name => $case) {
         'pooledTypes' => $case['pooledTypes'],
     ]);
 
-    if (null === $result['resolved']) {
-        $files[$name . '/errors.json'] = encode(array_map(static fn (SpecError $e): array => [
-            'code' => $e->code,
-            'file' => relative($e->file, $directory),
-            'pointer' => $e->pointer,
-        ], $result['errors']));
+    $resolved = resolve(new SpecSource($directory), $registry, $patterns, $types);
+
+    if (null === $resolved['schema']) {
+        $files[$name . '/errors.json'] = encode(errorList($resolved['errors'], $directory));
+
+        continue;
+    }
+
+    // Paths inside the IR are the fixture's, relative to the repository root: unlike the
+    // errors they are not rewritten, because they are part of the bytes builders receive.
+    $files[$name . '/resolved.json'] = encode(IrCodec::encode($resolved['schema']));
+
+    $compiled = (new SchemaCompiler(
+        integrations: $registry,
+        pooledPatterns: $patterns,
+        pooledTypes: $types,
+        storageRules: $storageRules,
+    ))->compile(new SpecSource($directory));
+
+    if ($compiled->isSuccess()) {
+        $files[$name . '/ir.json'] = request($compiled->schema());
     } else {
-        $files[$name . '/resolved.json'] = encode($result['resolved']);
+        $files[$name . '/errors.json'] = encode(errorList($compiled->errors, $directory));
     }
 }
 

@@ -155,3 +155,51 @@ fields:
   commentTail:
     type: string
     default: value # comment
+  f0:
+    type: float
+    default: 0.1
+  f1:
+    type: float
+    default: 100.0
+  f2:
+    type: float
+    default: 1.0e15
+  f3:
+    type: float
+    default: 1.0e16
+  f4:
+    type: float
+    default: 1.0e17
+  f5:
+    type: float
+    default: 1.0e25
+  f6:
+    type: float
+    default: 1.5e-7
+  f7:
+    type: float
+    default: 0.00001
+  f8:
+    type: float
+    default: 0.0001
+  f9:
+    type: float
+    default: 123456789.123456789
+  f10:
+    type: float
+    default: -0.0
+  f11:
+    type: float
+    default: 0.0
+  f12:
+    type: float
+    default: 3.141592653589793
+  f13:
+    type: float
+    default: 123456789012345678.0
+  f14:
+    type: float
+    default: -2.5e-10
+  f15:
+    type: float
+    default: 0.30000000000000004

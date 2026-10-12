@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/pattern-interface/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Comment": {
             "name": "Comment",
@@ -16,21 +15,21 @@
                 "table": "comment",
                 "handle": null
             },
-            "sourceFile": "entities/Comment.yml",
+            "sourceFile": "packages/schema/tests/fixtures/pattern-interface/entities/Comment.yml",
             "description": null,
             "uses": [
-                "Auditable"
-            ],
-            "appliedPatterns": [
                 "Auditable"
             ],
             "fields": {
                 "createdAt": {
                     "name": "createdAt",
-                    "type": "datetime",
+                    "type": {
+                        "primitive": "datetime",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "patterns/Auditable.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -47,10 +46,13 @@
                 },
                 "updatedAt": {
                     "name": "updatedAt",
-                    "type": "datetime",
+                    "type": {
+                        "primitive": "datetime",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "patterns/Auditable.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -67,10 +69,13 @@
                 },
                 "body": {
                     "name": "body",
-                    "type": "text",
+                    "type": {
+                        "primitive": "text",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Comment.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/entities/Comment.yml"
                     },
                     "description": null,
                     "required": false,
@@ -92,6 +97,9 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [
+                "Auditable"
+            ],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
@@ -104,23 +112,22 @@
                 "table": "post",
                 "handle": null
             },
-            "sourceFile": "entities/Post.yml",
+            "sourceFile": "packages/schema/tests/fixtures/pattern-interface/entities/Post.yml",
             "description": null,
             "uses": [
-                "Auditable",
-                "Silent"
-            ],
-            "appliedPatterns": [
                 "Auditable",
                 "Silent"
             ],
             "fields": {
                 "createdAt": {
                     "name": "createdAt",
-                    "type": "datetime",
+                    "type": {
+                        "primitive": "datetime",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "patterns/Auditable.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -137,10 +144,13 @@
                 },
                 "updatedAt": {
                     "name": "updatedAt",
-                    "type": "datetime",
+                    "type": {
+                        "primitive": "datetime",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "patterns/Auditable.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -157,10 +167,13 @@
                 },
                 "note": {
                     "name": "note",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": "Silent",
-                        "file": "patterns/Silent.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Silent.yml"
                     },
                     "description": null,
                     "required": false,
@@ -177,10 +190,13 @@
                 },
                 "title": {
                     "name": "title",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/pattern-interface/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -202,10 +218,16 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [
+                "Auditable",
+                "Silent"
+            ],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

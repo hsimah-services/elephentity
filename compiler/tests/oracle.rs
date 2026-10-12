@@ -1,15 +1,18 @@
 //! Parity with the PHP compiler.
 //!
-//! `tools/compare-compiler --refresh` runs the PHP stages over every fixture in
-//! `packages/schema/tests/fixtures` and commits what they produce to `tests/oracle/<case>/`.
-//! Each case here must resolve to the same snapshot: the same resolved project, types and
-//! entities (compared in order, byte for byte once serialized) or the same errors by code,
-//! file and pointer.
+//! `tools/compare-compiler --refresh` runs the PHP compiler over every fixture in
+//! `packages/schema/tests/fixtures` and commits what it produces to `tests/oracle/<case>/`:
 //!
-//! One deliberate difference, recorded in `docs/divergence.md`: for `spec.invalid`, Rust
-//! must report every location PHP does and may report more. opis stops descending into an
-//! object after its first failing keyword; jsonschema reports each failing leaf. Every other
-//! error code must match exactly.
+//! - `resolved.json`: the IR after load, validation and patterns, before semantic checks.
+//!   Compared in order, so key order counts.
+//! - `ir.json`: the exact bytes `eleph generate` sends to `eleph-codegen`. Compared byte for
+//!   byte.
+//! - `errors.json`: the errors, compared by code, file and pointer.
+//!
+//! One deliberate difference, recorded in `docs/divergence.md`: for `spec.invalid`, Rust must
+//! report every location PHP does and may report more. opis stops descending into an object
+//! after its first failing keyword; jsonschema reports each failing leaf. Every other error
+//! code must match exactly.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -17,7 +20,9 @@ use std::path::{Path, PathBuf};
 
 use eleph_compiler::integration::{IntegrationDefinition, IntegrationRegistry};
 use eleph_compiler::spec::{RawSpec, SpecKind, SpecSource};
-use eleph_compiler::{resolve, Options};
+use eleph_compiler::storage::StorageRuleRegistry;
+use eleph_compiler::{compile, resolve, Options, Schema, SpecError};
+use indexmap::IndexMap;
 use serde_json::{Map, Value};
 
 /// An error's code, file and pointer: the parity surface.
@@ -27,18 +32,18 @@ fn compiler_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
-fn read_json(path: &Path) -> Value {
-    let text = fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-
-    serde_json::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
+/// Paths in the IR and in errors are relative to the repository root, so every test runs
+/// from there. Every test sets the same directory, so they can share the process.
+fn from_repository_root() {
+    std::env::set_current_dir(compiler_dir().join("..")).expect("the repository root exists");
 }
 
-fn registry(oracle: &Path) -> IntegrationRegistry {
-    let snapshot = read_json(&oracle.join("registry.json"));
-    let definitions: Vec<IntegrationDefinition> =
-        serde_json::from_value(snapshot["integrations"].clone()).expect("registry.json parses");
+fn read(path: &Path) -> String {
+    fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
+}
 
-    IntegrationRegistry::new(definitions)
+fn read_json(path: &Path) -> Value {
+    serde_json::from_str(&read(path)).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
 fn pooled(kind: SpecKind, entries: &Value) -> Vec<RawSpec> {
@@ -54,7 +59,7 @@ fn pooled(kind: SpecKind, entries: &Value) -> Vec<RawSpec> {
         .collect()
 }
 
-/// Paths in snapshots are relative to the fixture; the root itself is ".".
+/// A fixture's errors name files relative to it; the root itself is ".".
 fn relative(path: &str, root: &str) -> String {
     if path == root {
         ".".to_string()
@@ -65,13 +70,87 @@ fn relative(path: &str, root: &str) -> String {
     }
 }
 
-fn relativize(value: &mut Value, root: &str) {
-    match value {
-        Value::String(text) => *text = relative(text, root),
-        Value::Array(items) => items.iter_mut().for_each(|item| relativize(item, root)),
-        Value::Object(map) => map.values_mut().for_each(|item| relativize(item, root)),
-        _ => {}
-    }
+fn keys_of_errors(errors: &[SpecError], root: &str) -> BTreeSet<ErrorKey> {
+    errors
+        .iter()
+        .map(|e| {
+            (
+                e.code.clone(),
+                e.file.as_deref().map(|f| relative(f, root)),
+                e.pointer.clone(),
+            )
+        })
+        .collect()
+}
+
+fn keys_of_snapshot(path: &Path) -> BTreeSet<ErrorKey> {
+    read_json(path)
+        .as_array()
+        .expect("errors are a list")
+        .iter()
+        .map(|e| {
+            (
+                e["code"].as_str().unwrap().to_string(),
+                e["file"].as_str().map(str::to_string),
+                e["pointer"].as_str().map(str::to_string),
+            )
+        })
+        .collect()
+}
+
+struct Case {
+    name: String,
+    dir: PathBuf,
+    root: String,
+    options: Options,
+}
+
+fn cases() -> Vec<Case> {
+    let oracle = compiler_dir().join("tests/oracle");
+
+    let registry_snapshot = read_json(&oracle.join("registry.json"));
+    let definitions: Vec<IntegrationDefinition> =
+        serde_json::from_value(registry_snapshot["integrations"].clone())
+            .expect("registry.json parses");
+    let registry = IntegrationRegistry::new(definitions);
+
+    let storage_rules: StorageRuleRegistry =
+        serde_json::from_value(read_json(&oracle.join("storage-rules.json")))
+            .expect("storage-rules.json parses");
+
+    let mut dirs: Vec<PathBuf> = fs::read_dir(&oracle)
+        .expect("tests/oracle exists")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.is_dir())
+        .collect();
+
+    dirs.sort();
+    assert!(
+        !dirs.is_empty(),
+        "no oracle cases; run tools/compare-compiler --refresh"
+    );
+
+    dirs.into_iter()
+        .map(|dir| {
+            let input = read_json(&dir.join("input.json"));
+
+            Case {
+                name: dir.file_name().unwrap().to_string_lossy().to_string(),
+                root: format!(
+                    "packages/schema/tests/fixtures/{}",
+                    input["fixture"].as_str().expect("a fixture")
+                ),
+                options: Options {
+                    integrations: registry.clone(),
+                    pooled_patterns: pooled(SpecKind::Pattern, &input["pooledPatterns"]),
+                    pooled_types: pooled(SpecKind::Type, &input["pooledTypes"]),
+                    storage_rules: storage_rules.clone(),
+                },
+                dir,
+            }
+        })
+        .collect()
 }
 
 /// Every leaf where two documents differ, as `pointer: php != rust`. Key order is checked
@@ -102,71 +181,64 @@ fn differences(php: &Value, rust: &Value, pointer: &str, out: &mut Vec<String>) 
     }
 }
 
-fn cases() -> Vec<PathBuf> {
-    let oracle = compiler_dir().join("tests/oracle");
-    let mut cases: Vec<PathBuf> = fs::read_dir(&oracle)
-        .expect("tests/oracle exists")
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.is_dir())
-        .collect();
+/// The first place two strings part, with some context either side.
+fn first_difference(php: &str, rust: &str) -> String {
+    let at = php
+        .bytes()
+        .zip(rust.bytes())
+        .position(|(a, b)| a != b)
+        .unwrap_or(php.len().min(rust.len()));
+    let window = |text: &str| {
+        let start = at.saturating_sub(100);
+        let end = (at + 100).min(text.len());
 
-    cases.sort();
-    assert!(
-        !cases.is_empty(),
-        "no oracle cases; run tools/compare-compiler --refresh"
-    );
-    cases
+        text.get(start..end)
+            .unwrap_or("<not on a character boundary>")
+            .to_string()
+    };
+
+    format!(
+        "  php:  ...{}...\n  rust: ...{}...",
+        window(php),
+        window(rust)
+    )
 }
 
+/// Stage two: load, validate, resolve patterns.
 #[test]
-fn every_fixture_matches_the_php_compiler() {
-    let oracle = compiler_dir().join("tests/oracle");
-    let registry = registry(&oracle);
+fn every_fixture_resolves_like_the_php_compiler() {
+    from_repository_root();
+
     let mut failures = Vec::new();
 
     for case in cases() {
-        let name = case.file_name().unwrap().to_string_lossy().to_string();
-        let input = read_json(&case.join("input.json"));
+        let name = &case.name;
+        let resolved_path = case.dir.join("resolved.json");
 
-        let root = compiler_dir()
-            .join("../packages/schema/tests/fixtures")
-            .join(input["fixture"].as_str().expect("a fixture"));
-        let root = fs::canonicalize(&root).expect("fixture exists");
-        let root = root.to_string_lossy().to_string();
-
-        let options = Options {
-            integrations: registry.clone(),
-            pooled_patterns: pooled(SpecKind::Pattern, &input["pooledPatterns"]),
-            pooled_types: pooled(SpecKind::Type, &input["pooledTypes"]),
-        };
-
-        let result = resolve(&SpecSource::new(root.clone()), &options);
-
-        match result {
+        match resolve(&SpecSource::new(case.root.clone()), &case.options) {
             Ok(resolved) => {
-                let expected_path = case.join("resolved.json");
-
-                if !expected_path.exists() {
+                if !resolved_path.exists() {
                     failures.push(format!("{name}: resolved, but PHP reported errors"));
                     continue;
                 }
 
-                let mut actual = serde_json::to_value(&resolved).expect("serializes");
-                relativize(&mut actual, &root);
+                // The snapshot is the IR before declared patterns are added.
+                let schema = Schema {
+                    project: resolved.project,
+                    entities: resolved.entities,
+                    types: resolved.types,
+                    patterns: IndexMap::new(),
+                };
+
+                let expected = read_json(&resolved_path);
+                let actual = serde_json::to_value(&schema).expect("serializes");
 
                 // Compact strings keep key order significant, which a Value comparison would not.
-                let expected = serde_json::to_string(&read_json(&expected_path)).unwrap();
-                let actual = serde_json::to_string(&actual).unwrap();
+                let (expected_text, actual_text) = (expected.to_string(), actual.to_string());
 
-                if expected != actual {
+                if expected_text != actual_text {
                     let mut found = Vec::new();
-                    differences(
-                        &read_json(&expected_path),
-                        &serde_json::from_str(&actual).unwrap(),
-                        "",
-                        &mut found,
-                    );
+                    differences(&expected, &actual, "", &mut found);
 
                     if found.is_empty() {
                         found.push("same values, different key order".to_string());
@@ -179,39 +251,14 @@ fn every_fixture_matches_the_php_compiler() {
                 }
             }
             Err(errors) => {
-                let expected_path = case.join("errors.json");
-
-                if !expected_path.exists() {
-                    let described: Vec<_> = errors.iter().map(|e| e.describe()).collect();
+                if resolved_path.exists() {
+                    let described: Vec<_> = errors.iter().map(SpecError::describe).collect();
                     failures.push(format!("{name}: failed, but PHP resolved: {described:?}"));
                     continue;
                 }
 
-                let triple = |code: &str, file: Option<&str>, pointer: Option<&str>| {
-                    (
-                        code.to_string(),
-                        file.map(|f| relative(f, &root)),
-                        pointer.map(str::to_string),
-                    )
-                };
-
-                let actual: BTreeSet<ErrorKey> = errors
-                    .iter()
-                    .map(|e| triple(&e.code, e.file.as_deref(), e.pointer.as_deref()))
-                    .collect();
-
-                let expected: BTreeSet<ErrorKey> = read_json(&expected_path)
-                    .as_array()
-                    .expect("errors are a list")
-                    .iter()
-                    .map(|e| {
-                        triple(
-                            e["code"].as_str().unwrap(),
-                            e["file"].as_str(),
-                            e["pointer"].as_str(),
-                        )
-                    })
-                    .collect();
+                let expected = keys_of_snapshot(&case.dir.join("errors.json"));
+                let actual = keys_of_errors(&errors, &case.root);
 
                 let schema_errors = |set: &BTreeSet<ErrorKey>| -> BTreeSet<ErrorKey> {
                     set.iter()
@@ -231,6 +278,64 @@ fn every_fixture_matches_the_php_compiler() {
                 {
                     failures.push(format!(
                         "{name}: errors differ\n  php:  {expected:?}\n  rust: {actual:?}"
+                    ));
+                }
+            }
+        }
+    }
+
+    assert!(failures.is_empty(), "\n{}\n", failures.join("\n"));
+}
+
+/// Stage three: the whole compile, down to the bytes `eleph-codegen` receives.
+#[test]
+fn every_fixture_compiles_like_the_php_compiler() {
+    from_repository_root();
+
+    let mut failures = Vec::new();
+
+    for case in cases() {
+        let name = &case.name;
+        let ir_path = case.dir.join("ir.json");
+        let errors_path = case.dir.join("errors.json");
+        let resolved_failed_in_php = !case.dir.join("resolved.json").exists();
+
+        match compile(&SpecSource::new(case.root.clone()), &case.options) {
+            Ok(schema) => {
+                if !ir_path.exists() {
+                    failures.push(format!("{name}: compiled, but PHP reported errors"));
+                    continue;
+                }
+
+                // Raw bytes: the file has no trailing newline because the request has none.
+                let expected = read(&ir_path);
+                let actual = schema.request();
+
+                if expected != actual {
+                    failures.push(format!(
+                        "{name}: request bytes differ\n{}",
+                        first_difference(&expected, &actual)
+                    ));
+                }
+            }
+            Err(errors) => {
+                if ir_path.exists() {
+                    let described: Vec<_> = errors.iter().map(SpecError::describe).collect();
+                    failures.push(format!("{name}: failed, but PHP compiled: {described:?}"));
+                    continue;
+                }
+
+                let expected = keys_of_snapshot(&errors_path);
+                let actual = keys_of_errors(&errors, &case.root);
+
+                if resolved_failed_in_php {
+                    // Stage two's errors were compared above, with the spec.invalid rule.
+                    continue;
+                }
+
+                if expected != actual {
+                    failures.push(format!(
+                        "{name}: semantic errors differ\n  php:  {expected:?}\n  rust: {actual:?}"
                     ));
                 }
             }

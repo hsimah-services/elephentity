@@ -30,6 +30,7 @@ The Rust compiler in `compiler/` runs in a container too, with no host cargo:
 ./tools/cargo cargo clippy --locked --all-targets --manifest-path compiler/Cargo.toml -- -D warnings
 tools/compare-compiler             # the oracle snapshots still match the PHP compiler
 tools/compare-compiler --refresh   # regenerate them after changing the PHP compiler or a fixture
+tools/test-rust-ir                 # the built builders accept the IR the Rust compiler produces
 ```
 
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are

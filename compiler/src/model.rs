@@ -1,13 +1,16 @@
 //! What a spec says, once it has been read: fields, edges, queries and the rest.
 //!
-//! These serialize to the shape the oracle snapshots use, which is also the shape
-//! `tools/compare-compiler.php` writes. Enum values are validated by the JSON Schema before
-//! anything is read, so parsing one that does not exist is an internal error.
+//! These are the IR: they serialize to the shape `IrCodec` gives the PHP value objects, field
+//! for field and in the same order, because the wire bytes are compared. Enum values are
+//! validated by the JSON Schema before anything is read, so parsing one that does not exist
+//! is an internal error.
 
 use indexmap::IndexMap;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+
+use crate::ir::{serialize_plain, serialize_settings, serialize_settings_by_name};
 
 /// Parse a schema-validated enum value.
 pub fn parse_enum<T: DeserializeOwned>(raw: &str) -> T {
@@ -60,6 +63,67 @@ string_enum!(ConfigType {
     List
 });
 
+impl Primitive {
+    fn parse(raw: &str) -> Option<Self> {
+        serde_json::from_value(Value::String(raw.to_string())).ok()
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Primitive::String => "string",
+            Primitive::Text => "text",
+            Primitive::Int => "int",
+            Primitive::Float => "float",
+            Primitive::Bool => "bool",
+            Primitive::Datetime => "datetime",
+            Primitive::Id => "id",
+            Primitive::Enum => "enum",
+            Primitive::Json => "json",
+        }
+    }
+
+    /// An enum type's backing: a declared enum must be a string or an int.
+    pub fn is_enum_backing(self) -> bool {
+        matches!(self, Primitive::String | Primitive::Int)
+    }
+}
+
+/// A field or argument's declared type: either a primitive or a declared value type.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeReference {
+    pub primitive: Option<Primitive>,
+    pub declared_type: Option<String>,
+}
+
+impl TypeReference {
+    /// A primitive if the spec string names one, a declared type otherwise. Whether that
+    /// declared type exists is a semantic check.
+    pub fn parse(raw: &str) -> Self {
+        match Primitive::parse(raw) {
+            Some(primitive) => Self {
+                primitive: Some(primitive),
+                declared_type: None,
+            },
+            None => Self {
+                primitive: None,
+                declared_type: Some(raw.to_string()),
+            },
+        }
+    }
+
+    pub fn is_primitive(&self) -> bool {
+        self.primitive.is_some()
+    }
+
+    pub fn name(&self) -> String {
+        self.primitive.map_or_else(
+            || self.declared_type.clone().unwrap_or_default(),
+            |primitive| primitive.name().to_string(),
+        )
+    }
+}
+
 /// Where a member came from: the entity's own spec, or a pattern it uses.
 ///
 /// Tracked so that a sealed-collision error can name both contributors.
@@ -97,24 +161,45 @@ pub trait Contributed {
     fn origin(&self) -> &Origin;
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum EnumSource {
-    Inline(Vec<String>),
-    Declared(String),
+/// Where an enum field's members come from: listed inline, or a declared type.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnumSource {
+    pub inline_values: Option<Vec<String>>,
+    pub declared_type: Option<String>,
 }
 
-/// A field or argument's declared type is serialized as its name; whether it names a
-/// primitive or a declared type is a semantic question.
+impl EnumSource {
+    pub fn inline(values: Vec<String>) -> Self {
+        Self {
+            inline_values: Some(values),
+            declared_type: None,
+        }
+    }
+
+    pub fn declared(name: String) -> Self {
+        Self {
+            inline_values: None,
+            declared_type: Some(name),
+        }
+    }
+
+    pub fn is_inline(&self) -> bool {
+        self.inline_values.is_some()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldDefinition {
     pub name: String,
     #[serde(rename = "type")]
-    pub type_name: String,
+    pub type_ref: TypeReference,
     pub origin: Origin,
     pub description: Option<String>,
     pub required: bool,
     pub nullable: bool,
+    #[serde(serialize_with = "serialize_plain")]
     pub default: Value,
     pub has_default: bool,
     pub unique: bool,
@@ -122,31 +207,9 @@ pub struct FieldDefinition {
     pub immutable: bool,
     pub managed: Option<Managed>,
     pub max_length: Option<i64>,
-    #[serde(rename = "enum", serialize_with = "serialize_enum_source")]
+    #[serde(rename = "enum")]
     pub enum_source: Option<EnumSource>,
     pub verify: bool,
-}
-
-/// `{inline: [...]}` or `{declared: "Name"}`, or null.
-fn serialize_enum_source<S: serde::Serializer>(
-    source: &Option<EnumSource>,
-    serializer: S,
-) -> Result<S::Ok, S::Error> {
-    use serde::ser::SerializeMap;
-
-    match source {
-        None => serializer.serialize_none(),
-        Some(source) => {
-            let mut map = serializer.serialize_map(Some(1))?;
-
-            match source {
-                EnumSource::Inline(values) => map.serialize_entry("inline", values)?,
-                EnumSource::Declared(name) => map.serialize_entry("declared", name)?,
-            }
-
-            map.end()
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -154,6 +217,23 @@ pub struct EdgeInverse {
     pub derived: bool,
     pub name: Option<String>,
     pub unique: bool,
+}
+
+impl EdgeInverse {
+    /// The accessor's name on the target: the declared one, or the declaring entity's name
+    /// with its first letter lowered (`Inventory` gives `inventory`).
+    pub fn name_for(&self, declaring_entity: &str) -> String {
+        if !self.derived {
+            return self.name.clone().unwrap_or_default();
+        }
+
+        let mut characters = declaring_entity.chars();
+
+        match characters.next() {
+            Some(first) => first.to_ascii_lowercase().to_string() + characters.as_str(),
+            None => String::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -173,7 +253,7 @@ pub struct EdgeDefinition {
 pub struct ArgumentDefinition {
     pub name: String,
     #[serde(rename = "type")]
-    pub type_name: String,
+    pub type_ref: TypeReference,
     pub nullable: bool,
 }
 
@@ -192,6 +272,7 @@ pub struct QueryDefinition {
     pub arguments: IndexMap<String, ArgumentDefinition>,
     pub description: Option<String>,
     /// Raw until the project's enabled integrations are known, then resolved.
+    #[serde(serialize_with = "serialize_settings_by_name")]
     pub integrations: IndexMap<String, Map<String, Value>>,
 }
 
@@ -368,6 +449,7 @@ pub struct ProjectDefinition {
     pub name: String,
     pub driver: String,
     pub source_file: String,
+    #[serde(serialize_with = "serialize_settings_by_name")]
     pub integrations: IndexMap<String, Map<String, Value>>,
     pub table_prefix: String,
     pub description: Option<String>,
@@ -399,14 +481,16 @@ pub struct EntityDefinition {
     pub source_file: String,
     pub description: Option<String>,
     pub uses: Vec<String>,
-    pub applied_patterns: Vec<String>,
     pub fields: IndexMap<String, FieldDefinition>,
     pub edges: IndexMap<String, EdgeDefinition>,
     pub queries: IndexMap<String, QueryDefinition>,
     pub actions: IndexMap<String, ActionDefinition>,
     pub side_effects: IndexMap<String, SideEffectDefinition>,
+    #[serde(serialize_with = "serialize_settings")]
     pub config: Map<String, Value>,
+    #[serde(serialize_with = "serialize_settings_by_name")]
     pub integrations: IndexMap<String, Map<String, Value>>,
+    pub applied_patterns: Vec<String>,
     pub read_policies: IndexMap<String, PolicyDefinition>,
     pub write_policies: IndexMap<String, PolicyDefinition>,
     pub terminal_read: TerminalRule,
