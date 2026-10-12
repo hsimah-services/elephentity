@@ -83,6 +83,7 @@ builders — plus the three C# builders once scaffolded.
 | the `describe` command's JSON | update `Installed::fromJson()` | — |
 | `Signing/HeaderStyle` — the rendered header or its line count | regenerate **every** tree and commit it | re-freeze golden fixtures |
 | `Config/ProjectConfig` — which `eleph.json` keys are required | update the docs and `elephentity-examples`'s `clog/eleph.json` | — |
+| the release artifact names (`release-binary.yml`, `docs/RELEASING.md`): tag `v<version>`, archives `<binary>-<version>-<rid>.tar.gz` (`.zip` on `win-x64`) holding `<binary>` and `LICENSE`, and one `SHA256SUMS` | `eleph install` finds and verifies archives by exactly these names | keep the released binary named as `eleph.json` pins it (`eleph-gen-csharp@0.1.0`) and tag `v<version>`; a repository adopting the workflow follows `docs/RELEASING.md` |
 
 **A header change invalidates every signature ever written.** Not just here: every
 generated file in every project using Elephentity fails verification at once, because the

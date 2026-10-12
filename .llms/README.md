@@ -21,7 +21,7 @@ is itself the thing this directory is about, so it needs its own issues.
 | `hsimah-services/elephentity-schema` | subtree mirror of `packages/schema`; entirely owned by the source package | schema, resources and IR oracle; source PRs go to `elephentity` |
 | `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver; source PRs go to `elephentity` |
 | `hsimah-services/elephentity-cli` | subtree mirror of `packages/cli`; entirely owned by the source package | `eleph` command and `eleph-gen-memory`; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol; runs builders; signs and writes |
+| `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol and the reusable `release-binary.yml`; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
 | `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |
 | `hsimah-services/elephentity-codegen-wpgraphql` | WPGraphQL builder | builder protocol; WPGraphQL runtime type names |
