@@ -87,7 +87,7 @@ line. So it differs from PHP deliberately:
 - a target with no checker is a warning, and a run that checked nothing fails (PHP failed only for
   a missing `php` target);
 - an error signal, a non-zero exit, a line that is not a signal and a checker that cannot be started
-  each fail the gate;
+  each fail the gate (a non-zero exit that already printed an error signal is not counted twice);
 - output adds a `Checking <target> (<program>)` line per checker.
 
 Until `elephentity-codegen-php` answers `provides.check` (step 6) a PHP project has no checker, so

@@ -649,3 +649,23 @@ fn a_malformed_check_declaration_names_the_builder() {
         stdout(&output)
     );
 }
+
+#[test]
+fn a_non_zero_exit_that_already_explained_itself_is_not_counted_twice() {
+    let project = Project::new(&checked(r#"{"command": ["checkers/explains"]}"#));
+    project.targets(ONE_TARGET);
+    project.program(
+        "checkers/explains",
+        r#"echo '{"severity": "error", "message": "no class map"}'
+exit 1"#,
+    );
+
+    let output = project.eleph(&["check"]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        stdout(&output).contains("[ERROR] 1 conformance error(s)."),
+        "{}",
+        stdout(&output)
+    );
+}

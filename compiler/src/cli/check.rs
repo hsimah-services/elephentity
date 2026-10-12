@@ -269,7 +269,13 @@ fn run(words: &[String], root: &str, target: &str) -> Vec<Signal> {
         }));
     }
 
-    if !output.status.success() {
+    // A checker that exits non-zero having already said why has said it once; a second error for the
+    // exit code would count one problem twice.
+    let explained = signals
+        .iter()
+        .any(|signal| signal.severity == Severity::Error);
+
+    if !output.status.success() && !explained {
         let said = String::from_utf8_lossy(&output.stderr).trim().to_string();
         let code = output
             .status
