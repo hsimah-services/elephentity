@@ -29,13 +29,13 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 
-use super::config::FILENAME;
+use super::config::{split_pin, ProjectConfig, DEFAULT_BUILDERS, FILENAME};
 
 pub const COMMAND: &str = "eleph-codegen";
 
 /// The file name to look for: `eleph-codegen`, or `eleph-codegen.exe` on Windows.
-fn file_name() -> String {
-    format!("{COMMAND}{}", std::env::consts::EXE_SUFFIX)
+fn file_name(name: &str) -> String {
+    format!("{name}{}", std::env::consts::EXE_SUFFIX)
 }
 
 /// Where the generator's report goes, and whether it may write there directly.
@@ -49,6 +49,7 @@ pub struct Console<'a> {
 pub struct Codegen {
     project_root: String,
     override_path: Option<String>,
+    builders_directory: String,
 }
 
 impl Codegen {
@@ -56,6 +57,16 @@ impl Codegen {
         Self {
             project_root: project_root.to_string(),
             override_path,
+            builders_directory: DEFAULT_BUILDERS.to_string(),
+        }
+    }
+
+    /// The generator a project's `eleph.json` asks for: its `codegen` key and its `builders`
+    /// directory, where a pinned `"eleph-codegen@0.2.0"` is looked for.
+    pub fn for_project(project_root: &str, config: &ProjectConfig) -> Self {
+        Self {
+            builders_directory: config.builders_directory.clone(),
+            ..Self::new(project_root, config.codegen.clone())
         }
     }
 
@@ -150,7 +161,27 @@ impl Codegen {
     fn resolve(&self) -> Result<PathBuf, String> {
         let mut looked = Vec::new();
 
-        if let Some(override_path) = &self.override_path {
+        // A pin names a program and a release to install, not a place. It is found where
+        // `eleph install` puts it, then the ordinary way.
+        let pinned = self
+            .override_path
+            .as_deref()
+            .and_then(split_pin)
+            .map(|(name, _)| name.to_string());
+
+        if let Some(name) = &pinned {
+            let installed = Path::new(&self.project_root)
+                .join(&self.builders_directory)
+                .join(file_name(name));
+
+            looked.push(installed.display().to_string());
+
+            if installed.is_file() {
+                return executable(installed);
+            }
+        }
+
+        if let Some(override_path) = self.override_path.as_ref().filter(|_| pinned.is_none()) {
             let path = if override_path.starts_with('/') {
                 PathBuf::from(override_path)
             } else {
@@ -168,9 +199,14 @@ impl Codegen {
             };
         }
 
-        for candidate in [self.beside_the_cli(), self.in_nearest_vendor_bin()]
-            .into_iter()
-            .flatten()
+        let name = pinned.unwrap_or_else(|| COMMAND.to_string());
+
+        for candidate in [
+            self.beside_the_cli(&name),
+            self.in_nearest_vendor_bin(&name),
+        ]
+        .into_iter()
+        .flatten()
         {
             looked.push(candidate.display().to_string());
 
@@ -179,7 +215,7 @@ impl Codegen {
             }
         }
 
-        if let Some(found) = on_path() {
+        if let Some(found) = on_path(&name) {
             return executable(found);
         }
 
@@ -191,20 +227,20 @@ impl Codegen {
     /// Composer installs `eleph` and `eleph-codegen` into the same bin directory, and a release
     /// archive unpacks them side by side, so the one running is the best evidence of where the
     /// other is.
-    fn beside_the_cli(&self) -> Option<PathBuf> {
+    fn beside_the_cli(&self, name: &str) -> Option<PathBuf> {
         let current = std::env::current_exe().ok()?.canonicalize().ok()?;
 
-        Some(current.parent()?.join(file_name()))
+        Some(current.parent()?.join(file_name(name)))
     }
 
     /// The nearest `vendor/bin` above the project. Walking rather than counting, because a
     /// project can sit at any depth under the directory Composer installed into.
-    fn in_nearest_vendor_bin(&self) -> Option<PathBuf> {
+    fn in_nearest_vendor_bin(&self, name: &str) -> Option<PathBuf> {
         let start = Path::new(&self.project_root).canonicalize().ok()?;
 
         start
             .ancestors()
-            .map(|directory| directory.join("vendor/bin").join(file_name()))
+            .map(|directory| directory.join("vendor/bin").join(file_name(name)))
             .find(|candidate| candidate.is_file())
     }
 }
@@ -224,10 +260,10 @@ fn describe(executable: &Path, arguments: &[String]) -> String {
         .join(" ")
 }
 
-fn on_path() -> Option<PathBuf> {
+fn on_path(name: &str) -> Option<PathBuf> {
     std::env::split_paths(&std::env::var_os("PATH")?)
         .filter(|directory| !directory.as_os_str().is_empty())
-        .map(|directory| directory.join(file_name()))
+        .map(|directory| directory.join(file_name(name)))
         .find(|candidate| candidate.is_file())
 }
 
@@ -261,7 +297,8 @@ fn missing(looked: &[String]) -> String {
     format!(
         "No {COMMAND} found. Looked in:\n  {}\n\
          Install it with `composer require --dev elephentity/codegen`, or set a \"codegen\" path \
-         in {FILENAME}. Elephentity compiles specs; it does not generate code itself.",
+         in {FILENAME}. Elephentity compiles specs; it does not generate code itself. \
+         To use a prebuilt release instead, pin it (\"codegen\": \"eleph-codegen@<version>\") and run `eleph install`.",
         looked.join("\n  ")
     )
 }

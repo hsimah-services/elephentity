@@ -125,7 +125,7 @@ fn describe(project: &str, provides: Option<&str>) -> Result<Installed, String> 
     let Some(provides) = provides else {
         let config = ProjectConfig::load(project)?;
 
-        return Installed::described_by(&Codegen::new(project, config.codegen), project);
+        return Installed::described_by(&Codegen::for_project(project, &config), project);
     };
 
     if !Path::new(provides).is_file() {
@@ -164,7 +164,7 @@ pub fn generate(
     };
 
     let root = project.trim_end_matches('/');
-    let codegen = Codegen::new(root, config.codegen.clone());
+    let codegen = Codegen::for_project(root, &config);
 
     // Before the specs are read, because what it answers is what they are read against: which
     // integrations may be named, which drivers exist.

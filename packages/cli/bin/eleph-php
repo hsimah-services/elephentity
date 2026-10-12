@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Cli\Command\CheckCommand;
+use Eleph\Cli\Command\FmtCommand;
+use Eleph\Cli\Command\GenerateCommand;
+use Eleph\Cli\Command\ValidateCommand;
+use Symfony\Component\Console\Application;
+
+// Works both when Elephentity is the root project and when it is installed as a dependency.
+foreach ([$_composer_autoload_path ?? '', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php', __DIR__ . '/../../../vendor/autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+$application = new Application('eleph', '0.1.0');
+$application->addCommands([
+    new ValidateCommand(),
+    new GenerateCommand(),
+    new CheckCommand(),
+    new FmtCommand(),
+]);
+$application->run();

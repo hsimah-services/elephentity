@@ -6,8 +6,10 @@
 //! disagree about something small, like whether a trailing slash on `output` matters, and the
 //! disagreement would surface as a tree written to the wrong place.
 //!
-//! So this reads `spec`, and `codegen` when a project needs to say where its generator is.
-//! Anything it does not recognise it leaves alone, because the file is not only its.
+//! So this reads `spec`; `codegen`, when a project needs to say where its generator is (or which
+//! release of it to install, `"eleph-codegen@0.2.0"`); and `builders`, the directory
+//! `eleph install` places programs in and the generator looks in. Anything it does not recognise
+//! it leaves alone, because the file is not only its.
 
 use std::fs;
 
@@ -15,10 +17,27 @@ use serde_json::Value;
 
 pub const FILENAME: &str = "eleph.json";
 
+/// Where installed builders live, unless a project says otherwise. The generator's default too.
+pub const DEFAULT_BUILDERS: &str = "tools/builders";
+
+/// `"name@version"` is a pin: a program to find by `name` and, for `eleph install`, a release to
+/// fetch. A value containing `/` is a path and is never split, because `@` is legal in one. The
+/// same rule as the generator's, so the two cannot disagree about what a builder is called.
+pub fn split_pin(value: &str) -> Option<(&str, &str)> {
+    if value.contains('/') {
+        return None;
+    }
+
+    value
+        .split_once('@')
+        .filter(|(name, version)| !name.is_empty() && !version.is_empty())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectConfig {
     pub spec_directory: String,
     pub codegen: Option<String>,
+    pub builders_directory: String,
 }
 
 impl ProjectConfig {
@@ -49,9 +68,18 @@ impl ProjectConfig {
             .filter(|codegen| !codegen.is_empty())
             .map(str::to_string);
 
+        let builders_directory = data
+            .get("builders")
+            .and_then(Value::as_str)
+            .filter(|builders| !builders.is_empty())
+            .unwrap_or(DEFAULT_BUILDERS)
+            .trim_matches('/')
+            .to_string();
+
         Ok(Self {
             spec_directory: spec.to_string(),
             codegen,
+            builders_directory,
         })
     }
 }
@@ -87,6 +115,37 @@ mod tests {
                 .as_deref(),
             Some("bin/gen")
         );
+    }
+
+    #[test]
+    fn the_builders_directory_defaults_and_can_be_moved() {
+        let default = project(r#"{"spec": "s", "targets": {}}"#);
+        let moved = project(r#"{"spec": "s", "builders": "/bin/tools/", "targets": {}}"#);
+
+        assert_eq!(
+            ProjectConfig::load(default.path().to_str().unwrap())
+                .unwrap()
+                .builders_directory,
+            "tools/builders"
+        );
+        assert_eq!(
+            ProjectConfig::load(moved.path().to_str().unwrap())
+                .unwrap()
+                .builders_directory,
+            "bin/tools"
+        );
+    }
+
+    #[test]
+    fn only_a_bare_name_at_a_version_is_a_pin() {
+        assert_eq!(
+            split_pin("eleph-gen-csharp@0.1.0"),
+            Some(("eleph-gen-csharp", "0.1.0"))
+        );
+        assert_eq!(split_pin("eleph-gen-csharp"), None);
+        assert_eq!(split_pin("@0.1.0"), None);
+        assert_eq!(split_pin("name@"), None);
+        assert_eq!(split_pin("node_modules/@scope/gen"), None);
     }
 
     #[test]

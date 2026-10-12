@@ -57,7 +57,7 @@ run() {
     if [ "$compiler" = rust ]; then
         "$RUST_ELEPH" --no-ansi "$@" --project "$project" > "$project.out" 2>&1 || code=$?
     else
-        "${PHP[@]}" packages/cli/bin/eleph --no-ansi "$@" --project "$project" > "$project.out" 2>&1 || code=$?
+        "${PHP[@]}" packages/cli/bin/eleph-php --no-ansi "$@" --project "$project" > "$project.out" 2>&1 || code=$?
     fi
 
     echo "$code"

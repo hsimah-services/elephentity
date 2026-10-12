@@ -1,28 +1,68 @@
-#!/usr/bin/env php
-<?php
+#!/bin/sh
+# Launches the Rust `eleph`. The PHP implementation is `bin/eleph-php`, kept as the migration oracle
+# until it is retired (docs/PLAN.md), and is never started from here: this has no fallback to PHP.
+#
+# Looked for, in order: a build in this package (target/release, then target/debug), a build in
+# the repository's compiler/ when this is a checkout of it, and an `eleph` on PATH (what install.sh
+# puts there). Composer links this file into vendor/bin, so its own location is resolved through
+# the link first.
+set -eu
 
-declare(strict_types=1);
+self=$0
+while [ -h "$self" ]; do
+    target=$(readlink "$self")
+    case "$target" in
+        /*) self=$target ;;
+        *) self=$(dirname "$self")/$target ;;
+    esac
+done
+package_dir=$(CDPATH= cd -- "$(dirname -- "$self")/.." && pwd)
+self=$package_dir/bin/eleph
 
-use Eleph\Cli\Command\CheckCommand;
-use Eleph\Cli\Command\FmtCommand;
-use Eleph\Cli\Command\GenerateCommand;
-use Eleph\Cli\Command\ValidateCommand;
-use Symfony\Component\Console\Application;
+for binary in \
+    "$package_dir/target/release/eleph" \
+    "$package_dir/target/debug/eleph" \
+    "$package_dir/../../compiler/target/release/eleph" \
+    "$package_dir/../../compiler/target/debug/eleph"; do
+    if [ -x "$binary" ]; then
+        exec "$binary" "$@"
+    fi
+done
 
-// Works both when Elephentity is the root project and when it is installed as a dependency.
-foreach ([$_composer_autoload_path ?? '', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php', __DIR__ . '/../../../vendor/autoload.php'] as $autoload) {
-    if (file_exists($autoload)) {
-        require $autoload;
+# An `eleph` on PATH, unless it is this very script (Composer's vendor/bin/eleph is a link to it,
+# and running it again would never end).
+old_ifs=$IFS
+IFS=:
+for directory in $PATH; do
+    candidate=${directory:-.}/eleph
+    if [ -x "$candidate" ] && [ -f "$candidate" ]; then
+        resolved=$candidate
+        while [ -h "$resolved" ]; do
+            link=$(readlink "$resolved")
+            case "$link" in
+                /*) resolved=$link ;;
+                *) resolved=$(dirname "$resolved")/$link ;;
+            esac
+        done
+        resolved_dir=$(CDPATH= cd -- "$(dirname -- "$resolved")" && pwd)
+        if [ "$resolved_dir/$(basename -- "$resolved")" != "$self" ]; then
+            IFS=$old_ifs
+            exec "$candidate" "$@"
+        fi
+    fi
+done
+IFS=$old_ifs
 
-        break;
-    }
-}
+cat >&2 <<HINT
+eleph: no Rust eleph found.
 
-$application = new Application('eleph', '0.1.0');
-$application->addCommands([
-    new ValidateCommand(),
-    new GenerateCommand(),
-    new CheckCommand(),
-    new FmtCommand(),
-]);
-$application->run();
+Install a prebuilt one, with no PHP or cargo needed:
+  curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
+
+Or, in a checkout of hsimah-services/elephentity:
+  cargo build --release --manifest-path compiler/Cargo.toml
+
+The PHP implementation is still here as $package_dir/bin/eleph-php, but it is the frozen oracle for
+the Rust one and no longer the command.
+HINT
+exit 1

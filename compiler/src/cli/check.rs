@@ -77,7 +77,7 @@ pub fn check(project: &str, console: &mut Console<'_>) -> i32 {
     };
 
     let root = project.trim_end_matches('/');
-    let codegen = Codegen::new(root, config.codegen);
+    let codegen = Codegen::for_project(root, &config);
 
     let targets = match targets(&codegen, root) {
         Ok(targets) => targets,

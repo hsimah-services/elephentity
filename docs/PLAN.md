@@ -2086,6 +2086,48 @@ from PHP they cause are listed in [divergence.md](divergence.md).
   shell-script builder (`compiler/tests/fixtures/stub-project`).
 - **Output is plain.** The words match PHP's; the coloured box does not (divergence.md).
 
+### Installing without PHP (step 8)
+
+- **A pin is a version written where the program is named**: `"builder": "eleph-gen-csharp@0.1.0"`
+  on a target, or `"codegen": "eleph-codegen@0.2.0"`. `eleph install` fetches exactly that,
+  verifies it against the release's `SHA256SUMS`, and places the binary in `tools/builders/`, the
+  first place the generator looks. There is no "latest": a build must not change because a release
+  was published. A builder that is not pinned (a path, `vendor/bin/...`) is left alone and only
+  mentioned.
+- **The orchestrator strips `@version` and fetches nothing**, so its table row ("resolve a builder
+  to an executable; do not fetch, pin, checksum or cache one") still holds. Fetching is `eleph`'s;
+  `eleph-codegen targets` is how it learns the pins, because the `targets` parser stays the
+  orchestrator's alone (the compiler reads `spec`, `codegen` and `builders`, and nothing else).
+- **Repositories are a built-in table** (`compiler/src/cli/install.rs`), overridable per target
+  with `"source": "owner/repo"`, which the orchestrator reports in `targets` and does not pass on
+  to the builder.
+- **`.eleph-install.json` records what was installed** (version, source, platform, the archive's
+  digest and the binary's), so a second run downloads nothing and `--check` can tell "missing"
+  from "another version" from "changed since installed" instead of merely "different".
+- **`ELEPH_RELEASES_URL`** replaces `https://github.com`; a `file://` directory laid out the same
+  way is a mirror or, in tests, the whole network.
+- **`install.sh` and `install.ps1` bootstrap `eleph` itself**, attached to each release by
+  `release.yml`, which calls the orchestrator's `release-binary.yml`. They find the latest version
+  from the `/releases/latest` redirect, so there is no API token and no rate limit.
+- **`packages/cli/bin/eleph` is a launcher for the Rust binary** (a build in the package, one in
+  `compiler/`, or `eleph` on `PATH`), the pattern of `bin/eleph-gen-php`. The PHP command is
+  `bin/eleph-php`: unchanged, the oracle `tools/test-rust-cli` compares against, and not a
+  `vendor/bin` entry.
+- **`eleph-gen-memory` stays a PHP builder.** The memory driver is PHP-only, so it keeps
+  `packages/cli/bin/eleph-gen-memory` and is not given a Rust release. A project using the memory
+  driver already has PHP; a .NET project uses `Elephentity.Runtime.Memory`, which is generated for
+  by the C# builders.
+
+#### Retiring the PHP compiler
+
+The PHP compiler, CLI and `eleph-php` are frozen: they receive no features and only fixes that keep
+them a faithful oracle. They are removed once **one tagged release** has shipped at parity, which
+means `tools/compare-compiler` and `tools/test-rust-cli` pass on the release's commit, the Rust
+`eleph` has passed gate 4 for a PHP project (step 6), and a .NET project has gone through all four
+gates with no PHP on the machine. Step 22 schedules the removal. Removing it means deleting
+`packages/schema`'s compiler and `packages/cli/src`, the oracle tests and snapshots, and the
+subtree mirrors for schema and CLI, keeping `eleph-gen-memory` and the launcher.
+
 WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
 The final proof is the .NET example generating, checking and testing in CI where

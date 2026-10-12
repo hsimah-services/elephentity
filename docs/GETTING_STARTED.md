@@ -34,6 +34,57 @@ That gives you three commands in `vendor/bin`: `eleph`, `eleph-codegen` and
 `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all where the
 config expects.
 
+## Install without PHP
+
+A project that generates C# (or anything else a Rust builder emits) needs no PHP, no Composer and
+no cargo. Three steps:
+
+```bash
+# 1. The `eleph` command: Linux and macOS (use install.ps1 on Windows)
+curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
+
+# 2. Pin the generator and each builder in eleph.json, by version (below), then fetch them
+eleph install
+
+# 3. The gates
+eleph install --check && eleph validate && eleph generate --check
+```
+
+`install.sh` checks the download against the release's `SHA256SUMS` and puts `eleph` in
+`~/.local/bin` (`ELEPH_INSTALL_DIR` changes that; `ELEPH_VERSION` picks a release). On Windows,
+`irm https://github.com/hsimah-services/elephentity/releases/latest/download/install.ps1 | iex`
+installs `eleph.exe` to `%LOCALAPPDATA%\eleph\bin`.
+
+A pin is `name@version`, written where you would write the program:
+
+```json
+{
+  "spec": "spec",
+  "codegen": "eleph-codegen@0.2.0",
+  "targets": {
+    "csharp": { "builder": "eleph-gen-csharp@0.1.0", "output": "generated" },
+    "other":  { "builder": "their-builder@3.0.0", "source": "owner/repo", "output": "web/generated" }
+  }
+}
+```
+
+`eleph install` downloads each pinned release from GitHub, verifies it against that release's
+`SHA256SUMS`, unpacks the one binary into `tools/builders/` (the first place the generator looks)
+and records what it did in `tools/builders/.eleph-install.json`. It skips whatever is already
+there at the pinned version, so it is cheap to run on every build. `eleph install --check`
+installs nothing and fails if a pinned program is missing, is another version, or was modified
+after it was installed, which is the form for CI.
+
+It fetches exactly what you pinned. There is no "latest", so a build never changes because
+somebody published a release, and a builder you did not pin (`vendor/bin/eleph-gen-php`, a path)
+is left to whatever installed it. The repositories of the Elephentity programs are known; for
+anything else, say where its releases are with `"source": "owner/repo"` on the target. Releases
+are built for linux-x64, linux-arm64, osx-arm64 and win-x64.
+
+PHP projects are unchanged: `composer require` still installs everything, and `vendor/bin/eleph`
+is a launcher that runs the Rust binary (a build in the package, one in `compiler/`, or the
+`eleph` that `install.sh` put on `PATH`).
+
 ## Lay out the project
 
 ```

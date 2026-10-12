@@ -1,0 +1,51 @@
+name: Release check
+
+# Proves the release path on a pull request, without a tag: all four archives build, checksums
+# verify, and the linux-x64 binary starts in clean containers. The workflow publishes only for a
+# tag, so this publishes nothing. The scripts are checked here too, since nothing else runs them
+# before a release.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-check.yml'
+      - 'compiler/**'
+      - 'install.sh'
+      - 'install.ps1'
+
+permissions:
+  contents: read
+
+jobs:
+  binary:
+    uses: hsimah-services/elephentity-codegen/.github/workflows/release-binary.yml@main
+    with:
+      binary: eleph
+      manifest-path: compiler/Cargo.toml
+
+  scripts:
+    name: Install scripts
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: sh -n install.sh
+
+      - name: install.sh installs from a local release and rejects a bad checksum
+        run: |
+          set -eu
+          cargo build --release --locked --manifest-path compiler/Cargo.toml
+          release="$RUNNER_TEMP/release/hsimah-services/elephentity/releases/download/v9.9.9"
+          mkdir -p "$release" "$RUNNER_TEMP/stage"
+          cp compiler/target/release/eleph LICENSE "$RUNNER_TEMP/stage/"
+          tar -C "$RUNNER_TEMP/stage" -czf "$release/eleph-9.9.9-linux-x64.tar.gz" eleph LICENSE
+          (cd "$release" && sha256sum eleph-9.9.9-linux-x64.tar.gz > SHA256SUMS)
+
+          export ELEPH_RELEASES_URL="file://$RUNNER_TEMP/release" ELEPH_INSTALL_DIR="$RUNNER_TEMP/bin"
+          sh install.sh 9.9.9
+          "$RUNNER_TEMP/bin/eleph" --version
+
+          sed -i 's/^./0/' "$release/SHA256SUMS"
+          if sh install.sh 9.9.9; then echo "a bad checksum was accepted" >&2; exit 1; fi
