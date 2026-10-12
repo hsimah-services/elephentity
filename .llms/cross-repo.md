@@ -121,7 +121,7 @@ itself — a builder names their classes as strings, not imports — so nothing 
 
 | You changed | the matching builder repository must | `elephentity-examples` must |
 |---|---|---|
-| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`) — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
+| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
 | a class implementing `Eleph\Runtime\Storage\StorageAdaptor`, `Conformance\Verifier`, `Policy\Viewer` or `Policy\ViewerProvider` | — | run the four gates; `eleph check` exercises the verifier for real |
 | its own `composer.json` version constraint on `elephentity/runtime` | — | bump the matching constraint in `clog/composer.json` once a new version is tagged |
 
