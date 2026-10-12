@@ -64,6 +64,11 @@ the spec; this asks whether it is *coherent*: every field the GraphQL layer expo
 must resolve to a method that exists. A renamed accessor still parses, still loads, and
 still fails here.
 
+How a tree is checked depends on its language, so each builder declares its own checker
+and `check` runs the one for every target (see [Getting started](GETTING_STARTED.md),
+".NET projects"). A target whose builder has no checker is reported, and a run that
+checked nothing fails.
+
 ## Order matters
 
 `check` inspects the classes on disk, so it must run after `generate`. Everything else

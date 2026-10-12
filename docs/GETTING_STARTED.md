@@ -203,6 +203,36 @@ Anything destructive or ambiguous is refused, and then **nothing** is applied:
 `$plan->refusals` says what it saw and why it will not guess, and an explicit migration
 is the answer. A half-migrated schema is worse than an unmigrated one.
 
+## .NET projects
+
+A project that generates C# needs no PHP and no Composer. The four gates are the same four, run by
+the Rust `eleph`:
+
+```bash
+eleph fmt                  # specs are in canonical key order
+eleph validate             # specs are well-formed and semantically closed
+eleph generate --check     # the committed tree matches the specs
+eleph check                # the generated tree is coherent
+```
+
+The first three read only the specs and the builders' `describe` answers. `eleph check` is the one
+that differs by language, because "coherent" depends on what was generated. So `eleph` does not
+check anything itself: each builder says how its tree is checked, in `describe`
+(`provides.check.command`), and `eleph check` runs that command for every target. For a C# target
+the checker is `ContractCheck` from `Elephentity.Runtime.Testing`, run as a test project. Only the
+application knows where that project is, so it is named in the target's config in `eleph.json` and
+the builder echoes it back:
+
+```json
+{ "targets": { "csharp": { "builder": "eleph-gen-csharp", "output": "generated",
+                           "check": ["dotnet", "test", "tests/Contracts"] } } }
+```
+
+A checker exits zero to pass and non-zero to fail, and prints one
+`{"severity": "error|warning|info", "message": "..."}` per line. `eleph check` never passes silently:
+a target whose builder provides no checker is listed as a warning, and if no target at all was
+checked the gate fails and names them.
+
 ## Wire up your editor
 
 ```bash

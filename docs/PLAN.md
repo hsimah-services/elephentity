@@ -1996,6 +1996,17 @@ and distribution assumptions where they conflict.
   move to `eleph-check-php` in `elephentity-codegen-php`; C# runs
   `Elephentity.Runtime.Testing.ContractCheck` via the target-configured command.
   A target without a checker is reported, because silence would falsely pass gate 4.
+  As built (step 5): `eleph check` asks `eleph-codegen targets` for each target's
+  output directory and `eleph-codegen describe` for its checker, substitutes the
+  `{project}` and `{output}` placeholders and runs it with the project as the working
+  directory. Exit zero passes, non-zero fails, and stdout is one
+  `{"severity": "error|warning|info", "message": "..."}` per line. An error signal
+  fails the gate even when the exit code is zero, a line that is not a signal is an
+  error, and a checker that cannot be started is an error: each of the ways a checker
+  could say nothing counts as failing. If no target was checked the gate fails, naming
+  the targets, which is what separates "nothing to check" from "did not check". The
+  old PHP `CheckCommand` stays as the oracle until it is retired with the rest of the
+  PHP compiler; its tree walk moves behind `eleph-check-php` (step 6).
 - **MIT everywhere.** The owner chose one licence for existing and new repositories,
   Rust crates, Composer packages and NuGet packages. New packages declare `MIT`
   (`PackageLicenseExpression` for NuGet), avoiding inconsistent published metadata.

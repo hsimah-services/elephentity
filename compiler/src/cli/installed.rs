@@ -30,6 +30,9 @@ pub struct Installed {
     /// Types some installed builder ships, pooled from `describe`.
     pub types: Vec<RawSpec>,
     pub storage_rules: StorageRuleRegistry,
+    /// The command that checks each target's tree, from `provides.check.command`, keyed by
+    /// target. A target without one is absent.
+    pub checkers: BTreeMap<String, Vec<String>>,
 }
 
 impl Installed {
@@ -69,6 +72,7 @@ impl Installed {
         let mut patterns = Vec::new();
         let mut types = Vec::new();
         let mut storage_rules = BTreeMap::new();
+        let mut checkers = BTreeMap::new();
 
         for (target, declared) in targets {
             let Some(provides) = declared.as_object() else {
@@ -85,6 +89,10 @@ impl Installed {
 
             patterns.extend(specs_in(provides, target, "patterns", SpecKind::Pattern)?);
             types.extend(specs_in(provides, target, "types", SpecKind::Type)?);
+
+            if let Some(command) = checker_in(provides, target)? {
+                checkers.insert(target.clone(), command);
+            }
 
             // Storage rules are the driver's own declaration, not the compiler's, so they land
             // against every driver this target declares rather than against the target's name.
@@ -117,6 +125,7 @@ impl Installed {
             patterns,
             types,
             storage_rules: StorageRuleRegistry::new(storage_rules),
+            checkers,
         })
     }
 
@@ -132,6 +141,39 @@ impl Installed {
             self.drivers.join(", ")
         }
     }
+}
+
+/// How a builder says its tree is checked: `"check": {"command": ["eleph-check-php"]}`. Absent
+/// means the builder has no checker, which `eleph check` reports rather than passes over.
+fn checker_in(provides: &Map<String, Value>, target: &str) -> Result<Option<Vec<String>>, String> {
+    let unusable = || {
+        format!(
+            "The {target} builder declared \"check\" unusably: \"command\" must be a non-empty list of strings."
+        )
+    };
+
+    let declared = match provides.get("check") {
+        None | Some(Value::Null) => return Ok(None),
+        Some(declared) => declared,
+    };
+
+    let command = declared
+        .as_object()
+        .and_then(|declared| declared.get("command"))
+        .and_then(Value::as_array)
+        .filter(|command| !command.is_empty())
+        .ok_or_else(unusable)?;
+
+    command
+        .iter()
+        .map(|word| {
+            word.as_str()
+                .filter(|word| !word.is_empty())
+                .map(str::to_string)
+                .ok_or_else(unusable)
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map(Some)
 }
 
 fn integrations_in(

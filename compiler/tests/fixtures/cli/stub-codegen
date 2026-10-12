@@ -3,6 +3,7 @@
 #
 #   STUB_LOG       directory to write `args` and `stdin` into
 #   STUB_DESCRIBE  file whose contents answer `describe`
+#   STUB_TARGETS   file whose contents answer `targets` (default: no targets)
 #   STUB_EXIT      exit code for `generate` (default 0)
 set -eu
 
@@ -11,6 +12,9 @@ printf '%s\n' "$*" >> "${STUB_LOG:?}/args"
 case "$1" in
     describe)
         cat "${STUB_DESCRIBE:?}"
+        ;;
+    targets)
+        if [ -f "${STUB_TARGETS:-/nonexistent}" ]; then cat "$STUB_TARGETS"; else echo '{"spec":"spec","targets":{}}'; fi
         ;;
     generate)
         cat > "$STUB_LOG/stdin"

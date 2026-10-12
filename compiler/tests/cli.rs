@@ -76,9 +76,27 @@ impl Project {
             .current_dir(self.path())
             .env("STUB_LOG", self.log.path())
             .env("STUB_DESCRIBE", self.log.path().join("describe.json"))
+            .env("STUB_TARGETS", self.log.path().join("targets.json"))
             .envs(environment.iter().copied())
             .output()
             .unwrap()
+    }
+
+    /// What `eleph-codegen targets` answers.
+    fn targets(&self, json: &str) {
+        fs::write(self.log.path().join("targets.json"), json).unwrap();
+    }
+
+    /// A program inside the project, as a builder's checker would be.
+    fn program(&self, relative: &str, body: &str) {
+        use std::os::unix::fs::PermissionsExt;
+
+        self.write(relative, &format!("#!/bin/sh\n{body}\n"));
+
+        let path = self.path().join(relative);
+        let mut permissions = fs::metadata(&path).unwrap().permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(path, permissions).unwrap();
     }
 
     fn recorded(&self, file: &str) -> String {
@@ -445,6 +463,188 @@ fn a_generator_that_is_not_executable_says_how_to_fix_it() {
     assert_eq!(output.status.code(), Some(1));
     assert!(
         stdout(&output).contains("is not executable. Try `chmod +x "),
+        "{}",
+        stdout(&output)
+    );
+}
+
+const ONE_TARGET: &str =
+    r#"{"spec": "spec", "targets": {"stub": {"output": "gen", "builder": "stub-builder"}}}"#;
+
+fn checked(check: &str) -> String {
+    format!(r#"{{"targets": {{"stub": {{"drivers": ["stub"], "check": {check}}}}}}}"#)
+}
+
+#[test]
+fn check_runs_the_checker_a_builder_declares_with_the_placeholders_filled_in() {
+    let project = Project::new(&checked(
+        r#"{"command": ["checkers/ok", "{project}", "{output}"]}"#,
+    ));
+    project.targets(ONE_TARGET);
+    project.program(
+        "checkers/ok",
+        r#"printf '%s\n' "$*" > checked-args
+echo '{"severity": "info", "message": "all fine"}'
+echo '{"severity": "warning", "message": "a small thing"}'"#,
+    );
+
+    let output = project.eleph(&["check", "-p", "."]);
+    let text = stdout(&output);
+
+    assert_eq!(output.status.code(), Some(0), "{text}");
+    assert!(text.contains("Checking stub (checkers/ok)"), "{text}");
+    assert!(text.contains("  [info] all fine"), "{text}");
+    assert!(text.contains("  [warning] a small thing"), "{text}");
+    assert!(
+        text.contains("[OK] Conformant: 1 checker(s), 2 signal(s)."),
+        "{text}"
+    );
+    assert_eq!(
+        fs::read_to_string(project.path().join("checked-args")).unwrap(),
+        ". ./gen\n"
+    );
+}
+
+#[test]
+fn a_checker_that_exits_non_zero_fails_the_check() {
+    let project = Project::new(&checked(r#"{"command": ["checkers/bad"]}"#));
+    project.targets(ONE_TARGET);
+    project.program("checkers/bad", "echo 'it is broken' >&2\nexit 3");
+
+    let output = project.eleph(&["check"]);
+    let text = stdout(&output);
+
+    assert_eq!(output.status.code(), Some(1), "{text}");
+    assert!(
+        text.contains("The stub checker failed (exit code 3): it is broken"),
+        "{text}"
+    );
+    assert!(text.contains("[ERROR] 1 conformance error(s)."), "{text}");
+}
+
+#[test]
+fn an_error_signal_fails_even_when_the_checker_exits_zero() {
+    let project = Project::new(&checked(r#"{"command": ["checkers/loud"]}"#));
+    project.targets(ONE_TARGET);
+    project.program(
+        "checkers/loud",
+        r#"echo '{"severity": "error", "message": "field Item.name does not resolve"}'"#,
+    );
+
+    let output = project.eleph(&["check"]);
+    let text = stdout(&output);
+
+    assert_eq!(output.status.code(), Some(1), "{text}");
+    assert!(
+        text.contains("  [error] field Item.name does not resolve"),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_checker_that_prints_something_that_is_not_a_signal_fails() {
+    let project = Project::new(&checked(r#"{"command": ["checkers/chatty"]}"#));
+    project.targets(ONE_TARGET);
+    project.program("checkers/chatty", "echo 'hello there'");
+
+    let output = project.eleph(&["check"]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        stdout(&output).contains("printed something that is not a signal: hello there"),
+        "{}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn a_project_where_nothing_has_a_checker_fails_naming_the_targets() {
+    let project = Project::with_stub_driver();
+    project.targets(
+        r#"{"spec": "spec", "targets": {
+            "stub": {"output": "gen", "builder": "stub-builder"},
+            "other": {"output": "out", "builder": "other-builder"}}}"#,
+    );
+
+    let output = project.eleph(&["check"]);
+    let text = stdout(&output);
+
+    assert_eq!(output.status.code(), Some(1), "{text}");
+    assert!(
+        text.contains("No target was checked: none of \"stub\", \"other\" provides a checker."),
+        "{text}"
+    );
+    assert!(
+        text.contains("[warning] The \"stub\" target (stub-builder) provides no checker"),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_target_without_a_checker_is_a_warning_when_another_was_checked() {
+    let project = Project::new(
+        r#"{"targets": {
+            "stub": {"drivers": ["stub"], "check": {"command": ["checkers/ok"]}},
+            "other": {}}}"#,
+    );
+    project.targets(
+        r#"{"spec": "spec", "targets": {
+            "stub": {"output": "gen", "builder": "stub-builder"},
+            "other": {"output": "out", "builder": "other-builder"}}}"#,
+    );
+    project.program("checkers/ok", "exit 0");
+
+    let output = project.eleph(&["check"]);
+    let text = stdout(&output);
+
+    assert_eq!(output.status.code(), Some(0), "{text}");
+    assert!(
+        text.contains("[warning] The \"other\" target (other-builder) provides no checker"),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_project_with_no_targets_has_nothing_to_check_and_says_so() {
+    let project = Project::with_stub_driver();
+
+    let output = project.eleph(&["check"]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        stdout(&output).contains("declares no targets, so there is nothing to check."),
+        "{}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn a_checker_that_cannot_be_started_is_an_error_not_a_pass() {
+    let project = Project::new(&checked(r#"{"command": ["checkers/missing"]}"#));
+    project.targets(ONE_TARGET);
+
+    let output = project.eleph(&["check"]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        stdout(&output).contains("Could not run the stub checker (checkers/missing)."),
+        "{}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn a_malformed_check_declaration_names_the_builder() {
+    let project = Project::new(&checked(r#"{"command": []}"#));
+    project.targets(ONE_TARGET);
+
+    let output = project.eleph(&["check"]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        stdout(&output).contains(
+            "The stub builder declared \"check\" unusably: \"command\" must be a non-empty list of strings."
+        ),
         "{}",
         stdout(&output)
     );

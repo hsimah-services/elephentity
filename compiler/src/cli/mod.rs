@@ -1,12 +1,12 @@
-//! The `eleph` command line: `fmt`, `validate` and `generate`.
+//! The `eleph` command line: `fmt`, `validate`, `generate` and `check`.
 //!
 //! The same commands, flags and exit codes as the PHP `eleph`, so a project's scripts and CI do
 //! not change when the binary under them does. Output wording matches too. What differs is
 //! presentation only: PHP's console library draws coloured, padded blocks, and this prints the
 //! same words as plain `[ERROR]` and `[OK]` lines. See `docs/divergence.md`.
 //!
-//! `check` is step 5.
 
+mod check;
 mod codegen;
 mod commands;
 pub mod config;
@@ -89,6 +89,13 @@ enum Command {
         #[arg(short, long)]
         targets: Option<String>,
     },
+
+    /// Verify every generated target is internally coherent, by running the checker its builder declares.
+    Check {
+        /// Directory holding eleph.json.
+        #[arg(short, long, default_value = ".")]
+        project: String,
+    },
 }
 
 /// Runs the command line and returns the process exit code.
@@ -123,5 +130,6 @@ pub fn run(arguments: &[String], out: &mut dyn Write, err: &mut dyn Write, attac
             project,
             targets,
         } => commands::generate(&project, check, targets.as_deref(), &mut console),
+        Command::Check { project } => check::check(&project, &mut console),
     }
 }
