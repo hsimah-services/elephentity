@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Run cargo (or any command) against the Elephentity Rust toolchain in a throwaway container.
+#
+#   ./tools/cargo test --locked --manifest-path compiler/Cargo.toml
+#   ./tools/cargo fmt --check --manifest-path compiler/Cargo.toml
+#   ./tools/cargo clippy --locked -- -D warnings
+#   ./tools/cargo bash                # interactive shell
+#
+# Mirrors tools/php: no host cargo is assumed, the container is removed on exit, and
+# podman is preferred with docker as a fallback.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+IMAGE="eleph-rust:1"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eleph/cargo"
+
+if command -v podman >/dev/null 2>&1; then
+    ENGINE=podman
+elif command -v docker >/dev/null 2>&1; then
+    ENGINE=docker
+else
+    echo "tools/cargo: needs podman or docker." >&2
+    exit 1
+fi
+
+# Rootless podman already maps the host user; passing --user there would double-map it.
+USER_ARGS=()
+if [ "$ENGINE" = "docker" ]; then
+    USER_ARGS=(--user "$(id -u):$(id -g)")
+fi
+
+if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "Building $IMAGE (first run only)..." >&2
+    "$ENGINE" build -t "$IMAGE" -f .docker/Dockerfile.rust .docker
+fi
+
+mkdir -p "$CACHE_DIR"
+
+TTY_ARGS=()
+if [ -t 0 ] && [ -t 1 ]; then
+    TTY_ARGS=(-it)
+fi
+
+# CARGO_HOME is a mounted cache at /cargo; /usr/local/cargo/bin stays on PATH so the
+# image's cargo, rustfmt and clippy are not hidden.
+exec "$ENGINE" run --rm \
+    "${TTY_ARGS[@]}" \
+    "${USER_ARGS[@]}" \
+    -v "$PWD:/app:z" \
+    -v "$CACHE_DIR:/cargo:z" \
+    -e CARGO_HOME=/cargo \
+    -e HOME=/tmp \
+    -w /app \
+    "$IMAGE" "${@:-cargo}"

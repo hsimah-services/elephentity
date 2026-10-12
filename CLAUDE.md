@@ -22,6 +22,16 @@ WPGraphQL ones — see `clog` in
 [elephentity-examples](https://github.com/hsimah-services/elephentity-examples); it is
 a separate repository now, not something this one can run against.
 
+The Rust compiler in `compiler/` runs in a container too, with no host cargo:
+
+```bash
+./tools/cargo cargo test --locked --manifest-path compiler/Cargo.toml
+./tools/cargo cargo fmt --check --manifest-path compiler/Cargo.toml
+./tools/cargo cargo clippy --locked --all-targets --manifest-path compiler/Cargo.toml -- -D warnings
+tools/compare-compiler             # the oracle snapshots still match the PHP compiler
+tools/compare-compiler --refresh   # regenerate them after changing the PHP compiler or a fixture
+```
+
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are
 no baseline exclusions — the framework's whole claim is that generated code is provably
 typed, so an exception here undermines the product.
@@ -34,6 +44,7 @@ typed, so an exception here undermines the product.
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `memory/` | yes | the neutral driver — no physical schema, no platform |
 | `cli/` | dev | the `eleph` command |
+| `compiler/` (Cargo crate) | not yet | the Rust `eleph`, being ported from `schema/` and `cli/`; PHP is its oracle ([docs/divergence.md](docs/divergence.md)) |
 
 **This repository has no platform adaptor.** WordPress lives in
 [`elephentity-wordpress`](https://github.com/hsimah-services/elephentity-wordpress),

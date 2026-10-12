@@ -1,0 +1,4 @@
+project: EmptyMaps
+storage:
+  driver: wordpress
+integrations: {}

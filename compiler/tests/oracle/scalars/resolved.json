@@ -1,0 +1,1009 @@
+{
+    "project": {
+        "name": "Invalid",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Scalars": {
+            "name": "Scalars",
+            "storage": {
+                "driver": "wordpress",
+                "table": "scalars",
+                "handle": null
+            },
+            "sourceFile": "entities/Scalars.yml",
+            "description": "Quoted: yes, no, 007, 1e3",
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {
+                "plainInt": {
+                    "name": "plainInt",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 42,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "negative": {
+                    "name": "negative",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": -7,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "octal": {
+                    "name": "octal",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 12,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "hex": {
+                    "name": "hex",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 31,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "float": {
+                    "name": "float",
+                    "type": "float",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "wholeFloat": {
+                    "name": "wholeFloat",
+                    "type": "float",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 2.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "exp": {
+                    "name": "exp",
+                    "type": "float",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1000.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "yes": {
+                    "name": "yes",
+                    "type": "bool",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "yes",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "no": {
+                    "name": "no",
+                    "type": "bool",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "no",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "trueValue": {
+                    "name": "trueValue",
+                    "type": "bool",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": true,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "upperTrue": {
+                    "name": "upperTrue",
+                    "type": "bool",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": true,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "nothing": {
+                    "name": "nothing",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "tilde": {
+                    "name": "tilde",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "empty": {
+                    "name": "empty",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "quotedNumber": {
+                    "name": "quotedNumber",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "007",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "bareZeros": {
+                    "name": "bareZeros",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "007",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "date": {
+                    "name": "date",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1706659200,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "timestamp": {
+                    "name": "timestamp",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1706695200,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "colon": {
+                    "name": "colon",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "a: b",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "unicode": {
+                    "name": "unicode",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "héllo ✓",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "multiline": {
+                    "name": "multiline",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "line one\nline two\n",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "folded": {
+                    "name": "folded",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "folded text\n",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "list": {
+                    "name": "list",
+                    "type": "json",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": [
+                        1,
+                        "two",
+                        3.5,
+                        true,
+                        null
+                    ],
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "map": {
+                    "name": "map",
+                    "type": "json",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": {
+                        "b": 1,
+                        "a": [
+                            "x",
+                            "y"
+                        ]
+                    },
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "emptyList": {
+                    "name": "emptyList",
+                    "type": "json",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": [],
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "plus": {
+                    "name": "plus",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "underscore": {
+                    "name": "underscore",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1000,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "leadingDot": {
+                    "name": "leadingDot",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0.5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "trailingDot": {
+                    "name": "trailingDot",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 5.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "negZero": {
+                    "name": "negZero",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "-0",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "zero": {
+                    "name": "zero",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "negFloat": {
+                    "name": "negFloat",
+                    "type": "float",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": -0.5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "leadingZeroFloat": {
+                    "name": "leadingZeroFloat",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1.5,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "big": {
+                    "name": "big",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 9223372036854775807,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "bigger": {
+                    "name": "bigger",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "9223372036854775808",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "binary": {
+                    "name": "binary",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "0b101",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "upperE": {
+                    "name": "upperE",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": 1000.0,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "nullWord": {
+                    "name": "nullWord",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "nullUpper": {
+                    "name": "nullUpper",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "trueCap": {
+                    "name": "trueCap",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": true,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "falseWord": {
+                    "name": "falseWord",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": false,
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "onOff": {
+                    "name": "onOff",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "on",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "tag": {
+                    "name": "tag",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "123",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "quotedBool": {
+                    "name": "quotedBool",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "true",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "singleQuoted": {
+                    "name": "singleQuoted",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "it's",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "spaces": {
+                    "name": "spaces",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "  padded  ",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "hash": {
+                    "name": "hash",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "a #b",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "commentTail": {
+                    "name": "commentTail",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Scalars.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": "value",
+                    "hasDefault": true,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

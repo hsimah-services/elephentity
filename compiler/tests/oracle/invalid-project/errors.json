@@ -1,0 +1,22 @@
+[
+    {
+        "code": "spec.invalid",
+        "file": "project.yml",
+        "pointer": "/project"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "project.yml",
+        "pointer": "/storage/driver"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "project.yml",
+        "pointer": "/storage/tablePrefix"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "project.yml",
+        "pointer": "/integrations"
+    }
+]

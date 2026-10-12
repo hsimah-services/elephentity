@@ -1,0 +1,24 @@
+{
+    "project": {
+        "name": "PooledEmpty",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {
+        "PostStatus": {
+            "name": "PostStatus",
+            "primitive": "string",
+            "sourceFile": "elephentity/codegen-php:types/PostStatus.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": [
+                "draft",
+                "published"
+            ]
+        }
+    },
+    "entities": {}
+}

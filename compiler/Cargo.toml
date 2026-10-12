@@ -1,0 +1,23 @@
+[package]
+name = "eleph-compiler"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "The Elephentity spec compiler"
+
+[lib]
+name = "eleph_compiler"
+path = "src/lib.rs"
+
+[[bin]]
+name = "eleph"
+path = "src/main.rs"
+
+[dependencies]
+# YAML with source spans and mapping order. serde_yaml is unmaintained and is not used.
+saphyr = "0.2"
+saphyr-parser = "0.2"
+indexmap = { version = "2", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+jsonschema = { version = "0.58", default-features = false }

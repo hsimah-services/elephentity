@@ -1,0 +1,568 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {
+            "wpgraphql": {}
+        },
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {
+        "Money": {
+            "name": "Money",
+            "primitive": "int",
+            "sourceFile": "types/Money.yml",
+            "description": "An amount in minor units.",
+            "hasProcessors": true,
+            "values": null
+        },
+        "PostStatus": {
+            "name": "PostStatus",
+            "primitive": "string",
+            "sourceFile": "types/PostStatus.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": [
+                "draft",
+                "scheduled",
+                "published"
+            ]
+        }
+    },
+    "entities": {
+        "Author": {
+            "name": "Author",
+            "storage": {
+                "driver": "wordpress",
+                "table": "phe_author",
+                "handle": null
+            },
+            "sourceFile": "entities/Author.yml",
+            "description": "Someone who writes comments.",
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {
+                "name": {
+                    "name": "name",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Author.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": 120,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {
+                "wpgraphql": {
+                    "plural": "Authors",
+                    "singular": "Author"
+                }
+            },
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Comment": {
+            "name": "Comment",
+            "storage": {
+                "driver": "wordpress",
+                "table": "phe_comment",
+                "handle": null
+            },
+            "sourceFile": "entities/Comment.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {
+                "body": {
+                    "name": "body",
+                    "type": "text",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Comment.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {
+                "author": {
+                    "name": "author",
+                    "to": "Author",
+                    "cardinality": "one",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Comment.yml"
+                    },
+                    "description": "Who wrote it.",
+                    "inverse": {
+                        "derived": false,
+                        "name": "comments",
+                        "unique": false
+                    },
+                    "onDelete": "nullify",
+                    "required": false
+                }
+            },
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {
+                "wpgraphql": {
+                    "plural": "Comments",
+                    "singular": "Comment"
+                }
+            },
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Post": {
+            "name": "Post",
+            "storage": {
+                "driver": "wordpress",
+                "table": "phe_post",
+                "handle": "post"
+            },
+            "sourceFile": "entities/Post.yml",
+            "description": "A published article.",
+            "uses": [
+                "Auditable",
+                "WordPressPost"
+            ],
+            "appliedPatterns": [
+                "Timestamps",
+                "Auditable",
+                "WordPressPost"
+            ],
+            "fields": {
+                "createdAt": {
+                    "name": "createdAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Timestamps",
+                        "file": "patterns/Timestamps.yml"
+                    },
+                    "description": "When the row was first written. Filled by the framework.",
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "created",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Timestamps",
+                        "file": "patterns/Timestamps.yml"
+                    },
+                    "description": "When the row was last written. Filled by the framework.",
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "modified",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "postId": {
+                    "name": "postId",
+                    "type": "int",
+                    "origin": {
+                        "pattern": "WordPressPost",
+                        "file": "patterns/WordPressPost.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": true,
+                    "indexed": true,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "slug": {
+                    "name": "slug",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": "Write-once, and chosen by whoever creates the post.",
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": true,
+                    "managed": null,
+                    "maxLength": 120,
+                    "enum": null,
+                    "verify": false
+                },
+                "title": {
+                    "name": "title",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": true,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": 200,
+                    "enum": null,
+                    "verify": false
+                },
+                "price": {
+                    "name": "price",
+                    "type": "Money",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": true
+                },
+                "status": {
+                    "name": "status",
+                    "type": "enum",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "declared": "PostStatus"
+                    },
+                    "verify": false
+                },
+                "visibility": {
+                    "name": "visibility",
+                    "type": "enum",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inline": [
+                            "public",
+                            "private"
+                        ]
+                    },
+                    "verify": false
+                },
+                "publishedAt": {
+                    "name": "publishedAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": "When it went live. A plain datetime, set by whoever publishes it.",
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {
+                "comments": {
+                    "name": "comments",
+                    "to": "Comment",
+                    "cardinality": "many",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "inverse": {
+                        "derived": true,
+                        "name": null,
+                        "unique": true
+                    },
+                    "onDelete": "restrict",
+                    "required": false
+                },
+                "tags": {
+                    "name": "tags",
+                    "to": "Tag",
+                    "cardinality": "many",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "inverse": {
+                        "derived": false,
+                        "name": "posts",
+                        "unique": false
+                    },
+                    "onDelete": "restrict",
+                    "required": false
+                }
+            },
+            "queries": {
+                "published": {
+                    "name": "published",
+                    "returns": {
+                        "type": "Post",
+                        "cardinality": "many"
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "arguments": {
+                        "limit": {
+                            "name": "limit",
+                            "type": "int",
+                            "nullable": true
+                        }
+                    },
+                    "description": null,
+                    "integrations": {
+                        "wpgraphql": {
+                            "field": "publishedPosts"
+                        }
+                    }
+                }
+            },
+            "actions": {
+                "publish": {
+                    "name": "publish",
+                    "writes": {
+                        "fields": [
+                            "status"
+                        ],
+                        "edges": [
+                            "comments"
+                        ]
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "arguments": {
+                        "at": {
+                            "name": "at",
+                            "type": "datetime",
+                            "nullable": true
+                        }
+                    },
+                    "description": null
+                }
+            },
+            "sideEffects": {
+                "audit": {
+                    "name": "audit",
+                    "events": [
+                        "create",
+                        "update"
+                    ],
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "phase": "postCommit",
+                    "description": null
+                },
+                "reindex": {
+                    "name": "reindex",
+                    "events": [
+                        "create",
+                        "update"
+                    ],
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "phase": "postCommit",
+                    "description": null
+                }
+            },
+            "config": {
+                "adminMenu": null,
+                "supports": [
+                    "title",
+                    "editor"
+                ],
+                "visibility": "public"
+            },
+            "integrations": {
+                "wpgraphql": {
+                    "plural": "Posts",
+                    "singular": "Post"
+                }
+            },
+            "readPolicies": {
+                "owner": {
+                    "name": "owner",
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "description": null
+                },
+                "reporter": {
+                    "name": "reporter",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": "The person who raised it may always read it."
+                }
+            },
+            "writePolicies": {
+                "noBackwards": {
+                    "name": "noBackwards",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": "A post never returns to draft."
+                }
+            },
+            "terminalRead": "allow",
+            "terminalWrite": "deny"
+        },
+        "Tag": {
+            "name": "Tag",
+            "storage": {
+                "driver": "wordpress",
+                "table": "phe_tag",
+                "handle": null
+            },
+            "sourceFile": "entities/Tag.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {
+                "label": {
+                    "name": "label",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Tag.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": true,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {
+                "wpgraphql": {
+                    "plural": "Tags",
+                    "singular": "Tag"
+                }
+            },
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

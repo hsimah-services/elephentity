@@ -1,0 +1,22 @@
+[
+    {
+        "code": "config.collision",
+        "file": "entities/Broken.yml",
+        "pointer": null
+    },
+    {
+        "code": "config.unusedPattern",
+        "file": "entities/Broken.yml",
+        "pointer": "/configure/Absent"
+    },
+    {
+        "code": "config.invalidValue",
+        "file": "entities/Broken.yml",
+        "pointer": "/configure/visibility"
+    },
+    {
+        "code": "config.unknown",
+        "file": "entities/Broken.yml",
+        "pointer": "/configure/nonsense"
+    }
+]

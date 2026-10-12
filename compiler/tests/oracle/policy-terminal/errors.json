@@ -1,0 +1,7 @@
+[
+    {
+        "code": "policy.terminalWithoutPolicies",
+        "file": "entities/Post.yml",
+        "pointer": "/policies/terminalRule/read"
+    }
+]

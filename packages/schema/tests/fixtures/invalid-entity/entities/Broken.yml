@@ -1,0 +1,45 @@
+entity: lowercase
+storage:
+  table: 5
+  extra: x
+fields:
+  Bad-Name:
+    type: string
+  count:
+    type: 3
+  mode:
+    type: string
+    values: 5
+  size:
+    type: int
+    maxLength: lots
+    unknown: true
+edges:
+  owner:
+    to: Person
+    cardinality: some
+    onDelete: explode
+    inverse: 7
+queries:
+  find:
+    returns:
+      type: Person
+      cardinality: lots
+    args:
+      a:
+        nullable: maybe
+actions:
+  save:
+    writes:
+      fields: name
+sideEffects:
+  audit:
+    on: [explode]
+    phase: never
+readPolicies:
+  owner:
+    handler: sure
+policies:
+  terminalRule:
+    read: perhaps
+unknownKey: 1

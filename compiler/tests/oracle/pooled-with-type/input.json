@@ -1,0 +1,17 @@
+{
+    "fixture": "pooled-empty",
+    "pooledPatterns": [],
+    "pooledTypes": [
+        {
+            "file": "elephentity/codegen-php:types/PostStatus.yml",
+            "data": {
+                "type": "PostStatus",
+                "primitive": "string",
+                "values": [
+                    "draft",
+                    "published"
+                ]
+            }
+        }
+    ]
+}

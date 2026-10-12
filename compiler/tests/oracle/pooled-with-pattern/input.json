@@ -1,0 +1,20 @@
+{
+    "fixture": "pooled",
+    "pooledPatterns": [
+        {
+            "file": "elephentity/codegen-wordpress:patterns/Taxonomy.yml",
+            "data": {
+                "pattern": "Taxonomy",
+                "requires": {
+                    "driver": "wordpress"
+                },
+                "fields": {
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "pooledTypes": []
+}

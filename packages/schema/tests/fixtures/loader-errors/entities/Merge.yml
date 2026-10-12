@@ -1,0 +1,5 @@
+base: &base
+  table: b
+entity: Merge
+storage:
+  <<: *base

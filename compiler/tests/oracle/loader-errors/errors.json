@@ -1,0 +1,52 @@
+[
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Complex.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Dup.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.notAMap",
+        "file": "entities/Empty.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.wrongKind",
+        "file": "entities/List.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Multi.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.notAMap",
+        "file": "entities/Scalar.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Syntax.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.unparseable",
+        "file": "entities/Tagged.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.wrongKind",
+        "file": "entities/Wrong.yml",
+        "pointer": null
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Merge.yml",
+        "pointer": "/"
+    }
+]

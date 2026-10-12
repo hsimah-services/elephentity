@@ -1,0 +1,6 @@
+project: not valid
+storage:
+  driver: 7
+  tablePrefix: 1
+integrations: nope
+extra: true

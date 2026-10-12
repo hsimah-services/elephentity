@@ -1,0 +1,3 @@
+project: Invalid
+storage:
+  driver: wordpress

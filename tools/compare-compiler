@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Compare the committed oracle snapshots with what the PHP compiler produces now.
+#
+#   tools/compare-compiler             fail when the snapshots are stale
+#   tools/compare-compiler --refresh   regenerate compiler/tests/oracle from PHP
+#
+# The snapshots are what the Rust compiler's tests are measured against, so Rust CI needs
+# no PHP. See tools/compare-compiler.php.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+exec ./tools/php php tools/compare-compiler.php "$@"

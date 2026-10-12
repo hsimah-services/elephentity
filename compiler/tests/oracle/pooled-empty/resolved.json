@@ -1,0 +1,12 @@
+{
+    "project": {
+        "name": "PooledEmpty",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {}
+}

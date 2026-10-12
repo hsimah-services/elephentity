@@ -1,0 +1,3 @@
+entity: Tagged
+storage:
+  table: !!int 5

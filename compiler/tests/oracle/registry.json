@@ -1,0 +1,43 @@
+{
+    "integrations": [
+        {
+            "name": "wpgraphql",
+            "description": "Stand-in for the real definition; see the note above.",
+            "projectConfig": {},
+            "entityConfig": {
+                "singular": {
+                    "name": "singular",
+                    "type": "string",
+                    "description": null,
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                },
+                "plural": {
+                    "name": "plural",
+                    "type": "string",
+                    "description": null,
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                }
+            },
+            "queryConfig": {
+                "field": {
+                    "name": "field",
+                    "type": "string",
+                    "description": null,
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                }
+            }
+        }
+    ]
+}

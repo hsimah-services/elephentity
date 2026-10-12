@@ -1,0 +1,7 @@
+[
+    {
+        "code": "spec.invalid",
+        "file": "entities/Widget.yml",
+        "pointer": "/storage"
+    }
+]

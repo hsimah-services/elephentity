@@ -1,0 +1,66 @@
+{
+    "project": {
+        "name": "T",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {
+            "wpgraphql": {}
+        },
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Hidden": {
+            "name": "Hidden",
+            "storage": {
+                "driver": "wordpress",
+                "table": "hidden",
+                "handle": null
+            },
+            "sourceFile": "entities/Hidden.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Shown": {
+            "name": "Shown",
+            "storage": {
+                "driver": "wordpress",
+                "table": "shown",
+                "handle": null
+            },
+            "sourceFile": "entities/Shown.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {
+                "wpgraphql": {
+                    "plural": "Showns",
+                    "singular": "Shown"
+                }
+            },
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

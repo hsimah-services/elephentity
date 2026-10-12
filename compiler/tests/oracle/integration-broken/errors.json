@@ -1,0 +1,17 @@
+[
+    {
+        "code": "integration.unknown",
+        "file": "project.yml",
+        "pointer": "/integrations/nonsense"
+    },
+    {
+        "code": "config.unknown",
+        "file": "entities/A.yml",
+        "pointer": "/integrations/wpgraphql/nope"
+    },
+    {
+        "code": "config.required",
+        "file": "entities/A.yml",
+        "pointer": "/integrations/wpgraphql"
+    }
+]

@@ -1,0 +1,67 @@
+[
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/entity"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/storage/table"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/fields"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner/cardinality"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner/inverse"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner/inverse"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner/inverse"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner/onDelete"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/queries/find"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/actions/save"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/sideEffects/audit"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/readPolicies/owner/handler"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "entities/Broken.yml",
+        "pointer": "/policies/terminalRule/read"
+    }
+]

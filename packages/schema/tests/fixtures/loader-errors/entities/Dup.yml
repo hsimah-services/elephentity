@@ -1,0 +1,4 @@
+entity: Dup
+entity: Dup2
+storage:
+  table: d
