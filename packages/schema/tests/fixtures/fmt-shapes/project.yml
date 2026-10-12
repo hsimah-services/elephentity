@@ -1,0 +1,5 @@
+storage:
+  tablePrefix: fmt_
+  driver: stub
+description: Every shape, out of order.
+project: FmtShapes

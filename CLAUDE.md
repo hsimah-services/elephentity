@@ -31,6 +31,7 @@ The Rust compiler in `compiler/` runs in a container too, with no host cargo:
 tools/compare-compiler             # the oracle snapshots still match the PHP compiler
 tools/compare-compiler --refresh   # regenerate them after changing the PHP compiler or a fixture
 tools/test-rust-ir                 # the built builders accept the IR the Rust compiler produces
+tools/test-rust-cli                # the Rust eleph and the PHP eleph agree on a project
 ```
 
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are

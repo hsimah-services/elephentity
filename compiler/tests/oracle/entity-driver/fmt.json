@@ -1,0 +1,8 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Widget.yml",
+        "pointer": "/storage",
+        "message": "Keys are out of canonical order. Expected: table, driver."
+    }
+]

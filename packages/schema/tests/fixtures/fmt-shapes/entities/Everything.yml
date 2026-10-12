@@ -1,0 +1,63 @@
+storage:
+  handle: everything
+  table: everything
+fields:
+  title:
+    required: true
+    description: A title.
+    type: string
+    maxLength: 40
+    verify: true
+    nullable: false
+edges:
+  owner:
+    cardinality: one
+    to: Everything
+    onDelete: restrict
+    inverse:
+      unique: false
+      name: children
+    description: The owner.
+queries:
+  find:
+    handler: true
+    returns:
+      cardinality: many
+      type: Everything
+    args:
+      term:
+        nullable: true
+        type: string
+    description: Find some.
+actions:
+  rename:
+    handler: true
+    writes:
+      edges: []
+      fields: [title]
+    args:
+      title:
+        nullable: false
+        type: string
+    description: Rename it.
+sideEffects:
+  audit:
+    handler: true
+    phase: postCommit
+    on: [create, update]
+    description: Record it.
+readPolicies:
+  visible:
+    handler: true
+    description: Who may read.
+writePolicies:
+  editable:
+    handler: true
+    description: Who may write.
+policies:
+  terminalRule:
+    write: deny
+    read: allow
+use: [Flavoured]
+description: Everything.
+entity: Everything

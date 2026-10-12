@@ -1,0 +1,122 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "project.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: project, description, storage."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "project.yml",
+        "pointer": "/storage",
+        "message": "Keys are out of canonical order. Expected: driver, tablePrefix."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: entity, description, use, storage, policies, fields, edges, queries, actions, sideEffects, readPolicies, writePolicies."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/storage",
+        "message": "Keys are out of canonical order. Expected: table, handle."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/policies/terminalRule",
+        "message": "Keys are out of canonical order. Expected: read, write."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/fields/title",
+        "message": "Keys are out of canonical order. Expected: type, description, required, nullable, maxLength, verify."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/edges/owner",
+        "message": "Keys are out of canonical order. Expected: to, cardinality, description, inverse, onDelete."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/edges/owner/inverse",
+        "message": "Keys are out of canonical order. Expected: name, unique."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/queries/find",
+        "message": "Keys are out of canonical order. Expected: description, args, returns, handler."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/queries/find/returns",
+        "message": "Keys are out of canonical order. Expected: type, cardinality."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/queries/find/args/term",
+        "message": "Keys are out of canonical order. Expected: type, nullable."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/actions/rename",
+        "message": "Keys are out of canonical order. Expected: description, args, writes, handler."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/actions/rename/writes",
+        "message": "Keys are out of canonical order. Expected: fields, edges."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/actions/rename/args/title",
+        "message": "Keys are out of canonical order. Expected: type, nullable."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/sideEffects/audit",
+        "message": "Keys are out of canonical order. Expected: description, on, phase, handler."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/readPolicies/visible",
+        "message": "Keys are out of canonical order. Expected: description, handler."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Everything.yml",
+        "pointer": "/writePolicies/editable",
+        "message": "Keys are out of canonical order. Expected: description, handler."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "patterns/Flavoured.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: pattern, description, requires, config, use, fields."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "patterns/Flavoured.yml",
+        "pointer": "/config/scoops",
+        "message": "Keys are out of canonical order. Expected: type, description, default."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "types/Colour.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: type, description, primitive, values."
+    }
+]

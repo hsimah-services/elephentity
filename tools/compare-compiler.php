@@ -14,6 +14,8 @@ declare(strict_types=1);
  *   ir.json        the exact bytes `eleph generate` sends to eleph-codegen, when the whole
  *                  compile succeeds
  *   errors.json    code, file and pointer of every error, when it does not
+ *   fmt.json       what `eleph fmt` reports for the fixture: code, file, pointer and the
+ *                  message, which carries the canonical order expected
  *
  * Rust tests read these snapshots, so Rust CI needs no PHP. The stage-2 stages are called
  * through reflection rather than reimplemented, so the oracle is the shipped code and the PHP
@@ -30,6 +32,7 @@ use Eleph\Schema\Ir\ConfigParameter;
 use Eleph\Schema\Ir\Schema;
 use Eleph\Schema\SchemaCompiler;
 use Eleph\Schema\Spec\RawSpec;
+use Eleph\Schema\Spec\FormatChecker;
 use Eleph\Schema\Spec\SchemaValidator;
 use Eleph\Schema\Spec\SpecKind;
 use Eleph\Schema\SpecSource;
@@ -256,6 +259,15 @@ foreach ($cases as $name => $case) {
     $raw = static fn (SpecKind $kind): Closure => static fn (array $d): RawSpec => new RawSpec($kind, $d['file'], $d['data']);
     $patterns = array_map($raw(SpecKind::Pattern), $case['pooledPatterns']);
     $types = array_map($raw(SpecKind::Type), $case['pooledTypes']);
+
+    // `eleph fmt` reads the documents off disk and never sees pooled ones, so it runs once per
+    // fixture; the message is kept because the order it expects is the point.
+    $files[$name . '/fmt.json'] = encode(array_map(static fn (SpecError $e): array => [
+        'code' => $e->code,
+        'file' => relative($e->file, $directory),
+        'pointer' => $e->pointer,
+        'message' => $e->message,
+    ], (new FormatChecker())->check(new SpecSource($directory))));
 
     $files[$name . '/input.json'] = encode([
         'fixture' => $case['fixture'],

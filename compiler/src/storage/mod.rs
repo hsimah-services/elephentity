@@ -31,7 +31,20 @@ impl StorageRules {
             return true;
         };
 
-        pcre(pattern).is_some_and(|regex| regex.is_match(handle))
+        pcre(pattern).is_ok_and(|regex| regex.is_match(handle))
+    }
+
+    /// Whether the handle pattern, if there is one, is one this compiler can run.
+    ///
+    /// PHP runs PCRE; this runs the `regex` crate, which has no lookaround, backreferences or
+    /// possessive quantifiers. A driver whose pattern needs them would otherwise refuse every
+    /// handle and blame the entity, so it is reported once, as the driver's problem, when the
+    /// rules are loaded.
+    pub fn check_pattern(&self) -> Result<(), String> {
+        match &self.handle_pattern {
+            Some(pattern) => pcre(pattern).map(|_| ()),
+            None => Ok(()),
+        }
     }
 }
 
@@ -54,11 +67,15 @@ impl StorageRuleRegistry {
 
 /// A delimited PCRE pattern (`/.../i`) as a regex. Only the syntax both engines share is
 /// supported, with the `i`, `m`, `s`, `x` and `u` modifiers.
-fn pcre(pattern: &str) -> Option<regex::Regex> {
+fn pcre(pattern: &str) -> Result<regex::Regex, String> {
+    let unreadable =
+        |why: &str| format!("\"{pattern}\" is not a pattern this compiler can read: {why}");
+
     let mut chars = pattern.chars();
     let open = chars
         .next()
-        .filter(|c| !c.is_alphanumeric() && *c != '\\' && !c.is_whitespace())?;
+        .filter(|c| !c.is_alphanumeric() && *c != '\\' && !c.is_whitespace())
+        .ok_or_else(|| unreadable("it does not start with a delimiter"))?;
     let close = match open {
         '(' => ')',
         '[' => ']',
@@ -68,7 +85,9 @@ fn pcre(pattern: &str) -> Option<regex::Regex> {
     };
 
     let rest = chars.as_str();
-    let end = rest.rfind(close)?;
+    let end = rest
+        .rfind(close)
+        .ok_or_else(|| unreadable(&format!("it has no closing {close}")))?;
     let (body, modifiers) = (&rest[..end], &rest[end + close.len_utf8()..]);
 
     let mut builder = RegexBuilder::new(body);
@@ -80,11 +99,25 @@ fn pcre(pattern: &str) -> Option<regex::Regex> {
             's' => builder.dot_matches_new_line(true),
             'x' => builder.ignore_whitespace(true),
             'u' => &mut builder,
-            _ => return None,
+            other => {
+                return Err(unreadable(&format!(
+                    "the modifier {other} is not supported"
+                )))
+            }
         };
     }
 
-    builder.build().ok()
+    builder.build().map_err(|error| {
+        unreadable(&format!(
+            "{} (the regex engine has no lookaround, backreferences or possessive quantifiers)",
+            error
+                .to_string()
+                .lines()
+                .last()
+                .unwrap_or("it does not compile")
+                .trim()
+        ))
+    })
 }
 
 #[cfg(test)]
@@ -118,6 +151,35 @@ mod tests {
         assert!(!rules("^abc$").handle_matches("abc"));
         assert!(!rules("/abc/Q").handle_matches("abc"));
         assert!(!rules("/(/").handle_matches("abc"));
+    }
+
+    #[test]
+    fn an_unreadable_pattern_is_reported_with_why() {
+        let lookahead = rules(r"/^(?!admin)[a-z]+$/").check_pattern().unwrap_err();
+
+        assert!(
+            lookahead.contains("is not a pattern this compiler can read"),
+            "{lookahead}"
+        );
+        assert!(lookahead.contains("lookaround"), "{lookahead}");
+        assert!(rules("abc")
+            .check_pattern()
+            .unwrap_err()
+            .contains("does not start with a delimiter"));
+        assert!(rules("^abc$")
+            .check_pattern()
+            .unwrap_err()
+            .contains("no closing ^"));
+        assert!(rules("/abc/Q")
+            .check_pattern()
+            .unwrap_err()
+            .contains("the modifier Q is not supported"));
+        assert!(rules("/abc")
+            .check_pattern()
+            .unwrap_err()
+            .contains("no closing /"));
+        assert!(rules("/^[a-z]+$/").check_pattern().is_ok());
+        assert!(StorageRules::default().check_pattern().is_ok());
     }
 
     #[test]

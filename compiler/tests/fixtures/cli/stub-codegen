@@ -1,0 +1,25 @@
+#!/bin/sh
+# A stand-in for eleph-codegen that records what it is asked, so a test can assert on it.
+#
+#   STUB_LOG       directory to write `args` and `stdin` into
+#   STUB_DESCRIBE  file whose contents answer `describe`
+#   STUB_EXIT      exit code for `generate` (default 0)
+set -eu
+
+printf '%s\n' "$*" >> "${STUB_LOG:?}/args"
+
+case "$1" in
+    describe)
+        cat "${STUB_DESCRIBE:?}"
+        ;;
+    generate)
+        cat > "$STUB_LOG/stdin"
+        echo "stub generated"
+        echo "stub warning" >&2
+        exit "${STUB_EXIT:-0}"
+        ;;
+    *)
+        echo "unknown command $1" >&2
+        exit 64
+        ;;
+esac

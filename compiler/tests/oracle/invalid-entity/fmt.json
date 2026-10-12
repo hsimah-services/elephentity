@@ -1,0 +1,20 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Broken.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: entity, storage, policies, fields, edges, queries, actions, sideEffects, readPolicies, unknownKey."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Broken.yml",
+        "pointer": "/edges/owner",
+        "message": "Keys are out of canonical order. Expected: to, cardinality, inverse, onDelete."
+    },
+    {
+        "code": "format.keyOrder",
+        "file": "entities/Broken.yml",
+        "pointer": "/queries/find",
+        "message": "Keys are out of canonical order. Expected: args, returns."
+    }
+]

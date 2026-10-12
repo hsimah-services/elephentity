@@ -88,6 +88,11 @@ jobs:
       - name: The builders accept the IR the Rust compiler produces
         run: tools/test-rust-ir
 
+      - name: The Rust eleph and the PHP eleph agree
+        run: |
+          cargo +stable build --release --locked --manifest-path compiler/Cargo.toml
+          tools/test-rust-cli
+
       - name: Check out the released SQLite adapter
         uses: actions/checkout@v4
         with:

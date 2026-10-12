@@ -46,6 +46,11 @@ impl IntegrationRegistry {
         Self { integrations }
     }
 
+    /// The names of every integration, sorted.
+    pub fn names(&self) -> Vec<String> {
+        self.integrations.keys().cloned().collect()
+    }
+
     fn describe_available(&self) -> String {
         if self.integrations.is_empty() {
             "none are installed".to_string()

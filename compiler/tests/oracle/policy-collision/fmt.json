@@ -1,0 +1,8 @@
+[
+    {
+        "code": "format.keyOrder",
+        "file": "patterns/Owned.yml",
+        "pointer": "/",
+        "message": "Keys are out of canonical order. Expected: pattern, readPolicies, interface."
+    }
+]
