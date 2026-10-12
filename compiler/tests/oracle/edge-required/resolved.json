@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/edge-required/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "PointsTransaction": {
             "name": "PointsTransaction",
@@ -16,17 +15,19 @@
                 "table": "points_transaction",
                 "handle": null
             },
-            "sourceFile": "entities/PointsTransaction.yml",
+            "sourceFile": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {
                 "value": {
                     "name": "value",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/PointsTransaction.yml"
+                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "required": false,
@@ -49,7 +50,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "entities/PointsTransaction.yml"
+                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "inverse": null,
@@ -62,7 +63,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "entities/PointsTransaction.yml"
+                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "inverse": null,
@@ -75,6 +76,7 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
@@ -87,17 +89,19 @@
                 "table": "user",
                 "handle": null
             },
-            "sourceFile": "entities/User.yml",
+            "sourceFile": "packages/schema/tests/fixtures/edge-required/entities/User.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {
                 "name": {
                     "name": "name",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/User.yml"
+                        "file": "packages/schema/tests/fixtures/edge-required/entities/User.yml"
                     },
                     "description": null,
                     "required": false,
@@ -119,10 +123,13 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

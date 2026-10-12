@@ -1,0 +1,3 @@
+entity: Type
+storage:
+  table: type_things

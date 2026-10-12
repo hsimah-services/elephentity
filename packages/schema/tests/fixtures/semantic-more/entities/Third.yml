@@ -1,0 +1,7 @@
+entity: Third
+storage:
+  table: third
+fields:
+  postStatus:
+    type: enum
+    values: [one, two]

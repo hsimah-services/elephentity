@@ -1,0 +1,29 @@
+entity: First
+storage:
+  table: shared
+  handle: attachment
+fields:
+  status:
+    type: enum
+    values: [a, b]
+  unknownEnum:
+    type: enum
+    values: Nope
+  notEnum:
+    type: enum
+    values: Plain
+  plainValues:
+    type: string
+    values: [x, y]
+  title:
+    type: string
+    indexed: true
+    maxLength: 1000
+queries:
+  find:
+    args:
+      kind:
+        type: Mystery
+    handler: true
+    returns:
+      type: First

@@ -1,0 +1,16 @@
+entity: Second
+storage:
+  table: shared
+  handle: revision
+fields:
+  first:
+    type: string
+edges:
+  owner:
+    to: First
+    cardinality: one
+    inverse: first
+  other:
+    to: First
+    cardinality: one
+    inverse: status

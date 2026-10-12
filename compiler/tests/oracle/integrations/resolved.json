@@ -2,14 +2,13 @@
     "project": {
         "name": "T",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/integrations/project.yml",
         "integrations": {
             "wpgraphql": {}
         },
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Hidden": {
             "name": "Hidden",
@@ -18,10 +17,9 @@
                 "table": "hidden",
                 "handle": null
             },
-            "sourceFile": "entities/Hidden.yml",
+            "sourceFile": "packages/schema/tests/fixtures/integrations/entities/Hidden.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {},
             "edges": {},
             "queries": {},
@@ -29,6 +27,7 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
@@ -41,10 +40,9 @@
                 "table": "shown",
                 "handle": null
             },
-            "sourceFile": "entities/Shown.yml",
+            "sourceFile": "packages/schema/tests/fixtures/integrations/entities/Shown.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {},
             "edges": {},
             "queries": {},
@@ -57,10 +55,13 @@
                     "singular": "Shown"
                 }
             },
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

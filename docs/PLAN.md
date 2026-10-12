@@ -2033,6 +2033,31 @@ from PHP they cause are listed in [divergence.md](divergence.md).
 - **`tools/cargo` mirrors `tools/php`.** A local `eleph-rust` image adds rustfmt and clippy
   to the stock Rust image; the cargo cache is a mounted directory.
 
+### The Rust compiler's IR (step 3)
+
+- **The IR types are the wire shape.** `compiler/src/model.rs` serializes field for field in the
+  PHP constructors' order, because `IrCodec` writes a value object's constructor parameters in
+  order and the bytes are compared. Adding or reordering a field is an IR change and bumps
+  `IR_VERSION`.
+- **Rust owns `IR_VERSION`** (`compiler/src/ir/mod.rs`, the counterpart of `IrCodec::VERSION`).
+  The orchestrator and every builder still declare their own copy and refuse a mismatch.
+- **The wire bytes are written by hand** (`compiler/src/ir/json.rs`), not by serde_json. PHP
+  `json_encode` as `eleph generate` calls it is compact, leaves `/` alone, escapes every
+  non-ASCII character as a lowercase `\u` escape (a surrogate pair beyond the BMP), writes a
+  whole-number float without `.0` (`100`, `-0`), and switches to `1.0e+17` / `1.0e-5`
+  outside `1e-4 <= |n| < 1e17`. Free-form data (a default, a config value) has no empty map in
+  PHP, so an empty map there is `[]`; typed maps (`fields`, `config`, the settings of an
+  integration) stay `{}`.
+- **`ir.json` is the whole request** PHP sends to `eleph-codegen`, with paths relative to the
+  repository root, so a snapshot does not depend on where the repository is checked out.
+- **Storage rules are data**, like integrations: loaded from `storage-rules.json`, later from
+  the builders' `provides.storage`. A handle pattern is PCRE with delimiters; the `regex` crate
+  runs the subset both share, and a pattern it cannot read matches nothing, as `preg_match`
+  returning false does.
+- **`tools/test-rust-ir`** feeds every Rust-produced request through the real orchestrator and
+  the PHP builder and checks for a second-run drift of zero. It is the proof that the builders
+  accept the bytes, run in the PHP job where those binaries are already built.
+
 WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
 The final proof is the .NET example generating, checking and testing in CI where

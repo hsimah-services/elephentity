@@ -1,0 +1,418 @@
+{
+    "project": {
+        "name": "SemanticMore",
+        "driver": "wordpress",
+        "sourceFile": "packages/schema/tests/fixtures/semantic-more/project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "entities": {
+        "Enum": {
+            "name": "Enum",
+            "storage": {
+                "driver": "wordpress",
+                "table": "enum_things",
+                "handle": null
+            },
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Enum.yml",
+            "description": null,
+            "uses": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "appliedPatterns": [],
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "First": {
+            "name": "First",
+            "storage": {
+                "driver": "wordpress",
+                "table": "shared",
+                "handle": "attachment"
+            },
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/First.yml",
+            "description": null,
+            "uses": [],
+            "fields": {
+                "status": {
+                    "name": "status",
+                    "type": {
+                        "primitive": "enum",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inlineValues": [
+                            "a",
+                            "b"
+                        ],
+                        "declaredType": null
+                    },
+                    "verify": false
+                },
+                "unknownEnum": {
+                    "name": "unknownEnum",
+                    "type": {
+                        "primitive": "enum",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inlineValues": null,
+                        "declaredType": "Nope"
+                    },
+                    "verify": false
+                },
+                "notEnum": {
+                    "name": "notEnum",
+                    "type": {
+                        "primitive": "enum",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inlineValues": null,
+                        "declaredType": "Plain"
+                    },
+                    "verify": false
+                },
+                "plainValues": {
+                    "name": "plainValues",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inlineValues": [
+                            "x",
+                            "y"
+                        ],
+                        "declaredType": null
+                    },
+                    "verify": false
+                },
+                "title": {
+                    "name": "title",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": true,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": 1000,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {
+                "find": {
+                    "name": "find",
+                    "returns": {
+                        "type": "First",
+                        "cardinality": "many"
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                    },
+                    "arguments": {
+                        "kind": {
+                            "name": "kind",
+                            "type": {
+                                "primitive": null,
+                                "declaredType": "Mystery"
+                            },
+                            "nullable": false
+                        }
+                    },
+                    "description": null,
+                    "integrations": {}
+                }
+            },
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "appliedPatterns": [],
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Second": {
+            "name": "Second",
+            "storage": {
+                "driver": "wordpress",
+                "table": "shared",
+                "handle": "revision"
+            },
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml",
+            "description": null,
+            "uses": [],
+            "fields": {
+                "first": {
+                    "name": "first",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {
+                "owner": {
+                    "name": "owner",
+                    "to": "First",
+                    "cardinality": "one",
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                    },
+                    "description": null,
+                    "inverse": {
+                        "derived": false,
+                        "name": "first",
+                        "unique": true
+                    },
+                    "onDelete": "restrict",
+                    "required": false
+                },
+                "other": {
+                    "name": "other",
+                    "to": "First",
+                    "cardinality": "one",
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                    },
+                    "description": null,
+                    "inverse": {
+                        "derived": false,
+                        "name": "status",
+                        "unique": true
+                    },
+                    "onDelete": "restrict",
+                    "required": false
+                }
+            },
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "appliedPatterns": [],
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Third": {
+            "name": "Third",
+            "storage": {
+                "driver": "wordpress",
+                "table": "third",
+                "handle": null
+            },
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Third.yml",
+            "description": null,
+            "uses": [],
+            "fields": {
+                "postStatus": {
+                    "name": "postStatus",
+                    "type": {
+                        "primitive": "enum",
+                        "declaredType": null
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Third.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": {
+                        "inlineValues": [
+                            "one",
+                            "two"
+                        ],
+                        "declaredType": null
+                    },
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "appliedPatterns": [],
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Type": {
+            "name": "Type",
+            "storage": {
+                "driver": "wordpress",
+                "table": "type_things",
+                "handle": null
+            },
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Type.yml",
+            "description": null,
+            "uses": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "appliedPatterns": [],
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    },
+    "types": {
+        "BadBacking": {
+            "name": "BadBacking",
+            "primitive": "float",
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/BadBacking.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": [
+                "a",
+                "b"
+            ]
+        },
+        "Plain": {
+            "name": "Plain",
+            "primitive": "string",
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/Plain.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": null
+        },
+        "PostStatus": {
+            "name": "PostStatus",
+            "primitive": "string",
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/PostStatus.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": [
+                "draft",
+                "live"
+            ]
+        },
+        "ThirdPostStatus": {
+            "name": "ThirdPostStatus",
+            "primitive": "string",
+            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/ThirdPostStatus.yml",
+            "description": null,
+            "hasProcessors": false,
+            "values": [
+                "x",
+                "y"
+            ]
+        }
+    },
+    "patterns": {}
+}

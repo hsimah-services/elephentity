@@ -48,6 +48,15 @@ They are in the oracle (`loader-errors`) and match.
 
 ## Not ported yet
 
-`CanonicalOrder` and `FormatChecker` (`eleph fmt`) arrive in step 4, and semantic
-validation and the IR in step 3. The oracle snapshots stop before both, so errors from
-those stages are not compared yet.
+`CanonicalOrder` and `FormatChecker` (`eleph fmt`) arrive in step 4, along with the
+registries that come from the builders' `describe` (integrations and storage rules are
+data passed in for now, read from `compiler/tests/oracle/registry.json` and
+`storage-rules.json`). Everything up to the request `eleph generate` sends is ported and
+compared byte for byte.
+
+## Not part of the compiler
+
+`EdgePlanner` decides physical edge placement for a storage manifest. It lives in the
+builders (the WordPress builder's `src/Sql/EdgePlanner.php`), nothing in the IR or on the
+wire carries a placement, and so the compiler never calls it. It is ported with the
+builders that need it.

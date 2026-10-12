@@ -1,0 +1,3 @@
+project: SemanticMore
+storage:
+  driver: wordpress

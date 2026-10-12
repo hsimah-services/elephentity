@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/config/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Configured": {
             "name": "Configured",
@@ -16,12 +15,9 @@
                 "table": "configured",
                 "handle": null
             },
-            "sourceFile": "entities/Configured.yml",
+            "sourceFile": "packages/schema/tests/fixtures/config/entities/Configured.yml",
             "description": null,
             "uses": [
-                "Platform"
-            ],
-            "appliedPatterns": [
                 "Platform"
             ],
             "fields": {},
@@ -38,6 +34,9 @@
                 "weight": 10
             },
             "integrations": {},
+            "appliedPatterns": [
+                "Platform"
+            ],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
@@ -50,12 +49,9 @@
                 "table": "defaulted",
                 "handle": null
             },
-            "sourceFile": "entities/Defaulted.yml",
+            "sourceFile": "packages/schema/tests/fixtures/config/entities/Defaulted.yml",
             "description": null,
             "uses": [
-                "Platform"
-            ],
-            "appliedPatterns": [
                 "Platform"
             ],
             "fields": {},
@@ -70,10 +66,15 @@
                 "weight": 10
             },
             "integrations": {},
+            "appliedPatterns": [
+                "Platform"
+            ],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }

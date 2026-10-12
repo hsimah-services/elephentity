@@ -2,12 +2,11 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "project.yml",
+        "sourceFile": "packages/schema/tests/fixtures/semantic/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
     },
-    "types": {},
     "entities": {
         "Post": {
             "name": "Post",
@@ -16,17 +15,19 @@
                 "table": "phe_post",
                 "handle": "ProductVariationSlugThatIsTooLong"
             },
-            "sourceFile": "entities/Post.yml",
+            "sourceFile": "packages/schema/tests/fixtures/semantic/entities/Post.yml",
             "description": null,
             "uses": [],
-            "appliedPatterns": [],
             "fields": {
                 "id": {
                     "name": "id",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -43,10 +44,13 @@
                 },
                 "slug": {
                     "name": "slug",
-                    "type": "string",
+                    "type": {
+                        "primitive": "string",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -63,10 +67,13 @@
                 },
                 "body": {
                     "name": "body",
-                    "type": "text",
+                    "type": {
+                        "primitive": "text",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -83,10 +90,13 @@
                 },
                 "price": {
                     "name": "price",
-                    "type": "Money",
+                    "type": {
+                        "primitive": null,
+                        "declaredType": "Money"
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -103,10 +113,13 @@
                 },
                 "status": {
                     "name": "status",
-                    "type": "enum",
+                    "type": {
+                        "primitive": "enum",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -123,10 +136,13 @@
                 },
                 "stampedAt": {
                     "name": "stampedAt",
-                    "type": "datetime",
+                    "type": {
+                        "primitive": "datetime",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": true,
@@ -143,10 +159,13 @@
                 },
                 "counter": {
                     "name": "counter",
-                    "type": "int",
+                    "type": {
+                        "primitive": "int",
+                        "declaredType": null
+                    },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,
@@ -169,7 +188,7 @@
                     "cardinality": "many",
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "inverse": {
@@ -186,7 +205,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "description": null,
                     "inverse": null,
@@ -203,7 +222,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "arguments": {},
                     "description": null,
@@ -222,7 +241,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "entities/Post.yml"
+                        "file": "packages/schema/tests/fixtures/semantic/entities/Post.yml"
                     },
                     "arguments": {},
                     "description": null
@@ -231,10 +250,13 @@
             "sideEffects": {},
             "config": {},
             "integrations": {},
+            "appliedPatterns": [],
             "readPolicies": {},
             "writePolicies": {},
             "terminalRead": "deny",
             "terminalWrite": "deny"
         }
-    }
+    },
+    "types": {},
+    "patterns": {}
 }
