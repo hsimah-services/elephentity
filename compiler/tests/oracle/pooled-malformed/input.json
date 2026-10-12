@@ -1,0 +1,13 @@
+{
+    "fixture": "pooled-empty",
+    "pooledPatterns": [
+        {
+            "file": "elephentity/codegen-wordpress:patterns/Taxonomy.yml",
+            "data": {
+                "pattern": "Taxonomy",
+                "notAField": true
+            }
+        }
+    ],
+    "pooledTypes": []
+}

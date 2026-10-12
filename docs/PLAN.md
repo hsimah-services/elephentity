@@ -2007,6 +2007,32 @@ only after real compilation, execution or host-library validation. No host PHP,
 cargo or dotnet is assumed: use container tooling, including `tools/dotnet` with
 `mcr.microsoft.com/dotnet/sdk:10.0`.
 
+### The Rust compiler's first stage (step 2)
+
+Decisions made while porting spec loading, schema validation and patterns; the divergences
+from PHP they cause are listed in [divergence.md](divergence.md).
+
+- **saphyr for YAML, jsonschema for validation.** saphyr keeps a span for every node and
+  the order of mapping keys, which `eleph fmt` needs in step 4; serde_yaml is unmaintained
+  and is not used. The `jsonschema` crate validates draft 2020-12 and resolves the five
+  embedded schemas through a registry, so `packages/schema/resources` stays the only copy.
+- **Plain scalars are typed by Symfony's rules, not the YAML core schema.** The two
+  disagree on `007`, `1_000`, large integers and dates, and a spec has to compile to the
+  same bytes in both compilers. saphyr only parses structure; see
+  `compiler/src/spec/scalar.rs`.
+- **The oracle calls the shipped PHP.** `tools/compare-compiler.php` runs `SchemaCompiler`'s
+  private `build*` stages by reflection instead of reimplementing them, so the PHP compiler
+  needs no change and the oracle cannot drift from it. It stops before semantic validation,
+  where step 3 starts. Snapshots live in `compiler/tests/oracle/`, so Rust CI needs no PHP,
+  and the PHP job runs `tools/compare-compiler` to fail when they go stale.
+- **Parity is code, file and pointer.** Messages are for people and are not compared.
+  `spec.invalid` is the one place Rust may report more than PHP (divergence.md #1).
+- **Integrations are data.** The registry the fixtures need is written to
+  `compiler/tests/oracle/registry.json` from `TestIntegrations`, so Rust reads it instead of
+  restating it. In step 4 the registry comes from builders' `describe`.
+- **`tools/cargo` mirrors `tools/php`.** A local `eleph-rust` image adds rustfmt and clippy
+  to the stock Rust image; the cargo cache is a mounted directory.
+
 WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
 The final proof is the .NET example generating, checking and testing in CI where

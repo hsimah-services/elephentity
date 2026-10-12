@@ -1,0 +1,7 @@
+[
+    {
+        "code": "integration.notEnabled",
+        "file": "entities/A.yml",
+        "pointer": "/integrations/wpgraphql"
+    }
+]

@@ -6,3 +6,4 @@
 .phpstan.cache/
 /build/
 /.tmp-demo/
+/compiler/target/

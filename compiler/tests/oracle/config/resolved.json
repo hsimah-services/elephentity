@@ -1,0 +1,79 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Configured": {
+            "name": "Configured",
+            "storage": {
+                "driver": "wordpress",
+                "table": "configured",
+                "handle": null
+            },
+            "sourceFile": "entities/Configured.yml",
+            "description": null,
+            "uses": [
+                "Platform"
+            ],
+            "appliedPatterns": [
+                "Platform"
+            ],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {
+                "adminMenu": null,
+                "supports": [
+                    "title"
+                ],
+                "visibility": "public",
+                "weight": 10
+            },
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Defaulted": {
+            "name": "Defaulted",
+            "storage": {
+                "driver": "wordpress",
+                "table": "defaulted",
+                "handle": null
+            },
+            "sourceFile": "entities/Defaulted.yml",
+            "description": null,
+            "uses": [
+                "Platform"
+            ],
+            "appliedPatterns": [
+                "Platform"
+            ],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {
+                "adminMenu": null,
+                "supports": [],
+                "visibility": "private",
+                "weight": 10
+            },
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

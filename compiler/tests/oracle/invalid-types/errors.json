@@ -1,0 +1,27 @@
+[
+    {
+        "code": "spec.invalid",
+        "file": "types/Bad.yml",
+        "pointer": "/type"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "types/Bad.yml",
+        "pointer": "/primitive"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "types/Bad.yml",
+        "pointer": "/processors"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "types/Bad.yml",
+        "pointer": "/values"
+    },
+    {
+        "code": "spec.invalid",
+        "file": "types/Worse.yml",
+        "pointer": "/"
+    }
+]

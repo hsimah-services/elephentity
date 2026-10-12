@@ -1,0 +1,6 @@
+entity: Empty
+storage:
+  table: empty
+fields: {}
+edges: {}
+queries: {}

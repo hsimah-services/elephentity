@@ -1,0 +1,7 @@
+entity: Multi
+storage:
+  table: m
+---
+entity: Second
+storage:
+  table: s

@@ -1,0 +1,61 @@
+{
+    "project": {
+        "name": "Pooled",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Term": {
+            "name": "Term",
+            "storage": {
+                "driver": "wordpress",
+                "table": "terms",
+                "handle": null
+            },
+            "sourceFile": "entities/Term.yml",
+            "description": null,
+            "uses": [
+                "Taxonomy"
+            ],
+            "appliedPatterns": [
+                "Taxonomy"
+            ],
+            "fields": {
+                "name": {
+                    "name": "name",
+                    "type": "string",
+                    "origin": {
+                        "pattern": "Taxonomy",
+                        "file": "elephentity/codegen-wordpress:patterns/Taxonomy.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

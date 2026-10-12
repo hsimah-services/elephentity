@@ -1,0 +1,157 @@
+entity: Scalars
+description: "Quoted: yes, no, 007, 1e3"
+storage:
+  table: scalars
+fields:
+  plainInt:
+    type: int
+    default: 42
+  negative:
+    type: int
+    default: -7
+  octal:
+    type: int
+    default: 0o14
+  hex:
+    type: int
+    default: 0x1F
+  float:
+    type: float
+    default: 1.5
+  wholeFloat:
+    type: float
+    default: 2.0
+  exp:
+    type: float
+    default: 1e3
+  yes:
+    type: bool
+    default: yes
+  no:
+    type: bool
+    default: no
+  trueValue:
+    type: bool
+    default: true
+  upperTrue:
+    type: bool
+    default: TRUE
+  nothing:
+    type: string
+    nullable: true
+    default: null
+  tilde:
+    type: string
+    nullable: true
+    default: ~
+  empty:
+    type: string
+    default: ""
+  quotedNumber:
+    type: string
+    default: "007"
+  bareZeros:
+    type: string
+    default: 007
+  date:
+    type: string
+    default: 2024-01-31
+  timestamp:
+    type: string
+    default: 2024-01-31T10:00:00Z
+  colon:
+    type: string
+    default: "a: b"
+  unicode:
+    type: string
+    default: "héllo ✓"
+  multiline:
+    type: string
+    default: |
+      line one
+      line two
+  folded:
+    type: string
+    default: >
+      folded
+      text
+  list:
+    type: json
+    default: [1, two, 3.5, true, null]
+  map:
+    type: json
+    default:
+      b: 1
+      a: [x, y]
+  emptyList:
+    type: json
+    default: []
+  plus:
+    type: string
+    default: +5
+  underscore:
+    type: string
+    default: 1_000
+  leadingDot:
+    type: string
+    default: .5
+  trailingDot:
+    type: string
+    default: 5.
+  negZero:
+    type: string
+    default: -0
+  zero:
+    type: int
+    default: 0
+  negFloat:
+    type: float
+    default: -0.5
+  leadingZeroFloat:
+    type: string
+    default: 01.5
+  big:
+    type: string
+    default: 9223372036854775807
+  bigger:
+    type: string
+    default: 9223372036854775808
+  binary:
+    type: string
+    default: 0b101
+  upperE:
+    type: string
+    default: 1E3
+  nullWord:
+    type: string
+    default: Null
+  nullUpper:
+    type: string
+    default: NULL
+  trueCap:
+    type: string
+    default: True
+  falseWord:
+    type: string
+    default: FALSE
+  onOff:
+    type: string
+    default: on
+  tag:
+    type: string
+    default: !!str 123
+  quotedBool:
+    type: string
+    default: "true"
+  singleQuoted:
+    type: string
+    default: 'it''s'
+  spaces:
+    type: string
+    default: "  padded  "
+  hash:
+    type: string
+    default: "a #b"
+  commentTail:
+    type: string
+    default: value # comment

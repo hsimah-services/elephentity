@@ -1,0 +1,7 @@
+[
+    {
+        "code": "pattern.collision",
+        "file": "entities/Post.yml",
+        "pointer": "/fields/createdAt"
+    }
+]

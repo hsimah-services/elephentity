@@ -1,0 +1,49 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Post": {
+            "name": "Post",
+            "storage": {
+                "driver": "wordpress",
+                "table": "post",
+                "handle": null
+            },
+            "sourceFile": "entities/Post.yml",
+            "description": null,
+            "uses": [
+                "Owned"
+            ],
+            "appliedPatterns": [
+                "Owned"
+            ],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {
+                "owner": {
+                    "name": "owner",
+                    "origin": {
+                        "pattern": "Owned",
+                        "file": "patterns/Owned.yml"
+                    },
+                    "description": null
+                }
+            },
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

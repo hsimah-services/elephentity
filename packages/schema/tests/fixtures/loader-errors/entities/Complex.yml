@@ -1,0 +1,5 @@
+entity: Complex
+storage:
+  table: c
+? [a, b]
+: value

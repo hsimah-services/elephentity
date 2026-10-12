@@ -1,0 +1,4 @@
+# The Rust toolchain for tools/cargo: the stock image plus the components CI runs.
+FROM docker.io/library/rust:1-bookworm
+
+RUN rustup component add rustfmt clippy

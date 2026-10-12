@@ -1,0 +1,17 @@
+{
+    "fixture": "pooled-collision",
+    "pooledPatterns": [
+        {
+            "file": "elephentity/codegen-wordpress:patterns/Taxonomy.yml",
+            "data": {
+                "pattern": "Taxonomy",
+                "fields": {
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "pooledTypes": []
+}

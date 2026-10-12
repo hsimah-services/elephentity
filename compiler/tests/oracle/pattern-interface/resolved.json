@@ -1,0 +1,211 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Comment": {
+            "name": "Comment",
+            "storage": {
+                "driver": "wordpress",
+                "table": "comment",
+                "handle": null
+            },
+            "sourceFile": "entities/Comment.yml",
+            "description": null,
+            "uses": [
+                "Auditable"
+            ],
+            "appliedPatterns": [
+                "Auditable"
+            ],
+            "fields": {
+                "createdAt": {
+                    "name": "createdAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "created",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "modified",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "body": {
+                    "name": "body",
+                    "type": "text",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Comment.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        },
+        "Post": {
+            "name": "Post",
+            "storage": {
+                "driver": "wordpress",
+                "table": "post",
+                "handle": null
+            },
+            "sourceFile": "entities/Post.yml",
+            "description": null,
+            "uses": [
+                "Auditable",
+                "Silent"
+            ],
+            "appliedPatterns": [
+                "Auditable",
+                "Silent"
+            ],
+            "fields": {
+                "createdAt": {
+                    "name": "createdAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "created",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": "Auditable",
+                        "file": "patterns/Auditable.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "modified",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "note": {
+                    "name": "note",
+                    "type": "string",
+                    "origin": {
+                        "pattern": "Silent",
+                        "file": "patterns/Silent.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": true,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "title": {
+                    "name": "title",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

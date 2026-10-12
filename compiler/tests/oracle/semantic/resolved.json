@@ -1,0 +1,240 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Post": {
+            "name": "Post",
+            "storage": {
+                "driver": "wordpress",
+                "table": "phe_post",
+                "handle": "ProductVariationSlugThatIsTooLong"
+            },
+            "sourceFile": "entities/Post.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "slug": {
+                    "name": "slug",
+                    "type": "string",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": true,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": 1000,
+                    "enum": null,
+                    "verify": false
+                },
+                "body": {
+                    "name": "body",
+                    "type": "text",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": 40,
+                    "enum": null,
+                    "verify": false
+                },
+                "price": {
+                    "name": "price",
+                    "type": "Money",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "status": {
+                    "name": "status",
+                    "type": "enum",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": null,
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "stampedAt": {
+                    "name": "stampedAt",
+                    "type": "datetime",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": true,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": true,
+                    "managed": "created",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                },
+                "counter": {
+                    "name": "counter",
+                    "type": "int",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "required": false,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false,
+                    "unique": false,
+                    "indexed": false,
+                    "immutable": false,
+                    "managed": "modified",
+                    "maxLength": null,
+                    "enum": null,
+                    "verify": false
+                }
+            },
+            "edges": {
+                "comments": {
+                    "name": "comments",
+                    "to": "Comment",
+                    "cardinality": "many",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "inverse": {
+                        "derived": true,
+                        "name": null,
+                        "unique": false
+                    },
+                    "onDelete": "restrict",
+                    "required": true
+                },
+                "ghosts": {
+                    "name": "ghosts",
+                    "to": "Ghost",
+                    "cardinality": "one",
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "description": null,
+                    "inverse": null,
+                    "onDelete": "restrict",
+                    "required": false
+                }
+            },
+            "queries": {
+                "find": {
+                    "name": "find",
+                    "returns": {
+                        "type": "Ghost",
+                        "cardinality": "many"
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "arguments": {},
+                    "description": null,
+                    "integrations": {}
+                }
+            },
+            "actions": {
+                "publish": {
+                    "name": "publish",
+                    "writes": {
+                        "fields": [
+                            "nonexistent",
+                            "stampedAt"
+                        ],
+                        "edges": []
+                    },
+                    "origin": {
+                        "pattern": null,
+                        "file": "entities/Post.yml"
+                    },
+                    "arguments": {},
+                    "description": null
+                }
+            },
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

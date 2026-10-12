@@ -1,0 +1,7 @@
+entity: Anchored
+storage: &s
+  table: a
+fields:
+  one: {type: string}
+  two: {type: string, default: &d hello}
+  three: {type: string, default: *d}

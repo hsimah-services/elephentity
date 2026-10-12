@@ -1,0 +1,36 @@
+{
+    "project": {
+        "name": "Shop",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "shop_",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Widget": {
+            "name": "Widget",
+            "storage": {
+                "driver": "wordpress",
+                "table": "shop_widget",
+                "handle": null
+            },
+            "sourceFile": "entities/Widget.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

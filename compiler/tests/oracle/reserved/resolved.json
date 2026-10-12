@@ -1,0 +1,36 @@
+{
+    "project": {
+        "name": "Fixture",
+        "driver": "wordpress",
+        "sourceFile": "project.yml",
+        "integrations": {},
+        "tablePrefix": "",
+        "description": null
+    },
+    "types": {},
+    "entities": {
+        "Enum": {
+            "name": "Enum",
+            "storage": {
+                "driver": "wordpress",
+                "table": "reserved_enum",
+                "handle": null
+            },
+            "sourceFile": "entities/Enum.yml",
+            "description": null,
+            "uses": [],
+            "appliedPatterns": [],
+            "fields": {},
+            "edges": {},
+            "queries": {},
+            "actions": {},
+            "sideEffects": {},
+            "config": {},
+            "integrations": {},
+            "readPolicies": {},
+            "writePolicies": {},
+            "terminalRead": "deny",
+            "terminalWrite": "deny"
+        }
+    }
+}

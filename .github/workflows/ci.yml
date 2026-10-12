@@ -13,6 +13,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The Rust compiler is measured against snapshots of the PHP one, committed under
+  # compiler/tests/oracle, so this job needs no PHP. The PHP job below fails when those
+  # snapshots stop matching the PHP compiler.
+  compiler:
+    name: Rust compiler
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+
+      - name: Formatting
+        run: cargo +stable fmt --check --manifest-path compiler/Cargo.toml
+
+      - name: Static analysis
+        run: cargo +stable clippy --locked --all-targets --manifest-path compiler/Cargo.toml -- -D warnings
+
+      - name: Tests
+        run: cargo +stable test --locked --manifest-path compiler/Cargo.toml
+
   # These are the framework's own gates. The spec gates Elephentity provides — `validate`,
   # `generate --check`, `fmt --check` and conformance — run in the CI of projects that
   # use Elephentity, against their specs; here they are exercised by the test suite instead.
@@ -59,6 +81,9 @@ jobs:
 
       - name: Tests
         run: vendor/bin/phpunit
+
+      - name: Rust compiler oracle snapshots are current
+        run: php tools/compare-compiler.php
 
       - name: Check out the released SQLite adapter
         uses: actions/checkout@v4
