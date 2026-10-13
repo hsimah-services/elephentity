@@ -14,8 +14,10 @@ on:
       - 'install.sh'
       - 'install.ps1'
 
+# GitHub checks the called workflow's permissions against this one even for a job that does not
+# run, and its publish job asks for write. Nothing here publishes: that job only runs for a tag.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   binary:
