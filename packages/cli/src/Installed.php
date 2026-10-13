@@ -37,6 +37,8 @@ final readonly class Installed
      * @param list<string>   $drivers  Storage drivers some installed builder can generate for.
      * @param list<RawSpec>  $patterns Patterns some installed builder ships, pooled from `describe`.
      * @param list<RawSpec>  $types    Types some installed builder ships, pooled from `describe`.
+     * @param array<string, list<string>> $checkers Command that checks each target's tree, keyed by target,
+     *                                              from `provides.check.command`. A target without one is absent.
      */
     private function __construct(
         public IntegrationRegistry $integrations,
@@ -44,6 +46,7 @@ final readonly class Installed
         public array $patterns = [],
         public array $types = [],
         public StorageRuleRegistry $storageRules = new StorageRuleRegistry(),
+        public array $checkers = [],
     ) {
     }
 
@@ -96,6 +99,7 @@ final readonly class Installed
         $patterns = [];
         $types = [];
         $storageRules = [];
+        $checkers = [];
 
         /** @var mixed $declared */
         foreach ($targets as $target => $declared) {
@@ -123,6 +127,12 @@ final readonly class Installed
 
             foreach (self::specsIn($provides, $target, 'types', SpecKind::Type) as $type) {
                 $types[] = $type;
+            }
+
+            $checker = self::checkerIn($provides, $target);
+
+            if (null !== $checker) {
+                $checkers[$target] = $checker;
             }
 
             // Storage rules are the driver's own declaration, not the compiler's, so
@@ -155,7 +165,7 @@ final readonly class Installed
         $names = array_keys($drivers);
         sort($names);
 
-        return new self(new IntegrationRegistry(...$definitions), $names, $patterns, $types, new StorageRuleRegistry($storageRules));
+        return new self(new IntegrationRegistry(...$definitions), $names, $patterns, $types, new StorageRuleRegistry($storageRules), $checkers);
     }
 
     /**
@@ -169,6 +179,49 @@ final readonly class Installed
     public function describeDrivers(): string
     {
         return [] === $this->drivers ? 'none are installed' : implode(', ', $this->drivers);
+    }
+
+    /**
+     * How a builder says its tree is checked: `"check": {"command": ["eleph-check-php"]}`.
+     * Absent means the builder has no checker, which `eleph check` reports rather than
+     * passes over.
+     *
+     * @param array<string, mixed> $provides
+     *
+     * @return list<string>|null
+     */
+    private static function checkerIn(array $provides, string $target): ?array
+    {
+        $declared = $provides['check'] ?? null;
+
+        if (null === $declared) {
+            return null;
+        }
+
+        $command = is_array($declared) ? ($declared['command'] ?? null) : null;
+
+        if (!is_array($command) || [] === $command || !array_is_list($command)) {
+            throw new RuntimeException(sprintf(
+                'The %s builder declared "check" unusably: "command" must be a non-empty list of strings.',
+                $target,
+            ));
+        }
+
+        $words = [];
+
+        /** @var mixed $word */
+        foreach ($command as $word) {
+            if (!is_string($word) || '' === $word) {
+                throw new RuntimeException(sprintf(
+                    'The %s builder declared "check" unusably: "command" must be a non-empty list of strings.',
+                    $target,
+                ));
+            }
+
+            $words[] = $word;
+        }
+
+        return $words;
     }
 
     /**

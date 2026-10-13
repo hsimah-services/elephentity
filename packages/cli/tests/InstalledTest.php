@@ -170,4 +170,36 @@ final class InstalledTest extends TestCase
             ],
         ], JSON_THROW_ON_ERROR));
     }
+
+    public function testPoolsEachTargetsCheckerCommand(): void
+    {
+        $installed = Installed::fromJson(json_encode([
+            'targets' => [
+                'php' => ['check' => ['command' => ['eleph-check-php', '{output}']]],
+                'sqlite' => ['drivers' => ['sqlite']],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertSame(['php' => ['eleph-check-php', '{output}']], $installed->checkers);
+    }
+
+    public function testACheckerWithoutACommandFailsNamingTheTarget(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/^The php builder declared "check" unusably: /');
+
+        Installed::fromJson(json_encode([
+            'targets' => ['php' => ['check' => ['command' => []]]],
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function testACheckerCommandWithANonStringWordFailsNamingTheTarget(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/^The php builder declared "check" unusably: /');
+
+        Installed::fromJson(json_encode([
+            'targets' => ['php' => ['check' => ['command' => ['ok', 3]]]],
+        ], JSON_THROW_ON_ERROR));
+    }
 }

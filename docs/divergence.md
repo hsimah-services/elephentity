@@ -73,11 +73,30 @@ What differs is presentation only:
   and saying why; PHP would run it. Drivers declare simple anchored classes today, so none is
   affected.
 
-## Not ported yet
+## `eleph check` is delegated, not ported
 
-`eleph check` (gate 4) is step 5. Everything else the PHP CLI does is ported: the compiler up to
-the request `eleph generate` sends, compared byte for byte; `fmt`, `validate` and `generate`;
-and the `describe` handshake that supplies integrations, patterns, types and storage rules.
+The PHP `check` loads the PHP target's `class-map.php`, autoloads the generated classes and runs
+each `*/verify.php`. That can only work in PHP, so the Rust `check` does not port it. It asks
+`eleph-codegen targets` for each target's output directory and `eleph-codegen describe` for its
+checker (`provides.check.command`, with `{project}` and `{output}` filled in), runs it with the
+project as the working directory, and reads one `{"severity", "message"}` JSON object per stdout
+line. So it differs from PHP deliberately:
+
+- it checks every target that has a checker, not only `php`;
+- a project with no PHP target works, which is the point;
+- a target with no checker is a warning, and a run that checked nothing fails (PHP failed only for
+  a missing `php` target);
+- an error signal, a non-zero exit, a line that is not a signal and a checker that cannot be started
+  each fail the gate (a non-zero exit that already printed an error signal is not counted twice);
+- output adds a `Checking <target> (<program>)` line per checker.
+
+Until `elephentity-codegen-php` answers `provides.check` (step 6) a PHP project has no checker, so
+the two steps merge together. The PHP `CheckCommand` is unchanged and stays as the oracle; the PHP
+`Installed` parses `provides.check` so both compilers read `describe` the same way.
+
+Everything else the PHP CLI does is ported: the compiler up to the request `eleph generate`
+sends, compared byte for byte; `fmt`, `validate` and `generate`; and the `describe` handshake that
+supplies integrations, patterns, types and storage rules.
 
 ## Not part of the compiler
 
