@@ -19,6 +19,7 @@
 //! The target list comes from `eleph-codegen targets`, not from reading eleph.json again: two
 //! parsers of one file eventually disagree about something small.
 
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -76,7 +77,21 @@ pub fn check(project: &str, console: &mut Console<'_>) -> i32 {
         }
     };
 
-    let root = project.trim_end_matches('/');
+    // Absolute, once. The checker is started inside the project, so a relative `{project}` or
+    // `{output}` would be applied twice: `--project examples/blog` would hand it
+    // `examples/blog/generated` to look for under `examples/blog`.
+    let root = match fs::canonicalize(project) {
+        Ok(root) => root.to_string_lossy().into_owned(),
+        Err(_) => {
+            error(
+                console,
+                &format!("Cannot resolve the project directory {project}."),
+            );
+
+            return FAILURE;
+        }
+    };
+    let root = root.as_str();
     let codegen = Codegen::new(root, config.codegen);
 
     let targets = match targets(&codegen, root) {
@@ -223,8 +238,10 @@ fn targets(codegen: &Codegen, root: &str) -> Result<Vec<Target>, String> {
         .collect()
 }
 
+/// `{output}` is the target's directory under the project; `Path::join` keeps an output that is
+/// already absolute as it is.
 fn substitute(command: &[String], root: &str, output: &str) -> Vec<String> {
-    let output = format!("{root}/{output}");
+    let output = Path::new(root).join(output).to_string_lossy().into_owned();
 
     command
         .iter()

@@ -499,9 +499,11 @@ echo '{"severity": "warning", "message": "a small thing"}'"#,
         text.contains("[OK] Conformant: 1 checker(s), 2 signal(s)."),
         "{text}"
     );
+    let root = project.path().canonicalize().unwrap();
+
     assert_eq!(
         fs::read_to_string(project.path().join("checked-args")).unwrap(),
-        ". ./gen\n"
+        format!("{} {}/gen\n", root.display(), root.display())
     );
 }
 
@@ -665,6 +667,45 @@ exit 1"#,
     assert_eq!(output.status.code(), Some(1));
     assert!(
         stdout(&output).contains("[ERROR] 1 conformance error(s)."),
+        "{}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn a_relative_project_other_than_dot_gets_absolute_paths_that_exist() {
+    let project = Project::new(&checked(
+        r#"{"command": ["checkers/dirs", "{project}", "{output}"]}"#,
+    ));
+    project.targets(ONE_TARGET);
+    project.write("gen/.keep", "");
+    // The checker is told where the project and the tree are; both must be real directories from
+    // wherever it is started, which is what a path applied twice would break.
+    project.program(
+        "checkers/dirs",
+        r#"if [ -d "$1" ] && [ -d "$2" ]; then
+  echo '{"severity": "info", "message": "both directories exist"}'
+else
+  echo '{"severity": "error", "message": "a directory it was given does not exist"}'
+  exit 1
+fi"#,
+    );
+
+    let parent = project.path().parent().unwrap();
+    let name = project.path().file_name().unwrap().to_str().unwrap();
+    let output = Command::new(ELEPH)
+        .args(["check", "--project", name])
+        .current_dir(parent)
+        .env("PATH", "/usr/bin:/bin")
+        .env("STUB_LOG", project.log.path())
+        .env("STUB_DESCRIBE", project.log.path().join("describe.json"))
+        .env("STUB_TARGETS", project.log.path().join("targets.json"))
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(0), "{}", stdout(&output));
+    assert!(
+        stdout(&output).contains("both directories exist"),
         "{}",
         stdout(&output)
     );
