@@ -1,0 +1,47 @@
+name: Release
+
+# On a v* tag: build `eleph` for linux-x64, linux-arm64, osx-arm64 and win-x64, check the
+# archives, publish them with SHA256SUMS to the tag's GitHub Release, and attach the two scripts
+# that bootstrap it (install.sh, install.ps1).
+#
+# The build, the checks and the archive names are elephentity-codegen's reusable workflow, which
+# every Rust program here shares; the names are a contract with `eleph install`
+# (docs/RELEASING.md there). Called from a branch or a pull request it publishes nothing, which is
+# how release-check.yml proves a change to this path without a tag.
+#
+# split.yml also runs on v* tags and still mirrors packages/*; the two are independent.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  binary:
+    # Pin this to a tag of elephentity-codegen once one exists (its docs/RELEASING.md says to).
+    uses: hsimah-services/elephentity-codegen/.github/workflows/release-binary.yml@main
+    with:
+      binary: eleph
+      manifest-path: compiler/Cargo.toml
+
+  scripts:
+    name: Attach install scripts
+    needs: binary
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the scripts parse
+        run: |
+          sh -n install.sh
+          # PowerShell is on the runner; a script that does not parse should not be published.
+          pwsh -NoProfile -Command '$e = $null; [void][System.Management.Automation.Language.Parser]::ParseFile("install.ps1", [ref]$null, [ref]$e); if ($e.Count) { $e; exit 1 }'
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$TAG" install.sh install.ps1 --clobber --repo "$GITHUB_REPOSITORY"

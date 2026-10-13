@@ -49,6 +49,8 @@ fields:
     type: text
     required: true
 YAML
+# A Composer-only project has no Rust binary, so vendor/bin/eleph falls back to the PHP compiler. What
+# this proves is that `composer require` alone still gives a working `eleph`, so it runs the launcher.
 cat > eleph.json <<'JSON'
 {
   "spec": "spec",

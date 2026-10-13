@@ -1,4 +1,4 @@
-//! The `eleph` command line: `fmt`, `validate`, `generate` and `check`.
+//! The `eleph` command line: `fmt`, `validate`, `generate`, `check` and `install`.
 //!
 //! The same commands, flags and exit codes as the PHP `eleph`, so a project's scripts and CI do
 //! not change when the binary under them does. Output wording matches too. What differs is
@@ -10,6 +10,7 @@ mod check;
 mod codegen;
 mod commands;
 pub mod config;
+mod install;
 pub mod installed;
 mod style;
 
@@ -90,6 +91,17 @@ enum Command {
         targets: Option<String>,
     },
 
+    /// Fetch the programs eleph.json pins as "name@version" (builders, and the generator itself).
+    Install {
+        /// Directory holding eleph.json.
+        #[arg(short, long, default_value = ".")]
+        project: String,
+
+        /// Install nothing; fail if anything pinned is missing, a different version, or modified.
+        #[arg(long)]
+        check: bool,
+    },
+
     /// Verify every generated target is internally coherent, by running the checker its builder declares.
     Check {
         /// Directory holding eleph.json.
@@ -131,5 +143,6 @@ pub fn run(arguments: &[String], out: &mut dyn Write, err: &mut dyn Write, attac
             targets,
         } => commands::generate(&project, check, targets.as_deref(), &mut console),
         Command::Check { project } => check::check(&project, &mut console),
+        Command::Install { project, check } => install::install(&project, check, &mut console),
     }
 }

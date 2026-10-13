@@ -104,3 +104,11 @@ supplies integrations, patterns, types and storage rules.
 builders (the WordPress builder's `src/Sql/EdgePlanner.php`), nothing in the IR or on the
 wire carries a placement, and so the compiler never calls it. It is ported with the
 builders that need it.
+
+## `eleph install` has no PHP counterpart
+
+Composer installs the PHP `eleph` and its builders, so the PHP CLI never fetched anything and has
+no `install` command. The Rust one adds `eleph install [--check]` (see `docs/PLAN.md`, "Installing
+without PHP"), the `"name@version"` pin, and the `builders` and `codegen@version` keys it reads
+from `eleph.json`. None of it changes what `fmt`, `validate`, `generate` or `check` do. The PHP
+entry point is now `packages/cli/bin/eleph-php`; `bin/eleph` launches the Rust binary.

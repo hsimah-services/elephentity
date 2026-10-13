@@ -45,7 +45,7 @@ typed, so an exception here undermines the product.
 | `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR, its wire format |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
 | `memory/` | yes | the neutral driver — no physical schema, no platform |
-| `cli/` | dev | the `eleph` command |
+| `cli/` | dev | the `eleph` command: `bin/eleph` launches the Rust binary, `bin/eleph-php` is the frozen PHP oracle, `bin/eleph-gen-memory` is the memory builder |
 | `compiler/` (Cargo crate) | not yet | the Rust `eleph`, being ported from `schema/` and `cli/`; PHP is its oracle ([docs/divergence.md](docs/divergence.md)) |
 
 **This repository has no platform adaptor.** WordPress lives in

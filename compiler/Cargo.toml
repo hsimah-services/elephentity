@@ -23,6 +23,13 @@ serde_json = { version = "1", features = ["preserve_order"] }
 jsonschema = { version = "0.58", default-features = false }
 regex = "1"
 clap = { version = "4", features = ["derive"] }
+# `eleph install`: download a release, check its digest, unpack the one binary in it. Blocking
+# and synchronous on purpose; this is a command line, and nothing here is concurrent.
+ureq = "2"
+sha2 = "0.10"
+flate2 = "1"
+tar = "0.4"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 tempfile = "3"

@@ -95,6 +95,18 @@ rejected by the next build.
 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) continues from here: autoloading,
 wiring, migrations.
 
+## Install without PHP
+
+No PHP, Composer or cargo is needed for a project whose builders are Rust programs:
+
+```bash
+curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh   # eleph
+eleph install            # fetch eleph-codegen and the builders eleph.json pins as "name@version"
+eleph install --check    # fail if anything pinned is missing or changed
+```
+
+Windows uses `install.ps1`. See [Getting started](docs/GETTING_STARTED.md#install-without-php).
+
 ## Spec to artifact
 
 **A field becomes a typed property and a column.** `body: { type: text }` above:

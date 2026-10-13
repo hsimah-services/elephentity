@@ -34,7 +34,7 @@ together, but C# builders' `rust/runtime.rs` constants still cross a repository 
 | what `provides` may contain (`packages/cli/src/Installed.php`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
 | a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`), if it names that class |
 | an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
-| `eleph.json` keys **it** reads (`spec`, `codegen`) | only if the key is also the orchestrator's | — |
+| `eleph.json` keys **it** reads (`spec`, `codegen`, `builders`; `codegen` may be pinned as `name@version`) | only if the key is also the orchestrator's (`builders` is) | — |
 
 **Every builder repository** means php, wordpress, wpgraphql, sqlite, graphql-php
 and tsquid, plus csharp, cosmos and graphql-csharp once scaffolded. Update each
@@ -83,6 +83,7 @@ builders — plus the three C# builders once scaffolded.
 | the `describe` command's JSON | update `Installed::fromJson()` | — |
 | `Signing/HeaderStyle` — the rendered header or its line count | regenerate **every** tree and commit it | re-freeze golden fixtures |
 | `Config/ProjectConfig` — which `eleph.json` keys are required | update the docs and `elephentity-examples`'s `clog/eleph.json` | — |
+| a target's `builder` pin `name@version`, its `source` key, and `targets` reporting `source` | strip `@version` when looking a builder up (never from a path); report `builder` as written and `source`; do not pass `source` to builders | — (a builder never sees the pin or `source`) |
 | the release artifact names (`release-binary.yml`, `docs/RELEASING.md`): tag `v<version>`, archives `<binary>-<version>-<rid>.tar.gz` (`.zip` on `win-x64`) holding `<binary>` and `LICENSE`, and one `SHA256SUMS` | `eleph install` finds and verifies archives by exactly these names | keep the released binary named as `eleph.json` pins it (`eleph-gen-csharp@0.1.0`) and tag `v<version>`; a repository adopting the workflow follows `docs/RELEASING.md` |
 
 **A header change invalidates every signature ever written.** Not just here: every
