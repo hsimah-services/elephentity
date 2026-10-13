@@ -49,8 +49,8 @@ fields:
     type: text
     required: true
 YAML
-# vendor/bin/eleph launches the Rust binary, which a Composer install does not provide; what this proves
-# is that the PHP packages install and work standalone, so it runs the PHP command (the oracle).
+# A Composer-only project has no Rust binary, so vendor/bin/eleph falls back to the PHP compiler. What
+# this proves is that `composer require` alone still gives a working `eleph`, so it runs the launcher.
 cat > eleph.json <<'JSON'
 {
   "spec": "spec",
@@ -60,11 +60,11 @@ cat > eleph.json <<'JSON'
   }
 }
 JSON
-php vendor/elephentity/cli/bin/eleph-php fmt
-php vendor/elephentity/cli/bin/eleph-php validate
-php vendor/elephentity/cli/bin/eleph-php generate
-php vendor/elephentity/cli/bin/eleph-php generate --check
-php vendor/elephentity/cli/bin/eleph-php check
+vendor/bin/eleph fmt
+vendor/bin/eleph validate
+vendor/bin/eleph generate
+vendor/bin/eleph generate --check
+vendor/bin/eleph check
 php -r '
     require "vendor/autoload.php";
     foreach (["Eleph\\Memory\\MemoryAdaptor", "InstallCheck\\Entity\\Note\\Note"] as $class) {

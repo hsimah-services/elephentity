@@ -1,11 +1,16 @@
 #!/bin/sh
-# Launches the Rust `eleph`. The PHP implementation is `bin/eleph-php`, kept as the migration oracle
-# until it is retired (docs/PLAN.md), and is never started from here: this has no fallback to PHP.
+# Launches the Rust `eleph`.
 #
 # Looked for, in order: a build in this package (target/release, then target/debug), a build in
 # the repository's compiler/ when this is a checkout of it, and an `eleph` on PATH (what install.sh
 # puts there). Composer links this file into vendor/bin, so its own location is resolved through
 # the link first.
+#
+# When there is none, it runs the PHP implementation, `bin/eleph-php`, after saying so on stderr:
+# `composer require` has always been enough to run `eleph`, and a Composer-only project must keep
+# working. That is the same compiler at parity (it is the oracle the Rust one is measured against),
+# so nothing about the result changes. The fallback goes when the PHP compiler is retired
+# (docs/PLAN.md), at which point this prints the hint below and stops.
 set -eu
 
 self=$0
@@ -53,6 +58,11 @@ for directory in $PATH; do
 done
 IFS=$old_ifs
 
+if [ -f "$package_dir/bin/eleph-php" ] && command -v php >/dev/null 2>&1; then
+    printf '%s\n' "eleph: no Rust eleph found, so this is running the PHP compiler (bin/eleph-php), which is being retired. Install the Rust one with: curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh" >&2
+    exec php "$package_dir/bin/eleph-php" "$@"
+fi
+
 cat >&2 <<HINT
 eleph: no Rust eleph found.
 
@@ -62,7 +72,6 @@ Install a prebuilt one, with no PHP or cargo needed:
 Or, in a checkout of hsimah-services/elephentity:
   cargo build --release --manifest-path compiler/Cargo.toml
 
-The PHP implementation is still here as $package_dir/bin/eleph-php, but it is the frozen oracle for
-the Rust one and no longer the command.
+The PHP implementation is here as $package_dir/bin/eleph-php, and runs when PHP is installed.
 HINT
 exit 1

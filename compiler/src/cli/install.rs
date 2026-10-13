@@ -21,6 +21,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
+use std::time::Duration;
 
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -458,7 +459,14 @@ fn fetch(repository: &str, version: &str, asset: &str) -> Result<Vec<u8>, String
         });
     }
 
-    match ureq::get(&location).call() {
+    // A stalled connection must end, not hang a build forever.
+    let agent = ureq::AgentBuilder::new()
+        .timeout_connect(Duration::from_secs(15))
+        .timeout_read(Duration::from_secs(60))
+        .timeout(Duration::from_secs(600))
+        .build();
+
+    match agent.get(&location).call() {
         Ok(response) => {
             let mut bytes = Vec::new();
             response

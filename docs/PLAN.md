@@ -2112,7 +2112,10 @@ from PHP they cause are listed in [divergence.md](divergence.md).
 - **`packages/cli/bin/eleph` is a launcher for the Rust binary** (a build in the package, one in
   `compiler/`, or `eleph` on `PATH`), the pattern of `bin/eleph-gen-php`. The PHP command is
   `bin/eleph-php`: unchanged, the oracle `tools/test-rust-cli` compares against, and not a
-  `vendor/bin` entry.
+  `vendor/bin` entry. **When there is no Rust binary the launcher runs `bin/eleph-php`**, after one
+  line on stderr saying so, because the `elephentity/cli` mirror has no `compiler/` and a
+  Composer-only project must keep working: the same compiler, at parity. `tools/test-package-install.sh`
+  runs `vendor/bin/eleph` to prove it. The fallback is removed with the PHP compiler.
 - **`eleph-gen-memory` stays a PHP builder.** The memory driver is PHP-only, so it keeps
   `packages/cli/bin/eleph-gen-memory` and is not given a Rust release. A project using the memory
   driver already has PHP; a .NET project uses `Elephentity.Runtime.Memory`, which is generated for
@@ -2126,7 +2129,9 @@ means `tools/compare-compiler` and `tools/test-rust-cli` pass on the release's c
 `eleph` has passed gate 4 for a PHP project (step 6), and a .NET project has gone through all four
 gates with no PHP on the machine. Step 22 schedules the removal. Removing it means deleting
 `packages/schema`'s compiler and `packages/cli/src`, the oracle tests and snapshots, and the
-subtree mirrors for schema and CLI, keeping `eleph-gen-memory` and the launcher.
+subtree mirrors for schema and CLI, keeping `eleph-gen-memory` and the launcher, whose PHP fallback goes
+with them. Pinning `release-binary.yml` (called at `@main` from `release.yml`, which holds
+`contents: write`) to a tag of `elephentity-codegen` is part of cutting the first release.
 
 WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-app
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
