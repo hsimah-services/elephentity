@@ -49,5 +49,6 @@ jobs:
           sh install.sh 9.9.9
           "$RUNNER_TEMP/bin/eleph" --version
 
-          sed -i 's/^./0/' "$release/SHA256SUMS"
+          # A digest that cannot match, whatever the real one starts with.
+          printf '%064d  eleph-9.9.9-linux-x64.tar.gz\n' 0 > "$release/SHA256SUMS"
           if sh install.sh 9.9.9; then echo "a bad checksum was accepted" >&2; exit 1; fi
