@@ -152,6 +152,15 @@ Deletion is deliberately underbuilt: `onDelete` defaults to `restrict`, enforcem
 in the framework rather than in foreign keys, and the semantics are due to be revisited.
 Ask, record the answer in the markdown, and do not build around it.
 
+The options, for when the answer is not "leave it":
+
+- `restrict` (default) — refuse to delete while dependents exist.
+- `cascade` — delete the dependents with it.
+- `nullify` — keep the dependents and clear their link.
+
+The policy applies to whoever holds the key. On a many-to-many, `nullify` removes only
+the join rows and `cascade` also deletes the far side.
+
 ---
 
 ## What not to ask

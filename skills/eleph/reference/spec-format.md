@@ -155,7 +155,7 @@ edges:
     cardinality: many
     inverse: true                            # or: post
                                              # or: { name: posts, unique: false }
-    onDelete: restrict
+    onDelete: restrict                       # default; or cascade, nullify
 ```
 
 `cardinality` describes the forward side; `inverse.unique` describes the reverse. The
@@ -169,10 +169,32 @@ declared:
 | `many` | `true` | one-to-many | foreign key on the far side |
 | `many` | `false` | many-to-many | join table |
 
+### Deleting across an edge: `onDelete`
+
+`onDelete` is optional and **defaults to `restrict`**, so removing data that other rows
+still point at is always a deliberate choice.
+
+| `onDelete` | when the row on the other end is deleted |
+|---|---|
+| `restrict` (default) | the delete is refused while dependents exist |
+| `cascade` | the dependents are deleted too |
+| `nullify` | the dependents survive with the edge cleared |
+
 `onDelete` governs the **dependent** side — whoever holds the key. `Post.comments` puts
-`post_id` on comments, so `cascade` there deletes the comments when a Post goes. Join
-rows on a many-to-many always go regardless; `cascade` additionally deletes the far
-side, which for shared vocabulary is rarely what you want.
+`post_id` on comments, so deleting a Post applies the policy to its comments:
+`restrict` refuses while any exist, `cascade` deletes them, `nullify` clears `post_id`
+on them. Likewise `Inventory.item` puts `item_id` on inventory, so the policy decides
+what happens to inventory rows when an Item goes.
+
+On a many-to-many edge the policy applies to the rows linked through the join table.
+`restrict` refuses while any are linked. `nullify` removes only the join rows for the
+deleted row, leaving the far side and its other links untouched. `cascade` removes the
+join rows and also deletes the far side, which for shared vocabulary is rarely what you
+want.
+
+Deletion is enforced by the framework, not by database foreign keys, and the semantics
+are still due to be revisited. Say what you want in the spec rather than relying on the
+default being right.
 
 `inverse` is optional. `true` derives the reverse accessor name from the declaring
 entity, lowercased — legal only when the reverse is unique, because the derived name is

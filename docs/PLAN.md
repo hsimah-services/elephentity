@@ -782,7 +782,14 @@ everywhere assumes an array.
 ### Deletion
 
 `onDelete: restrict | cascade | nullify`, defaulting to `restrict` so orphaning data
-takes a deliberate keystroke.
+takes a deliberate keystroke. The default applies to every relation, and an edge that
+omits `onDelete` is `restrict`.
+
+| policy | deleting the other end... |
+|---|---|
+| `restrict` (default) | is refused while dependents exist |
+| `cascade` | deletes the dependents too |
+| `nullify` | keeps the dependents and clears their key |
 
 **The policy governs the dependent side** — whoever holds the foreign key, which is the
 same rule SQL uses. `Post.comments` puts `post_id` on comments, so deleting a Post
@@ -805,9 +812,11 @@ and the deleted target's ID as `to`. This also preserves a surviving row's other
 many-to-many links. The planner uses the generated rules without adapter-specific
 SQL or application wrappers (elephentity#91).
 
-**Join rows always go, whatever the policy.** A link to a row that will not exist is not
-a policy choice. `cascade` on a many-to-many additionally deletes the far side, which
-for shared vocabulary is rarely wanted and is exactly why it must be asked for.
+**On a many-to-many, `restrict` still refuses while links exist.** Otherwise a link to a
+row that will not exist is not a policy choice: `nullify` and `cascade` both remove the
+join rows. `nullify` stops there, leaving the far side and its other links alone.
+`cascade` additionally deletes the far side, which for shared vocabulary is rarely wanted
+and is exactly why it must be asked for.
 
 **Cascades are ordered and guarded.** Dependents are deleted before the row they depend
 on, so a key never dangles even briefly; a visited set stops Post→Comment→Post running
