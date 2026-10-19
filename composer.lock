@@ -8,7 +8,7 @@
     "packages": [
         {
             "name": "elephentity/runtime",
-            "version": "v0.14.0",
+            "version": "v0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
@@ -43,7 +43,7 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.0"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.1"
             },
             "time": "2026-10-18T22:32:08+00:00"
         },
@@ -480,30 +480,35 @@
         },
         {
             "name": "elephentity/codegen-php",
-            "version": "v0.6.2",
+            "version": "v0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-codegen-php.git",
-                "reference": "50182ebc38a9147ef362a11dc6f3efc29d87bfd5"
+                "reference": "487fd921b2fa80fbcec54ec7af7fc84a017462d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/50182ebc38a9147ef362a11dc6f3efc29d87bfd5",
-                "reference": "50182ebc38a9147ef362a11dc6f3efc29d87bfd5",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-codegen-php/zipball/487fd921b2fa80fbcec54ec7af7fc84a017462d4",
+                "reference": "487fd921b2fa80fbcec54ec7af7fc84a017462d4",
                 "shasum": ""
             },
             "require": {
+                "elephentity/runtime": "^0.13.1 || ^0.14",
                 "nette/php-generator": "^4.1",
                 "php": ">=8.3",
                 "psr/container": "^2.0"
             },
             "require-dev": {
+                "elephentity/graphql": "^0.2@alpha",
+                "elephentity/memory": "^0.13.1 || ^0.14",
+                "elephentity/sqlite": "^0.1.0-alpha.5",
                 "friendsofphp/php-cs-fixer": "^3.64",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^11.0 || ^12.0"
             },
             "bin": [
-                "bin/eleph-gen-php"
+                "bin/eleph-gen-php",
+                "bin/eleph-check-php"
             ],
             "type": "library",
             "autoload": {
@@ -513,14 +518,14 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "Apache-2.0"
+                "MIT"
             ],
             "description": "The PHP builder for Elephentity: compiles the IR into locked PHP. Build-time only.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-codegen-php/issues",
-                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/v0.6.2"
+                "source": "https://github.com/hsimah-services/elephentity-codegen-php/tree/v0.8.1"
             },
-            "time": "2026-10-10T20:07:32+00:00"
+            "time": "2026-10-19T20:41:04+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
