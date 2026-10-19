@@ -65,6 +65,9 @@ vendor/bin/eleph validate
 vendor/bin/eleph generate
 vendor/bin/eleph generate --check
 vendor/bin/eleph check
+# `composer run` and `composer exec` put vendor/bin first on PATH, where Composer's proxy for this
+# launcher is an `eleph` that leads back to it. It must still reach the fallback, not run itself forever.
+timeout 60 composer exec -- eleph validate
 php -r '
     require "vendor/autoload.php";
     foreach (["Eleph\\Memory\\MemoryAdaptor", "InstallCheck\\Entity\\Note\\Note"] as $class) {

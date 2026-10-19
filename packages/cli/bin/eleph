@@ -34,8 +34,12 @@ for binary in \
     fi
 done
 
-# An `eleph` on PATH, unless it is this very script (Composer's vendor/bin/eleph is a link to it,
-# and running it again would never end).
+# An `eleph` on PATH, unless it is this very script. Composer's vendor/bin/eleph is a link to it or,
+# by default, a proxy script that runs it, and `composer run` puts vendor/bin first on PATH, so a
+# candidate can lead straight back here. Every candidate tried is recorded in ELEPH_LAUNCHER_TRIED,
+# and one already tried is skipped, so the search moves on (to a real `eleph` further along, or to
+# the fallback below) instead of running itself forever.
+tried=":${ELEPH_LAUNCHER_TRIED:-}:"
 old_ifs=$IFS
 IFS=:
 for directory in $PATH; do
@@ -50,10 +54,17 @@ for directory in $PATH; do
             esac
         done
         resolved_dir=$(CDPATH= cd -- "$(dirname -- "$resolved")" && pwd)
-        if [ "$resolved_dir/$(basename -- "$resolved")" != "$self" ]; then
-            IFS=$old_ifs
-            exec "$candidate" "$@"
+        resolved=$resolved_dir/$(basename -- "$resolved")
+        if [ "$resolved" = "$self" ]; then
+            continue
         fi
+        case "$tried" in
+            *":$resolved:"*) continue ;;
+        esac
+        IFS=$old_ifs
+        ELEPH_LAUNCHER_TRIED=${ELEPH_LAUNCHER_TRIED:+$ELEPH_LAUNCHER_TRIED:}$resolved
+        export ELEPH_LAUNCHER_TRIED
+        exec "$candidate" "$@"
     fi
 done
 IFS=$old_ifs
