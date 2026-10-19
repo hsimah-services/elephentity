@@ -183,10 +183,7 @@ fn it_installs_the_generator_and_every_pinned_builder_and_records_them() {
     let entry = &record["installed"]["eleph-gen-csharp"];
 
     assert_eq!(entry["version"], "0.1.0");
-    assert_eq!(
-        entry["source"],
-        "hsimah-services/elephentity"
-    );
+    assert_eq!(entry["source"], "hsimah-services/elephentity");
     assert_eq!(entry["rid"], rid());
     assert_eq!(
         entry["archive"],

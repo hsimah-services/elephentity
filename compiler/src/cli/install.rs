@@ -581,7 +581,10 @@ mod tests {
             tag_of("hsimah-services/elephentity", "eleph-gen-csharp", "0.1.0"),
             "eleph-gen-csharp-v0.1.0"
         );
-        assert_eq!(tag_of("hsimah-services/elephentity", "eleph", "0.14.0"), "v0.14.0");
+        assert_eq!(
+            tag_of("hsimah-services/elephentity", "eleph", "0.14.0"),
+            "v0.14.0"
+        );
         assert_eq!(tag_of("them/theirs", "eleph-gen-x", "1.0.0"), "v1.0.0");
         assert_eq!(repository_of("somebody-elses", None), None);
         assert_eq!(
