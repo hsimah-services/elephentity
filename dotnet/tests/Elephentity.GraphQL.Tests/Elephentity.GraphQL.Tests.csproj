@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Elephentity.GraphQL/Elephentity.GraphQL.csproj" />
+    <ProjectReference Include="../../src/Elephentity.Runtime.Memory/Elephentity.Runtime.Memory.csproj" />
+    <ProjectReference Include="../../src/Elephentity.Runtime.Testing/Elephentity.Runtime.Testing.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Content Include="../fixtures/graphql/book-author.graphql" Link="book-author.graphql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

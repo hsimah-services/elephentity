@@ -1,0 +1,6 @@
+project: Standalone
+storage:
+  driver: sqlite
+  tablePrefix: demo_
+integrations:
+  graphql:

@@ -1,0 +1,18 @@
+entity: Book
+storage:
+  table: book
+fields:
+  title:
+    type: string
+    required: true
+    maxLength: 200
+edges:
+  author:
+    to: Author
+    cardinality: one
+    inverse: books
+    onDelete: restrict
+integrations:
+  graphql:
+    singular: Book
+    plural: Books

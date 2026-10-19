@@ -11,8 +11,8 @@
 //! only mentioned. A version written down is the whole of reproducibility here, so a build never
 //! changes because a release was published.
 //!
-//! The names of the archives are a contract with `elephentity-codegen`'s `release-binary.yml`
-//! (docs/RELEASING.md there): `<binary>-<version>-<rid>.<tar.gz|zip>` and one `SHA256SUMS`.
+//! The names of the archives are a contract with `elephentity`'s `release-binary.yml`
+//! (docs/RELEASING.md): `<binary>-<version>-<rid>.<tar.gz|zip>` and one `SHA256SUMS`.
 //!
 //! `--check` is the CI form. It installs nothing and fails if anything pinned is missing, is a
 //! different version than pinned, or is not the file that was installed.
@@ -37,19 +37,16 @@ const OWNER: &str = "hsimah-services";
 /// and nothing more. Anything else needs `"source": "owner/repo"` on its target.
 const KNOWN: &[(&str, &str)] = &[
     ("eleph", "elephentity"),
-    ("eleph-codegen", "elephentity-codegen"),
-    ("eleph-gen-php", "elephentity-codegen-php"),
+    ("eleph-codegen", "elephentity"),
+    ("eleph-gen-php", "elephentity"),
     ("eleph-gen-wordpress", "elephentity-codegen-wordpress"),
     ("eleph-gen-wpgraphql", "elephentity-codegen-wpgraphql"),
-    ("eleph-gen-sqlite", "elephentity-codegen-sqlite"),
-    ("eleph-gen-graphql-php", "elephentity-codegen-graphql-php"),
-    ("eleph-gen-tsquid", "elephentity-codegen-tsquid"),
-    ("eleph-gen-csharp", "elephentity-codegen-csharp"),
-    ("eleph-gen-cosmos", "elephentity-codegen-cosmos"),
-    (
-        "eleph-gen-graphql-csharp",
-        "elephentity-codegen-graphql-csharp",
-    ),
+    ("eleph-gen-sqlite", "elephentity"),
+    ("eleph-gen-graphql-php", "elephentity"),
+    ("eleph-gen-tsquid", "elephentity"),
+    ("eleph-gen-csharp", "elephentity"),
+    ("eleph-gen-cosmos", "elephentity"),
+    ("eleph-gen-graphql-csharp", "elephentity"),
 ];
 
 /// Where release assets are downloaded from. `file://` reads a directory laid out the same way,
@@ -201,6 +198,17 @@ fn unknown(binary: &str, origin: &str) -> String {
     )
 }
 
+/// The tag a release is published under. `eleph` itself is `v<version>`; every other program that
+/// lives in the `elephentity` monorepo is `<binary>-v<version>`, because one repository releases
+/// many programs and their versions are independent. A program from anywhere else is `v<version>`.
+fn tag_of(repository: &str, binary: &str, version: &str) -> String {
+    if repository == format!("{OWNER}/elephentity") && binary != "eleph" {
+        format!("{binary}-v{version}")
+    } else {
+        format!("v{version}")
+    }
+}
+
 fn repository_of(binary: &str, source: Option<&str>) -> Option<String> {
     if let Some(source) = source {
         return Some(source.to_string());
@@ -304,12 +312,13 @@ fn settle(
     };
     let archive_name = format!("{}-{}-{rid}.{extension}", pin.binary, pin.version);
 
-    let archive = fetch(&pin.repository, &pin.version, &archive_name)?;
-    let sums = fetch(&pin.repository, &pin.version, "SHA256SUMS")?;
+    let tag = tag_of(&pin.repository, &pin.binary, &pin.version);
+    let archive = fetch(&pin.repository, &tag, &archive_name)?;
+    let sums = fetch(&pin.repository, &tag, "SHA256SUMS")?;
     let expected = digest_in(&String::from_utf8_lossy(&sums), &archive_name).ok_or_else(|| {
         format!(
-            "SHA256SUMS of {} v{} has no line for {archive_name}.",
-            pin.repository, pin.version
+            "SHA256SUMS of {} {tag} has no line for {archive_name}.",
+            pin.repository
         )
     })?;
     let actual = hex(&Sha256::digest(&archive));
@@ -448,14 +457,14 @@ fn runtime_identifier() -> Result<String, String> {
 }
 
 /// Read one release asset. A `file://` base is a directory laid out like GitHub's URLs.
-fn fetch(repository: &str, version: &str, asset: &str) -> Result<Vec<u8>, String> {
+fn fetch(repository: &str, tag: &str, asset: &str) -> Result<Vec<u8>, String> {
     let base = std::env::var(BASE_VARIABLE).unwrap_or_else(|_| DEFAULT_BASE.to_string());
     let base = base.trim_end_matches('/');
-    let location = format!("{base}/{repository}/releases/download/v{version}/{asset}");
+    let location = format!("{base}/{repository}/releases/download/{tag}/{asset}");
 
     if let Some(path) = location.strip_prefix("file://") {
         return fs::read(path).map_err(|_| {
-            format!("{repository} has no release v{version} with {asset} (looked for {path}).")
+            format!("{repository} has no release {tag} with {asset} (looked for {path}).")
         });
     }
 
@@ -477,7 +486,7 @@ fn fetch(repository: &str, version: &str, asset: &str) -> Result<Vec<u8>, String
             Ok(bytes)
         }
         Err(ureq::Error::Status(404, _)) => Err(format!(
-            "{repository} has no release v{version} with {asset} ({location})."
+            "{repository} has no release {tag} with {asset} ({location})."
         )),
         Err(error) => Err(format!("Could not download {location}: {error}")),
     }
@@ -566,8 +575,14 @@ mod tests {
     fn a_known_program_needs_no_source() {
         assert_eq!(
             repository_of("eleph-gen-csharp", None).as_deref(),
-            Some("hsimah-services/elephentity-codegen-csharp")
+            Some("hsimah-services/elephentity")
         );
+        assert_eq!(
+            tag_of("hsimah-services/elephentity", "eleph-gen-csharp", "0.1.0"),
+            "eleph-gen-csharp-v0.1.0"
+        );
+        assert_eq!(tag_of("hsimah-services/elephentity", "eleph", "0.14.0"), "v0.14.0");
+        assert_eq!(tag_of("them/theirs", "eleph-gen-x", "1.0.0"), "v1.0.0");
         assert_eq!(repository_of("somebody-elses", None), None);
         assert_eq!(
             repository_of("somebody-elses", Some("them/theirs")).as_deref(),

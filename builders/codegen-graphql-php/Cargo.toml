@@ -1,0 +1,15 @@
+[package]
+name = "elephentity-codegen-graphql-php"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Elephentity standalone GraphQL PHP manifest builder"
+
+[[bin]]
+name = "eleph-gen-graphql-php"
+path = "rust/main.rs"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+serde = { version = "1", features = ["derive"] }
+indexmap = { version = "2", features = ["serde"] }

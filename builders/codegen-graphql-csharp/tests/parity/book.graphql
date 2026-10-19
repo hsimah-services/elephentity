@@ -1,0 +1,144 @@
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}
+
+""""""
+type Book implements Node {
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """"""
+  priority: Priority
+
+  """"""
+  severity: Priority!
+
+  """"""
+  status: BookStatus!
+
+  """"""
+  title: String!
+}
+
+enum BookStatus {
+  DRAFT
+  LIVE
+}
+
+input CreateBookInput {
+  clientMutationId: String
+  priority: Priority
+  severity: Priority!
+  status: BookStatus!
+  title: String!
+}
+
+type CreateBookPayload {
+  book: Book
+  clientMutationId: String
+}
+
+input DeleteBookInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteBookPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+enum Priority {
+  HIGH
+  LOW
+  MEDIUM
+}
+
+input RenameBookInput {
+  clientMutationId: String
+  id: ID!
+  title: String!
+}
+
+type RenameBookPayload {
+  book: Book
+  clientMutationId: String
+}
+
+type RootMutation {
+  createBook(input: CreateBookInput!): CreateBookPayload
+  deleteBook(input: DeleteBookInput!): DeleteBookPayload
+  renameBook(input: RenameBookInput!): RenameBookPayload
+  updateBook(input: UpdateBookInput!): UpdateBookPayload
+}
+
+type RootQuery {
+  """One Book by id."""
+  book(id: ID!): Book
+  books(after: String, before: String, first: Int, last: Int): RootQueryToBookConnection
+  node(id: ID!): Node
+  searchBooks(after: String, before: String, first: Int, last: Int, where: RootQueryToSearchBooksConnectionWhereArgs): RootQueryToSearchBooksConnection
+}
+
+type RootQueryToBookConnection {
+  edges: [RootQueryToBookConnectionEdge]
+  nodes: [Book]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToBookConnectionEdge {
+  cursor: String
+  node: Book
+}
+
+type RootQueryToSearchBooksConnection {
+  edges: [RootQueryToSearchBooksConnectionEdge]
+  nodes: [Book]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToSearchBooksConnectionEdge {
+  cursor: String
+  node: Book
+}
+
+input RootQueryToSearchBooksConnectionWhereArgs {
+  text: String
+}
+
+input UpdateBookInput {
+  clientMutationId: String
+  id: ID!
+  priority: Priority
+  severity: Priority
+  status: BookStatus
+  title: String
+}
+
+type UpdateBookPayload {
+  book: Book
+  clientMutationId: String
+}

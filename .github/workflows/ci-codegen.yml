@@ -1,0 +1,70 @@
+name: CI codegen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'builders/codegen/**'
+      - '.github/workflows/ci-codegen.yml'
+  pull_request:
+    paths:
+      - 'builders/codegen/**'
+      - '.github/workflows/ci-codegen.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.3 is the floor. 8.4 runs to catch forward-compatibility breaks early.
+        php: ['8.3', '8.4']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+
+      - name: Rust formatting
+        run: cargo +stable fmt --check
+
+      - name: Rust static analysis
+        run: cargo +stable clippy --locked --all-targets -- -D warnings
+
+      - name: Rust tests and binaries
+        run: cargo +stable test --locked
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: builders/codegen
+
+      - name: Code style
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --show-progress=none
+
+      - name: Static analysis
+        run: composer stan -- --no-progress
+
+      - name: Tests
+        run: vendor/bin/phpunit

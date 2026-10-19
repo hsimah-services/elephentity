@@ -1,0 +1,138 @@
+name: CI dotnet
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dotnet
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The SDK feature band is pinned in global.json.
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: dotnet/global.json
+
+      - name: Formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Tests
+        run: dotnet test -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack -c Release --no-build -o artifacts -p:Version=0.0.0-ci
+
+      - name: One package per project, each declaring the MIT licence
+        run: |
+          test "$(ls artifacts/*.nupkg | wc -l)" -eq 7
+          for package in artifacts/*.nupkg; do
+            unzip -p "$package" '*.nuspec' | grep -q '<license type="expression">MIT</license>'
+          done
+
+  # The Cosmos adaptor against the Azure Cosmos DB Linux emulator. The plain job above skips those tests, because they
+  # need ELEPH_COSMOS_ENDPOINT; this one sets it. The emulator takes a minute or two to start, so the job waits for it.
+  cosmos:
+    name: Cosmos emulator
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dotnet
+
+    services:
+      cosmos:
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+        ports:
+          - 8081:8081
+          - 10250-10255:10250-10255
+        env:
+          AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 3
+          AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: dotnet/global.json
+
+      - name: Wait for the emulator
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -ksf https://localhost:8081/_explorer/emulator.pem -o /dev/null; then
+              echo "Emulator ready after $attempt attempt(s)."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "The Cosmos emulator did not become ready." >&2
+          docker ps -a
+          exit 1
+
+      - name: Cosmos tests
+        env:
+          ELEPH_COSMOS_ENDPOINT: https://localhost:8081
+        run: dotnet test tests/Elephentity.Cosmos.Tests -c Release
+
+  # The payload the .NET middleware inlines, read by the real tsquid client (`readInitialData` / `withInitialData`), at the tsquid commit in
+  # tests/Elephentity.Tsquid.Tests/tsquid.sha. The dotnet container has no node, so this is where that check runs.
+  tsquid-client:
+    name: The real tsquid client accepts the payload
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dotnet
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: dotnet/global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: tsquid at the pinned commit
+        run: |
+          git clone https://github.com/hsimah-services/tsquid.git tsquid
+          git -C tsquid checkout "$(cat tests/Elephentity.Tsquid.Tests/tsquid.sha)"
+          corepack enable
+          cd tsquid
+          pnpm install --frozen-lockfile
+          pnpm --filter @tsquid/routes build
+
+      - name: Write the payload
+        env:
+          TSQUID_PAYLOAD_OUT: ${{ github.workspace }}/dotnet/payload.json
+        run: dotnet test tests/Elephentity.Tsquid.Tests -c Release
+
+      - name: Read it with the client
+        run: node tests/Elephentity.Tsquid.Tests/client.mjs tsquid/packages/routes/dist/initialData.js payload.json

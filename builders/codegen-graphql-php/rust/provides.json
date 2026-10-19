@@ -1,0 +1,39 @@
+{
+    "integrations": {
+        "graphql": {
+            "description": "Exposes PHP entities through webonyx GraphQL without WordPress.",
+            "projectConfig": {},
+            "entityConfig": {
+                "singular": {
+                    "type": "string",
+                    "description": "GraphQL type name, e.g. ClogItem.",
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                },
+                "plural": {
+                    "type": "string",
+                    "description": "Plural for root fields and connections, e.g. ClogItems.",
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                }
+            },
+            "queryConfig": {
+                "field": {
+                    "type": "string",
+                    "description": "Root field name, e.g. clogItemsLowStock.",
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": null,
+                    "hasDefault": false
+                }
+            }
+        }
+    }
+}

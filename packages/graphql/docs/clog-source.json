@@ -1,0 +1,28 @@
+{
+  "source": "hsimah/clog",
+  "branch": "feature/standalone-sqlite",
+  "head": "3c8d7b1b3dd502e7c8c524c56c8c0ee62348392d",
+  "capturedAt": "2026-09-27T04:19:27.393260+00:00",
+  "status": "Imported from the working tree; all imported source hashes now verified against verifiedSourceCommit.",
+  "path": "server/standalone/vendor/elephentity/graphql",
+  "files": {
+    "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "src/Manifest/ConnectionEntry.php": "c50017a690d0da4841530504d447a0b1c7637d9460e607098de77e46fda37d7b",
+    "src/Manifest/EnumTypeEntry.php": "925efb9ef7715a332131daed9079445e70e46c1c934e6635e89562f5517d996a",
+    "src/Manifest/FieldEncoding.php": "9c21a22e6af7ee4dc47c46c64e5daef7e69cfc60d0326338b55664cabbf03749",
+    "src/Manifest/FieldEntry.php": "0f5d07deceefbd658b6f53e8c2df9caea82f78903ff33df946ea994696803b30",
+    "src/Manifest/GraphQLType.php": "7a521f4be99e21f3292005fc55c0a29fceddacba7d81c4a0d1064d9f55c2d2c7",
+    "src/Manifest/Manifest.php": "1f4d53c698c826f747751e55e79c6749fc2774c8781867030e2fdd812de88a76",
+    "src/Manifest/MutationEntry.php": "2ae126fee4247d14700d5ef75ddab2326f87fe5f8a71c43c1a503b22f15ce190",
+    "src/Manifest/ObjectTypeEntry.php": "9d5c49d87efc91fe8c41e24f596291717b354b8a95c0f419f0de46bf530fdd55",
+    "src/Manifest/QueryFieldEntry.php": "2b12396b4dcd62daa4ed3cb7771825d0282babc78156b39d572c9103f8385fbd",
+    "src/Manifest/RootFieldEntry.php": "0a4f85ca27e58cfe09e79ca668668937dbab1c3f26aed3fa5366e098ee4fd1b2",
+    "src/Registration/MutationRegistrar.php": "649df94da5d78c43c2508cc65210204b6b6af20522c8574e8645a3a05119571a",
+    "src/Registration/TypeRegistrar.php": "2603fae8bb5765d7a8acb9451e167db45b915a0afe5135a1555e6097a6682097",
+    "src/Relay/GlobalId.php": "c4b06f3cdc1928b353bbcb643356140e3bdc3a78c605d1bf292aa5a06e50e69c",
+    "src/Resolver/Connections.php": "94f7fa34372dff6af3617cff02d89b57b4031290c8856d8dd55fd80b322f6957",
+    "src/SchemaBuilder.php": "e38728709b40e9a35d2d88a40ee396756f020538fc31f9480f3715ad4f438f7f"
+  },
+  "verifiedSourceCommit": "fb57b3c5fd54d2faa6759f7fc7a75e828c8c837a",
+  "verifiedAt": "2026-09-27T04:24:57.286878+00:00"
+}

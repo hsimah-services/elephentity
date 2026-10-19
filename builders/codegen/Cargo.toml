@@ -1,0 +1,15 @@
+[package]
+name = "elephentity-codegen"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Elephentity builder orchestration, signing and output verification"
+
+[[bin]]
+name = "eleph-codegen"
+path = "rust/main.rs"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"
+tempfile = "3"

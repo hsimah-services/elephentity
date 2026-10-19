@@ -1,0 +1,19 @@
+pattern: HasTimestamps
+description: Creation and modification timestamps supplied by a pre-commit trigger.
+interface: true
+fields:
+  createdAt:
+    type: datetime
+    description: When the entity was created.
+    required: true
+    immutable: true
+  updatedAt:
+    type: datetime
+    description: When the entity was last modified.
+    required: true
+sideEffects:
+  timestamps:
+    description: Stamp creation once and modification on create or update, never delete.
+    on: [create, update]
+    phase: preCommit
+    handler: true

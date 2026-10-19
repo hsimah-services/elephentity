@@ -1,0 +1,12 @@
+{
+    "name": "elephentity/codegen-graphql-php",
+    "description": "Standalone GraphQL PHP manifest generator for Elephentity. Build-time only.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.3"
+    },
+    "bin": [
+        "bin/eleph-gen-graphql-php"
+    ]
+}

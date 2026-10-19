@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in([__DIR__ . '/packages'])
-    ->exclude('vendor');
+    ->exclude('vendor')
+    ->notPath('#^(graphql|sqlite)/#');
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)

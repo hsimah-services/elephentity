@@ -1,6 +1,6 @@
 //! `eleph install`, run as a user runs it, against a local directory laid out like GitHub Releases.
 //!
-//! A release here is a `file://` tree: `<owner>/<repo>/releases/download/v<version>/<asset>`. The
+//! A release here is a `file://` tree: `<owner>/<repo>/releases/download/<tag>/<asset>`. The
 //! "programs" in it are shell scripts, so the tests need no network and no real builder, and what
 //! was installed can be run to prove it is the file that was in the archive.
 
@@ -68,13 +68,18 @@ impl World {
         world
     }
 
-    fn dir(&self, repository: &str, version: &str) -> PathBuf {
+    fn dir(&self, repository: &str, binary: &str, version: &str) -> PathBuf {
+        let tag = if repository == "hsimah-services/elephentity" && binary != "eleph" {
+            format!("{binary}-v{version}")
+        } else {
+            format!("v{version}")
+        };
         let dir = self
             .releases
             .path()
             .join(repository)
             .join("releases/download")
-            .join(format!("v{version}"));
+            .join(tag);
         fs::create_dir_all(&dir).unwrap();
 
         dir
@@ -82,7 +87,7 @@ impl World {
 
     /// Publish `binary` as release `version` of `repository`, with a correct SHA256SUMS.
     fn publish(&self, repository: &str, binary: &str, version: &str, script: &str) {
-        let dir = self.dir(repository, version);
+        let dir = self.dir(repository, binary, version);
         let name = format!("{binary}-{version}-{}.tar.gz", rid());
         let bytes = archive(binary, script);
 
@@ -132,13 +137,13 @@ const PINNED: &str = r#"{"spec": "spec", "codegen": "eleph-codegen@1.0.0", "targ
 
 fn publish_both(world: &World) {
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         &codegen_script("eleph-gen-csharp@0.1.0", ""),
     );
     world.publish(
-        "hsimah-services/elephentity-codegen-csharp",
+        "hsimah-services/elephentity",
         "eleph-gen-csharp",
         "0.1.0",
         "#!/bin/sh\necho csharp builder\n",
@@ -180,7 +185,7 @@ fn it_installs_the_generator_and_every_pinned_builder_and_records_them() {
     assert_eq!(entry["version"], "0.1.0");
     assert_eq!(
         entry["source"],
-        "hsimah-services/elephentity-codegen-csharp"
+        "hsimah-services/elephentity"
     );
     assert_eq!(entry["rid"], rid());
     assert_eq!(
@@ -277,7 +282,7 @@ fn a_wrong_checksum_installs_nothing() {
     let world = World::new();
     publish_both(&world);
     world.config(PINNED);
-    let dir = world.dir("hsimah-services/elephentity-codegen", "1.0.0");
+    let dir = world.dir("hsimah-services/elephentity", "eleph-codegen", "1.0.0");
     fs::write(
         dir.join("SHA256SUMS"),
         format!("{}  eleph-codegen-1.0.0-{}.tar.gz\n", "0".repeat(64), rid()),
@@ -314,7 +319,7 @@ fn an_archive_without_the_binary_is_refused() {
     publish_both(&world);
     world.config(PINNED);
     // Re-pack the generator's archive with the wrong name inside, and fix its checksum.
-    let dir = world.dir("hsimah-services/elephentity-codegen", "1.0.0");
+    let dir = world.dir("hsimah-services/elephentity", "eleph-codegen", "1.0.0");
     let name = format!("eleph-codegen-1.0.0-{}.tar.gz", rid());
     let bytes = archive("something-else", "#!/bin/sh\n");
     fs::write(dir.join(&name), &bytes).unwrap();
@@ -329,7 +334,7 @@ fn an_archive_without_the_binary_is_refused() {
 fn a_builder_the_table_does_not_know_needs_a_source_and_then_uses_it() {
     let world = World::new();
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         &codegen_script("their-builder@3.0.0", ""),
@@ -346,7 +351,7 @@ fn a_builder_the_table_does_not_know_needs_a_source_and_then_uses_it() {
 
     // With a source, the same pin resolves to that repository.
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         &codegen_script("their-builder@3.0.0", ",\"source\":\"them/theirs\""),
@@ -376,7 +381,7 @@ fn a_builder_the_table_does_not_know_needs_a_source_and_then_uses_it() {
 fn an_unpinned_builder_is_mentioned_and_left_alone() {
     let world = World::new();
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         &codegen_script("vendor/bin/eleph-gen-php", ""),
@@ -398,7 +403,7 @@ fn two_targets_cannot_pin_two_versions_of_one_builder() {
     let world = World::new();
     let script = "#!/bin/sh\ncase \"$1\" in\n  targets) echo '{\"spec\":\"spec\",\"targets\":{\"a\":{\"output\":\"a\",\"builder\":\"eleph-gen-csharp@0.1.0\"},\"b\":{\"output\":\"b\",\"builder\":\"eleph-gen-csharp@0.2.0\"}}}' ;;\nesac\n";
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         script,
@@ -414,7 +419,7 @@ fn two_targets_cannot_pin_two_versions_of_one_builder() {
 fn a_project_that_pins_nothing_says_so_and_succeeds() {
     let world = World::new();
     world.publish(
-        "hsimah-services/elephentity-codegen",
+        "hsimah-services/elephentity",
         "eleph-codegen",
         "1.0.0",
         &codegen_script("vendor/bin/x", ""),

@@ -1,0 +1,599 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "request": "generate",
+  "target": "php",
+  "config": {
+    "namespace": "RuntimeCheck",
+    "typeNamespace": "RuntimeCheckType"
+  },
+  "outputDirectory": "generated",
+  "schema": {
+    "project": {
+      "name": "Fixture",
+      "driver": "sqlite",
+      "sourceFile": "/app/packages/schema/tests/fixtures/valid/project.yml",
+      "integrations": {
+        "wpgraphql": {
+          "mutations": true,
+          "rootQueries": true
+        }
+      },
+      "tablePrefix": "",
+      "description": null
+    },
+    "entities": {
+      "Page": {
+        "name": "Page",
+        "storage": {
+          "driver": "sqlite",
+          "table": "page",
+          "handle": null
+        },
+        "sourceFile": "Page.yml",
+        "description": null,
+        "uses": [],
+        "fields": {
+          "title": {
+            "name": "title",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "slug": {
+            "name": "slug",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "content": {
+            "name": "content",
+            "type": {
+              "primitive": "text",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": "",
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "excerpt": {
+            "name": "excerpt",
+            "type": {
+              "primitive": "text",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": "",
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "status": {
+            "name": "status",
+            "type": {
+              "primitive": null,
+              "declaredType": "Status"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": "draft",
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "publishedAt": {
+            "name": "publishedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": true
+          },
+          "enquiryUrl": {
+            "name": "enquiryUrl",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": true
+          },
+          "active": {
+            "name": "active",
+            "type": {
+              "primitive": "bool",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": true,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "zero": {
+            "name": "zero",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": 0,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "disabled": {
+            "name": "disabled",
+            "type": {
+              "primitive": "bool",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": false,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "metadata": {
+            "name": "metadata",
+            "type": {
+              "primitive": "json",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": {
+              "source": "default"
+            },
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": "2000-01-01",
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "rank": {
+            "name": "rank",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": 0,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "amount": {
+            "name": "amount",
+            "type": {
+              "primitive": null,
+              "declaredType": "Amount"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": {
+              "cents": 10
+            },
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {
+          "bySlug": {
+            "name": "bySlug",
+            "returns": {
+              "type": "Page",
+              "cardinality": "one"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "arguments": {
+              "slug": {
+                "name": "slug",
+                "type": {
+                  "primitive": "string",
+                  "declaredType": null
+                },
+                "nullable": false
+              }
+            },
+            "description": null,
+            "integrations": {
+              "graphql": {
+                "field": "pageBySlug"
+              }
+            }
+          },
+          "search": {
+            "name": "search",
+            "returns": {
+              "type": "Page",
+              "cardinality": "many"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "arguments": {
+              "limit": {
+                "name": "limit",
+                "type": {
+                  "primitive": "int",
+                  "declaredType": null
+                },
+                "nullable": true
+              }
+            },
+            "description": null,
+            "integrations": {
+              "graphql": {
+                "field": "searchPages"
+              }
+            }
+          }
+        },
+        "actions": {
+          "publish": {
+            "name": "publish",
+            "writes": {
+              "fields": [
+                "status",
+                "publishedAt"
+              ],
+              "edges": []
+            },
+            "origin": {
+              "pattern": null,
+              "file": "runtime-contracts.yml"
+            },
+            "arguments": {
+              "at": {
+                "name": "at",
+                "type": {
+                  "primitive": "datetime",
+                  "declaredType": null
+                },
+                "nullable": false
+              }
+            },
+            "description": null
+          }
+        },
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "singular": "Page",
+            "plural": "Pages"
+          }
+        },
+        "appliedPatterns": [],
+        "readPolicies": {
+          "public": {
+            "name": "public",
+            "origin": {
+              "pattern": null,
+              "file": "Page.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "User": {
+        "name": "User",
+        "storage": {
+          "driver": "sqlite",
+          "table": "user",
+          "handle": null
+        },
+        "sourceFile": "Page.yml",
+        "description": null,
+        "uses": [],
+        "fields": {
+          "username": {
+            "name": "username",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "role": {
+            "name": "role",
+            "type": {
+              "primitive": null,
+              "declaredType": "Role"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": "editor",
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "active": {
+            "name": "active",
+            "type": {
+              "primitive": "bool",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": true,
+            "hasDefault": true,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {},
+        "appliedPatterns": [],
+        "readPolicies": {},
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      }
+    },
+    "types": {
+      "Status": {
+        "name": "Status",
+        "primitive": "string",
+        "sourceFile": "Status.yml",
+        "description": null,
+        "hasProcessors": false,
+        "values": [
+          "draft",
+          "published"
+        ]
+      },
+      "Role": {
+        "name": "Role",
+        "primitive": "int",
+        "sourceFile": "Role.yml",
+        "description": null,
+        "hasProcessors": false,
+        "values": [
+          "editor",
+          "viewer"
+        ]
+      },
+      "Amount": {
+        "name": "Amount",
+        "primitive": "json",
+        "sourceFile": "Amount.yml",
+        "description": null,
+        "hasProcessors": true,
+        "values": null
+      }
+    },
+    "patterns": {}
+  }
+}

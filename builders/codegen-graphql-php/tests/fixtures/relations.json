@@ -1,0 +1,721 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "request": "generate",
+  "target": "graphql-php",
+  "config": {},
+  "outputDirectory": "generated/wpgraphql",
+  "schema": {
+    "project": {
+      "name": "Fixture",
+      "driver": "sqlite",
+      "sourceFile": "/app/packages/schema/tests/fixtures/valid/project.yml",
+      "integrations": {
+        "graphql": {}
+      },
+      "tablePrefix": "",
+      "description": null
+    },
+    "entities": {
+      "Author": {
+        "name": "Author",
+        "storage": {
+          "driver": "sqlite",
+          "table": "phe_author",
+          "handle": null
+        },
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml",
+        "description": "Someone who writes comments.",
+        "uses": [],
+        "fields": {
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Author.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 120,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "Authors",
+            "singular": "Author"
+          }
+        },
+        "appliedPatterns": [],
+        "readPolicies": {},
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "Comment": {
+        "name": "Comment",
+        "storage": {
+          "driver": "sqlite",
+          "table": "phe_comment",
+          "handle": null
+        },
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/entities/Comment.yml",
+        "description": null,
+        "uses": [],
+        "fields": {
+          "body": {
+            "name": "body",
+            "type": {
+              "primitive": "text",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Comment.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {
+          "author": {
+            "name": "author",
+            "to": "Author",
+            "cardinality": "one",
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Comment.yml"
+            },
+            "description": "Who wrote it.",
+            "inverse": {
+              "derived": false,
+              "name": "comments",
+              "unique": false
+            },
+            "onDelete": "nullify",
+            "required": false
+          }
+        },
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "Comments",
+            "singular": "Comment"
+          }
+        },
+        "appliedPatterns": [],
+        "readPolicies": {},
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "Post": {
+        "name": "Post",
+        "storage": {
+          "driver": "sqlite",
+          "table": "phe_post",
+          "handle": "post"
+        },
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml",
+        "description": "A published article.",
+        "uses": [
+          "Auditable",
+          "WordPressPost"
+        ],
+        "fields": {
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/Timestamps.yml"
+            },
+            "description": "When the row was first written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/Timestamps.yml"
+            },
+            "description": "When the row was last written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "modified",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "WordPressPost",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/WordPressPost.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "slug": {
+            "name": "slug",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": "Write-once, and chosen by whoever creates the post.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": true,
+            "managed": null,
+            "maxLength": 120,
+            "enum": null,
+            "verify": false
+          },
+          "title": {
+            "name": "title",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 200,
+            "enum": null,
+            "verify": false
+          },
+          "price": {
+            "name": "price",
+            "type": {
+              "primitive": null,
+              "declaredType": "Money"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": true
+          },
+          "status": {
+            "name": "status",
+            "type": {
+              "primitive": "enum",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": {
+              "inlineValues": null,
+              "declaredType": "PostStatus"
+            },
+            "verify": false
+          },
+          "visibility": {
+            "name": "visibility",
+            "type": {
+              "primitive": "enum",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": {
+              "inlineValues": [
+                "public",
+                "private"
+              ],
+              "declaredType": null
+            },
+            "verify": false
+          },
+          "publishedAt": {
+            "name": "publishedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": "When it went live. A plain datetime, set by whoever publishes it.",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "extraInt": {
+            "name": "extraInt",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "nullable": true
+          },
+          "extraFloat": {
+            "name": "extraFloat",
+            "type": {
+              "primitive": "float",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "nullable": true
+          },
+          "extraBool": {
+            "name": "extraBool",
+            "type": {
+              "primitive": "bool",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "nullable": true
+          },
+          "extraJson": {
+            "name": "extraJson",
+            "type": {
+              "primitive": "json",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "nullable": true
+          },
+          "extraId": {
+            "name": "extraId",
+            "type": {
+              "primitive": "id",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "nullable": true
+          }
+        },
+        "edges": {
+          "comments": {
+            "name": "comments",
+            "to": "Comment",
+            "cardinality": "many",
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "inverse": {
+              "derived": true,
+              "name": null,
+              "unique": true
+            },
+            "onDelete": "restrict",
+            "required": false
+          },
+          "tags": {
+            "name": "tags",
+            "to": "Tag",
+            "cardinality": "many",
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": null,
+            "inverse": {
+              "derived": false,
+              "name": "posts",
+              "unique": false
+            },
+            "onDelete": "restrict",
+            "required": false
+          },
+          "related": {
+            "name": "related",
+            "to": "Post",
+            "cardinality": "many",
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "onDelete": "cascade",
+            "inverse": {
+              "derived": false,
+              "name": "relatedFrom",
+              "unique": false
+            }
+          },
+          "featuredAuthor": {
+            "name": "featuredAuthor",
+            "to": "Author",
+            "cardinality": "one",
+            "origin": {
+              "pattern": null,
+              "file": "relations.yml"
+            },
+            "onDelete": "restrict",
+            "inverse": {
+              "derived": true,
+              "name": null,
+              "unique": true
+            }
+          }
+        },
+        "queries": {
+          "published": {
+            "name": "published",
+            "returns": {
+              "type": "Post",
+              "cardinality": "many"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "arguments": {
+              "limit": {
+                "name": "limit",
+                "type": {
+                  "primitive": "int",
+                  "declaredType": null
+                },
+                "nullable": true
+              }
+            },
+            "description": null,
+            "integrations": {
+              "graphql": {
+                "field": "publishedPosts"
+              }
+            }
+          }
+        },
+        "actions": {
+          "publish": {
+            "name": "publish",
+            "writes": {
+              "fields": [
+                "status"
+              ],
+              "edges": [
+                "comments"
+              ]
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "arguments": {
+              "at": {
+                "name": "at",
+                "type": {
+                  "primitive": "datetime",
+                  "declaredType": null
+                },
+                "nullable": true
+              }
+            },
+            "description": null
+          }
+        },
+        "sideEffects": {
+          "audit": {
+            "name": "audit",
+            "events": [
+              "create",
+              "update"
+            ],
+            "origin": {
+              "pattern": "Auditable",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/Auditable.yml"
+            },
+            "phase": "postCommit",
+            "description": null
+          },
+          "reindex": {
+            "name": "reindex",
+            "events": [
+              "create",
+              "update"
+            ],
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "phase": "postCommit",
+            "description": null
+          }
+        },
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "Posts",
+            "singular": "Post"
+          }
+        },
+        "appliedPatterns": [
+          "Timestamps",
+          "Auditable",
+          "WordPressPost"
+        ],
+        "readPolicies": {
+          "owner": {
+            "name": "owner",
+            "origin": {
+              "pattern": "Auditable",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/Auditable.yml"
+            },
+            "description": null
+          },
+          "reporter": {
+            "name": "reporter",
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": "The person who raised it may always read it."
+          }
+        },
+        "writePolicies": {
+          "noBackwards": {
+            "name": "noBackwards",
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Post.yml"
+            },
+            "description": "A post never returns to draft."
+          }
+        },
+        "terminalRead": "allow",
+        "terminalWrite": "deny"
+      },
+      "Tag": {
+        "name": "Tag",
+        "storage": {
+          "driver": "sqlite",
+          "table": "phe_tag",
+          "handle": null
+        },
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/entities/Tag.yml",
+        "description": null,
+        "uses": [],
+        "fields": {
+          "label": {
+            "name": "label",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/packages/schema/tests/fixtures/valid/entities/Tag.yml"
+            },
+            "description": null,
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "Tags",
+            "singular": "Tag"
+          }
+        },
+        "appliedPatterns": [],
+        "readPolicies": {},
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      }
+    },
+    "types": {
+      "Money": {
+        "name": "Money",
+        "primitive": "int",
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/types/Money.yml",
+        "description": "An amount in minor units.",
+        "hasProcessors": true,
+        "values": null
+      },
+      "PostStatus": {
+        "name": "PostStatus",
+        "primitive": "string",
+        "sourceFile": "/app/packages/schema/tests/fixtures/valid/types/PostStatus.yml",
+        "description": null,
+        "hasProcessors": false,
+        "values": [
+          "draft",
+          "scheduled",
+          "published"
+        ]
+      }
+    },
+    "patterns": {
+      "Auditable": {
+        "name": "Auditable",
+        "fields": {},
+        "edges": {},
+        "readPolicies": {
+          "owner": {
+            "name": "owner",
+            "origin": {
+              "pattern": "Auditable",
+              "file": "/app/packages/schema/tests/fixtures/valid/patterns/Auditable.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {}
+      }
+    }
+  }
+}

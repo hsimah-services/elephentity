@@ -4,29 +4,74 @@ name: Release
 # archives, publish them with SHA256SUMS to the tag's GitHub Release, and attach the two scripts
 # that bootstrap it (install.sh, install.ps1).
 #
-# The build, the checks and the archive names are elephentity-codegen's reusable workflow, which
-# every Rust program here shares; the names are a contract with `eleph install`
-# (docs/RELEASING.md there). Called from a branch or a pull request it publishes nothing, which is
-# how release-check.yml proves a change to this path without a tag.
+# The build, the checks and the archive names are release-binary.yml, the reusable workflow every
+# Rust program here shares; the names are a contract with `eleph install`
+# (docs/RELEASING.md). Called from a branch or a pull request it publishes
+# nothing, which is how release-check.yml proves a change to this path without a tag.
 #
 # split.yml also runs on v* tags and still mirrors packages/*; the two are independent.
+#
+# Tags: `v<version>` releases eleph; `<binary>-v<version>` releases that builder (for example
+# `eleph-gen-csharp-v0.1.0`). Each program is versioned on its own.
 
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
+      - 'eleph-codegen-v*'
+      - 'eleph-gen-tsquid-v*'
+      - 'eleph-gen-csharp-v*'
+      - 'eleph-gen-cosmos-v*'
+      - 'eleph-gen-graphql-csharp-v*'
 
 permissions:
   contents: write
 
 jobs:
   binary:
-    # Pin this to a tag of elephentity-codegen once one exists (its docs/RELEASING.md says to).
-    uses: hsimah-services/elephentity-codegen/.github/workflows/release-binary.yml@main
+    if: startsWith(github.ref_name, 'v')
+    uses: ./.github/workflows/release-binary.yml
     with:
       binary: eleph
       manifest-path: compiler/Cargo.toml
 
+  eleph-codegen:
+    if: startsWith(github.ref_name, 'eleph-codegen-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-codegen
+      manifest-path: builders/codegen/Cargo.toml
+
+  eleph-gen-tsquid:
+    if: startsWith(github.ref_name, 'eleph-gen-tsquid-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-tsquid
+      manifest-path: builders/codegen-tsquid/Cargo.toml
+
+  eleph-gen-csharp:
+    if: startsWith(github.ref_name, 'eleph-gen-csharp-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-csharp
+      manifest-path: builders/codegen-csharp/Cargo.toml
+
+  eleph-gen-cosmos:
+    if: startsWith(github.ref_name, 'eleph-gen-cosmos-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-cosmos
+      manifest-path: builders/codegen-cosmos/Cargo.toml
+
+  eleph-gen-graphql-csharp:
+    if: startsWith(github.ref_name, 'eleph-gen-graphql-csharp-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-graphql-csharp
+      manifest-path: builders/codegen-graphql-csharp/Cargo.toml
+
   scripts:
+    if: startsWith(github.ref_name, 'v')
     name: Attach install scripts
     needs: binary
     runs-on: ubuntu-22.04

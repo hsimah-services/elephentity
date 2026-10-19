@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+# Resolve links first, so the launcher works when run through a symlink.
+self=$0
+while [ -h "$self" ]; do
+    target=$(readlink "$self")
+    case "$target" in
+        /*) self=$target ;;
+        *) self=$(dirname "$self")/$target ;;
+    esac
+done
+package_dir=$(CDPATH= cd -- "$(dirname -- "$self")/.." && pwd)
+for profile in release debug; do
+    binary="$package_dir/target/$profile/eleph-gen-csharp"
+    if [ -x "$binary" ]; then
+        exec "$binary" "$@"
+    fi
+done
+printf '%s\n' "eleph-gen-csharp: build this checkout with cargo build --release --locked --manifest-path $package_dir/Cargo.toml, install with cargo install --path $package_dir --locked, or fetch a release with \`eleph install\`." >&2
+exit 1

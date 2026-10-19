@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Gen\Php\PhpTarget;
+use Eleph\Gen\Php\Protocol\Envelope;
+use Eleph\Gen\Php\Protocol\ProtocolException;
+
+/**
+ * The PHP builder: a request on stdin, generated files on stdout, and nothing else.
+ *
+ * It never writes a file. Signing happens after this exits, in whatever ran it, so a
+ * builder that wrote its own output would produce files nothing had locked. Returning
+ * paths and bodies is the whole of the job.
+ *
+ * Diagnostics go to stderr, never stdout: stdout is the response and nothing else.
+ *
+ * See PROTOCOL.md in elephentity-codegen for the contract this implements.
+ */
+
+// Works both when this is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+$stdin = file_get_contents('php://stdin');
+
+if (false === $stdin || '' === trim($stdin)) {
+    fwrite(STDERR, "eleph-gen-php: expected a request on stdin.\n");
+
+    exit(1);
+}
+
+try {
+    $request = Envelope::fromJson($stdin);
+
+    // Which question this is, before anything else about it: a describe carries no
+    // schema, so decoding it as a generate is how a builder that predates describe
+    // fails.
+    if (Envelope::REQUEST_DESCRIBE === Envelope::requestKind($request)) {
+        fwrite(STDOUT, Envelope::toJson(Envelope::describe($request)));
+
+        exit(0);
+    }
+
+    $incoming = Envelope::decodeRequest($request);
+} catch (ProtocolException $exception) {
+    fwrite(STDERR, 'eleph-gen-php: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+} catch (JsonException $exception) {
+    fwrite(STDERR, 'eleph-gen-php: could not encode the description: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+}
+
+$response = (new PhpTarget())->generate($incoming->request, $incoming->schema);
+
+try {
+    fwrite(STDOUT, Envelope::toJson(Envelope::encodeResponse($response)));
+} catch (JsonException $exception) {
+    fwrite(STDERR, 'eleph-gen-php: could not encode the response: ' . $exception->getMessage() . "\n");
+
+    exit(1);
+}
+
+exit(0);

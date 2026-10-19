@@ -1,0 +1,10 @@
+pattern: HasSlug
+description: A required, immutable slug supplied by the application.
+interface: true
+fields:
+  slug:
+    type: string
+    description: An application-supplied slug, fixed after creation.
+    required: true
+    immutable: true
+    maxLength: 120

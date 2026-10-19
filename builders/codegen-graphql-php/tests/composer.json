@@ -1,0 +1,14 @@
+{
+    "name": "elephentity/test-codegen-graphql-php",
+    "description": "Runtime acceptance test dependencies.",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/hsimah-services/elephentity-graphql-php"
+        }
+    ],
+    "require": {
+        "elephentity/graphql": "0.2.0-alpha.3"
+    }
+}

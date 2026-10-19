@@ -1,0 +1,355 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Eleph\SQLite;
+
+use Eleph\Runtime\Capability\Capabilities;
+use Eleph\Runtime\Capability\Capability;
+use Eleph\Runtime\Identity\EntityId;
+use Eleph\Runtime\Identity\Identifier;
+use Eleph\Runtime\Storage\Criteria;
+use Eleph\Runtime\Storage\EdgeFilter;
+use Eleph\Runtime\Storage\Offset;
+use Eleph\Runtime\Storage\Page;
+use Eleph\Runtime\Storage\Record;
+use Eleph\Runtime\Storage\StorageAdaptor;
+use Eleph\Runtime\Storage\Write\Delete;
+use Eleph\Runtime\Storage\Write\Insert;
+use Eleph\Runtime\Storage\Write\Link;
+use Eleph\Runtime\Storage\Write\Unlink;
+use Eleph\Runtime\Storage\Write\Update;
+use Eleph\Runtime\Storage\Write\WriteBatch;
+use Eleph\Runtime\Storage\Write\WriteResult;
+use Eleph\SQLite\Database;
+use Eleph\SQLite\Sql\EdgePlacement;
+use Eleph\SQLite\Sql\FieldMap;
+use Eleph\SQLite\Sql\QueryCompiler;
+use Eleph\SQLite\Sql\TableSchema;
+use RuntimeException;
+use Throwable;
+
+
+final readonly class SQLiteAdaptor implements StorageAdaptor
+{
+
+    public function __construct(
+        private Database $database,
+        private array $tables,
+        private FieldMap $fields,
+        private array $placements = [],
+        private QueryCompiler $compiler = new QueryCompiler(),
+    ) {
+    }
+
+    public function capabilities(): Capabilities
+    {
+        return new Capabilities(
+            'sqlite',
+            Capability::Transactions,
+            Capability::ForeignKeys,
+        );
+    }
+
+    public function get(string $entity, EntityId $id): ?Record
+    {
+        $table = $this->table($entity);
+
+        $rows = $this->database->select(
+            sprintf('SELECT * FROM `%s` WHERE `id` = %%d LIMIT 1', $table->name),
+            [$id->raw()],
+        );
+
+        return [] === $rows ? null : $this->record($entity, $rows[0]);
+    }
+
+    public function getMany(string $entity, array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+
+        $table = $this->table($entity);
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+
+        $rows = $this->database->select(
+            sprintf('SELECT * FROM `%s` WHERE `id` IN (%s)', $table->name, $placeholders),
+            array_map(static fn (EntityId $id): int|string => $id->raw(), $ids),
+        );
+
+        return array_map(fn (array $row): Record => $this->record($entity, $row), $rows);
+    }
+
+    public function query(Criteria $criteria): Page
+    {
+        if (null !== $criteria->limit) {
+            if ($criteria->limit < 0) {
+                throw new RuntimeException('Page size must be non-negative.');
+            }
+            if (0 === $criteria->limit) {
+                return new Page([]);
+            }
+            $criteria = $criteria->take(min($criteria->limit, QueryCompiler::MAX_LIMIT), $criteria->after);
+        }
+
+        $table = $this->table($criteria->entity);
+        $compiled = $this->compiler->select($table, $criteria);
+
+        $rows = $this->database->select($compiled->sql, $compiled->bindings);
+
+        $records = array_map(
+            fn (array $row): Record => $this->record($criteria->entity, $row),
+            $rows,
+        );
+
+        if (null === $criteria->limit) {
+            return new Page($records);
+        }
+
+        // The compiler asked for one row more than the caller wanted. Its presence is
+        // the answer to "is there another page", and it is dropped here so nothing
+        // above ever sees it.
+        $offset = Offset::fromCursor($criteria->after)->value;
+        $hasMore = count($records) > $criteria->limit;
+
+        return new Page(
+            array_slice($records, 0, $criteria->limit),
+            $hasMore ? (new Offset($offset + $criteria->limit))->toCursor() : null,
+        );
+    }
+
+    public function count(Criteria $criteria): int
+    {
+        $compiled = $this->compiler->count($this->table($criteria->entity), $criteria);
+
+        return (int) $this->database->scalar($compiled->sql, $compiled->bindings);
+    }
+
+
+    public function write(WriteBatch $batch): WriteResult
+    {
+        return $this->transaction(fn () => $this->apply($batch));
+    }
+
+    private function apply(WriteBatch $batch): WriteResult
+    {
+        $result = new WriteResult();
+
+        foreach ($batch->operations as $operation) {
+            $table = $this->table($operation->entity());
+
+            match (true) {
+                $operation instanceof Insert => $result->assign(
+                    $operation->pendingId(),
+                    $this->insert($table, $operation),
+                ),
+                $operation instanceof Update => $this->update($table, $operation),
+                $operation instanceof Delete => $this->delete($table, $operation),
+                $operation instanceof Link => $this->link($operation),
+                $operation instanceof Unlink => $this->unlink($operation),
+                default => throw new RuntimeException(sprintf(
+                    'Unsupported write operation %s.',
+                    $operation::class,
+                )),
+            };
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param Link|Unlink $operation
+     */
+    private function edgeKey(Link|Unlink $operation): string
+    {
+        return $operation->entity() . '.' . $operation->edge;
+    }
+
+    public function transaction(callable $work): mixed
+    {
+        return $this->database->transaction($work);
+    }
+
+    /**
+     * Attach one row to another.
+     *
+     * How that happens depends on where the edge lives, which is exactly why Link says
+     * nothing about columns: a foreign key on either side and a join table are three
+     * different statements for the same intent.
+     */
+    private function link(Link $operation): void
+    {
+        $placement = $this->placement($operation->entity(), $operation->edge);
+        $from = $this->rawId($operation->from);
+        $to = $this->rawId($operation->to);
+
+        if ($placement->usesJoinTable()) {
+            // INSERT IGNORE, because linking twice is not an error — the unique key on
+            // the pair already says a link exists at most once.
+            $this->database->execute(
+                sprintf(
+                    'INSERT OR IGNORE INTO `%s` (`%s`, `%s`) VALUES (%%d, %%d)',
+                    $placement->table,
+                    $placement->localColumn,
+                    (string) $placement->targetColumn,
+                ),
+                [$from, $to],
+            );
+
+            return;
+        }
+
+        // The key column lives on one side or the other; whichever it is, the row
+        // carrying it is updated to point at the other.
+        [$row, $value] = $placement->keyIsLocal() ? [$from, $to] : [$to, $from];
+
+        $this->database->execute(
+            sprintf(
+                'UPDATE `%s` SET `%s` = %%d WHERE `id` = %%d',
+                $placement->table,
+                $placement->localColumn,
+            ),
+            [$value, $row],
+        );
+    }
+
+    /**
+     * Detach one row from another, or clear the edge entirely when no target is named.
+     */
+    private function unlink(Unlink $operation): void
+    {
+        $placement = $this->placement($operation->entity(), $operation->edge);
+        $from = $this->rawId($operation->from);
+        $to = null === $operation->to ? null : $this->rawId($operation->to);
+
+        if ($placement->usesJoinTable()) {
+            $sql = sprintf(
+                'DELETE FROM `%s` WHERE `%s` = %%d',
+                $placement->table,
+                $placement->localColumn,
+            );
+
+            $bindings = [$from];
+
+            if (null !== $to) {
+                $sql .= sprintf(' AND `%s` = %%d', (string) $placement->targetColumn);
+                $bindings[] = $to;
+            }
+
+            $this->database->execute($sql, $bindings);
+
+            return;
+        }
+
+        if ($placement->keyIsLocal()) {
+            $sql = sprintf('UPDATE `%s` SET `%s` = NULL WHERE `id` = %%d', $placement->table, $placement->localColumn);
+            $bindings = [$from];
+            if (null !== $to) {
+                $sql .= sprintf(' AND `%s` = %%d', $placement->localColumn);
+                $bindings[] = $to;
+            }
+            $this->database->execute($sql, $bindings);
+
+            return;
+        }
+
+        $sql = sprintf(
+            'UPDATE `%s` SET `%s` = NULL WHERE `%s` = %%d',
+            $placement->table,
+            $placement->localColumn,
+            $placement->localColumn,
+        );
+
+        $bindings = [$from];
+
+        if (null !== $to) {
+            $sql .= ' AND `id` = %d';
+            $bindings[] = $to;
+        }
+
+        $this->database->execute($sql, $bindings);
+    }
+
+    private function placement(string $entity, string $edge): EdgePlacement
+    {
+        return $this->placements[$entity . '.' . $edge] ?? throw new RuntimeException(sprintf(
+            'Edge %s.%s is not mapped.',
+            $entity,
+            $edge,
+        ));
+    }
+
+    private function rawId(Identifier $identifier): int|string
+    {
+        return $identifier instanceof EntityId ? $identifier->raw() : (string) $identifier;
+    }
+
+    private function insert(TableSchema $table, Insert $operation): EntityId
+    {
+        $values = $this->fields->toColumns($operation->entity(), $operation->values);
+        return EntityId::of($this->database->insert($table->name, $values));
+    }
+
+    private function update(TableSchema $table, Update $operation): void
+    {
+        if ([] === $operation->values) {
+            return;
+        }
+
+        $assignments = [];
+        $bindings = [];
+
+        foreach ($operation->values as $field => $value) {
+            $assignments[] = sprintf('`%s` = %%s', $this->fields->column($operation->entity(), $field));
+            $bindings[] = $value;
+        }
+
+        $target = $operation->target();
+        $bindings[] = $target instanceof EntityId ? $target->raw() : (string) $target;
+
+        $this->database->execute(
+            sprintf(
+                'UPDATE `%s` SET %s WHERE `id` = %%d',
+                $table->name,
+                implode(', ', $assignments),
+            ),
+            $bindings,
+        );
+    }
+
+    private function delete(TableSchema $table, Delete $operation): void
+    {
+        $target = $operation->target();
+
+        $this->database->execute(
+            sprintf('DELETE FROM `%s` WHERE `id` = %%d', $table->name),
+            [$target instanceof EntityId ? $target->raw() : (string) $target],
+        );
+    }
+
+    /**
+     * @param array<string, scalar|null> $row
+     */
+    private function record(string $entity, array $row): Record
+    {
+        $id = $row['id'] ?? null;
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new RuntimeException(sprintf('A %s row came back without an id.', $entity));
+        }
+
+        unset($row['id']);
+
+        // Columns become fields here, so nothing above the adaptor ever sees a
+        // snake_case name or has to know how this backend spells things.
+        return new Record($entity, EntityId::of($id), $this->fields->toFields($entity, $row));
+    }
+
+    private function table(string $entity): TableSchema
+    {
+        return $this->tables[$entity] ?? throw new RuntimeException(sprintf(
+            'No table is mapped for entity "%s".',
+            $entity,
+        ));
+    }
+}

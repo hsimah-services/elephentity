@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/release.yml'
+      - '.github/workflows/release-binary.yml'
       - '.github/workflows/release-check.yml'
       - 'compiler/**'
       - 'install.sh'
@@ -21,7 +22,7 @@ permissions:
 
 jobs:
   binary:
-    uses: hsimah-services/elephentity-codegen/.github/workflows/release-binary.yml@main
+    uses: ./.github/workflows/release-binary.yml
     with:
       binary: eleph
       manifest-path: compiler/Cargo.toml

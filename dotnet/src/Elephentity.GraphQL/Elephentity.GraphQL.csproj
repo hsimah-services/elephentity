@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Elephentity GraphQL support for GraphQL.NET, emitting the same schema as the PHP runtime.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Elephentity.Runtime/Elephentity.Runtime.csproj" />
+    <PackageReference Include="GraphQL" />
+    <PackageReference Include="GraphQL.SystemTextJson" />
+    <!-- The endpoint and the service registration are ASP.NET Core; the schema builder needs none of it. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

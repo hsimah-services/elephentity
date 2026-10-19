@@ -1,0 +1,63 @@
+name: Release dotnet
+
+# Pushing an annotated tag dotnet-v* publishes every package under dotnet/src/ to nuget.org, with the
+# tag as the version. There is no API key: nuget.org trusts this workflow's OIDC identity.
+# Creating the tag, and the trusted publishing policy on nuget.org, are the owner's.
+
+on:
+  push:
+    tags: ['dotnet-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to nuget.org
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # trusted publishing
+
+    defaults:
+      run:
+        working-directory: dotnet
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse a lightweight tag
+        run: |
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = tag
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: dotnet/global.json
+
+      - name: Version
+        run: echo "VERSION=${GITHUB_REF_NAME#dotnet-v}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: dotnet build -c Release -p:Version="$VERSION"
+
+      - name: Tests
+        run: dotnet test -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack -c Release --no-build -o artifacts -p:Version="$VERSION"
+
+      # Exchanges the OIDC token for a short-lived API key. NUGET_USER is the nuget.org
+      # profile name that owns the trusted publishing policy, set as a repository variable.
+      - uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
