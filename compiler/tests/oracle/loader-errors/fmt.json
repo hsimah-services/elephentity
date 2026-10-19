@@ -27,7 +27,7 @@
         "code": "spec.unparseable",
         "file": "entities/Multi.yml",
         "pointer": null,
-        "message": "Could not parse YAML: Multiple documents are not supported in \"packages/schema/tests/fixtures/loader-errors/entities/Multi.yml\" at line 4 (near \"---\")."
+        "message": "Could not parse YAML: Multiple documents are not supported in \"compiler/tests/specs/loader-errors/entities/Multi.yml\" at line 4 (near \"---\")."
     },
     {
         "code": "spec.notAMap",

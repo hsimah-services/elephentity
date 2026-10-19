@@ -2,7 +2,7 @@
     "project": {
         "name": "FmtShapes",
         "driver": "stub",
-        "sourceFile": "packages/schema/tests/fixtures/fmt-shapes/project.yml",
+        "sourceFile": "compiler/tests/specs/fmt-shapes/project.yml",
         "integrations": {},
         "tablePrefix": "fmt_",
         "description": "Every shape, out of order."
@@ -15,7 +15,7 @@
                 "table": "fmt_everything",
                 "handle": "everything"
             },
-            "sourceFile": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml",
+            "sourceFile": "compiler/tests/specs/fmt-shapes/entities/Everything.yml",
             "description": "Everything.",
             "uses": [
                 "Flavoured"
@@ -29,7 +29,7 @@
                     },
                     "origin": {
                         "pattern": "Flavoured",
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/patterns/Flavoured.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/patterns/Flavoured.yml"
                     },
                     "description": null,
                     "required": false,
@@ -52,7 +52,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "description": "A title.",
                     "required": true,
@@ -75,7 +75,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "description": "The owner.",
                     "inverse": {
@@ -96,7 +96,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "arguments": {
                         "term": {
@@ -123,7 +123,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "arguments": {
                         "title": {
@@ -147,7 +147,7 @@
                     ],
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "phase": "postCommit",
                     "description": "Record it."
@@ -165,7 +165,7 @@
                     "name": "visible",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "description": "Who may read."
                 }
@@ -175,7 +175,7 @@
                     "name": "editable",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/fmt-shapes/entities/Everything.yml"
+                        "file": "compiler/tests/specs/fmt-shapes/entities/Everything.yml"
                     },
                     "description": "Who may write."
                 }
@@ -188,7 +188,7 @@
         "Colour": {
             "name": "Colour",
             "primitive": "string",
-            "sourceFile": "packages/schema/tests/fixtures/fmt-shapes/types/Colour.yml",
+            "sourceFile": "compiler/tests/specs/fmt-shapes/types/Colour.yml",
             "description": "A colour.",
             "hasProcessors": false,
             "values": [

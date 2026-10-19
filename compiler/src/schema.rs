@@ -1,7 +1,7 @@
 //! Gate one: is the document well-formed?
 //!
-//! The JSON Schemas live in `packages/schema/resources` and are embedded from there, so the
-//! Rust and PHP compilers validate against one copy. Whether a document makes sense, as
+//! The JSON Schemas live in `compiler/resources` and are embedded from there; they are also
+//! what editors fetch (docs/PUBLISHING-SCHEMAS.md). Whether a document makes sense, as
 //! opposed to being well formed, is semantic validation's job.
 
 use jsonschema::{Registry, Resource, Validator};
@@ -10,11 +10,11 @@ use serde_json::Value;
 use crate::error::SpecError;
 use crate::spec::{RawSpec, SpecKind};
 
-const COMMON: &str = include_str!("../../packages/schema/resources/common.schema.json");
-const PROJECT: &str = include_str!("../../packages/schema/resources/project.schema.json");
-const ENTITY: &str = include_str!("../../packages/schema/resources/entity.schema.json");
-const PATTERN: &str = include_str!("../../packages/schema/resources/pattern.schema.json");
-const TYPE: &str = include_str!("../../packages/schema/resources/type.schema.json");
+const COMMON: &str = include_str!("../resources/common.schema.json");
+const PROJECT: &str = include_str!("../resources/project.schema.json");
+const ENTITY: &str = include_str!("../resources/entity.schema.json");
+const PATTERN: &str = include_str!("../resources/pattern.schema.json");
+const TYPE: &str = include_str!("../resources/type.schema.json");
 
 pub struct SchemaValidator {
     project: Validator,

@@ -1,14 +1,15 @@
 name: Subtree split
 
 # Mirrors packages that are published as their own Composer package out to read-only
-# repositories. Runtime, schema, CLI and memory are independently installable.
+# repositories. Runtime and memory are independently installable. Schema and CLI were
+# mirrored too until the PHP compiler was retired; their mirrors stop at v0.14.2.
 #
 # Runs on push to main (keeps each mirror's `src/`+`tests/` current) and on tags (tags
 # the mirror's own main at whatever it synced to, matching this repository's tag line
 # — a mirror is not an independently-versioned product, see .llms/cross-repo.md).
 #
-# Runtime retains its existing mirror-owned tooling and Composer metadata. New schema,
-# CLI and memory mirrors copy the whole package, including resources, bins and CI.
+# Runtime retains its existing mirror-owned tooling and Composer metadata. The memory
+# mirror copies the whole package, including bins and CI.
 # Tag runs synchronize the tagged source revision too, avoiding tags on stale mirrors.
 #
 # Requires a secret named SPLIT_PUSH_TOKEN: a token with push access to every mirror
@@ -38,10 +39,6 @@ jobs:
         include:
           - package: runtime
             repo: hsimah-services/elephentity-runtime
-          - package: schema
-            repo: hsimah-services/elephentity-schema
-          - package: cli
-            repo: hsimah-services/elephentity-cli
           - package: memory
             repo: hsimah-services/elephentity-memory
 

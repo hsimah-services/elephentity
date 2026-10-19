@@ -16,11 +16,11 @@ is itself the thing this directory is about, so it needs its own issues.
 
 | Repository | Is | Speaks |
 |---|---|---|
-| `hsimah-services/elephentity` | spec compiler, PHP runtime source, CLI and neutral memory builder; Rust `eleph` in `compiler/` from steps 2–4 | produces the IR; ships `eleph-gen-memory` |
+| `hsimah-services/elephentity` | the spec compiler, Rust `eleph` in `compiler/`; PHP runtime and memory driver source, with the memory builder | produces the IR; ships `eleph-gen-memory` (in `packages/memory/bin`) |
 | `hsimah-services/elephentity-runtime` | subtree mirror of `packages/runtime/src` and `tests`; metadata is owned locally | runtime contracts; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-schema` | subtree mirror of `packages/schema`; entirely owned by the source package | schema, resources and IR oracle; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-cli` | subtree mirror of `packages/cli`; entirely owned by the source package | `eleph` command and `eleph-gen-memory`; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-schema` | retired: last mirror of the PHP compiler's `packages/schema`, frozen at v0.14.2 | none |
+| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver and `eleph-gen-memory`; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-cli` | retired: last mirror of the PHP `eleph` (`packages/cli`), frozen at v0.14.2 | none |
 | `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol and the reusable `release-binary.yml`; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
 | `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |

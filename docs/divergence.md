@@ -1,18 +1,22 @@
 # Where the Rust compiler differs from the PHP one
 
-The Rust `eleph` compiler in `compiler/` is measured against the PHP compiler in
-`packages/schema`, which stays frozen as the migration oracle until parity is proven
-(see [PLAN.md §21](PLAN.md)). The bar is byte-identical output for valid specs and the same
-errors, by code, file and pointer, for invalid ones.
+> **The PHP compiler is retired.** It was the migration oracle until the Rust compiler
+> shipped at parity in v0.14.0, and was removed after v0.14.2 (elephentity#145). This file is
+> now the record of how the two differed. The oracle snapshots are frozen, so a deliberate
+> change to the compiler's output from here on updates `compiler/tests/oracle/` by hand and
+> adds a row below saying why.
 
-This file lists every place the two **deliberately** disagree. Each is a bug in one of the
+The Rust `eleph` compiler in `compiler/` was measured against the PHP compiler in
+`packages/schema` (see [PLAN.md §21](PLAN.md)). The bar was byte-identical output for valid
+specs and the same errors, by code, file and pointer, for invalid ones.
+
+This file lists every place the two **deliberately** disagreed. Each was a bug in one of the
 two compilers rather than a feature; the "Fix" column says which. Anything not listed here
 is a parity failure, and `cargo test` in `compiler/` fails on it.
 
-How parity is checked: `tools/compare-compiler --refresh` runs the PHP stages over every
-fixture in `packages/schema/tests/fixtures` and commits the results to
-`compiler/tests/oracle/`. The Rust tests read those snapshots, so Rust CI needs no PHP, and
-`tools/compare-compiler` (no flag) fails when the snapshots no longer match PHP.
+How parity was checked: the PHP stages ran over every fixture, now in
+`compiler/tests/specs/`, and the results were committed to `compiler/tests/oracle/`. The
+Rust tests read those snapshots, so they need no PHP.
 
 | # | Difference | Why | Fix |
 |---|---|---|---|
@@ -50,8 +54,9 @@ They are in the oracle (`loader-errors`) and match.
 
 The Rust `eleph` runs `fmt`, `validate` and `generate` with the same flags, exit codes and
 words as the PHP one, so scripts and CI do not change when the binary under them does.
-`tools/test-rust-cli` runs both on one project and requires the same exit codes, a
-byte-identical generated tree, and the same problems named for a broken spec.
+Until the PHP compiler was retired, `tools/test-rust-cli` ran both on one project and required
+the same exit codes, a byte-identical generated tree, and the same problems named for a broken
+spec.
 
 What differs is presentation only:
 
@@ -91,8 +96,8 @@ line. So it differs from PHP deliberately:
 - output adds a `Checking <target> (<program>)` line per checker.
 
 Until `elephentity-codegen-php` answers `provides.check` (step 6) a PHP project has no checker, so
-the two steps merge together. The PHP `CheckCommand` is unchanged and stays as the oracle; the PHP
-`Installed` parses `provides.check` so both compilers read `describe` the same way.
+the two steps merge together. The PHP `CheckCommand` stayed unchanged as the oracle, and the PHP
+`Installed` parsed `provides.check`, so both compilers read `describe` the same way.
 
 Everything else the PHP CLI does is ported: the compiler up to the request `eleph generate`
 sends, compared byte for byte; `fmt`, `validate` and `generate`; and the `describe` handshake that
@@ -110,5 +115,4 @@ builders that need it.
 Composer installs the PHP `eleph` and its builders, so the PHP CLI never fetched anything and has
 no `install` command. The Rust one adds `eleph install [--check]` (see `docs/PLAN.md`, "Installing
 without PHP"), the `"name@version"` pin, and the `builders` and `codegen@version` keys it reads
-from `eleph.json`. None of it changes what `fmt`, `validate`, `generate` or `check` do. The PHP
-entry point is now `packages/cli/bin/eleph-php`; `bin/eleph` launches the Rust binary.
+from `eleph.json`. None of it changes what `fmt`, `validate`, `generate` or `check` do.

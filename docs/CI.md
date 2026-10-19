@@ -3,11 +3,15 @@
 Elephentity ships four gates. They are cheap, they run in this order, and each catches a
 class of failure the others cannot see.
 
+`eleph` is one binary, installed with `install.sh` from the
+[releases](https://github.com/hsimah-services/elephentity/releases) (it needs no PHP):
+
 ```yaml
-- run: vendor/bin/eleph fmt                 # canonical key order, so diffs stay semantic
-- run: vendor/bin/eleph validate spec       # well-formed and semantically closed
-- run: vendor/bin/eleph generate --check    # the tree matches the spec
-- run: vendor/bin/eleph check               # every exposed field resolves
+- run: curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
+- run: eleph fmt                 # canonical key order, so diffs stay semantic
+- run: eleph validate spec       # well-formed and semantically closed
+- run: eleph generate --check    # the tree matches the spec
+- run: eleph check               # each target's checker, e.g. eleph-check-php
 - run: vendor/bin/phpstan analyse
 - run: vendor/bin/phpunit
 ```
@@ -35,7 +39,7 @@ For a spec-only review before builders are available, use a saved discovery resp
 # Capture once with the matching builders installed; this does not generate code.
 vendor/bin/eleph-codegen describe --project . > provides.json
 # No eleph.json, builder execution or generated files needed for this check.
-vendor/bin/eleph validate spec --provides provides.json
+eleph validate spec --provides provides.json
 ```
 
 `--provides` reads the existing discovery response shape (`targets` mapping to each

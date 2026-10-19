@@ -11,9 +11,9 @@ Two words carry real ambiguity, so they are always qualified.
 
 **Schema.** Three different things:
 
-- a **JSON Schema** — the files in `packages/schema/resources/` that define what a spec
+- a **JSON Schema** — the files in `compiler/resources/` that define what a spec
   file may contain;
-- the **compiled schema** — `Eleph\Schema\Ir\Schema`, the in-memory result of compiling
+- the **compiled schema** — the compiler's `Schema` (`compiler/src/ir`), the in-memory result of compiling
   every spec file, also called the IR;
 - the **database schema** — tables and columns, produced by whichever driver's adaptor
   is installed (`elephentity/wordpress`, today; `elephentity/memory` has none).

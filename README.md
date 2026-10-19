@@ -10,9 +10,13 @@ The command is `eleph`; the PHP namespace is `Eleph\`.
 ## Quick start
 
 ```bash
+curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
 composer require elephentity/runtime elephentity/memory
-composer require --dev elephentity/cli elephentity/codegen elephentity/codegen-php
+composer require --dev elephentity/codegen elephentity/codegen-php
 ```
+
+`install.sh` puts the `eleph` compiler, a single binary, in `~/.local/bin` (`install.ps1` on
+Windows). It needs no PHP: the same `eleph` compiles specs for PHP and .NET projects alike.
 
 `elephentity/memory` is the neutral driver: raw PHP objects, no platform. Want
 WordPress instead? `composer require elephentity/wordpress` and
@@ -63,8 +67,8 @@ without a `builder` is refused:
 ```
 
 ```bash
-vendor/bin/eleph validate
-vendor/bin/eleph generate
+eleph validate
+eleph generate
 ```
 
 ```
@@ -209,15 +213,15 @@ and wire it up. That loop — change the spec, regenerate, implement what appear
 ## The four gates
 
 ```bash
-vendor/bin/eleph fmt                 # canonical key order, so diffs stay semantic
-vendor/bin/eleph validate spec       # well-formed and semantically closed
-vendor/bin/eleph generate --check    # the tree matches the spec
-vendor/bin/eleph check               # every exposed GraphQL field resolves
+eleph fmt                 # canonical key order, so diffs stay semantic
+eleph validate spec       # well-formed and semantically closed
+eleph generate --check    # the tree matches the spec
+eleph check               # each target's own checker, e.g. eleph-check-php
 ```
 
 `validate` writes no generated files. To validate before builder executables are
 available, pass saved discovery metadata with
-`vendor/bin/eleph validate spec --provides provides.json`; this also works without
+`eleph validate spec --provides provides.json`; this also works without
 `eleph.json`. See [docs/CI.md](docs/CI.md) for capturing the snapshot and its limits.
 
 [docs/CI.md](docs/CI.md) — what each one catches that the others cannot.

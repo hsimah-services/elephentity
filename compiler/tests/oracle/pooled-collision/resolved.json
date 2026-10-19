@@ -2,7 +2,7 @@
     "project": {
         "name": "PooledCollision",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/pooled-collision/project.yml",
+        "sourceFile": "compiler/tests/specs/pooled-collision/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null

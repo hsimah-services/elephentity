@@ -2,7 +2,7 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/config/project.yml",
+        "sourceFile": "compiler/tests/specs/config/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "configured",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/config/entities/Configured.yml",
+            "sourceFile": "compiler/tests/specs/config/entities/Configured.yml",
             "description": null,
             "uses": [
                 "Platform"
@@ -49,7 +49,7 @@
                 "table": "defaulted",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/config/entities/Defaulted.yml",
+            "sourceFile": "compiler/tests/specs/config/entities/Defaulted.yml",
             "description": null,
             "uses": [
                 "Platform"

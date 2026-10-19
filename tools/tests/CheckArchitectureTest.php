@@ -31,7 +31,7 @@ final class CheckArchitectureTest extends TestCase
 
     public function testAWordpressNamedConstantFailsTheBuild(): void
     {
-        $this->writeCoreFile('schema', 'src/SemanticValidator.php', <<<'PHP'
+        $this->writeCoreFile('runtime', 'src/SemanticValidator.php', <<<'PHP'
             <?php
 
             final class SemanticValidator
@@ -50,7 +50,7 @@ final class CheckArchitectureTest extends TestCase
 
     public function testAWordpressStringLiteralFailsTheBuild(): void
     {
-        $this->writeCoreFile('schema', 'src/Foo.php', <<<'PHP'
+        $this->writeCoreFile('runtime', 'src/Foo.php', <<<'PHP'
             <?php
 
             final class Foo
@@ -71,10 +71,10 @@ final class CheckArchitectureTest extends TestCase
 
     public function testImportingAPlatformPackageFromCoreFailsTheBuild(): void
     {
-        $this->writeCoreFile('cli', 'src/Command/CheckCommand.php', <<<'PHP'
+        $this->writeCoreFile('memory', 'src/Command/CheckCommand.php', <<<'PHP'
             <?php
 
-            namespace Eleph\Cli\Command;
+            namespace Eleph\Memory\Command;
 
             use Eleph\WPGraphQL\Conformance\ConformanceChecker;
 
@@ -93,7 +93,7 @@ final class CheckArchitectureTest extends TestCase
 
     public function testProseMentioningWordPressInADocCommentStaysLegal(): void
     {
-        $this->writeCoreFile('schema', 'src/Foo.php', <<<'PHP'
+        $this->writeCoreFile('runtime', 'src/Foo.php', <<<'PHP'
             <?php
 
             /**
@@ -115,7 +115,7 @@ final class CheckArchitectureTest extends TestCase
     {
         // A test exercising driver-agnostic code needs a real driver name to exercise
         // it with, and "wordpress" is the one that exists. That is data, not a leak.
-        $this->writeCoreFile('schema', 'tests/FooTest.php', <<<'PHP'
+        $this->writeCoreFile('runtime', 'tests/FooTest.php', <<<'PHP'
             <?php
 
             final class FooTest

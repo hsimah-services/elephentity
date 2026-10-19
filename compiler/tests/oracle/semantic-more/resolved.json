@@ -2,7 +2,7 @@
     "project": {
         "name": "SemanticMore",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/semantic-more/project.yml",
+        "sourceFile": "compiler/tests/specs/semantic-more/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "enum_things",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Enum.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/entities/Enum.yml",
             "description": null,
             "uses": [],
             "fields": {},
@@ -38,7 +38,7 @@
                 "table": "shared",
                 "handle": "attachment"
             },
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/First.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/entities/First.yml",
             "description": null,
             "uses": [],
             "fields": {
@@ -50,7 +50,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "description": null,
                     "required": false,
@@ -79,7 +79,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "description": null,
                     "required": false,
@@ -105,7 +105,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "description": null,
                     "required": false,
@@ -131,7 +131,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "description": null,
                     "required": false,
@@ -160,7 +160,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "description": null,
                     "required": false,
@@ -186,7 +186,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/First.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/First.yml"
                     },
                     "arguments": {
                         "kind": {
@@ -219,7 +219,7 @@
                 "table": "shared",
                 "handle": "revision"
             },
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/entities/Second.yml",
             "description": null,
             "uses": [],
             "fields": {
@@ -231,7 +231,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/Second.yml"
                     },
                     "description": null,
                     "required": false,
@@ -254,7 +254,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/Second.yml"
                     },
                     "description": null,
                     "inverse": {
@@ -271,7 +271,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Second.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/Second.yml"
                     },
                     "description": null,
                     "inverse": {
@@ -301,7 +301,7 @@
                 "table": "third",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Third.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/entities/Third.yml",
             "description": null,
             "uses": [],
             "fields": {
@@ -313,7 +313,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/semantic-more/entities/Third.yml"
+                        "file": "compiler/tests/specs/semantic-more/entities/Third.yml"
                     },
                     "description": null,
                     "required": false,
@@ -354,7 +354,7 @@
                 "table": "type_things",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/entities/Type.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/entities/Type.yml",
             "description": null,
             "uses": [],
             "fields": {},
@@ -375,7 +375,7 @@
         "BadBacking": {
             "name": "BadBacking",
             "primitive": "float",
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/BadBacking.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/types/BadBacking.yml",
             "description": null,
             "hasProcessors": false,
             "values": [
@@ -386,7 +386,7 @@
         "Plain": {
             "name": "Plain",
             "primitive": "string",
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/Plain.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/types/Plain.yml",
             "description": null,
             "hasProcessors": false,
             "values": null
@@ -394,7 +394,7 @@
         "PostStatus": {
             "name": "PostStatus",
             "primitive": "string",
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/PostStatus.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/types/PostStatus.yml",
             "description": null,
             "hasProcessors": false,
             "values": [
@@ -405,7 +405,7 @@
         "ThirdPostStatus": {
             "name": "ThirdPostStatus",
             "primitive": "string",
-            "sourceFile": "packages/schema/tests/fixtures/semantic-more/types/ThirdPostStatus.yml",
+            "sourceFile": "compiler/tests/specs/semantic-more/types/ThirdPostStatus.yml",
             "description": null,
             "hasProcessors": false,
             "values": [
