@@ -305,7 +305,7 @@ fn a_release_that_does_not_exist_names_the_repository_and_version() {
 
     assert_eq!(output.status.code(), Some(1), "{text}");
     assert!(
-        text.contains("hsimah-services/elephentity-codegen has no release v1.0.0"),
+        text.contains("hsimah-services/elephentity has no release eleph-codegen-v1.0.0"),
         "{text}"
     );
 }

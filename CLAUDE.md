@@ -131,9 +131,12 @@ compiler tests compile it.
 
 ## Before you commit anything that crosses a repository boundary
 
-Elephentity is eight repositories that talk over a wire format, not a shared
-classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
-behind the compiler fails at run time rather than at build time.
+The compiler, the code generator, the builders and the adaptors talk over a wire format, not a
+shared classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
+behind the compiler fails at run time rather than at build time. Most of them share this
+repository now, which lets one pull request change both sides, but it does not make the gap
+type-check. The WordPress and WPGraphQL packages and builders, and `elephentity-examples`, are
+still separate repositories.
 
 **[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If
 you changed something on it, open an issue on each repository it reaches, before or with
