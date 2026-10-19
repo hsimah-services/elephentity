@@ -89,11 +89,11 @@ The Elephentity-specific gates — `validate`, `generate --check`, signature ver
 
 ```
 docs/                  PLAN.md — every design decision and its reasoning
+compiler/              the eleph command (Rust): spec parser, JSON Schemas,  (release binaries)
+                       pattern resolution, the IR
 packages/
-  schema/              spec parser, JSON Schema, pattern resolution, IR       (dev-only)
   runtime/             storage port, unit of work, verification, loaders     (shipped, mirrored)
-  memory/              the neutral driver; no physical schema                (shipped)
-  cli/                 the eleph command                                     (dev-only)
+  memory/              the neutral driver and its builder; no physical schema (shipped, mirrored)
 tools/
   php                  run a command in the throwaway PHP container
   check-architecture.php  enforces the platform-free core

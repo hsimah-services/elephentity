@@ -33,19 +33,9 @@ declare(strict_types=1);
  *     both, even with neither package present here any more — an import of either is a
  *     missing-class error at best and a stale copy resurrected at worst.
  *
- * Rule 2 — the schema-free runtime.
- *   The packages that ship — runtime, memory — must not reference `Eleph\Schema`
- *   except from the build-time classes named below.
- *
- *   `elephentity/schema` is dev-only: it parses YAML and exists to produce the IR, and
- *   the plan says dev packages never reach production. A shipped class naming one is
- *   how that stops being true, and it did — a compiled storage manifest contained
- *   `Schema\Ir\RelationKind::OneToMany` as a literal, so loading it pulled the spec
- *   compiler into every request of every WordPress project.
- *
- *   The allowlist is deliberately a list of files rather than a namespace convention.
- *   Each entry is a class that runs at build time and could not run at any other, and
- *   adding one should take a moment's thought rather than a directory choice.
+ * There used to be a Rule 2, keeping the shipped packages free of `Eleph\Schema`. The PHP
+ * spec compiler that namespace belonged to was retired for the Rust `eleph`, so there is
+ * nothing left in this repository for a shipped package to reach for.
  *
  * Uses the tokenizer rather than grep, so prose in a doc comment discussing WordPress
  * is not mistaken for a dependency on it — and neither is a string literal.
@@ -56,18 +46,7 @@ declare(strict_types=1);
  * move for the same reason.
  */
 
-const CORE_PACKAGES = ['schema', 'runtime', 'cli'];
-
-/** The packages that ship, and so may not reach for the spec compiler. */
-const SHIPPED_PACKAGES = ['runtime', 'memory'];
-
-/**
- * Build-time classes inside a shipped package, allowed to read the IR.
- *
- * Each turns a compiled spec into something the runtime loads later; none of them is
- * reachable from a request. Paths are relative to packages/.
- */
-const COMPILERS = [];
+const CORE_PACKAGES = ['runtime', 'memory'];
 
 /** Hook and option functions that are WordPress even without a wp_ prefix. */
 const WORDPRESS_FUNCTIONS = [
@@ -108,8 +87,7 @@ foreach (CORE_PACKAGES as $package) {
 
     // Vocabulary and platform imports are checked against what ships, not what proves
     // it works: a test naming the one real driver by its actual name is exercising
-    // driver-agnostic code with real data, not leaking platform knowledge into it — the
-    // same reasoning sourceFilesIn() already applies to the schema-free-runtime rule.
+    // driver-agnostic code with real data, not leaking platform knowledge into it.
     foreach (sourceFilesIn($directory) as $file) {
         foreach (wordpressVocabularyIn($file) as $line => $word) {
             $violations[] = sprintf(
@@ -143,45 +121,7 @@ if ([] !== $violations) {
     exit(1);
 }
 
-$leaks = [];
-
-foreach (SHIPPED_PACKAGES as $package) {
-    $directory = $root . '/packages/' . $package;
-
-    if (!is_dir($directory)) {
-        continue;
-    }
-
-    foreach (sourceFilesIn($directory) as $file) {
-        $relative = substr($file, strlen($root . '/packages/'));
-
-        if (in_array($relative, COMPILERS, true)) {
-            continue;
-        }
-
-        foreach (schemaSymbolsIn($file) as $line => $symbol) {
-            $leaks[] = sprintf('packages/%s:%d references %s', $relative, $line, $symbol);
-        }
-    }
-}
-
-if ([] !== $leaks) {
-    fwrite(STDERR, "ERROR: a shipped package reaches for the spec compiler.\n");
-    fwrite(STDERR, "elephentity/schema is dev-only. A class that runs at build time and\n");
-    fwrite(STDERR, "genuinely needs the IR goes in COMPILERS, in this file, deliberately.\n\n");
-
-    foreach ($leaks as $leak) {
-        fwrite(STDERR, '  ' . $leak . "\n");
-    }
-
-    exit(1);
-}
-
-printf(
-    "Architecture rules: OK (%d core packages are platform-free, %d shipped packages are schema-free)\n",
-    count(CORE_PACKAGES),
-    count(SHIPPED_PACKAGES),
-);
+printf("Architecture rules: OK (%d core packages are platform-free)\n", count(CORE_PACKAGES));
 
 /**
  * @return list<string>
@@ -214,17 +154,15 @@ function phpFilesIn(string $directory): array
 /**
  * Like phpFilesIn(), plus the extensionless builder entrypoints.
  *
- * A builder is a `bin/` script rather than a `.php` file, and it is exactly the kind of
- * thing that reads the IR — so a rule about reading the IR that skipped it would miss
- * the clearest case.
+ * A builder is a `bin/` script rather than a `.php` file (memory's `eleph-gen-memory`), and
+ * it ships like any class in `src/`, so a rule about what ships that skipped it would miss it.
  *
  * @return list<string>
  */
 function sourceFilesIn(string $directory): array
 {
-    // src/ and bin/ only. A test compiles a fixture spec to have something to assert
-    // against, which is the IR being read by something that never ships — the rule is
-    // about what a plugin loads, not about what proves it works.
+    // src/ and bin/ only: the rule is about what a plugin loads, not about what proves
+    // it works.
     $files = is_dir($directory . '/src') ? phpFilesIn($directory . '/src') : [];
 
     foreach (glob($directory . '/bin/*') ?: [] as $entry) {
@@ -236,41 +174,6 @@ function sourceFilesIn(string $directory): array
     sort($files);
 
     return $files;
-}
-
-/**
- * References to the spec compiler, by namespace.
- *
- * The tokenizer again, so a doc comment explaining why a class does *not* read the IR
- * is not read as a class that does.
- *
- * @return array<int, string> line number => offending symbol
- */
-function schemaSymbolsIn(string $file): array
-{
-    $source = file_get_contents($file);
-
-    if (false === $source) {
-        return [];
-    }
-
-    $found = [];
-
-    foreach (token_get_all($source) as $token) {
-        if (!is_array($token)) {
-            continue;
-        }
-
-        [$id, $text, $line] = $token;
-
-        if (T_NAME_QUALIFIED === $id || T_NAME_FULLY_QUALIFIED === $id) {
-            if (str_starts_with(ltrim($text, '\\'), 'Eleph\\Schema\\')) {
-                $found[$line] = $text;
-            }
-        }
-    }
-
-    return $found;
 }
 
 /**

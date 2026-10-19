@@ -1,1 +1,1 @@
-{"elephentity":1,"irVersion":"1.2","schema":{"project":{"name":"PooledCollision","driver":"wordpress","sourceFile":"packages/schema/tests/fixtures/pooled-collision/project.yml","integrations":{},"tablePrefix":"","description":null},"entities":{},"types":{},"patterns":{}},"files":{}}
+{"elephentity":1,"irVersion":"1.2","schema":{"project":{"name":"PooledCollision","driver":"wordpress","sourceFile":"compiler/tests/specs/pooled-collision/project.yml","integrations":{},"tablePrefix":"","description":null},"entities":{},"types":{},"patterns":{}},"files":{}}

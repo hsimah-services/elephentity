@@ -16,11 +16,11 @@ is itself the thing this directory is about, so it needs its own issues.
 
 | Repository | Is | Speaks |
 |---|---|---|
-| `hsimah-services/elephentity` | spec compiler, PHP runtime source, CLI and neutral memory builder; Rust `eleph` in `compiler/` from steps 2–4 | produces the IR; ships `eleph-gen-memory` |
+| `hsimah-services/elephentity` | the spec compiler, Rust `eleph` in `compiler/`; PHP runtime and memory driver source, with the memory builder | produces the IR; ships `eleph-gen-memory` (in `packages/memory/bin`) |
 | `hsimah-services/elephentity-runtime` | subtree mirror of `packages/runtime/src` and `tests`; metadata is owned locally | runtime contracts; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-schema` | subtree mirror of `packages/schema`; entirely owned by the source package | schema, resources and IR oracle; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver; source PRs go to `elephentity` |
-| `hsimah-services/elephentity-cli` | subtree mirror of `packages/cli`; entirely owned by the source package | `eleph` command and `eleph-gen-memory`; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-schema` | retired: last mirror of the PHP compiler's `packages/schema`, frozen at v0.14.2 | none |
+| `hsimah-services/elephentity-memory` | subtree mirror of `packages/memory`; entirely owned by the source package | neutral memory driver and `eleph-gen-memory`; source PRs go to `elephentity` |
+| `hsimah-services/elephentity-cli` | retired: last mirror of the PHP `eleph` (`packages/cli`), frozen at v0.14.2 | none |
 | `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol and the reusable `release-binary.yml`; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
 | `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |
@@ -35,10 +35,10 @@ is itself the thing this directory is about, so it needs its own issues.
 | `hsimah-services/elephentity-graphql-php` | generic PHP GraphQL runtime | runtime integration contracts; webonyx schema |
 | `hsimah-services/elephentity-patterns` | reusable spec patterns | compiler pattern declarations |
 | `hsimah-services/elephentity-examples` | worked examples, including the step 21 .NET example | consumes generated output; end-to-end proof |
-| `hsimah-services/elephentity-dotnet` (planned) | one .NET monorepo: Runtime, Runtime.Memory, Runtime.Testing, Cosmos, GraphQL, Tsquid | async runtime contracts; NuGet; GraphQL.NET schema |
-| `hsimah-services/elephentity-codegen-csharp` (planned) | Rust entity/enum/contract/catalogue/DI builder, `eleph-gen-csharp` | unchanged builder protocol; .NET runtime type names |
-| `hsimah-services/elephentity-codegen-cosmos` (planned) | Rust Cosmos C# storage-manifest builder, `eleph-gen-cosmos` | unchanged builder protocol; .NET Cosmos runtime type names |
-| `hsimah-services/elephentity-codegen-graphql-csharp` (planned) | Rust GraphQL C# manifest builder, `eleph-gen-graphql-csharp` | unchanged builder protocol; `graphql` integration; .NET GraphQL runtime type names |
+| `hsimah-services/elephentity-dotnet` | one .NET monorepo: Runtime, Runtime.Memory, Runtime.Testing, Cosmos, GraphQL, Tsquid | async runtime contracts; NuGet; GraphQL.NET schema |
+| `hsimah-services/elephentity-codegen-csharp` | Rust entity/enum/contract/catalogue/DI builder, `eleph-gen-csharp` | unchanged builder protocol; .NET runtime type names |
+| `hsimah-services/elephentity-codegen-cosmos` | Rust Cosmos C# storage-manifest builder, `eleph-gen-cosmos` | unchanged builder protocol; .NET Cosmos runtime type names |
+| `hsimah-services/elephentity-codegen-graphql-csharp` | Rust GraphQL C# manifest builder, `eleph-gen-graphql-csharp` | unchanged builder protocol; `graphql` integration; .NET GraphQL runtime type names |
 
 ## The rule
 

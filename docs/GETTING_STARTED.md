@@ -3,12 +3,16 @@
 ## Install
 
 ```bash
+curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
 composer require elephentity/runtime elephentity/memory
-composer require --dev elephentity/cli elephentity/codegen elephentity/codegen-php
+composer require --dev elephentity/codegen elephentity/codegen-php
 ```
 
+The first line installs `eleph`, the compiler: one binary, no PHP needed (`install.ps1` on
+Windows).
+
 **Installation is additive, by driver and by integration.** `elephentity/runtime`
-carries the storage port, the unit of work and the `eleph` command's dependencies.
+carries the storage port and the unit of work.
 `elephentity/memory` is the neutral driver — raw PHP objects, no platform — so a project
 that installs nothing else still has somewhere to write. Want WordPress instead?
 
@@ -28,8 +32,8 @@ dependency. `elephentity/codegen` runs your builders and writes the tree;
 types from the same spec, you add a builder for it and a target in `eleph.json` — nothing
 else changes, and no part of the framework learns what TypeScript is.
 
-That gives you three commands in `vendor/bin`: `eleph`, `eleph-codegen` and
-`eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/cli` and whichever of
+That gives you `eleph` on your `PATH`, and in `vendor/bin`: `eleph-codegen` and
+`eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/memory` and whichever of
 `eleph-gen-wordpress` / `eleph-gen-wpgraphql` you installed.
 `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all where the
 config expects.
@@ -81,9 +85,9 @@ is left to whatever installed it. The repositories of the Elephentity programs a
 anything else, say where its releases are with `"source": "owner/repo"` on the target. Releases
 are built for linux-x64, linux-arm64, osx-arm64 and win-x64.
 
-PHP projects are unchanged: `composer require` still installs everything, and `vendor/bin/eleph`
-is a launcher that runs the Rust binary (a build in the package, one in `compiler/`, or the
-`eleph` that `install.sh` put on `PATH`).
+PHP projects can keep installing builders with Composer: `eleph` finds `eleph-codegen` and
+the builders in `vendor/bin`. `eleph` itself always comes from `install.sh`; the PHP compiler
+that `elephentity/cli` used to provide was retired after v0.14.2.
 
 ## Lay out the project
 
@@ -175,8 +179,8 @@ fields:
 ```
 
 ```bash
-vendor/bin/eleph validate spec
-vendor/bin/eleph generate
+eleph validate spec
+eleph generate
 ```
 
 You now have `generated/Note/Note.php`, `NoteMutator`, `NoteMutationContext`,
@@ -192,13 +196,13 @@ You now have `generated/Note/Note.php`, `NoteMutator`, `NoteMutationContext`,
 ```
 
 ```bash
-vendor/bin/eleph generate
+eleph generate
 ls generated/Note/Contract/
 # NoteBodyVerifier.php
 ```
 
 That interface has no implementation, so the application will not boot. Write one in
-`src/`, wire it into your container, and `vendor/bin/eleph check` goes green.
+`src/`, wire it into your container, and `eleph check` goes green.
 
 That loop — change the spec, regenerate, implement what appeared under `Contract/` — is
 the whole workflow.

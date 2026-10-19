@@ -2,7 +2,7 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/pattern-interface/project.yml",
+        "sourceFile": "compiler/tests/specs/pattern-interface/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "comment",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/pattern-interface/entities/Comment.yml",
+            "sourceFile": "compiler/tests/specs/pattern-interface/entities/Comment.yml",
             "description": null,
             "uses": [
                 "Auditable"
@@ -29,7 +29,7 @@
                     },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
+                        "file": "compiler/tests/specs/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -52,7 +52,7 @@
                     },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
+                        "file": "compiler/tests/specs/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -75,7 +75,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/pattern-interface/entities/Comment.yml"
+                        "file": "compiler/tests/specs/pattern-interface/entities/Comment.yml"
                     },
                     "description": null,
                     "required": false,
@@ -112,7 +112,7 @@
                 "table": "post",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/pattern-interface/entities/Post.yml",
+            "sourceFile": "compiler/tests/specs/pattern-interface/entities/Post.yml",
             "description": null,
             "uses": [
                 "Auditable",
@@ -127,7 +127,7 @@
                     },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
+                        "file": "compiler/tests/specs/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -150,7 +150,7 @@
                     },
                     "origin": {
                         "pattern": "Auditable",
-                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Auditable.yml"
+                        "file": "compiler/tests/specs/pattern-interface/patterns/Auditable.yml"
                     },
                     "description": null,
                     "required": false,
@@ -173,7 +173,7 @@
                     },
                     "origin": {
                         "pattern": "Silent",
-                        "file": "packages/schema/tests/fixtures/pattern-interface/patterns/Silent.yml"
+                        "file": "compiler/tests/specs/pattern-interface/patterns/Silent.yml"
                     },
                     "description": null,
                     "required": false,
@@ -196,7 +196,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/pattern-interface/entities/Post.yml"
+                        "file": "compiler/tests/specs/pattern-interface/entities/Post.yml"
                     },
                     "description": null,
                     "required": false,

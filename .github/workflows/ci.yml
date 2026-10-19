@@ -25,9 +25,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The Rust compiler is measured against snapshots of the PHP one, committed under
-  # compiler/tests/oracle, so this job needs no PHP. The PHP job below fails when those
-  # snapshots stop matching the PHP compiler.
+  # The Rust compiler is measured against snapshots of the retired PHP compiler, frozen under
+  # compiler/tests/oracle, so this job needs no PHP.
   compiler:
     name: Rust compiler
     runs-on: ubuntu-latest
@@ -94,16 +93,9 @@ jobs:
       - name: Tests
         run: vendor/bin/phpunit
 
-      - name: Rust compiler oracle snapshots are current
-        run: php tools/compare-compiler.php
-
       - name: The builders accept the IR the Rust compiler produces
         run: tools/test-rust-ir
 
-      - name: The Rust eleph and the PHP eleph agree
-        run: |
-          cargo +stable build --release --locked --manifest-path compiler/Cargo.toml
-          tools/test-rust-cli
 
       - name: Deletion policies against SQLite
         env:

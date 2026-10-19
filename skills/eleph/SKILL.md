@@ -46,11 +46,11 @@ generated/          machine-owned, committed, never edited
 ## The loop
 
 ```bash
-vendor/bin/eleph fmt          # canonical key order
-vendor/bin/eleph validate spec # well-formed and semantically closed
-vendor/bin/eleph generate     # write the tree
+eleph fmt          # canonical key order
+eleph validate spec # well-formed and semantically closed
+eleph generate     # write the tree
 #   ... implement anything new under generated/*/Contract/ ...
-vendor/bin/eleph check        # every exposed field resolves
+eleph check        # every exposed field resolves
 vendor/bin/phpstan analyse
 vendor/bin/phpunit
 ```

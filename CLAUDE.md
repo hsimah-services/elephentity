@@ -14,7 +14,6 @@ There is no local PHP. Everything runs in a container:
 ./tools/php composer ci          # style, static analysis, architecture, tests
 ./tools/php composer style:fix
 ./tools/php vendor/bin/phpunit --filter SomeTest
-./tools/php vendor/bin/phpunit --filter PipelineTest   # the four gates, end to end, on the memory driver
 ```
 
 For the four gates against a real spec and real builders — including the WordPress and
@@ -22,17 +21,20 @@ WPGraphQL ones — see `clog` in
 [elephentity-examples](https://github.com/hsimah-services/elephentity-examples); it is
 a separate repository now, not something this one can run against.
 
-The Rust compiler in `compiler/` runs in a container too, with no host cargo:
+The compiler, `eleph`, is Rust, in `compiler/`. It runs in a container too, with no host cargo:
 
 ```bash
 ./tools/cargo cargo test --locked --manifest-path compiler/Cargo.toml
 ./tools/cargo cargo fmt --check --manifest-path compiler/Cargo.toml
 ./tools/cargo cargo clippy --locked --all-targets --manifest-path compiler/Cargo.toml -- -D warnings
-tools/compare-compiler             # the oracle snapshots still match the PHP compiler
-tools/compare-compiler --refresh   # regenerate them after changing the PHP compiler or a fixture
-tools/test-rust-ir                 # the built builders accept the IR the Rust compiler produces
-tools/test-rust-cli                # the Rust eleph and the PHP eleph agree on a project
+tools/test-rust-ir                 # the built builders accept the IR the compiler produces
+tools/test-package-install.sh      # a Composer project, end to end: runtime, builders and eleph
 ```
+
+`compiler/tests/oracle/` holds what the retired PHP compiler produced for every spec in
+`compiler/tests/specs/`. It is frozen: the compiler must keep reproducing it, and a
+deliberate change to the output updates it by hand, with the reason in
+[docs/divergence.md](docs/divergence.md).
 
 `composer ci` must pass before committing. PHPStan runs at **level max** and there are
 no baseline exclusions — the framework's whole claim is that generated code is provably
@@ -42,11 +44,13 @@ typed, so an exception here undermines the product.
 
 | Package | Ships? | Holds |
 |---|---|---|
-| `schema/` | dev | spec parsing, JSON Schemas, pattern resolution, the IR, its wire format |
 | `runtime/` | yes | storage port, unit of work, verification, loaders |
-| `memory/` | yes | the neutral driver — no physical schema, no platform |
-| `cli/` | dev | the `eleph` command: `bin/eleph` launches the Rust binary, `bin/eleph-php` is the frozen PHP oracle, `bin/eleph-gen-memory` is the memory builder |
-| `compiler/` (Cargo crate) | not yet | the Rust `eleph`, being ported from `schema/` and `cli/`; PHP is its oracle ([docs/divergence.md](docs/divergence.md)) |
+| `memory/` | yes | the neutral driver — no physical schema, no platform — and its builder, `bin/eleph-gen-memory` |
+| `compiler/` (Cargo crate) | release binaries | the `eleph` command: spec parsing, the JSON Schemas (`compiler/resources/`), pattern resolution, the IR and its wire format |
+
+The PHP compiler (`packages/schema`, `packages/cli`) was retired after the Rust one shipped at
+parity in v0.14.0. Its last releases, and the `elephentity-schema`/`elephentity-cli` mirrors,
+stop at v0.14.2.
 
 **This repository has no platform adaptor.** WordPress lives in
 [`elephentity-wordpress`](https://github.com/hsimah-services/elephentity-wordpress),
@@ -57,8 +61,7 @@ dependency, not by removing one. `tools/check-architecture.php` enforces that no
 package here references WordPress at all. It uses the tokenizer, so prose in a doc
 comment is fine and a real call is not.
 
-`packages/runtime` stays here — `schema`, `cli` and `memory` all build on it
-in-process — but is also mirrored, read-only, to
+`packages/runtime` stays here — `memory` builds on it in-process — but is also mirrored, read-only, to
 [`elephentity-runtime`](https://github.com/hsimah-services/elephentity-runtime) on
 every push, so `elephentity/runtime` is installable on its own. Never edit that
 mirror's `src/` or `tests/` directly; PRs go here.
@@ -66,7 +69,10 @@ mirror's `src/` or `tests/` directly; PRs go here.
 **The code generator, the builders and the .NET packages are in this repository.** They used to
 be separate repositories (`elephentity-codegen*`, `elephentity-dotnet`, `elephentity-graphql-php`,
 `elephentity-sqlite`, `elephentity-patterns`); they were folded in without their history, and
-each is its own unit with its own `README.md`, CI workflow and release:
+each is its own unit with its own `README.md`, CI workflow and release. `eleph generate` pipes the IR
+to `eleph-codegen` (`builders/codegen`), which resolves a project's builders and signs and writes what
+they return; the root `composer.json` still installs `codegen` and `codegen-php` from Packagist as dev
+dependencies so that `tools/test-rust-ir` can run.
 
 | Directory | Is | Ships as | Tag |
 |---|---|---|---|
@@ -117,11 +123,11 @@ actually gets caught, not here.
 ## Testing
 
 Pure logic is tested directly; anything touching WordPress is kept thin enough that the
-thin part needs no test. `packages/cli/tests/PipelineTest.php` runs all four gates end
-to end and is what proves the layers are wired together at all.
+thin part needs no test. `tools/test-package-install.sh` runs all four gates end to end
+in a fresh Composer project, and is what proves the layers are wired together at all.
 
-`packages/schema/tests/fixtures/valid/` is the canonical spec exercising every
-construct. Most tests compile it.
+`compiler/tests/specs/valid/` is the canonical spec exercising every construct. Most
+compiler tests compile it.
 
 ## Before you commit anything that crosses a repository boundary
 

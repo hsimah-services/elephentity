@@ -2,7 +2,7 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/reserved/project.yml",
+        "sourceFile": "compiler/tests/specs/reserved/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "reserved_enum",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/reserved/entities/Enum.yml",
+            "sourceFile": "compiler/tests/specs/reserved/entities/Enum.yml",
             "description": null,
             "uses": [],
             "fields": {},

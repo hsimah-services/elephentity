@@ -8,9 +8,12 @@ for older bundled releases, WordPress integrations. Declare the packages your pr
 uses explicitly before updating. Composer ignores a dependency's `require-dev`.
 
 ```sh
+curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
 composer require elephentity/runtime elephentity/memory
-composer require --dev elephentity/cli elephentity/codegen elephentity/codegen-php
+composer require --dev elephentity/codegen elephentity/codegen-php
 ```
+
+The first line installs the `eleph` compiler, a single binary that needs no PHP.
 
 For WordPress, replace memory with these explicit dependencies:
 
@@ -20,9 +23,9 @@ composer require --dev elephentity/codegen-wordpress
 ```
 
 For GraphQL also install `elephentity/wpgraphql` at runtime and
-`elephentity/codegen-wpgraphql` for development. Schema is a CLI dependency; projects
-using the compiler API directly can require `elephentity/schema` for development.
-Remove `elephentity/elephentity` from require-dev once it has been replaced by CLI.
+`elephentity/codegen-wpgraphql` for development. `elephentity/cli` and
+`elephentity/schema`, the retired PHP compiler, stop at v0.14.2: remove them, and install
+`eleph` with `install.sh` instead. Remove `elephentity/elephentity` from require-dev too.
 
 The CLI ships `eleph` and the neutral `eleph-gen-memory` builder. The memory adaptor
 requires only runtime. Generator executable paths in `eleph.json` stay the same.

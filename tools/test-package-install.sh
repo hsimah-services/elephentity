@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Verify the actual Composer consumer layout, independently of root dev autoload.
+# Verify the actual Composer consumer layout, independently of root dev autoload: the runtime and
+# the builders from Composer, and the Rust `eleph` (built here from compiler/) as the compiler.
 set -euo pipefail
 source_root="$(cd "$(dirname "$0")/.." && pwd)"
+cargo build --release --locked --manifest-path "$source_root/compiler/Cargo.toml"
+eleph="$source_root/compiler/target/release/eleph"
 project="$(mktemp -d)"
 trap 'rm -rf "$project"' EXIT
 cd "$project"
@@ -9,12 +12,12 @@ cat > composer.json <<'JSON'
 {
   "name": "elephentity/package-install-check",
   "require": {
-    "elephentity/elephentity": "^0.11",
-    "elephentity/memory": "^0.11"
+    "elephentity/elephentity": "^0.14",
+    "elephentity/memory": "^0.14"
   },
   "require-dev": {
-    "elephentity/cli": "^0.11",
-    "elephentity/codegen-php": "^0.6"
+    "elephentity/codegen": "^0.7",
+    "elephentity/codegen-php": "^0.8.1"
   },
   "autoload": {"psr-4": {"InstallCheck\\Entity\\": "generated/"}}
 }
@@ -24,9 +27,9 @@ if [ "${1:-}" != --published ]; then
   php -r '
     $file = "composer.json";
     $config = json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-    foreach (["elephentity" => "", "schema" => "/packages/schema", "cli" => "/packages/cli", "memory" => "/packages/memory"] as $name => $path) {
+    foreach (["elephentity" => "", "memory" => "/packages/memory"] as $name => $path) {
         $config["repositories"][] = ["type" => "path", "url" => $argv[1] . $path,
-            "options" => ["symlink" => false, "versions" => ["elephentity/" . $name => "0.11.0"]]];
+            "options" => ["symlink" => false, "versions" => ["elephentity/" . $name => "0.14.0"]]];
     }
     file_put_contents($file, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
   ' "$source_root"
@@ -49,8 +52,8 @@ fields:
     type: text
     required: true
 YAML
-# A Composer-only project has no Rust binary, so vendor/bin/eleph falls back to the PHP compiler. What
-# this proves is that `composer require` alone still gives a working `eleph`, so it runs the launcher.
+# eleph-codegen is found in vendor/bin, where Composer put it; eleph-gen-memory ships with the
+# memory driver it declares.
 cat > eleph.json <<'JSON'
 {
   "spec": "spec",
@@ -60,11 +63,11 @@ cat > eleph.json <<'JSON'
   }
 }
 JSON
-vendor/bin/eleph fmt
-vendor/bin/eleph validate
-vendor/bin/eleph generate
-vendor/bin/eleph generate --check
-vendor/bin/eleph check
+"$eleph" fmt
+"$eleph" validate
+"$eleph" generate
+"$eleph" generate --check
+"$eleph" check
 php -r '
     require "vendor/autoload.php";
     foreach (["Eleph\\Memory\\MemoryAdaptor", "InstallCheck\\Entity\\Note\\Note"] as $class) {
@@ -79,8 +82,5 @@ composer install --no-dev --no-interaction
 php -r '
     require "vendor/autoload.php";
     if (!class_exists("Eleph\\Memory\\MemoryAdaptor")) { throw new RuntimeException("Missing production adaptor"); }
-    foreach (["Eleph\\Schema\\SchemaCompiler", "Eleph\\Cli\\Command\\GenerateCommand"] as $class) {
-        if (class_exists($class)) { throw new RuntimeException("Build-time class shipped: " . $class); }
-    }
 '
 printf 'Standalone install, generation, conformance and production dependency checks passed.\n'
