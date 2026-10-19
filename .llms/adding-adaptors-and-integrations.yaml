@@ -27,7 +27,8 @@ start_here:
   - Check current IR_VERSION in code; README examples may lag behind.
   - Run a real generated manifest against the runtime before freezing golden output.
 new_builder_files:
-  composer.json: Build-time package metadata; bin entry once the launcher exists.
+  composer.json: PHP-runtime builders only; build-time package metadata with the bin entry. Builders for
+    other runtimes (csharp, cosmos, graphql-csharp) have none; they ship as release binaries for eleph install.
   Cargo.toml: Binary name and Rust dependencies; no runtime-package dependency.
   Cargo.lock: Commit it and use --locked in CI.
   LICENSE: MIT for new owner-authored code; preserve third-party notices for reused code.
@@ -74,29 +75,29 @@ current_examples:
     integration_key: graphql
     runtime_manifest: elephentity-graphql-php/src/Manifest/Manifest.php
   csharp:
-    status: planned_steps_13_14
+    status: released
     runtime_repository: elephentity-dotnet
     runtime_package: Elephentity.Runtime
     builder_repository: elephentity-codegen-csharp
-    builder_package: elephentity/codegen-csharp
+    distribution: GitHub Releases, fetched by eleph install; no Composer package
     executable: eleph-gen-csharp
     target: csharp
     runtime_names: elephentity-codegen-csharp/rust/runtime.rs
   cosmos:
-    status: planned_steps_15_16
+    status: released
     runtime_repository: elephentity-dotnet
     runtime_package: Elephentity.Cosmos
     builder_repository: elephentity-codegen-cosmos
-    builder_package: elephentity/codegen-cosmos
+    distribution: GitHub Releases, fetched by eleph install; no Composer package
     executable: eleph-gen-cosmos
     driver: cosmos
     runtime_manifest: elephentity-dotnet/src/Elephentity.Cosmos/Manifest/CosmosStorageManifest.cs
   graphql_csharp:
-    status: planned_steps_17_18
+    status: released
     runtime_repository: elephentity-dotnet
     runtime_package: Elephentity.GraphQL
     builder_repository: elephentity-codegen-graphql-csharp
-    builder_package: elephentity/codegen-graphql-csharp
+    distribution: GitHub Releases, fetched by eleph install; no Composer package
     executable: eleph-gen-graphql-csharp
     target: graphql-csharp
     integration_key: graphql
