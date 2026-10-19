@@ -35,10 +35,10 @@ is itself the thing this directory is about, so it needs its own issues.
 | `hsimah-services/elephentity-graphql-php` | generic PHP GraphQL runtime | runtime integration contracts; webonyx schema |
 | `hsimah-services/elephentity-patterns` | reusable spec patterns | compiler pattern declarations |
 | `hsimah-services/elephentity-examples` | worked examples, including the step 21 .NET example | consumes generated output; end-to-end proof |
-| `hsimah-services/elephentity-dotnet` (planned) | one .NET monorepo: Runtime, Runtime.Memory, Runtime.Testing, Cosmos, GraphQL, Tsquid | async runtime contracts; NuGet; GraphQL.NET schema |
-| `hsimah-services/elephentity-codegen-csharp` (planned) | Rust entity/enum/contract/catalogue/DI builder, `eleph-gen-csharp` | unchanged builder protocol; .NET runtime type names |
-| `hsimah-services/elephentity-codegen-cosmos` (planned) | Rust Cosmos C# storage-manifest builder, `eleph-gen-cosmos` | unchanged builder protocol; .NET Cosmos runtime type names |
-| `hsimah-services/elephentity-codegen-graphql-csharp` (planned) | Rust GraphQL C# manifest builder, `eleph-gen-graphql-csharp` | unchanged builder protocol; `graphql` integration; .NET GraphQL runtime type names |
+| `hsimah-services/elephentity-dotnet` | one .NET monorepo: Runtime, Runtime.Memory, Runtime.Testing, Cosmos, GraphQL, Tsquid | async runtime contracts; NuGet; GraphQL.NET schema |
+| `hsimah-services/elephentity-codegen-csharp` | Rust entity/enum/contract/catalogue/DI builder, `eleph-gen-csharp` | unchanged builder protocol; .NET runtime type names |
+| `hsimah-services/elephentity-codegen-cosmos` | Rust Cosmos C# storage-manifest builder, `eleph-gen-cosmos` | unchanged builder protocol; .NET Cosmos runtime type names |
+| `hsimah-services/elephentity-codegen-graphql-csharp` | Rust GraphQL C# manifest builder, `eleph-gen-graphql-csharp` | unchanged builder protocol; `graphql` integration; .NET GraphQL runtime type names |
 
 ## The rule
 
