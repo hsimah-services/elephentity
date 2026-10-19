@@ -2,7 +2,7 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/policy-pattern-interface/project.yml",
+        "sourceFile": "compiler/tests/specs/policy-pattern-interface/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "post",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/policy-pattern-interface/entities/Post.yml",
+            "sourceFile": "compiler/tests/specs/policy-pattern-interface/entities/Post.yml",
             "description": null,
             "uses": [
                 "Owned"
@@ -35,7 +35,7 @@
                     "name": "owner",
                     "origin": {
                         "pattern": "Owned",
-                        "file": "packages/schema/tests/fixtures/policy-pattern-interface/patterns/Owned.yml"
+                        "file": "compiler/tests/specs/policy-pattern-interface/patterns/Owned.yml"
                     },
                     "description": null
                 }

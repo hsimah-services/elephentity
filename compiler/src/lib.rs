@@ -1,7 +1,8 @@
 //! The Elephentity spec compiler.
 //!
-//! The PHP compiler in `packages/schema` is the migration oracle: this crate is measured
-//! against the snapshots `tools/compare-compiler` takes from it.
+//! This crate was ported from the PHP compiler that used to live in `packages/schema` and
+//! `packages/cli`. That compiler is retired; what it produced over every fixture is frozen
+//! under `tests/oracle`, and this crate is still measured against it.
 
 pub mod cli;
 pub mod compile;

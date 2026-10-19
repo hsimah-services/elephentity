@@ -10,7 +10,7 @@ paths:
   runtime_source: elephentity/packages/runtime
   runtime_mirror: elephentity-runtime
   protocol: elephentity-codegen/docs/PROTOCOL.md
-  compiler_discovery: elephentity/packages/cli/src/Installed.php
+  compiler_discovery: elephentity/compiler/src/cli/installed.rs
   cross_repository_rules: elephentity/.llms/cross-repo.md
 boundaries:
   compiler: validates specs and emits the versioned wire IR

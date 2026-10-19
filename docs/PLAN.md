@@ -89,10 +89,9 @@ spec field mean", and drift from each other rather than from the spec.
 
 | Package/repository | Responsibility |
 |---|---|
-| `schema/` (this repo) | spec parser, JSON Schema, pattern resolution, IR, semantic validation |
+| `compiler/` (this repo, Rust) | `eleph`: spec parser, JSON Schemas, pattern resolution, IR, semantic validation, `generate` / `validate` / `check` / `fmt` / `install` |
 | `runtime/` (this repo, mirrored to `elephentity-runtime`) | StorageAdaptor port, capabilities, unit of work, loaders, verification |
-| `memory/` (this repo) | the neutral driver — no physical schema, no platform |
-| `cli/` (this repo) | `eleph generate` / `validate` / `check` / `fmt` |
+| `memory/` (this repo) | the neutral driver — no physical schema, no platform — and `eleph-gen-memory` |
 | `elephentity-codegen` | the orchestrator: resolves builders, runs them, signs and writes |
 | `elephentity-codegen-php` | IR → PHP (entity, mutator, finder, handler interfaces, migrations) |
 | `elephentity-codegen-wordpress` | IR → the physical schema `elephentity-wordpress` loads |
@@ -2131,6 +2130,17 @@ from PHP they cause are listed in [divergence.md](divergence.md).
   by the C# builders.
 
 #### Retiring the PHP compiler
+
+> **Done (elephentity#145), after v0.14.2.** `packages/schema` and `packages/cli` are gone, along
+> with `tools/compare-compiler` and `tools/test-rust-cli`, and the schema and CLI mirrors stop at
+> v0.14.2. It differs from the plan below in two places. **The oracle snapshots stay**: the fixtures
+> moved to `compiler/tests/specs/`, the JSON Schemas to `compiler/resources/`, and
+> `compiler/tests/oracle/` is frozen as a regression suite (a deliberate output change updates it by
+> hand and is recorded in `docs/divergence.md`). **The launcher does not stay**: `elephentity/cli`
+> ends at v0.14.2, and `eleph` comes only from `install.sh`. `eleph-gen-memory` moved to
+> `packages/memory/bin`, beside the driver it declares, with the protocol envelope inlined, so it
+> depends on nothing. `tools/test-package-install.sh` runs the four gates on a Composer project with
+> the Rust `eleph`, in place of `PipelineTest`.
 
 The PHP compiler, CLI and `eleph-php` are frozen: they receive no features and only fixes that keep
 them a faithful oracle. They are removed once **one tagged release** has shipped at parity, which

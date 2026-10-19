@@ -6,7 +6,7 @@ before `eleph validate` ever runs.
 
 ## What to host
 
-Five files, copied verbatim from `packages/schema/resources/`, at exactly these URLs:
+Five files, copied verbatim from `compiler/resources/`, at exactly these URLs:
 
 | File | URL |
 |---|---|

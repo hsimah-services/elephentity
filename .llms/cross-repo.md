@@ -28,10 +28,10 @@ together, but C# builders' `rust/runtime.rs` constants still cross a repository 
 
 | You changed | `elephentity-codegen` must | every builder repository must |
 |---|---|---|
-| Rust `IrCodec::VERSION` under `compiler/` (owns the wire version from step 3; PHP `packages/schema/src/Wire/IrCodec.php` is the oracle copy) | bump `Envelope::IR_VERSION` | bump its own `Envelope::IR_VERSION`; keep the PHP oracle version aligned |
-| the shape of the compiler IR (`compiler/` from step 3; `packages/schema/src/Ir/*` is the PHP oracle) | — nothing; the IR is opaque to it | copy the change into its own `rust/ir.rs`, re-freeze golden fixtures |
-| the compiler request (`GenerateCommand::request()`) | update `Protocol/CompilerRequest` | — |
-| what `provides` may contain (`packages/cli/src/Installed.php`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
+| `IR_VERSION` in `compiler/src/ir/mod.rs` (owns the wire version) | bump `Envelope::IR_VERSION` | bump its own `Envelope::IR_VERSION`; in `elephentity` itself, bump `IR_VERSION` in `packages/memory/bin/eleph-gen-memory` |
+| the shape of the compiler IR (`compiler/src/ir`) | — nothing; the IR is opaque to it | copy the change into its own `rust/ir.rs`, re-freeze golden fixtures |
+| the compiler request (`Ir::request()` in `compiler/src/ir/mod.rs`) | update `Protocol/CompilerRequest` | — |
+| what `provides` may contain (`compiler/src/cli/installed.rs`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
 | a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`), if it names that class |
 | an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
 | `eleph.json` keys **it** reads (`spec`, `codegen`, `builders`; `codegen` may be pinned as `name@version`) | only if the key is also the orchestrator's (`builders` is) | — |
@@ -101,9 +101,9 @@ row for the one you changed.
 | You changed | `elephentity-examples` must | `elephentity-codegen` must |
 |---|---|---|
 | the bytes of any generated file | regenerate `clog` and commit the diff | — |
-| the shape of `class-map.php` (php builder only) | — (`packages/cli/src/ClassMap.php` lives in `elephentity`; open an issue there too) | — |
+| the shape of `class-map.php` (php builder only) | — (`eleph-check-php` reads it; it lives in `elephentity-codegen-php` with the builder) | — |
 | what it answers to `describe` | — (`Installed` lives in `elephentity`; open an issue there too) | — |
-| `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `IrCodec::VERSION` and `elephentity`'s compiler IR and PHP oracle in step | bump `Envelope::IR_VERSION` |
+| `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `elephentity`'s compiler `IR_VERSION` and IR, and `eleph-gen-memory`'s `IR_VERSION`, in step | bump `Envelope::IR_VERSION` |
 | its `src/Runtime.php` constants (php builder: `rust/runtime.rs`) | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
 | which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
 | a package pattern it ships (wordpress builder: `resources/patterns/*.yml`) | none, if the pattern's shape is unchanged; regenerate if it is | — |
@@ -152,25 +152,26 @@ Listed because guessing wrong in this direction is the expensive one.
   every other builder.** Each is independent; `elephentity-codegen-wordpress` falling
   behind the IR does not reach `elephentity-codegen-wpgraphql` or vice versa.
 
-Schema, CLI and memory mirrors are entirely owned by `packages/<name>` here, including
-Composer metadata, resources, bins and CI. Change those in the source repository;
-the split workflow synchronizes them on main pushes and source tags. The memory
-builder lives in the CLI package so memory has no compiler dependency at runtime.
+The memory mirror is entirely owned by `packages/memory` here, including Composer
+metadata, bins and CI. Change those in the source repository; the split workflow
+synchronizes it on main pushes and source tags. The memory builder lives in
+`packages/memory/bin` and depends on nothing, not even the runtime. The schema and CLI
+mirrors were retired with the PHP compiler and stop at v0.14.2.
 
 
 ## Rust compiler and target-delegated checks (steps 2–6)
 
-The Rust `eleph` lives in `elephentity/compiler/`. From step 3 its `IrCodec::VERSION`
-owns the wire version; `packages/schema/src/Wire/IrCodec.php` becomes the frozen
-oracle copy. Changes to IR shape or encoding require matching builder `rust/ir.rs`
-updates and parity verification through `tools/compare-compiler`. An IR-version bump
-must merge with the orchestrator and every builder version gate together.
-The Rust compiler request and the PHP migration-oracle request must agree with
+The Rust `eleph` lives in `elephentity/compiler/` and is the only compiler; the PHP one
+was retired after v0.14.2. Its `IR_VERSION` owns the wire version. Changes to IR shape or
+encoding require matching builder `rust/ir.rs` updates, and a deliberate change to the
+compiler's output updates the frozen snapshots in `compiler/tests/oracle/` with the reason
+in `docs/divergence.md`. An IR-version bump must merge with the orchestrator and every
+builder version gate together. The compiler request must agree with
 `elephentity-codegen`'s `Protocol/CompilerRequest` contract.
 
 | You changed | Repositories that must follow |
 |---|---|
-| `provides.check: {"command": [...]}` shape | `elephentity`'s Rust discovery/check dispatcher and PHP oracle while active; `elephentity-codegen-php`'s inline `provides` answer in `rust/main.rs` (step 6 may move it to a file) and every builder advertising a checker, including C# when it advertises one |
+| `provides.check: {"command": [...]}` shape | `elephentity`'s Rust discovery/check dispatcher; `elephentity-codegen-php`'s inline `provides` answer in `rust/main.rs` (step 6 may move it to a file) and every builder advertising a checker, including C# when it advertises one |
 | `eleph-check-php` invocation or class-map/verifier input | `elephentity-codegen-php` checker; `elephentity` dispatcher; `elephentity-examples` check configuration |
 | C# target-configured `ContractCheck` command/input | `elephentity-dotnet`'s `Elephentity.Runtime.Testing`, affected C# builder checker declaration/configuration and `elephentity-examples` |
 
@@ -188,7 +189,7 @@ PHP advertises `eleph-check-php`; C# runs `ContractCheck` through its configured
 | Exported initial-data API in `Elephentity.Tsquid` | `elephentity-codegen-tsquid`: update C# runtime names and output | regenerate and verify route data before the first script |
 | Runtime-name constant or emitted C# constructor call in a builder | `elephentity-dotnet`: confirm the named type and signature exist | regenerate, compile and run the affected integration |
 | Any generated C# bytes | affected builder: re-freeze fixtures only after real compilation/execution | regenerate and commit the signed tree |
-| C# builder's `rust/ir.rs` or `Envelope::IR_VERSION` | `elephentity`: align Rust wire codec and PHP oracle; `elephentity-codegen`: align `Envelope::IR_VERSION`; other builders: align their IR/version gates | regenerate with compatible compiler and builders |
+| C# builder's `rust/ir.rs` or `Envelope::IR_VERSION` | `elephentity`: align the compiler's wire codec and `eleph-gen-memory`'s `IR_VERSION`; `elephentity-codegen`: align `Envelope::IR_VERSION`; other builders: align their IR/version gates | regenerate with compatible compiler and builders |
 
 C# builders use `line-comment` and emit only `.cs`, never JSON. Both GraphQL builders
 provide integration key `graphql`; changes to its declaration reach both builders,

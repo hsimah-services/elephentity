@@ -5,10 +5,10 @@ others cannot see. Running them out of order wastes time; skipping one leaves a 
 of failure to be found later and further away.
 
 ```bash
-vendor/bin/eleph fmt
-vendor/bin/eleph validate spec
-vendor/bin/eleph generate          # generate --check in CI
-vendor/bin/eleph check
+eleph fmt
+eleph validate spec
+eleph generate          # generate --check in CI
+eleph check
 ```
 
 All commands take `--project` (default `.`), the directory holding `eleph.json`.

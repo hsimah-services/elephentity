@@ -2,7 +2,7 @@
     "project": {
         "name": "PooledEmpty",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/pooled-empty/project.yml",
+        "sourceFile": "compiler/tests/specs/pooled-empty/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null

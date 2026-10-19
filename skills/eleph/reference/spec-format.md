@@ -3,8 +3,11 @@
 **The JSON Schemas are the authority.** When this document and a schema disagree, the
 schema is right.
 
+Published at `https://dev.hbla.ke/elephentity/v0/<name>.schema.json`, and in the
+elephentity repository under:
+
 ```
-vendor/elephentity/elephentity/packages/schema/resources/
+compiler/resources/
   common.schema.json    shared definitions — fields, edges, queries, actions, sideEffects
   project.schema.json   project.yml
   entity.schema.json    entities/*.yml

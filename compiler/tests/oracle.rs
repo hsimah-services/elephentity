@@ -1,7 +1,9 @@
-//! Parity with the PHP compiler.
+//! Parity with the PHP compiler this crate was ported from.
 //!
-//! `tools/compare-compiler --refresh` runs the PHP compiler over every fixture in
-//! `packages/schema/tests/fixtures` and commits what it produces to `tests/oracle/<case>/`:
+//! Before it was retired, the PHP compiler was run over every fixture in `tests/specs` and
+//! what it produced was committed to `tests/oracle/<case>/`. Those snapshots are frozen: a
+//! deliberate change to the compiler's output updates them by hand, with the reason recorded
+//! in `docs/divergence.md`. Each case holds:
 //!
 //! - `resolved.json`: the IR after load, validation and patterns, before semantic checks.
 //!   Compared in order, so key order counts.
@@ -128,10 +130,7 @@ fn cases() -> Vec<Case> {
         .collect();
 
     dirs.sort();
-    assert!(
-        !dirs.is_empty(),
-        "no oracle cases; run tools/compare-compiler --refresh"
-    );
+    assert!(!dirs.is_empty(), "no oracle cases under tests/oracle");
 
     dirs.into_iter()
         .map(|dir| {
@@ -140,7 +139,7 @@ fn cases() -> Vec<Case> {
             Case {
                 name: dir.file_name().unwrap().to_string_lossy().to_string(),
                 root: format!(
-                    "packages/schema/tests/fixtures/{}",
+                    "compiler/tests/specs/{}",
                     input["fixture"].as_str().expect("a fixture")
                 ),
                 options: Options {

@@ -2,7 +2,7 @@
     "project": {
         "name": "T",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/integrations/project.yml",
+        "sourceFile": "compiler/tests/specs/integrations/project.yml",
         "integrations": {
             "wpgraphql": {}
         },
@@ -17,7 +17,7 @@
                 "table": "hidden",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/integrations/entities/Hidden.yml",
+            "sourceFile": "compiler/tests/specs/integrations/entities/Hidden.yml",
             "description": null,
             "uses": [],
             "fields": {},
@@ -40,7 +40,7 @@
                 "table": "shown",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/integrations/entities/Shown.yml",
+            "sourceFile": "compiler/tests/specs/integrations/entities/Shown.yml",
             "description": null,
             "uses": [],
             "fields": {},

@@ -10,19 +10,15 @@
          colors="true">
     <testsuites>
         <testsuite name="eleph">
-            <directory>packages/schema/tests</directory>
             <directory>packages/runtime/tests</directory>
             <directory>packages/memory/tests</directory>
-            <directory>packages/cli/tests</directory>
             <directory>tools/tests</directory>
         </testsuite>
     </testsuites>
     <source>
         <include>
-            <directory>packages/schema/src</directory>
             <directory>packages/runtime/src</directory>
             <directory>packages/memory/src</directory>
-            <directory>packages/cli/src</directory>
         </include>
     </source>
 </phpunit>

@@ -2,7 +2,7 @@
 //!
 //! The stand-in records the arguments and stdin it is given and answers `describe` from a file,
 //! so these tests can say exactly what crosses the pipe between the compiler and the generator
-//! without needing the real one. The real one is exercised by `tools/test-rust-cli`.
+//! without needing the real one. The real one is exercised by `tools/test-package-install.sh`.
 
 use std::fs;
 use std::path::{Path, PathBuf};

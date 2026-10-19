@@ -1,0 +1,109 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * The memory builder: the driver's declaration, and nothing else.
+ *
+ * A driver rather than an integration for the same reason `eleph-gen-wordpress` is:
+ * it is named once in `project.yml` and decides what every entity's storage means.
+ * Unlike WordPress, it compiles to no physical schema — `MemoryAdaptor` has no table,
+ * no post type, nothing to provision — so a project on this driver still needs this
+ * builder configured only to answer the describe handshake honestly. A `generate`
+ * request always succeeds with nothing to write.
+ *
+ * It lives beside the driver it declares and depends on nothing: the whole protocol it
+ * needs is the envelope below. See PROTOCOL.md in elephentity-codegen for the contract.
+ */
+
+const DRIVER = 'memory';
+const PROTOCOL_VERSION = 1;
+// The compiler's IR version (compiler/src/ir/mod.rs). This builder reads one field of the
+// IR, but it still refuses a request from another version rather than guess.
+const IR_VERSION = '1.2';
+
+/** @return never */
+function fail(string $message): void
+{
+    fwrite(STDERR, 'eleph-gen-memory: ' . $message . "\n");
+
+    exit(1);
+}
+
+/** @param array<string, mixed> $response */
+function respond(array $response): void
+{
+    fwrite(STDOUT, json_encode(
+        ['elephentity' => PROTOCOL_VERSION, 'irVersion' => IR_VERSION, ...$response],
+        JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+    ));
+}
+
+$stdin = (string) file_get_contents('php://stdin');
+
+if ('' === trim($stdin)) {
+    fail('Expected a request on stdin.');
+}
+
+$request = json_decode($stdin, true);
+
+if (!is_array($request)) {
+    fail('Expected one JSON object on stdin.');
+}
+
+$protocol = $request['elephentity'] ?? null;
+
+if (PROTOCOL_VERSION !== $protocol) {
+    fail(sprintf(
+        'Protocol version mismatch: this builder speaks %d, the other side speaks %s.',
+        PROTOCOL_VERSION,
+        is_scalar($protocol) ? (string) $protocol : get_debug_type($protocol),
+    ));
+}
+
+$ir = $request['irVersion'] ?? null;
+
+if (IR_VERSION !== $ir) {
+    fail(sprintf(
+        'IR version mismatch: this builder speaks %s, the other side speaks %s. '
+        . 'There is no compatibility guarantee before 1.0; upgrade whichever side is behind.',
+        IR_VERSION,
+        is_scalar($ir) ? (string) $ir : get_debug_type($ir),
+    ));
+}
+
+$kind = $request['request'] ?? 'generate';
+
+if ('describe' === $kind) {
+    respond(['provides' => ['drivers' => [DRIVER]]]);
+
+    exit(0);
+}
+
+if ('generate' !== $kind) {
+    fail(sprintf(
+        'Unknown request "%s". This builder answers "generate" and "describe".',
+        is_scalar($kind) ? (string) $kind : get_debug_type($kind),
+    ));
+}
+
+$driver = $request['schema']['project']['driver'] ?? null;
+
+if (!is_string($driver)) {
+    fail('The request carries no schema.');
+}
+
+// Configured but not chosen, the same courtesy eleph-gen-wordpress extends: saying
+// so beats silence, which looks exactly like a builder that ran and had nothing to
+// do. Chosen or not, there is never anything to write — this driver compiles to no
+// physical schema at all.
+$errors = DRIVER === $driver ? [] : [sprintf(
+    'This project declares driver "%s", so the memory target has nothing to generate. '
+    . 'Remove it from eleph.json, or change the driver in project.yml.',
+    $driver,
+)];
+
+respond(['headerStyle' => 'php', 'extensions' => ['php'], 'files' => [], 'errors' => $errors]);
+
+exit(0);

@@ -2,7 +2,7 @@
     "project": {
         "name": "Fixture",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/edge-required/project.yml",
+        "sourceFile": "compiler/tests/specs/edge-required/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "points_transaction",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml",
+            "sourceFile": "compiler/tests/specs/edge-required/entities/PointsTransaction.yml",
             "description": null,
             "uses": [],
             "fields": {
@@ -27,7 +27,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
+                        "file": "compiler/tests/specs/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "required": false,
@@ -50,7 +50,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
+                        "file": "compiler/tests/specs/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "inverse": null,
@@ -63,7 +63,7 @@
                     "cardinality": "one",
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/edge-required/entities/PointsTransaction.yml"
+                        "file": "compiler/tests/specs/edge-required/entities/PointsTransaction.yml"
                     },
                     "description": null,
                     "inverse": null,
@@ -89,7 +89,7 @@
                 "table": "user",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/edge-required/entities/User.yml",
+            "sourceFile": "compiler/tests/specs/edge-required/entities/User.yml",
             "description": null,
             "uses": [],
             "fields": {
@@ -101,7 +101,7 @@
                     },
                     "origin": {
                         "pattern": null,
-                        "file": "packages/schema/tests/fixtures/edge-required/entities/User.yml"
+                        "file": "compiler/tests/specs/edge-required/entities/User.yml"
                     },
                     "description": null,
                     "required": false,

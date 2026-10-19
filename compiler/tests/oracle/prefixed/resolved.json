@@ -2,7 +2,7 @@
     "project": {
         "name": "Shop",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/prefixed/project.yml",
+        "sourceFile": "compiler/tests/specs/prefixed/project.yml",
         "integrations": {},
         "tablePrefix": "shop_",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "shop_widget",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/prefixed/entities/Widget.yml",
+            "sourceFile": "compiler/tests/specs/prefixed/entities/Widget.yml",
             "description": null,
             "uses": [],
             "fields": {},

@@ -2,7 +2,7 @@
     "project": {
         "name": "Pooled",
         "driver": "wordpress",
-        "sourceFile": "packages/schema/tests/fixtures/pooled/project.yml",
+        "sourceFile": "compiler/tests/specs/pooled/project.yml",
         "integrations": {},
         "tablePrefix": "",
         "description": null
@@ -15,7 +15,7 @@
                 "table": "terms",
                 "handle": null
             },
-            "sourceFile": "packages/schema/tests/fixtures/pooled/entities/Term.yml",
+            "sourceFile": "compiler/tests/specs/pooled/entities/Term.yml",
             "description": null,
             "uses": [
                 "Taxonomy"
