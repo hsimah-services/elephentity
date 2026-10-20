@@ -1,0 +1,453 @@
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}
+
+"""One stocked instance of an item, in a location, with its own expiry."""
+type ClogInventory implements Node {
+  """When the row was first written. Filled by the framework."""
+  createdAt: String!
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """When this instance entered inventory."""
+  dateAdded: String!
+
+  """When it expires. Absent means it does not."""
+  dateExpiry: String
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """What this entry is an instance of."""
+  item: ClogItem
+
+  """Where it is kept."""
+  location: ClogLocation
+
+  """Projected to post_title, so the admin list has something to show."""
+  name: String!
+
+  "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n"
+  postId: Int
+  site(after: String, before: String, first: Int, last: Int): ClogInventoryToClogSiteConnection
+
+  """When the row was last written. Filled by the framework."""
+  updatedAt: String!
+}
+
+type ClogInventoryToClogSiteConnection {
+  edges: [ClogInventoryToClogSiteConnectionEdge]
+  nodes: [ClogSite]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type ClogInventoryToClogSiteConnectionEdge {
+  cursor: String
+  node: ClogSite
+}
+
+"""A thing that can be stocked, identified by its barcode."""
+type ClogItem implements Node {
+  "The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.\n"
+  barcode: String
+
+  """When the row was first written. Filled by the framework."""
+  createdAt: String!
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """Half of the default expiry; meaningless without the other half."""
+  defaultExpiryUnit: ExpiryUnit
+
+  """Half of the default expiry; meaningless without the other half."""
+  defaultExpiryValue: Int
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+  inventoryEntries(after: String, before: String, first: Int, last: Int): ClogItemToClogInventoryConnection
+
+  """What the item is called. Projected to post_title."""
+  name: String!
+
+  "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n"
+  postId: Int
+
+  """When the row was last written. Filled by the framework."""
+  updatedAt: String!
+}
+
+type ClogItemToClogInventoryConnection {
+  edges: [ClogItemToClogInventoryConnectionEdge]
+  nodes: [ClogInventory]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type ClogItemToClogInventoryConnectionEdge {
+  cursor: String
+  node: ClogInventory
+}
+
+"""Somewhere inventory can be kept."""
+type ClogLocation implements Node {
+  """When the row was first written. Filled by the framework."""
+  createdAt: String!
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+  inventoryEntries(after: String, before: String, first: Int, last: Int): ClogLocationToClogInventoryConnection
+
+  """What the location is called. Projected to post_title."""
+  name: String!
+
+  "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n"
+  postId: Int
+  sites(after: String, before: String, first: Int, last: Int): ClogLocationToClogSiteConnection
+
+  """When the row was last written. Filled by the framework."""
+  updatedAt: String!
+}
+
+type ClogLocationToClogInventoryConnection {
+  edges: [ClogLocationToClogInventoryConnectionEdge]
+  nodes: [ClogInventory]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type ClogLocationToClogInventoryConnectionEdge {
+  cursor: String
+  node: ClogInventory
+}
+
+type ClogLocationToClogSiteConnection {
+  edges: [ClogLocationToClogSiteConnectionEdge]
+  nodes: [ClogSite]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type ClogLocationToClogSiteConnectionEdge {
+  cursor: String
+  node: ClogSite
+}
+
+"""A building an inventory entry is physically kept in — Loft or Cave."""
+type ClogSite implements Node {
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  "The term's label. A taxonomy-backed entity has exactly this field — anything else declared here has nowhere to live in wp_term_taxonomy and is silently dropped at runtime.\n"
+  name: String!
+}
+
+input CreateClogInventoryInput {
+  clientMutationId: String
+  dateAdded: String!
+  dateExpiry: String
+  item: ID
+  location: ID
+  name: String!
+  postId: Int
+  site: [ID]
+}
+
+type CreateClogInventoryPayload {
+  clientMutationId: String
+  clogInventory: ClogInventory
+}
+
+input CreateClogItemInput {
+  barcode: String
+  clientMutationId: String
+  defaultExpiryUnit: ExpiryUnit
+  defaultExpiryValue: Int
+  name: String!
+  postId: Int
+}
+
+type CreateClogItemPayload {
+  clientMutationId: String
+  clogItem: ClogItem
+}
+
+input CreateClogLocationInput {
+  clientMutationId: String
+  name: String!
+  postId: Int
+  sites: [ID]
+}
+
+type CreateClogLocationPayload {
+  clientMutationId: String
+  clogLocation: ClogLocation
+}
+
+input CreateClogSiteInput {
+  clientMutationId: String
+  name: String!
+}
+
+type CreateClogSitePayload {
+  clientMutationId: String
+  clogSite: ClogSite
+}
+
+input DeleteClogInventoryInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteClogInventoryPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteClogItemInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteClogItemPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteClogLocationInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteClogLocationPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteClogSiteInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteClogSitePayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DiscontinueClogItemInput {
+  clientMutationId: String
+  id: ID!
+  reason: String!
+}
+
+type DiscontinueClogItemPayload {
+  clientMutationId: String
+  clogItem: ClogItem
+}
+
+enum ExpiryUnit {
+  DAYS
+  MONTHS
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type RootMutation {
+  createClogInventory(input: CreateClogInventoryInput!): CreateClogInventoryPayload
+  createClogItem(input: CreateClogItemInput!): CreateClogItemPayload
+  createClogLocation(input: CreateClogLocationInput!): CreateClogLocationPayload
+  createClogSite(input: CreateClogSiteInput!): CreateClogSitePayload
+  deleteClogInventory(input: DeleteClogInventoryInput!): DeleteClogInventoryPayload
+  deleteClogItem(input: DeleteClogItemInput!): DeleteClogItemPayload
+  deleteClogLocation(input: DeleteClogLocationInput!): DeleteClogLocationPayload
+  deleteClogSite(input: DeleteClogSiteInput!): DeleteClogSitePayload
+  discontinueClogItem(input: DiscontinueClogItemInput!): DiscontinueClogItemPayload
+  updateClogInventory(input: UpdateClogInventoryInput!): UpdateClogInventoryPayload
+  updateClogItem(input: UpdateClogItemInput!): UpdateClogItemPayload
+  updateClogLocation(input: UpdateClogLocationInput!): UpdateClogLocationPayload
+  updateClogSite(input: UpdateClogSiteInput!): UpdateClogSitePayload
+}
+
+type RootQuery {
+  """One ClogInventory by id."""
+  clogInventory(id: ID!): ClogInventory
+  clogInventoryEntries(after: String, before: String, first: Int, last: Int): RootQueryToClogInventoryConnection
+
+  """One ClogItem by id."""
+  clogItem(id: ID!): ClogItem
+  clogItemSearch(after: String, before: String, first: Int, last: Int, where: RootQueryToClogItemSearchConnectionWhereArgs): RootQueryToClogItemSearchConnection
+  clogItems(after: String, before: String, first: Int, last: Int): RootQueryToClogItemConnection
+
+  """One ClogLocation by id."""
+  clogLocation(id: ID!): ClogLocation
+  clogLocations(after: String, before: String, first: Int, last: Int): RootQueryToClogLocationConnection
+
+  """One ClogSite by id."""
+  clogSite(id: ID!): ClogSite
+  clogSites(after: String, before: String, first: Int, last: Int): RootQueryToClogSiteConnection
+  node(id: ID!): Node
+}
+
+type RootQueryToClogInventoryConnection {
+  edges: [RootQueryToClogInventoryConnectionEdge]
+  nodes: [ClogInventory]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToClogInventoryConnectionEdge {
+  cursor: String
+  node: ClogInventory
+}
+
+type RootQueryToClogItemConnection {
+  edges: [RootQueryToClogItemConnectionEdge]
+  nodes: [ClogItem]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToClogItemConnectionEdge {
+  cursor: String
+  node: ClogItem
+}
+
+type RootQueryToClogItemSearchConnection {
+  edges: [RootQueryToClogItemSearchConnectionEdge]
+  nodes: [ClogItem]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToClogItemSearchConnectionEdge {
+  cursor: String
+  node: ClogItem
+}
+
+input RootQueryToClogItemSearchConnectionWhereArgs {
+  term: String!
+}
+
+type RootQueryToClogLocationConnection {
+  edges: [RootQueryToClogLocationConnectionEdge]
+  nodes: [ClogLocation]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToClogLocationConnectionEdge {
+  cursor: String
+  node: ClogLocation
+}
+
+type RootQueryToClogSiteConnection {
+  edges: [RootQueryToClogSiteConnectionEdge]
+  nodes: [ClogSite]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToClogSiteConnectionEdge {
+  cursor: String
+  node: ClogSite
+}
+
+input UpdateClogInventoryInput {
+  clientMutationId: String
+  dateAdded: String
+  dateExpiry: String
+  id: ID!
+  item: ID
+  location: ID
+  name: String
+  postId: Int
+  site: [ID]
+}
+
+type UpdateClogInventoryPayload {
+  clientMutationId: String
+  clogInventory: ClogInventory
+}
+
+input UpdateClogItemInput {
+  barcode: String
+  clientMutationId: String
+  defaultExpiryUnit: ExpiryUnit
+  defaultExpiryValue: Int
+  id: ID!
+  name: String
+  postId: Int
+}
+
+type UpdateClogItemPayload {
+  clientMutationId: String
+  clogItem: ClogItem
+}
+
+input UpdateClogLocationInput {
+  clientMutationId: String
+  id: ID!
+  name: String
+  postId: Int
+  sites: [ID]
+}
+
+type UpdateClogLocationPayload {
+  clientMutationId: String
+  clogLocation: ClogLocation
+}
+
+input UpdateClogSiteInput {
+  clientMutationId: String
+  id: ID!
+  name: String
+}
+
+type UpdateClogSitePayload {
+  clientMutationId: String
+  clogSite: ClogSite
+}

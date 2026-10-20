@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Server-side initial route data for tsquid, for ASP.NET Core.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The middleware runs the route's query through the GraphQL executor registered by AddElephentityGraphQL. -->
+    <ProjectReference Include="../Elephentity.GraphQL/Elephentity.GraphQL.csproj" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

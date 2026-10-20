@@ -1,0 +1,123 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "request": "generate",
+  "config": {},
+  "outputDirectory": "out",
+  "schema": {
+    "project": {
+      "name": "Test",
+      "driver": "sqlite",
+      "sourceFile": "project.yml",
+      "integrations": {
+        "graphql": {}
+      }
+    },
+    "entities": {
+      "Book": {
+        "name": "Book",
+        "sourceFile": "fixture.yml",
+        "storage": {
+          "driver": "sqlite",
+          "table": "book"
+        },
+        "fields": {
+          "title": {
+            "name": "title",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "required": true,
+            "maxLength": 100
+          },
+          "status": {
+            "name": "status",
+            "type": {
+              "primitive": "enum",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "required": true,
+            "enum": {
+              "inlineValues": [
+                "draft",
+                "live"
+              ],
+              "declaredType": null
+            }
+          }
+        },
+        "edges": {},
+        "integrations": {
+          "graphql": {
+            "singular": "Book",
+            "plural": "Books"
+          }
+        },
+        "queries": {
+          "search": {
+            "name": "search",
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "returns": {
+              "type": "Book",
+              "cardinality": "many"
+            },
+            "arguments": {
+              "text": {
+                "name": "text",
+                "type": {
+                  "primitive": "string",
+                  "declaredType": null
+                },
+                "nullable": true
+              }
+            },
+            "integrations": {
+              "graphql": {
+                "field": "searchBooks"
+              }
+            }
+          }
+        },
+        "actions": {
+          "rename": {
+            "name": "rename",
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "writes": {
+              "fields": [
+                "title"
+              ],
+              "edges": []
+            },
+            "arguments": {
+              "title": {
+                "name": "title",
+                "type": {
+                  "primitive": "string",
+                  "declaredType": null
+                },
+                "nullable": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "types": {}
+  },
+  "target": "graphql-php"
+}

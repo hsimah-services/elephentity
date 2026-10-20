@@ -1,0 +1,231 @@
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}
+
+""""""
+type Author implements Node {
+  books(after: String, before: String, first: Int, last: Int): AuthorToBookConnection
+
+  """"""
+  databaseId: ID!
+
+  """"""
+  id: ID!
+
+  """"""
+  name: String!
+}
+
+type AuthorToBookConnection {
+  edges: [AuthorToBookConnectionEdge]
+  nodes: [Book]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type AuthorToBookConnectionEdge {
+  cursor: String
+  node: Book
+}
+
+"""A book."""
+type Book implements Node {
+  authors(after: String, before: String, first: Int, last: Int): BookToAuthorConnection
+
+  """"""
+  databaseId: ID!
+
+  """The global id."""
+  id: ID!
+
+  """"""
+  inPrint: Boolean!
+
+  """"""
+  pages: Int
+
+  """"""
+  publishedAt: String
+
+  """"""
+  rating: Float
+
+  """"""
+  status: BookStatus!
+
+  """"""
+  tags: String
+
+  """What it is called."""
+  title: String!
+}
+
+enum BookStatus {
+  DRAFT
+  LIVE
+}
+
+type BookToAuthorConnection {
+  edges: [BookToAuthorConnectionEdge]
+  nodes: [Author]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type BookToAuthorConnectionEdge {
+  cursor: String
+  node: Author
+}
+
+input CreateAuthorInput {
+  clientMutationId: String
+  name: String!
+}
+
+type CreateAuthorPayload {
+  author: Author
+  clientMutationId: String
+}
+
+input CreateBookInput {
+  authors: [ID]
+  clientMutationId: String
+  publishedAt: String
+  status: BookStatus!
+  title: String!
+}
+
+type CreateBookPayload {
+  book: Book
+  clientMutationId: String
+}
+
+input DeleteAuthorInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteAuthorPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteBookInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteBookPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+input PublishBookInput {
+  at: String
+  clientMutationId: String
+  id: ID!
+}
+
+type PublishBookPayload {
+  book: Book
+  clientMutationId: String
+}
+
+type RootMutation {
+  createAuthor(input: CreateAuthorInput!): CreateAuthorPayload
+  createBook(input: CreateBookInput!): CreateBookPayload
+  deleteAuthor(input: DeleteAuthorInput!): DeleteAuthorPayload
+  deleteBook(input: DeleteBookInput!): DeleteBookPayload
+  publishBook(input: PublishBookInput!): PublishBookPayload
+  updateBook(input: UpdateBookInput!): UpdateBookPayload
+}
+
+type RootQuery {
+  """One Author by id."""
+  author(id: ID!): Author
+  authors(after: String, before: String, first: Int, last: Int): RootQueryToAuthorConnection
+
+  """One Book by id."""
+  book(id: ID!): Book
+
+  """One book by its slug."""
+  bookBySlug(slug: String!): Book
+  books(after: String, before: String, first: Int, last: Int): RootQueryToBookConnection
+  node(id: ID!): Node
+  searchBooks(after: String, before: String, first: Int, last: Int, where: RootQueryToSearchBooksConnectionWhereArgs): RootQueryToSearchBooksConnection
+}
+
+type RootQueryToAuthorConnection {
+  edges: [RootQueryToAuthorConnectionEdge]
+  nodes: [Author]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToAuthorConnectionEdge {
+  cursor: String
+  node: Author
+}
+
+type RootQueryToBookConnection {
+  edges: [RootQueryToBookConnectionEdge]
+  nodes: [Book]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToBookConnectionEdge {
+  cursor: String
+  node: Book
+}
+
+type RootQueryToSearchBooksConnection {
+  edges: [RootQueryToSearchBooksConnectionEdge]
+  nodes: [Book]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToSearchBooksConnectionEdge {
+  cursor: String
+  node: Book
+}
+
+input RootQueryToSearchBooksConnectionWhereArgs {
+  status: BookStatus
+  text: String
+}
+
+input UpdateBookInput {
+  clientMutationId: String
+  id: ID!
+  status: BookStatus
+  title: String
+}
+
+type UpdateBookPayload {
+  book: Book
+  clientMutationId: String
+}

@@ -1,0 +1,24 @@
+{
+  "source": "hsimah/clog",
+  "branch": "feature/standalone-sqlite",
+  "head": "3c8d7b1b3dd502e7c8c524c56c8c0ee62348392d",
+  "capturedAt": "2026-09-27T04:22:22.781699+00:00",
+  "status": "Imported from the working tree; all imported source hashes now verified against verifiedSourceCommit.",
+  "path": "server/standalone/vendor/elephentity/sqlite",
+  "files": {
+    "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "src/Database.php": "7964fdb34d1f84f80e73e340d1fc6fe6a52b9d1bfe1a5aa2c6011f715f0cb5cc",
+    "src/Manifest/StorageManifest.php": "9139658757563c4dd111cf46ef1061471ce570e8ab03621e3378d3dd406a04e0",
+    "src/SQLiteAdaptor.php": "9dccaccaf90ce1086f747428e446be316217ad9bdadc98f0ae310430e7a27205",
+    "src/Sql/Column.php": "2d62f8eeb5f98500ef5ddde9aab3d6094e9c7edb5e9be908f8d1ff851d50fabd",
+    "src/Sql/CompiledQuery.php": "ea7fb5d02a2dc29fbcc70a1d209020c40e1a997c5d330a5202d008511d6b4e32",
+    "src/Sql/EdgePlacement.php": "33ad5422a16143a98d4170d33a717aec72abcbf7563f8aba622c3ff7512bce4d",
+    "src/Sql/FieldMap.php": "c3e7b1b9b9a5af8495a8a34da4407911d00fbfbbef163c18089c454988ecd781",
+    "src/Sql/Index.php": "b73c7733a0e3097e5cbc0d3d7433a4cd0d7aeba4e46c56619e211462a40b42e4",
+    "src/Sql/Naming.php": "61bb352de3763e0a4114c37ad03a5b78f885dc8dd11f59e20c412186637eb28a",
+    "src/Sql/QueryCompiler.php": "1b64fb0d2e89b574f3d8081c0178b78226af18abc61af7453023bd0c8c40c079",
+    "src/Sql/TableSchema.php": "f27cd7bdfc6adbad3064d5566ef10d16b2f37f7bdf8cd187b532e638347c728e"
+  },
+  "verifiedSourceCommit": "fb57b3c5fd54d2faa6759f7fc7a75e828c8c837a",
+  "verifiedAt": "2026-09-27T04:24:57.258818+00:00"
+}

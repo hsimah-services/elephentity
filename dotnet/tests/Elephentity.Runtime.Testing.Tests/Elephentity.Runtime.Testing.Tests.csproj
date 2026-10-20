@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Elephentity.Runtime.Testing/Elephentity.Runtime.Testing.csproj" />
+    <ProjectReference Include="../../src/Elephentity.Runtime.Memory/Elephentity.Runtime.Memory.csproj" />
+  </ItemGroup>
+
+</Project>

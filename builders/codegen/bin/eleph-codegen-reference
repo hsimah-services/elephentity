@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Eleph\Codegen\Command\DescribeCommand;
+use Eleph\Codegen\Command\DoctorCommand;
+use Eleph\Codegen\Command\GenerateCommand;
+use Eleph\Codegen\Command\TargetsCommand;
+use Symfony\Component\Console\Application;
+
+/**
+ * The Elephentity code generator.
+ *
+ * It does not read specs. Elephentity compiles those and pipes the result in; this
+ * program resolves the builders a project configured, runs them, and signs and writes
+ * what they return.
+ */
+
+// Works both when this is the root project and when it is installed as a dependency.
+foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+
+        break;
+    }
+}
+
+$application = new Application('eleph-codegen', '0.1.0');
+$application->add(new GenerateCommand());
+$application->add(new TargetsCommand());
+$application->add(new DescribeCommand());
+$application->add(new DoctorCommand());
+$application->run();

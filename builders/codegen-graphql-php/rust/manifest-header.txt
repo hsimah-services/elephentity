@@ -1,0 +1,6 @@
+/**
+ * The compiled GraphQL surface.
+ *
+ * Loaded at boot and registered as-is: every decision was made when this was
+ * compiled, so nothing here is worked out per request.
+ */

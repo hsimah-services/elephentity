@@ -1,0 +1,14 @@
+{
+    "name": "elephentity/test-codegen-sqlite",
+    "description": "Runtime acceptance test dependencies.",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/hsimah-services/elephentity-sqlite"
+        }
+    ],
+    "require": {
+        "elephentity/sqlite": "0.1.0-alpha.7"
+    }
+}

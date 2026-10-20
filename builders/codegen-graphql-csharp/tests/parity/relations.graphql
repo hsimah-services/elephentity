@@ -1,0 +1,487 @@
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}
+
+"""Someone who writes comments."""
+type Author implements Node {
+  comments(after: String, before: String, first: Int, last: Int): AuthorToCommentConnection
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """"""
+  name: String!
+
+  """The Post pointing here through "featuredAuthor"."""
+  post: Post
+}
+
+type AuthorToCommentConnection {
+  edges: [AuthorToCommentConnectionEdge]
+  nodes: [Comment]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type AuthorToCommentConnectionEdge {
+  cursor: String
+  node: Comment
+}
+
+""""""
+type Comment implements Node {
+  """Who wrote it."""
+  author: Author
+
+  """"""
+  body: String!
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """The Post pointing here through "comments"."""
+  post: Post
+}
+
+input CreateAuthorInput {
+  clientMutationId: String
+  name: String!
+}
+
+type CreateAuthorPayload {
+  author: Author
+  clientMutationId: String
+}
+
+input CreateCommentInput {
+  author: ID
+  body: String!
+  clientMutationId: String
+}
+
+type CreateCommentPayload {
+  clientMutationId: String
+  comment: Comment
+}
+
+input CreatePostInput {
+  clientMutationId: String
+  comments: [ID]
+  extraBool: Boolean
+  extraFloat: Float
+  extraId: ID
+  extraInt: Int
+  extraJson: String
+  featuredAuthor: ID
+  postId: Int
+  price: Int
+  publishedAt: String
+  related: [ID]
+  slug: String
+  status: PostStatus!
+  tags: [ID]
+  title: String!
+  visibility: PostVisibility
+}
+
+type CreatePostPayload {
+  clientMutationId: String
+  post: Post
+}
+
+input CreateTagInput {
+  clientMutationId: String
+  label: String!
+}
+
+type CreateTagPayload {
+  clientMutationId: String
+  tag: Tag
+}
+
+input DeleteAuthorInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteAuthorPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteCommentInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteCommentPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeletePostInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeletePostPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+input DeleteTagInput {
+  clientMutationId: String
+  id: ID!
+}
+
+type DeleteTagPayload {
+  clientMutationId: String
+  deletedId: ID
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+"""A published article."""
+type Post implements Node {
+  comments(after: String, before: String, first: Int, last: Int): PostToCommentConnection
+
+  """When the row was first written. Filled by the framework."""
+  createdAt: String!
+
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """"""
+  extraBool: Boolean
+
+  """"""
+  extraFloat: Float
+
+  """"""
+  extraId: ID
+
+  """"""
+  extraInt: Int
+
+  """"""
+  extraJson: String
+
+  """"""
+  featuredAuthor: Author
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """"""
+  postId: Int
+
+  """"""
+  price: Int
+
+  """When it went live. A plain datetime, set by whoever publishes it."""
+  publishedAt: String
+  related(after: String, before: String, first: Int, last: Int): PostToPostConnection
+  relatedFrom(after: String, before: String, first: Int, last: Int): PostToPostConnection
+
+  """Write-once, and chosen by whoever creates the post."""
+  slug: String!
+
+  """"""
+  status: PostStatus!
+  tags(after: String, before: String, first: Int, last: Int): PostToTagConnection
+
+  """"""
+  title: String!
+
+  """When the row was last written. Filled by the framework."""
+  updatedAt: String!
+
+  """"""
+  visibility: PostVisibility!
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+type PostToCommentConnection {
+  edges: [PostToCommentConnectionEdge]
+  nodes: [Comment]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type PostToCommentConnectionEdge {
+  cursor: String
+  node: Comment
+}
+
+type PostToPostConnection {
+  edges: [PostToPostConnectionEdge]
+  nodes: [Post]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type PostToPostConnectionEdge {
+  cursor: String
+  node: Post
+}
+
+type PostToTagConnection {
+  edges: [PostToTagConnectionEdge]
+  nodes: [Tag]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type PostToTagConnectionEdge {
+  cursor: String
+  node: Tag
+}
+
+enum PostVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+input PublishPostInput {
+  at: String
+  clientMutationId: String
+  id: ID!
+}
+
+type PublishPostPayload {
+  clientMutationId: String
+  post: Post
+}
+
+type RootMutation {
+  createAuthor(input: CreateAuthorInput!): CreateAuthorPayload
+  createComment(input: CreateCommentInput!): CreateCommentPayload
+  createPost(input: CreatePostInput!): CreatePostPayload
+  createTag(input: CreateTagInput!): CreateTagPayload
+  deleteAuthor(input: DeleteAuthorInput!): DeleteAuthorPayload
+  deleteComment(input: DeleteCommentInput!): DeleteCommentPayload
+  deletePost(input: DeletePostInput!): DeletePostPayload
+  deleteTag(input: DeleteTagInput!): DeleteTagPayload
+  publishPost(input: PublishPostInput!): PublishPostPayload
+  updateAuthor(input: UpdateAuthorInput!): UpdateAuthorPayload
+  updateComment(input: UpdateCommentInput!): UpdateCommentPayload
+  updatePost(input: UpdatePostInput!): UpdatePostPayload
+  updateTag(input: UpdateTagInput!): UpdateTagPayload
+}
+
+type RootQuery {
+  """One Author by id."""
+  author(id: ID!): Author
+  authors(after: String, before: String, first: Int, last: Int): RootQueryToAuthorConnection
+
+  """One Comment by id."""
+  comment(id: ID!): Comment
+  comments(after: String, before: String, first: Int, last: Int): RootQueryToCommentConnection
+  node(id: ID!): Node
+
+  """One Post by id."""
+  post(id: ID!): Post
+  posts(after: String, before: String, first: Int, last: Int): RootQueryToPostConnection
+  publishedPosts(after: String, before: String, first: Int, last: Int, where: RootQueryToPublishedPostsConnectionWhereArgs): RootQueryToPublishedPostsConnection
+
+  """One Tag by id."""
+  tag(id: ID!): Tag
+  tags(after: String, before: String, first: Int, last: Int): RootQueryToTagConnection
+}
+
+type RootQueryToAuthorConnection {
+  edges: [RootQueryToAuthorConnectionEdge]
+  nodes: [Author]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToAuthorConnectionEdge {
+  cursor: String
+  node: Author
+}
+
+type RootQueryToCommentConnection {
+  edges: [RootQueryToCommentConnectionEdge]
+  nodes: [Comment]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToCommentConnectionEdge {
+  cursor: String
+  node: Comment
+}
+
+type RootQueryToPostConnection {
+  edges: [RootQueryToPostConnectionEdge]
+  nodes: [Post]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToPostConnectionEdge {
+  cursor: String
+  node: Post
+}
+
+type RootQueryToPublishedPostsConnection {
+  edges: [RootQueryToPublishedPostsConnectionEdge]
+  nodes: [Post]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToPublishedPostsConnectionEdge {
+  cursor: String
+  node: Post
+}
+
+input RootQueryToPublishedPostsConnectionWhereArgs {
+  limit: Int
+}
+
+type RootQueryToTagConnection {
+  edges: [RootQueryToTagConnectionEdge]
+  nodes: [Tag]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type RootQueryToTagConnectionEdge {
+  cursor: String
+  node: Tag
+}
+
+""""""
+type Tag implements Node {
+  """
+  The row as storage knows it, unique within its table rather than the schema.
+  """
+  databaseId: ID!
+
+  """The globally unique identifier, opaque and safe to use as a cache key."""
+  id: ID!
+
+  """"""
+  label: String!
+  posts(after: String, before: String, first: Int, last: Int): TagToPostConnection
+}
+
+type TagToPostConnection {
+  edges: [TagToPostConnectionEdge]
+  nodes: [Post]
+  pageInfo: PageInfo!
+
+  """How many match, ignoring pagination."""
+  totalCount: Int
+}
+
+type TagToPostConnectionEdge {
+  cursor: String
+  node: Post
+}
+
+input UpdateAuthorInput {
+  clientMutationId: String
+  id: ID!
+  name: String
+}
+
+type UpdateAuthorPayload {
+  author: Author
+  clientMutationId: String
+}
+
+input UpdateCommentInput {
+  author: ID
+  body: String
+  clientMutationId: String
+  id: ID!
+}
+
+type UpdateCommentPayload {
+  clientMutationId: String
+  comment: Comment
+}
+
+input UpdatePostInput {
+  clientMutationId: String
+  comments: [ID]
+  extraBool: Boolean
+  extraFloat: Float
+  extraId: ID
+  extraInt: Int
+  extraJson: String
+  featuredAuthor: ID
+  id: ID!
+  postId: Int
+  price: Int
+  publishedAt: String
+  related: [ID]
+  status: PostStatus
+  tags: [ID]
+  title: String
+  visibility: PostVisibility
+}
+
+type UpdatePostPayload {
+  clientMutationId: String
+  post: Post
+}
+
+input UpdateTagInput {
+  clientMutationId: String
+  id: ID!
+  label: String
+}
+
+type UpdateTagPayload {
+  clientMutationId: String
+  tag: Tag
+}

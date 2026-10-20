@@ -1,0 +1,14 @@
+parameters:
+    level: max
+    phpVersion: 80300
+    paths:
+        - src
+        - tests
+    tmpDir: .phpstan.cache
+    treatPhpDocTypesAsCertain: false
+    # These execute dynamically generated classes, checked by the integration runner.
+    excludePaths:
+        analyse:
+            - tests/generated-runtime.php
+            - tests/fixtures/golden/runtime-contracts/*.php
+            - tests/fixtures/golden/runtime-contracts/sqlite/*.php

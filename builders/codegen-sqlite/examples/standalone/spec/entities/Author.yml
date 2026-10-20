@@ -1,0 +1,12 @@
+entity: Author
+storage:
+  table: author
+fields:
+  name:
+    type: string
+    required: true
+    maxLength: 100
+integrations:
+  graphql:
+    singular: Author
+    plural: Authors

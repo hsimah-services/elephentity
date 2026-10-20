@@ -1,0 +1,16 @@
+[package]
+name = "elephentity-codegen-php"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Generate Elephentity PHP code from the versioned schema IR"
+
+[[bin]]
+name = "eleph-gen-php"
+path = "rust/main.rs"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+php_codegen = "=0.4.0"
+serde = { version = "1", features = ["derive"] }
+indexmap = { version = "2", features = ["serde"] }

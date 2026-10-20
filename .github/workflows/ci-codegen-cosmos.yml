@@ -1,0 +1,107 @@
+name: CI codegen-cosmos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'builders/codegen-cosmos/**'
+      - '.github/workflows/ci-codegen-cosmos.yml'
+      - 'dotnet/**'
+  pull_request:
+    paths:
+      - 'builders/codegen-cosmos/**'
+      - '.github/workflows/ci-codegen-cosmos.yml'
+      - 'dotnet/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Rust
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-cosmos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+
+      - name: Formatting
+        run: cargo +stable fmt --check
+
+      - name: Static analysis
+        run: cargo +stable clippy --locked --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo +stable test --locked
+
+      - name: The launcher parses
+        run: sh -n bin/eleph-gen-cosmos
+
+  # The generated manifests against Elephentity.Cosmos and the Azure Cosmos DB Linux emulator. The emulator takes a
+  # minute or two to start, so the job waits for it.
+  generated:
+    name: Manifests install and conform on the emulator
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-cosmos
+
+    services:
+      cosmos:
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+        ports:
+          - 8081:8081
+          - 10250-10255:10250-10255
+        env:
+          AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 3
+          AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: builders/codegen-cosmos/tests/dotnet/global.json
+
+      - name: The runtime the manifests are loaded into
+        run: |
+          mkdir -p tests/dotnet/.deps
+          cp -R ../../dotnet tests/dotnet/.deps/elephentity-dotnet
+
+      - name: Build the builder
+        run: cargo +stable build --locked
+
+      - name: Write the manifests out
+        run: python3 tests/dotnet/materialize.py
+
+      - name: Wait for the emulator
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -ksf https://localhost:8081/_explorer/emulator.pem -o /dev/null; then
+              echo "Emulator ready after $attempt attempt(s)."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "The Cosmos emulator did not become ready." >&2
+          docker ps -a
+          exit 1
+
+      - name: Load, install and run the conformance cases
+        env:
+          ELEPH_COSMOS_ENDPOINT: https://localhost:8081
+        run: dotnet run --project tests/dotnet -c Release

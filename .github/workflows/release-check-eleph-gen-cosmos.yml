@@ -1,0 +1,29 @@
+name: Release check eleph-gen-cosmos
+
+# Builds, packages and verifies eleph-gen-cosmos's release archives without publishing anything, so a change
+# to the release workflow (or to what it builds) is proven before a tag is pushed.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-binary.yml'
+      - '.github/workflows/release-check-eleph-gen-cosmos.yml'
+      - 'builders/codegen-cosmos/Cargo.toml'
+      - 'builders/codegen-cosmos/Cargo.lock'
+      - 'builders/codegen-cosmos/rust/**'
+
+# GitHub checks the called workflow's permissions against this one even for a job that does not
+# run, and its publish job asks for write. Nothing here publishes: that job only runs for a tag.
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  binary:
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-cosmos
+      manifest-path: builders/codegen-cosmos/Cargo.toml

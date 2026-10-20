@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# Run any command against the Elephentity .NET toolchain in a throwaway container.
+#
+#   ./tools/dotnet dotnet build -c Release
+#   ./tools/dotnet dotnet test
+#   ./tools/dotnet dotnet format --verify-no-changes
+#   ./tools/dotnet dotnet --version
+#   ./tools/dotnet bash                 # interactive shell
+#
+# Mirrors elephentity/tools/php: the host has no dotnet, the container is removed on exit,
+# and podman is preferred with docker as a fallback.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+IMAGE="mcr.microsoft.com/dotnet/sdk:10.0"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eleph/nuget"
+
+if command -v podman >/dev/null 2>&1; then
+    ENGINE=podman
+elif command -v docker >/dev/null 2>&1; then
+    ENGINE=docker
+else
+    echo "tools/dotnet: needs podman or docker." >&2
+    echo "  Fedora:  sudo dnf install podman" >&2
+    exit 1
+fi
+
+# Run as the host user so nothing in the working tree ends up owned by root. Rootless
+# podman already maps the host user, and passing --user there would double-map it, so
+# this is docker-only.
+USER_ARGS=()
+if [ "$ENGINE" = "docker" ]; then
+    USER_ARGS=(--user "$(id -u):$(id -g)")
+fi
+
+# A host directory rather than a named volume: under docker's --user a named volume would
+# be created root-owned and unwritable, and this works identically for podman.
+mkdir -p "$CACHE_DIR"
+
+# Interactive only when attached to a terminal, so CI and pipes still work.
+TTY_ARGS=()
+if [ -t 0 ] && [ -t 1 ]; then
+    TTY_ARGS=(-it)
+fi
+
+# The Cosmos tests run against the emulator when told where it is (ELEPH_COSMOS_ENDPOINT, ELEPH_COSMOS_KEY; TSQUID_PAYLOAD_OUT names a file the tsquid tests write their payload to, for the real-client check) and
+# skip otherwise. ELEPH_DOTNET_NETWORK=host lets the container reach an emulator published on the host's loopback.
+ENV_ARGS=()
+for variable in ELEPH_COSMOS_ENDPOINT ELEPH_COSMOS_KEY TSQUID_PAYLOAD_OUT; do
+    if [ -n "${!variable:-}" ]; then
+        ENV_ARGS+=(-e "$variable=${!variable}")
+    fi
+done
+
+NETWORK_ARGS=()
+if [ -n "${ELEPH_DOTNET_NETWORK:-}" ]; then
+    NETWORK_ARGS=(--network "$ELEPH_DOTNET_NETWORK")
+fi
+
+exec "$ENGINE" run --rm \
+    "${TTY_ARGS[@]}" \
+    "${NETWORK_ARGS[@]}" \
+    "${ENV_ARGS[@]}" \
+    "${USER_ARGS[@]}" \
+    `# :z relabels the mount for SELinux, which Fedora enforces by default.` \
+    -v "$PWD:/app:z" \
+    -v "$CACHE_DIR:/nuget:z" \
+    -e NUGET_PACKAGES=/nuget \
+    -e DOTNET_CLI_HOME=/tmp \
+    -e DOTNET_NOLOGO=1 \
+    -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    `# An arbitrary UID has no passwd entry, so HOME is unset and some tools fall over.` \
+    -e HOME=/tmp \
+    -w /app \
+    "$IMAGE" "$@"

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Elephentity.Cosmos/Elephentity.Cosmos.csproj" />
+    <ProjectReference Include="../../src/Elephentity.Runtime.Memory/Elephentity.Runtime.Memory.csproj" />
+    <ProjectReference Include="../../src/Elephentity.Runtime.Testing.Xunit/Elephentity.Runtime.Testing.Xunit.csproj" />
+  </ItemGroup>
+
+</Project>

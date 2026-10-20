@@ -1,0 +1,19 @@
+{
+    "spec": "spec",
+    "targets": {
+        "php": {
+            "builder": "eleph-gen-php",
+            "output": "generated",
+            "namespace": "Standalone\\Entity",
+            "typeNamespace": "Standalone\\Type"
+        },
+        "sqlite": {
+            "builder": "eleph-gen-sqlite",
+            "output": "generated/sqlite"
+        },
+        "graphql-php": {
+            "builder": "eleph-gen-graphql-php",
+            "output": "generated/graphql"
+        }
+    }
+}

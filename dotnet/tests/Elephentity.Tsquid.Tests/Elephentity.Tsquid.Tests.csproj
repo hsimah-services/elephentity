@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Elephentity.Tsquid/Elephentity.Tsquid.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- vectors.json is the SKILL's, copied from the tsquid repository (skills/tsquid-server-integration); the PHP package tests it too. -->
+    <Content Include="Fixtures/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

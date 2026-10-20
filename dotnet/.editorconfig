@@ -1,0 +1,40 @@
+# The style source of truth for `dotnet format`. CI runs `dotnet format --verify-no-changes`.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml,json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# Namespaces and usings.
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+
+# Braces and new lines.
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:warning
+
+# Types and members.
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+
+# Test names read as sentences.
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none

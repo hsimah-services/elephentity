@@ -1,0 +1,21 @@
+{
+    "name": "elephentity/sqlite",
+    "description": "Experimental SQLite storage adaptor for the Elephentity PHP runtime.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.3",
+        "elephentity/runtime": "^0.13.1 || ^0.14",
+        "ext-pdo": "*",
+        "ext-pdo_sqlite": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eleph\\SQLite\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "@php tests/regressions.php"
+    }
+}

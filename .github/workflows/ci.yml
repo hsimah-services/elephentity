@@ -3,7 +3,19 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'dotnet/**'
+      - 'builders/**'
+      - 'packages/graphql/**'
+      - 'packages/sqlite/**'
+      - 'patterns/**'
   pull_request:
+    paths-ignore:
+      - 'dotnet/**'
+      - 'builders/**'
+      - 'packages/graphql/**'
+      - 'packages/sqlite/**'
+      - 'patterns/**'
 
 permissions:
   contents: read
@@ -84,16 +96,10 @@ jobs:
       - name: The builders accept the IR the Rust compiler produces
         run: tools/test-rust-ir
 
-      - name: Check out the released SQLite adapter
-        uses: actions/checkout@v4
-        with:
-          repository: hsimah-services/elephentity-sqlite
-          ref: v0.1.0-alpha.2
-          path: .integration/sqlite
 
       - name: Deletion policies against SQLite
         env:
-          ELEPH_SQLITE_SOURCE: ${{ github.workspace }}/.integration/sqlite/src
+          ELEPH_SQLITE_SOURCE: ${{ github.workspace }}/packages/sqlite/src
         run: vendor/bin/phpunit --bootstrap tools/integration/sqlite-bootstrap.php tools/integration/DeletionPlannerSQLiteTest.php
 
       - name: Standalone package installation

@@ -1,0 +1,49 @@
+name: CI codegen-sqlite
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'builders/codegen-sqlite/**'
+      - '.github/workflows/ci-codegen-sqlite.yml'
+  pull_request:
+    paths:
+      - 'builders/codegen-sqlite/**'
+      - '.github/workflows/ci-codegen-sqlite.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-sqlite
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+      - name: Check Rust formatting
+        run: cargo +stable fmt --check
+      - name: Check Rust code
+        run: cargo +stable clippy --locked --all-targets -- -D warnings
+      - name: Test binary protocol and generation
+        run: cargo +stable test --locked
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite, mbstring
+          coverage: none
+          tools: composer:v2
+      - name: Validate package metadata
+        run: composer validate --strict --no-check-lock
+      - name: Install tagged runtime test dependencies
+        run: composer --working-dir=tests install --no-interaction --no-plugins --no-scripts --prefer-dist
+      - name: Execute generated PHP against the runtimes
+        run: php tests/runtime.php

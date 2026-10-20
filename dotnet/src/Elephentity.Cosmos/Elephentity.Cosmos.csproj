@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The Elephentity storage adaptor for Azure Cosmos DB.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Elephentity.Runtime/Elephentity.Runtime.csproj" />
+    <PackageReference Include="Azure.Core" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" />
+    <!-- The SDK no longer brings its own: it uses Newtonsoft.Json internally for its system types (account and container
+         properties, responses), and refuses to build until the reference is explicit. The adaptor never serializes a
+         document with it: documents go through System.Text.Json (CosmosSystemTextJsonSerializer). -->
+    <PackageReference Include="Newtonsoft.Json" />
+    <InternalsVisibleTo Include="Elephentity.Cosmos.Tests" />
+  </ItemGroup>
+
+</Project>

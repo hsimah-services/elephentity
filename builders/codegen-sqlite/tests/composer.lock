@@ -1,0 +1,207 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "4294e78882bb6246ca58fd4058aea388",
+    "packages": [
+        {
+            "name": "elephentity/runtime",
+            "version": "v0.14.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hsimah-services/elephentity-runtime.git",
+                "reference": "399619b88c28590b4ac1bec6bef6e5ac4592c2b4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-runtime/zipball/399619b88c28590b4ac1bec6bef6e5ac4592c2b4",
+                "reference": "399619b88c28590b4ac1bec6bef6e5ac4592c2b4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "psr/container": "^2.0",
+                "psr/log": "^3.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.64",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^11.0 || ^12.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Eleph\\Runtime\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
+            "support": {
+                "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.1"
+            },
+            "time": "2026-10-18T22:32:08+00:00"
+        },
+        {
+            "name": "elephentity/sqlite",
+            "version": "v0.1.0-alpha.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hsimah-services/elephentity-sqlite.git",
+                "reference": "c7ae66a3bec4fda12cb55bab301f38faff2b7833"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/c7ae66a3bec4fda12cb55bab301f38faff2b7833",
+                "reference": "c7ae66a3bec4fda12cb55bab301f38faff2b7833",
+                "shasum": ""
+            },
+            "require": {
+                "elephentity/runtime": "^0.13.1 || ^0.14",
+                "ext-mbstring": "*",
+                "ext-pdo": "*",
+                "ext-pdo_sqlite": "*",
+                "php": ">=8.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Eleph\\SQLite\\": "src/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "@php tests/regressions.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Experimental SQLite storage adaptor for the Elephentity PHP runtime.",
+            "support": {
+                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.1.0-alpha.7",
+                "issues": "https://github.com/hsimah-services/elephentity-sqlite/issues"
+            },
+            "time": "2026-10-19T19:13:23+00:00"
+        },
+        {
+            "name": "psr/container",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/container.git",
+                "reference": "c71ecc56dfe541dbd90c5360474fbc405f8d5963"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/container/zipball/c71ecc56dfe541dbd90c5360474fbc405f8d5963",
+                "reference": "c71ecc56dfe541dbd90c5360474fbc405f8d5963",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Container\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common Container Interface (PHP FIG PSR-11)",
+            "homepage": "https://github.com/php-fig/container",
+            "keywords": [
+                "PSR-11",
+                "container",
+                "container-interface",
+                "container-interop",
+                "psr"
+            ],
+            "support": {
+                "issues": "https://github.com/php-fig/container/issues",
+                "source": "https://github.com/php-fig/container/tree/2.0.2"
+            },
+            "time": "2021-11-05T16:47:00+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "3.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
+                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/3.0.2"
+            },
+            "time": "2024-09-11T13:17:53+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "elephentity/sqlite": 15
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

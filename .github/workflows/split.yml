@@ -1,12 +1,13 @@
 name: Subtree split
 
 # Mirrors packages that are published as their own Composer package out to read-only
-# repositories. Runtime and memory are independently installable. Schema and CLI were
+# repositories. Runtime and memory are independently installable, and so are the PHP packages
+# under packages/ and the Composer-installable builders under builders/. Schema and CLI were
 # mirrored too until the PHP compiler was retired; their mirrors stop at v0.14.2.
 #
-# Runs on push to main (keeps each mirror's `src/`+`tests/` current) and on tags (tags
-# the mirror's own main at whatever it synced to, matching this repository's tag line
-# — a mirror is not an independently-versioned product, see .llms/cross-repo.md).
+# Runs on push to main (keeps each mirror current) and on tags (tags the mirror's own main at
+# whatever it synced to). The original mirrors (runtime, memory) follow this repository's `v*` tag line, see
+# .llms/cross-repo.md; the later ones are versioned on their own, see Tags below.
 #
 # Runtime retains its existing mirror-owned tooling and Composer metadata. The memory
 # mirror copies the whole package, including bins and CI.
@@ -17,10 +18,14 @@ name: Subtree split
 # and actions/checkout's own persisted credentials silently shadow it if not disabled
 # (persist-credentials: false, below) — both steps are load bearing.
 
+# Tags: `v<version>` tags the original mirrors (runtime, memory). The other
+# packages are versioned on their own, so `<package>-v<version>` (for example `codegen-php-v0.8.1`)
+# tags that package's mirror `v<version>`. Pushes to main sync every mirror.
+
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ['v*', 'graphql-v*', 'sqlite-v*', 'codegen-v*', 'codegen-php-v*', 'codegen-sqlite-v*', 'codegen-graphql-php-v*', 'codegen-tsquid-v*']
 
 permissions:
   contents: read
@@ -39,17 +44,68 @@ jobs:
         include:
           - package: runtime
             repo: hsimah-services/elephentity-runtime
+            path: packages/runtime
+            prefix: ''
           - package: memory
             repo: hsimah-services/elephentity-memory
+            path: packages/memory
+            prefix: ''
+          - package: graphql
+            repo: hsimah-services/elephentity-graphql-php
+            path: packages/graphql
+            prefix: 'graphql-'
+          - package: sqlite
+            repo: hsimah-services/elephentity-sqlite
+            path: packages/sqlite
+            prefix: 'sqlite-'
+          - package: codegen
+            repo: hsimah-services/elephentity-codegen
+            path: builders/codegen
+            prefix: 'codegen-'
+          - package: codegen-php
+            repo: hsimah-services/elephentity-codegen-php
+            path: builders/codegen-php
+            prefix: 'codegen-php-'
+          - package: codegen-sqlite
+            repo: hsimah-services/elephentity-codegen-sqlite
+            path: builders/codegen-sqlite
+            prefix: 'codegen-sqlite-'
+          - package: codegen-graphql-php
+            repo: hsimah-services/elephentity-codegen-graphql-php
+            path: builders/codegen-graphql-php
+            prefix: 'codegen-graphql-php-'
+          - package: codegen-tsquid
+            repo: hsimah-services/elephentity-codegen-tsquid
+            path: builders/codegen-tsquid
+            prefix: 'codegen-tsquid-'
 
     steps:
+      # A tag syncs only the mirrors it is a release of; a push to main syncs all of them. The
+      # matrix context is not available to a job-level `if`, so every step below hangs off this.
+      - name: Is this a release of this mirror?
+        id: gate
+        env:
+          PREFIX: ${{ matrix.prefix }}
+        run: |
+          run=true
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            if [ -z "$PREFIX" ]; then
+              [[ "$GITHUB_REF_NAME" == v* ]] || run=false
+            else
+              [[ "$GITHUB_REF_NAME" == "${PREFIX}v"* ]] || run=false
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           fetch-depth: 0
           persist-credentials: false
           path: source
 
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           repository: ${{ matrix.repo }}
           fetch-depth: 0
@@ -58,17 +114,18 @@ jobs:
           path: mirror
 
       - name: Sync package into the mirror
+        if: steps.gate.outputs.run == 'true'
         run: |
           set -euo pipefail
           if [ "${{ matrix.package }}" = runtime ]; then
             # The existing runtime mirror owns its tooling and Composer metadata.
-            rsync -a --delete source/packages/runtime/src/ mirror/src/
-            rsync -a --delete source/packages/runtime/tests/ mirror/tests/
+            rsync -a --delete source/${{ matrix.path }}/src/ mirror/src/
+            rsync -a --delete source/${{ matrix.path }}/tests/ mirror/tests/
           else
             # New mirrors are wholly source-owned, including resources, bins and CI.
             rsync -a --delete --exclude=.git --exclude=vendor --exclude=composer.lock \
-              --exclude=.phpunit.cache --exclude=.phpunit.result.cache \
-              "source/packages/${{ matrix.package }}/" mirror/
+              --exclude=target --exclude=.phpunit.cache --exclude=.phpunit.result.cache \
+              "source/${{ matrix.path }}/" mirror/
           fi
 
           cd mirror
@@ -83,15 +140,16 @@ jobs:
 
           git commit -m "Sync package from elephentity@${GITHUB_SHA}
 
-          Automated: packages/${{ matrix.package }} in elephentity.
+          Automated: ${{ matrix.path }} in elephentity.
           Runtime tooling stays mirror-owned; other package metadata is source-owned."
           git push origin main
 
       - name: Tag the mirror to match
-        if: startsWith(github.ref, 'refs/tags/')
+        if: steps.gate.outputs.run == 'true' && startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
+          tag="${tag#"${{ matrix.prefix }}"}"
           cd mirror
           if git rev-parse "refs/tags/$tag" >/dev/null 2>&1; then
             test "$(git rev-parse "$tag^{commit}")" = "$(git rev-parse HEAD)"

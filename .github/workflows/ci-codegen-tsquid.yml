@@ -1,0 +1,82 @@
+name: CI codegen-tsquid
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'builders/codegen-tsquid/**'
+      - '.github/workflows/ci-codegen-tsquid.yml'
+      - 'dotnet/**'
+  pull_request:
+    paths:
+      - 'builders/codegen-tsquid/**'
+      - '.github/workflows/ci-codegen-tsquid.yml'
+      - 'dotnet/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Rust
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-tsquid
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+
+      - name: Formatting
+        run: cargo +stable fmt --check
+
+      - name: Static analysis
+        run: cargo +stable clippy --locked --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo +stable test --locked
+
+      - name: The launcher parses
+        run: sh -n bin/eleph-gen-tsquid
+
+  # The C# this builder emits, loaded into Elephentity.Tsquid (at the commit in tests/dotnet/elephentity-dotnet.sha) and run against the
+  # SKILL's vectors.json.
+  generated:
+    name: The emitted C# answers the vectors
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-tsquid
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: builders/codegen-tsquid/tests/dotnet/global.json
+
+      - name: The runtime the manifest is loaded into
+        run: |
+          mkdir -p tests/dotnet/.deps
+          cp -R ../../dotnet tests/dotnet/.deps/elephentity-dotnet
+
+      - name: Build the builder
+        run: cargo +stable build --locked
+
+      - name: Write the manifests out
+        run: python3 tests/dotnet/materialize.py
+
+      - name: Run the vectors
+        run: dotnet run --project tests/dotnet -c Release

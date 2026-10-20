@@ -1,0 +1,33 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!-- The packages: every project under src/. -->
+  <PropertyGroup>
+    <!-- The C# version of "PHPStan max, no baseline": generated code uses no reflection, and
+         the libraries must not stop an application publishing with Native AOT. -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>hsimah services</Authors>
+    <Copyright>Copyright (c) 2026 hsimah services</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/hsimah-services/elephentity/tree/main/dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hsimah-services/elephentity</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>elephentity;codegen;entities;specs</PackageTags>
+
+    <!-- SourceLink: the repository URL and commit go into the package. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="/" Visible="false" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

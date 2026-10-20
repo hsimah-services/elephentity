@@ -1,0 +1,19 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "headerStyle": "php",
+  "extensions": [
+    "php"
+  ],
+  "files": [
+    {
+      "path": "storage-manifest.php",
+      "body": "namespace Eleph\\SQLite\\Manifest;\n\nuse Eleph\\SQLite\\Sql\\{Column, EdgePlacement, Index, TableSchema};\nuse Eleph\\Runtime\\Storage\\RelationKind;\n\nreturn new StorageManifest(\n    tables: [\n        'Owner' => new TableSchema(\n            'owner',\n            [\n                'id' => new Column('id', 'INTEGER', false, true, null),\n                'name' => new Column('name', 'TEXT', true, false, null),\n                'rank' => new Column('rank', 'INTEGER', true, false, null),\n                'target_id' => new Column('target_id', 'INTEGER', true, false, null),\n            ],\n            [\n                'owner_target_id_idx' => new Index('owner_target_id_idx', ['target_id'], false),\n            ],\n            'id',\n        ),\n        'Target' => new TableSchema(\n            'target',\n            [\n                'id' => new Column('id', 'INTEGER', false, true, null),\n                'name' => new Column('name', 'TEXT', true, false, null),\n                'rank' => new Column('rank', 'INTEGER', true, false, null),\n            ],\n            [\n\n            ],\n            'id',\n        ),\n    ],\n    placements: [\n        'Owner.target' => new EdgePlacement('Owner', 'target', 'Target', RelationKind::ManyToOne, 'owner', 'target_id', null, 'target'),\n    ],\n    columns: [\n        'Owner' => ['name' => 'name', 'rank' => 'rank'],\n        'Target' => ['name' => 'name', 'rank' => 'rank'],\n    ],\n    joinTables: [\n\n    ],\n);\n"
+    },
+    {
+      "path": "install.php",
+      "body": "/**\n * Explicit initial installation. Existing tables cause a failure and rollback.\n * Evolving a populated database requires a reviewed application migration.\n * Use the same prefix when loading StorageManifest::withPrefix().\n */\nreturn static function (\\PDO $database, string $prefix = ''): void {\n    if ($database->getAttribute(\\PDO::ATTR_DRIVER_NAME) !== 'sqlite') {\n        throw new \\InvalidArgumentException('This installer requires PDO SQLite.');\n    }\n    if ($prefix !== '' && !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $prefix)) {\n        throw new \\InvalidArgumentException('Invalid SQLite table prefix.');\n    }\n    if ($database->inTransaction()) {\n        throw new \\LogicException('Run the initial installer outside an existing transaction.');\n    }\n    $database->exec('PRAGMA foreign_keys = ON');\n    $table = static fn (string $name): string => '\"' . $prefix . $name . '\"';\n    $statements = [\n        'CREATE TABLE ' . $table('owner') . ' (\n    ' . '\"id\" INTEGER PRIMARY KEY AUTOINCREMENT' . ',\n    ' . '\"name\" TEXT' . ',\n    ' . '\"rank\" INTEGER' . ',\n    ' . '\"target_id\" INTEGER' . ' REFERENCES ' . $table('target') . '(\"id\") ON DELETE RESTRICT' . '\n)',\n        'CREATE INDEX ' . $table('owner_target_id_idx') . ' ON ' . $table('owner') . ' (\"target_id\")',\n        'CREATE TABLE ' . $table('target') . ' (\n    ' . '\"id\" INTEGER PRIMARY KEY AUTOINCREMENT' . ',\n    ' . '\"name\" TEXT' . ',\n    ' . '\"rank\" INTEGER' . '\n)',\n    ];\n    $database->beginTransaction();\n    try {\n        foreach ($statements as $sql) {\n            if ($database->exec($sql) === false) {\n                $detail = $database->errorInfo()[2] ?? null;\n                throw new \\RuntimeException('SQLite schema installation failed: ' . (is_string($detail) ? $detail : 'unknown error'));\n            }\n        }\n        $database->commit();\n    } catch (\\Throwable $error) {\n        $database->rollBack();\n        throw $error;\n    }\n};\n"
+    }
+  ],
+  "errors": []
+}

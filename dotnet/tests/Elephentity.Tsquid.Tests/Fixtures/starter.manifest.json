@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "name": "Home",
+      "path": "/",
+      "ssr": true,
+      "fields": {}
+    },
+    {
+      "name": "Profile",
+      "path": "/me",
+      "ssr": true,
+      "fields": {},
+      "query": {
+        "operation": "ProfileQuery",
+        "id": "0e84be14690d7e5a6e2acfd699bae55f",
+        "text": "query ProfileQuery {\n  viewer {\n    id\n    name\n  }\n}\n",
+        "variables": {}
+      }
+    }
+  ]
+}

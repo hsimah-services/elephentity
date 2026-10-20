@@ -99,6 +99,14 @@ rejected by the next build.
 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) continues from here: autoloading,
 wiring, migrations.
 
+## Repository layout
+
+The framework, the code generator, every non-WordPress builder, the PHP GraphQL and SQLite
+packages and the .NET packages live in this repository, each as its own directory with its own CI
+and its own version: `compiler/`, `packages/`, `builders/`, `dotnet/`, `patterns/`. Composer
+packages are mirrored read-only to their own repositories for Packagist; the table is in
+[CLAUDE.md](CLAUDE.md#layout).
+
 ## Install without PHP
 
 No PHP, Composer or cargo is needed for a project whose builders are Rust programs:

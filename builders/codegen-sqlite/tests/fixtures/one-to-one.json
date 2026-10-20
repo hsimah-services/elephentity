@@ -1,0 +1,103 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "request": "generate",
+  "config": {},
+  "outputDirectory": "out",
+  "schema": {
+    "project": {
+      "name": "Test",
+      "driver": "sqlite",
+      "sourceFile": "project.yml"
+    },
+    "entities": {
+      "Owner": {
+        "name": "Owner",
+        "sourceFile": "fixture.yml",
+        "storage": {
+          "driver": "sqlite",
+          "table": "owner"
+        },
+        "fields": {
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "nullable": true
+          },
+          "rank": {
+            "name": "rank",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "nullable": true
+          }
+        },
+        "edges": {
+          "target": {
+            "name": "target",
+            "to": "Target",
+            "cardinality": "one",
+            "inverse": {
+              "name": "owners",
+              "derived": false,
+              "unique": true
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            }
+          }
+        }
+      },
+      "Target": {
+        "name": "Target",
+        "sourceFile": "fixture.yml",
+        "storage": {
+          "driver": "sqlite",
+          "table": "target"
+        },
+        "fields": {
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "nullable": true
+          },
+          "rank": {
+            "name": "rank",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "fixture.yml"
+            },
+            "nullable": true
+          }
+        },
+        "edges": {}
+      }
+    },
+    "types": {}
+  },
+  "target": "sqlite"
+}

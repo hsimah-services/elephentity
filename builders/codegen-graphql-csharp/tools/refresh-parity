@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Rewrites tests/parity/<fixture>.graphql: the SDL the PHP stack prints for each fixture, normalised the way `tsquid-schema fetch`
+# does it (graphql-js printSchema over lexicographicSortSchema). The C# schema must equal these byte for byte.
+#
+# For each fixture: eleph-gen-graphql-php makes the PHP manifest, a PHP container assembles the schema with elephentity-graphql-php
+# on webonyx and prints its introspection, a node container normalises it. Needs podman or docker, the image eleph-dev:8.3 (built
+# by elephentity/tools/php), and checkouts or builds of:
+#
+#   GRAPHQL_PHP_BUILDER  the built eleph-gen-graphql-php          (default: ../codegen-graphql-php/bin/eleph-gen-graphql-php)
+#   GRAPHQL_PHP          packages/graphql/src              (default: ../../packages/graphql/src)
+#   VENDOR               a vendor/ with webonyx and the runtime   (default: ../codegen-graphql-php/tests/vendor)
+#   TSQUID               an installed tsquid checkout (graphql-js) (default: ../../tsquid)
+
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")/.." && pwd)"
+engine="$(command -v podman || command -v docker)"
+builder="${GRAPHQL_PHP_BUILDER:-$here/../codegen-graphql-php/bin/eleph-gen-graphql-php}"
+graphql_php="${GRAPHQL_PHP:-$here/../../packages/graphql/src}"
+vendor="${VENDOR:-$here/../codegen-graphql-php/tests/vendor}"
+tsquid="${TSQUID:-$here/../../tsquid}"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+for fixture in book relations clog; do
+    "$builder" < "$here/tests/fixtures/$fixture/request.json" | python3 -c '
+import json, sys
+response = json.load(sys.stdin)
+assert not response["errors"], response["errors"]
+body = next(f["body"] for f in response["files"] if f["path"] == "graphql-manifest.php")
+sys.stdout.write("<?php\ndeclare(strict_types=1);\n\n" + body)
+' > "$work/$fixture.php"
+
+    "$engine" run --rm \
+        -v "$here/tests/parity:/parity:z" -v "$work:/work:z" -v "$graphql_php:/graphql-php:z" -v "$vendor:/vendor:z" \
+        eleph-dev:8.3 php /parity/assemble.php /vendor/autoload.php /graphql-php "/work/$fixture.php" > "$work/$fixture.json"
+
+    "$engine" run --rm \
+        -v "$here/tests/parity:/parity:z" -v "$work:/work:z" -v "$tsquid:/tsquid:z" -e GRAPHQL_FROM=/tsquid/packages/codegen/package.json \
+        node:22-slim node /parity/normalize.mjs "/work/$fixture.json" > "$here/tests/parity/$fixture.graphql"
+
+    echo "$fixture: $(wc -l < "$here/tests/parity/$fixture.graphql") lines"
+done

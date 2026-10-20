@@ -1,0 +1,924 @@
+{
+  "elephentity": 1,
+  "irVersion": "1.2",
+  "request": "generate",
+  "target": "graphql-php",
+  "config": {},
+  "outputDirectory": "generated/wpgraphql",
+  "schema": {
+    "project": {
+      "name": "Clog",
+      "driver": "sqlite",
+      "sourceFile": "/app/scratch/../examples/clog/spec/project.yml",
+      "integrations": {
+        "graphql": {}
+      },
+      "tablePrefix": "clog_",
+      "description": null
+    },
+    "entities": {
+      "Inventory": {
+        "name": "Inventory",
+        "storage": {
+          "driver": "sqlite",
+          "table": "clog_inventory",
+          "handle": "clog_inventory"
+        },
+        "sourceFile": "/app/scratch/../examples/clog/spec/entities/Inventory.yml",
+        "description": "One stocked instance of an item, in a location, with its own expiry.",
+        "uses": [
+          "ClogPost"
+        ],
+        "fields": {
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was first written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was last written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "modified",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "Projected to post_title, so the admin list has something to show.",
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 200,
+            "enum": null,
+            "verify": false
+          },
+          "dateAdded": {
+            "name": "dateAdded",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "When this instance entered inventory.",
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "dateExpiry": {
+            "name": "dateExpiry",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "When it expires. Absent means it does not.",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {
+          "item": {
+            "name": "item",
+            "to": "Item",
+            "cardinality": "one",
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "What this entry is an instance of.",
+            "inverse": {
+              "derived": false,
+              "name": "inventoryEntries",
+              "unique": false
+            },
+            "onDelete": "cascade",
+            "required": false
+          },
+          "location": {
+            "name": "location",
+            "to": "Location",
+            "cardinality": "one",
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "Where it is kept.",
+            "inverse": {
+              "derived": false,
+              "name": "inventoryEntries",
+              "unique": false
+            },
+            "onDelete": "restrict",
+            "required": false
+          },
+          "site": {
+            "name": "site",
+            "to": "Site",
+            "cardinality": "many",
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "description": "Which building this instance is physically in. Many-to-many because that is the only relation Elephentity's WordPress driver stores as a taxonomy term rather than a column; an entry moving between buildings relinks this edge instead of becoming a different row.\n",
+            "inverse": null,
+            "onDelete": "restrict",
+            "required": false
+          }
+        },
+        "queries": {},
+        "actions": {},
+        "sideEffects": {
+          "siteAvailability": {
+            "name": "siteAvailability",
+            "events": [
+              "create",
+              "update"
+            ],
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Inventory.yml"
+            },
+            "phase": "preCommit",
+            "description": "Rejects a write whose site is not one of its location's available sites \u2014 Deep Freezer lists only Cave, so an entry there can never claim the Loft.\n"
+          }
+        },
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "ClogInventoryEntries",
+            "singular": "ClogInventory"
+          }
+        },
+        "appliedPatterns": [
+          "Timestamps",
+          "ClogPost"
+        ],
+        "readPolicies": {
+          "signedIn": {
+            "name": "signedIn",
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "Item": {
+        "name": "Item",
+        "storage": {
+          "driver": "sqlite",
+          "table": "clog_item",
+          "handle": "clog_item"
+        },
+        "sourceFile": "/app/scratch/../examples/clog/spec/entities/Item.yml",
+        "description": "A thing that can be stocked, identified by its barcode.",
+        "uses": [
+          "ClogPost"
+        ],
+        "fields": {
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was first written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was last written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "modified",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "description": "What the item is called. Projected to post_title.",
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 200,
+            "enum": null,
+            "verify": false
+          },
+          "barcode": {
+            "name": "barcode",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "description": "The barcode that identifies this item. One per item: a serialized list could not be indexed, and scanning a barcode to find an item is the query this data exists to serve.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 64,
+            "enum": null,
+            "verify": false
+          },
+          "defaultExpiryUnit": {
+            "name": "defaultExpiryUnit",
+            "type": {
+              "primitive": "enum",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "description": "Half of the default expiry; meaningless without the other half.",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": {
+              "inlineValues": null,
+              "declaredType": "ExpiryUnit"
+            },
+            "verify": true
+          },
+          "defaultExpiryValue": {
+            "name": "defaultExpiryValue",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "description": "Half of the default expiry; meaningless without the other half.",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": true
+          }
+        },
+        "edges": {},
+        "queries": {
+          "search": {
+            "name": "search",
+            "returns": {
+              "type": "Item",
+              "cardinality": "many"
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "arguments": {
+              "term": {
+                "name": "term",
+                "type": {
+                  "primitive": "string",
+                  "declaredType": null
+                },
+                "nullable": false
+              }
+            },
+            "description": "Items whose name or barcode matches a term, for the table's filter box.",
+            "integrations": {
+              "graphql": {
+                "field": "clogItemSearch"
+              }
+            }
+          }
+        },
+        "actions": {
+          "discontinue": {
+            "name": "discontinue",
+            "writes": {
+              "fields": [
+                "barcode"
+              ],
+              "edges": []
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "arguments": {
+              "reason": {
+                "name": "reason",
+                "type": {
+                  "primitive": "string",
+                  "declaredType": null
+                },
+                "nullable": false
+              }
+            },
+            "description": "Retire an item from the catalogue. Clears the barcode so a scan stops resolving to it; the item row itself stays, since existing inventory entries still point at it.\n"
+          }
+        },
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "ClogItems",
+            "singular": "ClogItem"
+          }
+        },
+        "appliedPatterns": [
+          "Timestamps",
+          "ClogPost"
+        ],
+        "readPolicies": {
+          "signedIn": {
+            "name": "signedIn",
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {
+          "staff": {
+            "name": "staff",
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Item.yml"
+            },
+            "description": null
+          }
+        },
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "Location": {
+        "name": "Location",
+        "storage": {
+          "driver": "sqlite",
+          "table": "clog_location",
+          "handle": "clog_location"
+        },
+        "sourceFile": "/app/scratch/../examples/clog/spec/entities/Location.yml",
+        "description": "Somewhere inventory can be kept.",
+        "uses": [
+          "ClogPost"
+        ],
+        "fields": {
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was first written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was last written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "modified",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Location.yml"
+            },
+            "description": "What the location is called. Projected to post_title.",
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 200,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {
+          "sites": {
+            "name": "sites",
+            "to": "Site",
+            "cardinality": "many",
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/Location.yml"
+            },
+            "description": "Which buildings this kind of storage exists in \u2014 Deep Freezer might list only Cave, where Pantry lists both. Inventory.site is checked against this list on write, so an entry can never claim a combination this edge does not allow.\n",
+            "inverse": null,
+            "onDelete": "restrict",
+            "required": false
+          }
+        },
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "ClogLocations",
+            "singular": "ClogLocation"
+          }
+        },
+        "appliedPatterns": [
+          "Timestamps",
+          "ClogPost"
+        ],
+        "readPolicies": {
+          "signedIn": {
+            "name": "signedIn",
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "Site": {
+        "name": "Site",
+        "storage": {
+          "driver": "sqlite",
+          "table": "clog_site",
+          "handle": "clog_site"
+        },
+        "sourceFile": "/app/scratch/../examples/clog/spec/entities/Site.yml",
+        "description": "A building an inventory entry is physically kept in \u2014 Loft or Cave.",
+        "uses": [
+          "Taxonomy"
+        ],
+        "fields": {
+          "name": {
+            "name": "name",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Taxonomy",
+              "file": "wordpress:patterns/Taxonomy.yml"
+            },
+            "description": "The term's label. A taxonomy-backed entity has exactly this field \u2014 anything else declared here has nowhere to live in wp_term_taxonomy and is silently dropped at runtime.\n",
+            "required": true,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": 200,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {
+          "graphql": {
+            "plural": "ClogSites",
+            "singular": "ClogSite"
+          }
+        },
+        "appliedPatterns": [
+          "Taxonomy"
+        ],
+        "readPolicies": {},
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      },
+      "User": {
+        "name": "User",
+        "storage": {
+          "driver": "sqlite",
+          "table": "clog_user",
+          "handle": null
+        },
+        "sourceFile": "/app/scratch/../examples/clog/spec/entities/User.yml",
+        "description": "The WordPress account behind clog activity. Its rows are wp_users accounts, not new data Clog owns: no wp_posts projection, no admin menu entry, and no table of its own \u2014 see ClogPost's account: true. Its id is the same wp_users.ID a Viewer resolves to, by construction, so no bridge field and no manual lookup are needed to ask \"is this row the current viewer\".\n",
+        "uses": [
+          "ClogPost"
+        ],
+        "fields": {
+          "createdAt": {
+            "name": "createdAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was first written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "created",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "type": {
+              "primitive": "datetime",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "Timestamps",
+              "file": "/app/scratch/../examples/clog/spec/patterns/Timestamps.yml"
+            },
+            "description": "When the row was last written. Filled by the framework.",
+            "required": false,
+            "nullable": false,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": "modified",
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          },
+          "bio": {
+            "name": "bio",
+            "type": {
+              "primitive": "string",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": null,
+              "file": "/app/scratch/../examples/clog/spec/entities/User.yml"
+            },
+            "description": "A short note staff can see on this account's profile.",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": false,
+            "indexed": false,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "queries": {},
+        "actions": {},
+        "sideEffects": {},
+        "config": {},
+        "integrations": {},
+        "appliedPatterns": [
+          "Timestamps",
+          "ClogPost"
+        ],
+        "readPolicies": {
+          "signedIn": {
+            "name": "signedIn",
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {},
+        "terminalRead": "deny",
+        "terminalWrite": "deny"
+      }
+    },
+    "types": {
+      "ExpiryUnit": {
+        "name": "ExpiryUnit",
+        "primitive": "string",
+        "sourceFile": "/app/scratch/../examples/clog/spec/types/ExpiryUnit.yml",
+        "description": "The unit a default expiry duration is counted in.",
+        "hasProcessors": false,
+        "values": [
+          "days",
+          "months"
+        ]
+      }
+    },
+    "patterns": {
+      "ClogPost": {
+        "name": "ClogPost",
+        "fields": {
+          "postId": {
+            "name": "postId",
+            "type": {
+              "primitive": "int",
+              "declaredType": null
+            },
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": "The wp_posts row this entity projects to, once something creates one. Nullable because nothing in the framework writes it: an entity exists in its own table whether or not a post row was ever made for it.\n",
+            "required": false,
+            "nullable": true,
+            "default": null,
+            "hasDefault": false,
+            "unique": true,
+            "indexed": true,
+            "immutable": false,
+            "managed": null,
+            "maxLength": null,
+            "enum": null,
+            "verify": false
+          }
+        },
+        "edges": {},
+        "readPolicies": {
+          "signedIn": {
+            "name": "signedIn",
+            "origin": {
+              "pattern": "ClogPost",
+              "file": "/app/scratch/../examples/clog/spec/patterns/ClogPost.yml"
+            },
+            "description": null
+          }
+        },
+        "writePolicies": {}
+      }
+    }
+  }
+}

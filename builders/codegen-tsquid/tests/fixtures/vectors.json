@@ -1,0 +1,68 @@
+{
+  "manifest": {
+    "version": 1,
+    "routes": [
+      { "name": "Home", "path": "/", "ssr": true, "fields": {} },
+      { "name": "Articles", "path": "/articles", "ssr": true, "fields": {
+        "drafts": { "kind": "bool", "optional": true, "in": "query" },
+        "page": { "kind": "int", "optional": true, "in": "query" },
+        "tags": { "kind": "string[]", "optional": true, "in": "query" } },
+      "query": { "operation": "ArticlesQuery", "id": "a1", "text": "query ArticlesQuery($page: Int = 1, $tags: [String!], $drafts: Boolean, $first: Int = 20, $order: Order = NEWEST, $after: String) { articles(page: $page, tags: $tags, drafts: $drafts, first: $first, order: $order, after: $after) { id } }", "variables": {
+        "after": {}, "drafts": { "input": "drafts" }, "first": { "default": 20 }, "order": { "default": "NEWEST" },
+        "page": { "input": "page", "default": 1 }, "tags": { "input": "tags" } } } },
+      { "name": "Article", "path": "/articles/:id", "ssr": true, "fields": {
+        "id": { "kind": "string", "optional": false, "in": "path" } },
+      "query": { "operation": "ArticleQuery", "id": "a2", "text": "query ArticleQuery($id: ID!) { article(id: $id) { id } }", "variables": { "id": { "input": "id" } } } },
+      { "name": "ArticleNew", "path": "/articles/new", "ssr": false, "fields": {} },
+      { "name": "Section", "path": "/sections/:section/:page", "ssr": true, "fields": {
+        "page": { "kind": "int", "optional": false, "in": "path" },
+        "section": { "kind": "string", "optional": false, "in": "path" },
+        "sort": { "kind": "string", "optional": true, "in": "query" } } },
+      { "name": "Batch", "path": "/batch", "ssr": true, "fields": {
+        "ids": { "kind": "int[]", "optional": false, "in": "query" } } },
+      { "name": "Page", "path": "/:slug", "ssr": true, "fields": {
+        "slug": { "kind": "string", "optional": false, "in": "path" } } }
+    ]
+  },
+  "urls": [
+    { "url": "/", "route": "Home", "input": {} },
+    { "url": "/articles", "route": "Articles", "input": {}, "variables": { "page": 1, "first": 20, "order": "NEWEST" } },
+    { "url": "/articles/", "route": "Articles", "input": {}, "variables": { "page": 1, "first": 20, "order": "NEWEST" } },
+    { "url": "/articles?utm=x&utm=y", "route": "Articles", "input": {}, "variables": { "page": 1, "first": 20, "order": "NEWEST" } },
+    { "url": "/articles?page=2&tags=a&tags=b&tags=a&drafts=false", "route": "Articles", "input": { "page": 2, "tags": ["a", "b", "a"], "drafts": false },
+      "variables": { "page": 2, "tags": ["a", "b", "a"], "drafts": false, "first": 20, "order": "NEWEST" } },
+    { "url": "/articles?tags=a+b&tags=%26&tags=", "route": "Articles", "input": { "tags": ["a b", "&", ""] }, "variables": { "page": 1, "tags": ["a b", "&", ""], "first": 20, "order": "NEWEST" } },
+    { "url": "/articles?page=-3", "route": "Articles", "input": { "page": -3 }, "variables": { "page": -3, "first": 20, "order": "NEWEST" } },
+    { "url": "/articles?page=2.5", "route": null },
+    { "url": "/articles?page=", "route": null },
+    { "url": "/articles?page=9007199254740992", "route": null },
+    { "url": "/articles?page=1&page=2", "route": null },
+    { "url": "/articles?drafts=1", "route": null },
+    { "url": "/articles?drafts=TRUE", "route": null },
+    { "url": "/Articles", "route": null },
+    { "url": "/articl%65s", "route": null },
+    { "url": "/ARTICLES/new", "route": null },
+    { "url": "/articles/new", "route": "ArticleNew", "input": {} },
+    { "url": "/articles/new/", "route": "ArticleNew", "input": {} },
+    { "url": "/articles/a%2Fb", "route": "Article", "input": { "id": "a/b" }, "variables": { "id": "a/b" } },
+    { "url": "/articles/%E9%9B%AA?page=2", "route": "Article", "input": { "id": "雪" }, "variables": { "id": "雪" } },
+    { "url": "/articles/a+b", "route": "Article", "input": { "id": "a+b" }, "variables": { "id": "a+b" } },
+    { "url": "/articles/%ZZ", "route": null },
+    { "url": "/articles/a/b", "route": null },
+    { "url": "/sections/news/3?sort=new", "route": "Section", "input": { "section": "news", "page": 3, "sort": "new" } },
+    { "url": "/sections/news/x", "route": null },
+    { "url": "/batch", "route": null },
+    { "url": "/batch?ids=1&ids=1", "route": "Batch", "input": { "ids": [1, 1] } },
+    { "url": "/about", "route": "Page", "input": { "slug": "about" } },
+    { "url": "/about/team", "route": null }
+  ],
+  "variables": [
+    { "client": { "first": 10, "after": null }, "server": { "first": 10 }, "match": true },
+    { "client": { "first": 10, "after": null }, "server": { "after": null, "first": 10 }, "match": true },
+    { "client": { "first": 10 }, "server": {}, "match": false },
+    { "client": { "filter": { "b": 1, "a": 2 } }, "server": { "filter": { "a": 2, "b": 1 } }, "match": true },
+    { "client": { "filter": { "a": null } }, "server": { "filter": {} }, "match": false },
+    { "client": { "ids": [1, 2] }, "server": { "ids": [2, 1] }, "match": false },
+    { "client": { "id": "1" }, "server": { "id": 1 }, "match": false }
+  ]
+}

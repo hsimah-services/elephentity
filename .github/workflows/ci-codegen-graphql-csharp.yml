@@ -1,0 +1,89 @@
+name: CI codegen-graphql-csharp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'builders/codegen-graphql-csharp/**'
+      - '.github/workflows/ci-codegen-graphql-csharp.yml'
+      - 'dotnet/**'
+      - 'builders/codegen-csharp/**'
+  pull_request:
+    paths:
+      - 'builders/codegen-graphql-csharp/**'
+      - '.github/workflows/ci-codegen-graphql-csharp.yml'
+      - 'dotnet/**'
+      - 'builders/codegen-csharp/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Rust
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-graphql-csharp
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+
+      - name: Formatting
+        run: cargo +stable fmt --check
+
+      - name: Static analysis
+        run: cargo +stable clippy --locked --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo +stable test --locked
+
+      - name: The launcher parses
+        run: sh -n bin/eleph-gen-graphql-csharp
+
+  # The generated manifest compiled with the entities `eleph-gen-csharp` makes from the same IR, assembled with Elephentity.GraphQL
+  # on the memory driver, executed, and its SDL compared with the PHP stack's (tests/parity).
+  generated:
+    name: Manifests compile, run and match the PHP schema
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-graphql-csharp
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: builders/codegen-graphql-csharp/tests/dotnet/global.json
+
+      - name: The runtime the manifests are assembled with
+        run: |
+          mkdir -p tests/dotnet/.deps
+          cp -R ../../dotnet tests/dotnet/.deps/elephentity-dotnet
+
+      - name: The C# entity builder
+        run: cargo +stable build --locked --manifest-path ../codegen-csharp/Cargo.toml
+
+      - name: Build this builder
+        run: cargo +stable build --locked
+
+      - name: Write the generated trees out
+        env:
+          ELEPH_GEN_CSHARP: ${{ github.workspace }}/builders/codegen-csharp/target/debug/eleph-gen-csharp
+        run: python3 tests/dotnet/materialize.py
+
+      - name: Execution and SDL parity
+        run: dotnet run --project tests/dotnet -c Release

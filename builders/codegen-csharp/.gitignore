@@ -1,0 +1,7 @@
+/vendor/
+/target/
+/tests/dotnet/Generated/
+/tests/dotnet/.deps/
+/tests/dotnet/bin/
+/tests/dotnet/obj/
+/build/

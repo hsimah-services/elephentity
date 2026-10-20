@@ -1,5 +1,12 @@
 # The contract surface
 
+> **Layout note.** Since the consolidation, `elephentity-codegen*`, `elephentity-dotnet`,
+> `elephentity-graphql-php`, `elephentity-sqlite` and `elephentity-patterns` are directories of this
+> repository (`builders/*`, `dotnet/`, `packages/graphql`, `packages/sqlite`, `patterns/`); the
+> table of what is where is in [CLAUDE.md](../CLAUDE.md). A "repository boundary" below is now a
+> directory boundary: the contracts are unchanged, but one pull request can change both sides. The
+> WordPress and WPGraphQL packages and builders, and `elephentity-examples`, are still separate.
+
 Everything shared by the repositories in [README.md](README.md). A change to anything
 on this list needs issues on the repositories named beside it; internal changes do not.
 

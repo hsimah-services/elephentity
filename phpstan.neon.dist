@@ -6,5 +6,8 @@ parameters:
     excludePaths:
         analyse:
             - packages/*/vendor
+            # Own dependencies and own CI (tests-graphql.yml, tests-sqlite.yml).
+            - packages/graphql
+            - packages/sqlite
     tmpDir: .phpstan.cache
     treatPhpDocTypesAsCertain: false

@@ -1,0 +1,218 @@
+name: Release binary
+
+# Reusable: builds a Rust binary for four platforms, checks the archives, and on a tag
+# publishes them to that tag's GitHub Release. Several programs live in this repository, so the
+# tag is `v<version>` for eleph and `<binary>-v<version>` for every other program. The archive names are a contract with
+# `eleph install`; see docs/RELEASING.md before changing anything here.
+#
+# Called from a branch or pull request it does everything except publish, so a change to
+# this workflow is proven without pushing a tag.
+
+on:
+  workflow_call:
+    inputs:
+      binary:
+        description: The binary to release, e.g. eleph-codegen.
+        type: string
+        required: true
+      manifest-path:
+        description: The Cargo manifest that builds it.
+        type: string
+        default: Cargo.toml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The Linux builds use the oldest runner images on purpose: a binary needs at least
+          # the glibc it was linked against, and Raspberry Pi OS (Debian 12) ships 2.36.
+          - { target: x86_64-unknown-linux-gnu, rid: linux-x64, os: ubuntu-22.04, archive: tar.gz }
+          - { target: aarch64-unknown-linux-gnu, rid: linux-arm64, os: ubuntu-22.04-arm, archive: tar.gz }
+          - { target: aarch64-apple-darwin, rid: osx-arm64, os: macos-14, archive: tar.gz }
+          - { target: x86_64-pc-windows-msvc, rid: win-x64, os: windows-2022, archive: zip }
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      BINARY: ${{ inputs.binary }}
+      MANIFEST_PATH: ${{ inputs.manifest-path }}
+      TARGET: ${{ matrix.target }}
+      RID: ${{ matrix.rid }}
+      ARCHIVE: ${{ matrix.archive }}
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the version
+        id: version
+        run: |
+          # A tag v1.2.3 releases eleph 1.2.3; <binary>-v1.2.3 releases that binary's 1.2.3.
+          # Anything else is a dry run, which is never published.
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            version="${GITHUB_REF_NAME#"$BINARY"-}"
+            echo "version=${version#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --target "$TARGET"
+
+      - name: Build
+        run: cargo +stable build --release --locked --manifest-path "$MANIFEST_PATH" --target "$TARGET"
+
+      - name: Package
+        id: package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          name="$BINARY-$VERSION-$RID"
+          exe="$BINARY"
+          if [ "$RID" = win-x64 ]; then exe="$BINARY.exe"; fi
+
+          mkdir -p stage dist
+          cp "target/$TARGET/release/$exe" LICENSE stage/
+
+          # The archive holds the binary and the licence at its top level, nothing else.
+          if [ "$ARCHIVE" = zip ]; then
+            (cd stage && 7z a -tzip "../dist/$name.zip" "$exe" LICENSE > /dev/null)
+          else
+            tar -C stage -czf "dist/$name.tar.gz" "$exe" LICENSE
+          fi
+
+          echo "file=$name.$ARCHIVE" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive.${{ inputs.binary }}.${{ matrix.rid }}
+          path: dist/${{ steps.package.outputs.file }}
+          if-no-files-found: error
+
+  checksums:
+    name: Checksums
+    needs: build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: archive.${{ inputs.binary }}.*
+          merge-multiple: true
+          path: dist
+
+      - name: SHA256SUMS
+        working-directory: dist
+        run: |
+          # Bare file names, so `sha256sum -c SHA256SUMS` works from the directory it is in.
+          sha256sum -- * > ../SHA256SUMS
+          mv ../SHA256SUMS .
+          cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sums.${{ inputs.binary }}.all
+          path: dist/SHA256SUMS
+          if-no-files-found: error
+
+  verify:
+    name: Verify the archives
+    needs: checksums
+    runs-on: ubuntu-22.04
+
+    env:
+      BINARY: ${{ inputs.binary }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*.${{ inputs.binary }}.*'
+          path: dist
+          merge-multiple: true
+
+      - name: Four archives, and they match their checksums
+        working-directory: dist
+        run: |
+          ls -l
+          test "$(ls | grep -c -E '\.(tar\.gz|zip)$')" -eq 4
+          for rid in linux-x64 linux-arm64 osx-arm64 win-x64; do
+            ls | grep -E -- "^$BINARY-.+-$rid\.(tar\.gz|zip)$"
+          done
+          sha256sum -c SHA256SUMS
+
+      - name: The Linux binary starts in a clean container
+        working-directory: dist
+        run: |
+          mkdir bin
+          tar -xzf "$(ls | grep -E -- "^$BINARY-.+-linux-x64\.tar\.gz$")" -C bin
+
+          # debian:stable-slim is what the release is checked against; bookworm is the
+          # oldest glibc that Raspberry Pi OS ships and the one most likely to break.
+          for image in debian:stable-slim debian:bookworm-slim; do
+            echo "== $image"
+            set +e
+            docker run --rm -v "$PWD/bin:/release:ro" "$image" "/release/$BINARY" --help < /dev/null
+            code=$?
+            set -e
+
+            # 126 and 127 are "cannot execute" and "not found" (a missing library included),
+            # and anything above is a signal. Whatever else the binary says is its own business.
+            if [ "$code" -ge 126 ]; then
+              echo "::error::$BINARY did not start in $image (exit $code)"
+              exit 1
+            fi
+          done
+
+  release:
+    name: Publish the release
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+      BINARY: ${{ inputs.binary }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The annotated tag, with its message
+        run: git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*.${{ inputs.binary }}.*'
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update the GitHub Release
+        run: |
+          # The release notes are the annotated tag's message.
+          notes="$(git for-each-ref "refs/tags/$TAG" --format='%(contents)')"
+
+          # A version with a hyphen (1.0.0-alpha.1) is a pre-release. The tag's own hyphens
+          # (eleph-gen-csharp-v1.0.0) are not.
+          version="${TAG#"$BINARY"-}"
+          pre=false
+          if [[ "${version#v}" == *-* ]]; then pre=true; fi
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --notes "$notes" --prerelease="$pre"
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* --verify-tag --title "$TAG" --notes "$notes" --prerelease="$pre"
+          fi

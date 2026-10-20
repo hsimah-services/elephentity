@@ -66,13 +66,35 @@ comment is fine and a real call is not.
 every push, so `elephentity/runtime` is installable on its own. Never edit that
 mirror's `src/` or `tests/` directly; PRs go here.
 
-**The code generator is not in this repository.** `eleph generate` compiles the specs and
-pipes the IR to [`eleph-codegen`](https://github.com/hsimah-services/elephentity-codegen), which
-resolves a project's builders — [`eleph-gen-php`](https://github.com/hsimah-services/elephentity-codegen-php)
-and any others — runs them, and signs and writes what they return. Both are dev
-dependencies here so that `tools/test-rust-ir` can run; a project installs them itself.
+**The code generator, the builders and the .NET packages are in this repository.** They used to
+be separate repositories (`elephentity-codegen*`, `elephentity-dotnet`, `elephentity-graphql-php`,
+`elephentity-sqlite`, `elephentity-patterns`); they were folded in without their history, and
+each is its own unit with its own `README.md`, CI workflow and release. `eleph generate` pipes the IR
+to `eleph-codegen` (`builders/codegen`), which resolves a project's builders and signs and writes what
+they return; the root `composer.json` still installs `codegen` and `codegen-php` from Packagist as dev
+dependencies so that `tools/test-rust-ir` can run.
 
-**Worked examples live in their own repository too.**
+| Directory | Is | Ships as | Tag |
+|---|---|---|---|
+| `compiler/` | the Rust `eleph` | GitHub Release binary | `v<version>` |
+| `dotnet/` | the .NET runtime and adaptors | NuGet (`dotnet-v*`) | `dotnet-v<version>` |
+| `builders/codegen` | `eleph-codegen`, the orchestrator | binary; Composer `elephentity/codegen` | binary `eleph-codegen-v<version>`, mirror `codegen-v<version>` |
+| `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp`, `-tsquid` | the C#, Cosmos, GraphQL.NET and tsquid builders | binary `eleph-gen-<name>`; tsquid also Composer | `eleph-gen-<name>-v<version>` |
+| `builders/codegen-php`, `-sqlite`, `-graphql-php` | the PHP-side builders | Composer (mirrors) | `codegen-<name>-v<version>` |
+| `packages/graphql`, `packages/sqlite` | PHP GraphQL and SQLite adaptors | Composer (mirrors) | `graphql-v<version>`, `sqlite-v<version>` |
+| `patterns/` | the pattern catalogue | — | — |
+
+Each program is versioned independently, so a tag names the program it releases. Packagist cannot
+publish several packages from one repository, so everything installed with Composer is mirrored,
+read-only, to its old repository by `split.yml` (the mirror gets the plain `v<version>` tag). Never
+edit a mirror; PRs go here. Workflows are path-filtered: `ci-<name>.yml`, `tests-<name>.yml`,
+`release.yml` (binaries), `release-dotnet.yml` (NuGet).
+
+`eleph install` reads a builder's release from this repository under its prefixed tag
+(`compiler/src/cli/install.rs`, `tag_of`). The WordPress and WPGraphQL packages and builders, and
+`elephentity-examples`, remain separate repositories.
+
+**Worked examples live in their own repository.**
 [`elephentity-examples`](https://github.com/hsimah-services/elephentity-examples) holds
 `clog`, a real WordPress plugin built on this framework, tested end to end against real
 builders and adaptors — that is where a runtime class renamed out from under a builder
@@ -109,9 +131,12 @@ compiler tests compile it.
 
 ## Before you commit anything that crosses a repository boundary
 
-Elephentity is eight repositories that talk over a wire format, not a shared
-classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
-behind the compiler fails at run time rather than at build time.
+The compiler, the code generator, the builders and the adaptors talk over a wire format, not a
+shared classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
+behind the compiler fails at run time rather than at build time. Most of them share this
+repository now, which lets one pull request change both sides, but it does not make the gap
+type-check. The WordPress and WPGraphQL packages and builders, and `elephentity-examples`, are
+still separate repositories.
 
 **[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If
 you changed something on it, open an issue on each repository it reaches, before or with

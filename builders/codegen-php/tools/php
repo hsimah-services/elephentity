@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# Run any command against the Elephentity PHP toolchain in a throwaway container.
+#
+#   ./tools/php composer install
+#   ./tools/php composer ci
+#   ./tools/php vendor/bin/phpunit
+#   ./tools/php vendor/bin/phpstan analyse
+#   ./tools/php php -v
+#   ./tools/php bash                  # interactive shell
+#
+# The container is removed on exit (--rm) and podman has no daemon, so when you stop
+# running commands nothing is left running at all. Docker is supported as a fallback.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+IMAGE="eleph-dev:8.3"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eleph/composer"
+
+if command -v podman >/dev/null 2>&1; then
+    ENGINE=podman
+elif command -v docker >/dev/null 2>&1; then
+    ENGINE=docker
+else
+    echo "tools/php: needs podman or docker." >&2
+    echo "  Fedora:  sudo dnf install podman" >&2
+    exit 1
+fi
+
+if ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "Building $IMAGE (first run only)..." >&2
+    "$ENGINE" build -t "$IMAGE" -f .docker/Dockerfile .docker
+fi
+
+# Run as the host user so nothing in the working tree ends up owned by root.
+# Rootless podman already maps the host user, and passing --user there would
+# double-map it, so this is docker-only.
+USER_ARGS=()
+if [ "$ENGINE" = "docker" ]; then
+    USER_ARGS=(--user "$(id -u):$(id -g)")
+fi
+
+# A host directory rather than a named volume: under docker's --user a named volume
+# would be created root-owned and unwritable, and this works identically for podman.
+mkdir -p "$CACHE_DIR"
+
+# stdin is always attached: this program's entire interface is a JSON request on it,
+# so a container that could not be piped into would be untestable by hand. A TTY is
+# added only when there is one to attach, so CI and pipes still work.
+TTY_ARGS=(-i)
+if [ -t 0 ] && [ -t 1 ]; then
+    TTY_ARGS=(-it)
+fi
+
+exec "$ENGINE" run --rm \
+    "${TTY_ARGS[@]}" \
+    "${USER_ARGS[@]}" \
+    `# :z relabels the mount for SELinux, which Fedora enforces by default.` \
+    -v "$PWD:/app:z" \
+    -v "$CACHE_DIR:/composer:z" \
+    -e COMPOSER_HOME=/composer \
+    `# An arbitrary UID has no passwd entry, so HOME is unset and some tools fall over.` \
+    -e HOME=/tmp \
+    -w /app \
+    "$IMAGE" "$@"

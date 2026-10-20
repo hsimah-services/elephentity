@@ -1,0 +1,74 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Checks a generated PHP tree. Run by `eleph check` with the command this builder declares in
+ * `describe` (provides.check.command):
+ *
+ *     eleph-check-php --project DIR --output DIR
+ *
+ * Writes one JSON object per line on stdout, {"severity": "error|warning|info", "message": "..."},
+ * and exits non-zero if any is an error. Everything else (usage, an unreadable tree) is reported
+ * the same way, as an error signal, so the caller has one thing to read.
+ */
+
+use Eleph\Gen\Php\Check\TreeCheck;
+use Eleph\Runtime\Conformance\Severity;
+
+$autoloaders = [];
+
+foreach ([
+    $GLOBALS['_composer_autoload_path'] ?? null,
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+] as $candidate) {
+    if (is_string($candidate) && is_file($candidate)) {
+        $autoloaders[] = $candidate;
+
+        break;
+    }
+}
+
+if ([] === $autoloaders) {
+    fwrite(STDERR, "eleph-check-php: no Composer autoloader found; run `composer install`.\n");
+
+    exit(2);
+}
+
+require_once $autoloaders[0];
+
+$options = getopt('', ['project:', 'output:']);
+$project = $options['project'] ?? null;
+$output = $options['output'] ?? null;
+
+if (!is_string($project) || !is_string($output) || '' === $output) {
+    fwrite(STDERR, "Usage: eleph-check-php --project DIR --output DIR\n");
+
+    exit(2);
+}
+
+// The project's own autoloader, so classes the generated tree extends or implements (its own
+// code, not this builder's) can be found. Skipped when it is the one already loaded.
+$projectAutoloader = rtrim($project, '/') . '/vendor/autoload.php';
+
+if (is_file($projectAutoloader) && realpath($projectAutoloader) !== realpath($autoloaders[0])) {
+    require_once $projectAutoloader;
+}
+
+$signals = TreeCheck::run($output);
+$errors = 0;
+
+foreach ($signals as $signal) {
+    echo json_encode(
+        ['severity' => $signal->severity->value, 'message' => $signal->message],
+        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+    ), "\n";
+
+    if (Severity::Error === $signal->severity) {
+        ++$errors;
+    }
+}
+
+exit($errors > 0 ? 1 : 0);
