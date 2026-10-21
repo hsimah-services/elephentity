@@ -155,3 +155,48 @@ fn generated_php_has_checked_types_at_the_boundary() {
         .unwrap();
     assert!(body.contains("is_string($detail)"));
 }
+
+fn file(response: &Value, path: &str) -> String {
+    response["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|file| file["path"] == path)
+        .unwrap()["body"]
+        .as_str()
+        .unwrap()
+        .into()
+}
+
+#[test]
+fn field_defaults_become_column_defaults() {
+    let mut request = fixture("many-to-one");
+    let fields = &mut request["schema"]["entities"]["Owner"]["fields"];
+    fields["checked"] = json!({"name":"checked","type":{"primitive":"bool","declaredType":null},"origin":{"pattern":null,"file":"fixture.yml"},"nullable":false,"hasDefault":true,"default":false});
+    fields["mood"] = json!({"name":"mood","type":{"primitive":"enum","declaredType":null},"enum":{"inlineValues":["calm","busy"],"declaredType":null},"origin":{"pattern":null,"file":"fixture.yml"},"nullable":false,"hasDefault":true,"default":"busy"});
+    fields["rank"]["hasDefault"] = json!(true);
+    fields["rank"]["default"] = json!(-3);
+    fields["name"]["hasDefault"] = json!(true);
+    fields["name"]["default"] = json!(null);
+    let response = generate(&request);
+    assert_eq!(response["errors"], json!([]));
+    let install = file(&response, "install.php");
+    assert!(install.contains(r#""checked" INTEGER NOT NULL DEFAULT 0 CHECK"#));
+    assert!(install.contains(r#""mood" TEXT NOT NULL DEFAULT \'busy\' CHECK"#));
+    assert!(install.contains(r#""rank" INTEGER DEFAULT -3"#));
+    assert!(!install.contains(r#""name" TEXT DEFAULT"#));
+    let manifest = file(&response, "storage-manifest.php");
+    assert!(manifest.contains("new Column('checked', 'INTEGER', false, false, '0')"));
+    assert!(manifest.contains("new Column('name', 'TEXT', true, false, null)"));
+
+    for (field, default) in [("checked", json!("yes")), ("mood", json!("asleep"))] {
+        let mut request = request.clone();
+        request["schema"]["entities"]["Owner"]["fields"][field]["default"] = default;
+        let response = generate(&request);
+        assert_eq!(response["files"], json!([]));
+        assert!(
+            !response["errors"].as_array().unwrap().is_empty(),
+            "{field}"
+        );
+    }
+}
