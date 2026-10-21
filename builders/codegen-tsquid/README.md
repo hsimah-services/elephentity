@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-codegen-tsquid` is a read-only mirror of [`builders/codegen-tsquid/`](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-tsquid) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-codegen-tsquid
 
 Build-time Rust manifest compiler for tsquid's initial route data, with a standalone PHP runtime, and a C# target for

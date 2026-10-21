@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-memory` is a read-only mirror of [`packages/memory/`](https://github.com/hsimah-services/elephentity/tree/main/packages/memory) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity/memory
 
 Install with `composer require elephentity/memory`.
