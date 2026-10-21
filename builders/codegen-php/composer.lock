@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea889f2e3310e85529557b5c19b507a4",
+    "content-hash": "46c98da5104d62b4feb9ad10ce813983",
     "packages": [
         {
             "name": "elephentity/runtime",
-            "version": "v0.14.1",
+            "version": "v0.14.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
@@ -43,7 +43,7 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.1"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.2"
             },
             "time": "2026-10-18T22:32:08+00:00"
         },
@@ -638,16 +638,16 @@
         },
         {
             "name": "elephentity/memory",
-            "version": "v0.14.1",
+            "version": "v0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-memory.git",
-                "reference": "fbe974f49908e8fa88c7dfd6109a64e1d2d4f720"
+                "reference": "d927077c5385b39739862832b95c6c622d1b84ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-memory/zipball/fbe974f49908e8fa88c7dfd6109a64e1d2d4f720",
-                "reference": "fbe974f49908e8fa88c7dfd6109a64e1d2d4f720",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-memory/zipball/d927077c5385b39739862832b95c6c622d1b84ea",
+                "reference": "d927077c5385b39739862832b95c6c622d1b84ea",
                 "shasum": ""
             },
             "require": {
@@ -657,6 +657,9 @@
             "require-dev": {
                 "phpunit/phpunit": "^11.0 || ^12.0"
             },
+            "bin": [
+                "bin/eleph-gen-memory"
+            ],
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -670,9 +673,9 @@
             "description": "An in-process StorageAdaptor with no backend of its own. The neutral driver for a project that wants raw PHP objects rather than WordPress.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-memory/issues",
-                "source": "https://github.com/hsimah-services/elephentity-memory/tree/v0.14.1"
+                "source": "https://github.com/hsimah-services/elephentity-memory/tree/v0.16.0"
             },
-            "time": "2026-10-19T19:13:28+00:00"
+            "time": "2026-10-19T21:45:58+00:00"
         },
         {
             "name": "elephentity/sqlite",

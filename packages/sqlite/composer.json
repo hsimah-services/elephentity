@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "^0.13.1 || ^0.14",
+        "elephentity/runtime": "^0.13.1 || ^0.14 || ^0.15 || ^0.16",
         "ext-pdo": "*",
         "ext-pdo_sqlite": "*",
         "ext-mbstring": "*"
