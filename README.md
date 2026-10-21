@@ -1,11 +1,23 @@
 # Elephentity
 ![Elephentity logo](./assets/elephentity.svg)
 
-An AI-native framework for building PHP business logic. Utilizes layers of agentic
-rules and skills to turn human readable specs into consistent, scalable and reliable
-underlying code.
+An AI-native framework for building business logic in PHP or C#. Utilizes layers of
+agentic rules and skills to turn human readable specs into consistent, scalable and
+reliable underlying code.
 
 The command is `eleph`; the PHP namespace is `Eleph\`.
+
+## Stacks
+
+One spec language, compiled by one `eleph` binary, with a builder per target:
+
+| Stack | Builders | Runtime and adaptors | Status |
+|---|---|---|---|
+| PHP and SQLite | `eleph-gen-php`, `eleph-gen-sqlite`, `eleph-gen-graphql-php` | Composer: `elephentity/runtime`, `elephentity/sqlite`, `elephentity/graphql` | Established |
+| C# and Cosmos DB | `eleph-gen-csharp`, `eleph-gen-cosmos`, `eleph-gen-graphql-csharp` | NuGet: `Elephentity.Runtime`, `Elephentity.Cosmos`, `Elephentity.GraphQL` | Experimental: alpha releases |
+
+`eleph-gen-tsquid` generates the route manifest a [tsquid](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-tsquid)
+client reads, for either stack. [`dotnet/`](dotnet) documents the NuGet packages.
 
 ## Quick start
 
@@ -18,12 +30,37 @@ composer require --dev elephentity/codegen elephentity/codegen-php
 `install.sh` puts the `eleph` compiler, a single binary, in `~/.local/bin` (`install.ps1` on
 Windows). It needs no PHP: the same `eleph` compiles specs for PHP and .NET projects alike.
 
-`elephentity/memory` is the neutral driver: raw PHP objects, no platform. Want
-WordPress instead? `composer require elephentity/wordpress` and
-`composer require --dev elephentity/codegen-wordpress` — see
-[elephentity-wordpress](https://github.com/hsimah-services/elephentity-wordpress).
+`elephentity/memory` is the neutral driver: raw PHP objects, no platform. For a real database,
+add SQLite: `composer require elephentity/sqlite` and `composer require --dev
+elephentity/codegen-sqlite`. The WordPress adaptors are separate repositories and are not in
+active development: [elephentity-wordpress](https://github.com/hsimah-services/elephentity-wordpress).
 
-Two files. The project, and one entity:
+For C#, install `eleph` the same way and add the runtime from NuGet instead of Composer:
+
+```bash
+dotnet add package Elephentity.Runtime
+dotnet add package Elephentity.Runtime.Memory
+```
+
+then pin the generator and the C# builder in `eleph.json`, and let `eleph install` fetch them
+(see [Install without PHP](#install-without-php)):
+
+```json
+{
+    "spec": "spec",
+    "codegen": "eleph-codegen@0.7.0",
+    "targets": {
+        "csharp": {
+            "builder": "eleph-gen-csharp@0.1.0-alpha.1",
+            "output": "Generated/Entities",
+            "namespace": "App.Entity",
+            "typeNamespace": "App.Type"
+        }
+    }
+}
+```
+
+The specs below are the same for both stacks. Two files. The project, and one entity:
 
 ```yaml
 # spec/project.yml
@@ -45,8 +82,8 @@ fields:
     required: true
 ```
 
-Name the builders in `eleph.json` — Elephentity generates nothing itself, so a target
-without a `builder` is refused:
+For PHP, name the builders in `eleph.json` — Elephentity generates nothing itself, so a
+target without a `builder` is refused:
 
 ```json
 {
@@ -101,10 +138,28 @@ wiring, migrations.
 
 ## Repository layout
 
-The framework, the code generator, every non-WordPress builder, the PHP GraphQL and SQLite
-packages and the .NET packages live in this repository, each as its own directory with its own CI
-and its own version: `compiler/`, `packages/`, `builders/`, `dotnet/`, `patterns/`. Composer
-packages are mirrored read-only to their own repositories for Packagist; the table is in
+The compiler, the code generator, every builder that isn't for WordPress, the PHP runtime and
+adaptors and the .NET packages live in this repository. Each is its own directory with its own CI
+and its own version:
+
+| Directory | What it is | You install it from |
+|---|---|---|
+| `compiler/` | `eleph`, the spec compiler (Rust) | GitHub Releases (`install.sh`) |
+| `builders/codegen` | `eleph-codegen`, which runs the builders | GitHub Releases, or Composer |
+| `builders/codegen-php`, `-sqlite`, `-graphql-php`, `-tsquid` | PHP, SQLite, GraphQL and tsquid builders | Composer (tsquid also GitHub Releases) |
+| `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp` | C#, Cosmos and GraphQL.NET builders | GitHub Releases, via `eleph install` |
+| `packages/runtime`, `memory` | PHP runtime and the neutral memory driver | Composer |
+| `packages/sqlite`, `graphql` | PHP SQLite and GraphQL adaptors | Composer |
+| `dotnet/` | The .NET runtime and adaptors | NuGet |
+| `patterns/` | The pattern catalogue | |
+
+Packagist can't publish several packages from one repository, so every Composer package is
+mirrored, read-only, to its own repository. Open issues and pull requests here, never on a mirror.
+
+**Releases are per program.** A tag names what it releases: `v1.2.3` is `eleph` (and the `runtime`
+and `memory` mirrors), `eleph-gen-csharp-v1.2.3` is that builder, `dotnet-v1.2.3` publishes the
+NuGet packages, and `sqlite-v1.2.3` tags the SQLite mirror. [docs/RELEASING.md](docs/RELEASING.md)
+has the details. The full layout, with the conventions that apply to each, is in
 [CLAUDE.md](CLAUDE.md#layout).
 
 ## Install without PHP
