@@ -5,8 +5,13 @@
     "license": "MIT",
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "^0.13 || ^0.14 || ^0.15 || ^0.16",
+        "elephentity/runtime": "^0.17",
         "webonyx/graphql-php": "^15.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.17.x-dev"
+        }
     },
     "autoload": {
         "psr-4": {

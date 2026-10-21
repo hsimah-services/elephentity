@@ -12,8 +12,8 @@ cat > composer.json <<'JSON'
 {
   "name": "elephentity/package-install-check",
   "require": {
-    "elephentity/elephentity": "^0.14",
-    "elephentity/memory": "^0.14"
+    "elephentity/elephentity": "^0.17",
+    "elephentity/memory": "^0.17"
   },
   "require-dev": {
     "elephentity/codegen": "^0.7",
@@ -23,16 +23,25 @@ cat > composer.json <<'JSON'
 }
 JSON
 if [ "${1:-}" != --published ]; then
-  # Paths model the future release without installing the monorepo as a library.
+  # Paths model the future release without installing the monorepo as a library. The PHP packages
+  # share one version (tools/family-version); a pull request checkout has no branch Composer could
+  # read it from. codegen-php is versioned on its own, so it gets a stand-in for its next release.
+  family="$("$source_root/tools/family-version")"
   php -r '
     $file = "composer.json";
     $config = json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-    foreach (["elephentity" => "", "memory" => "/packages/memory"] as $name => $path) {
+    $packages = [
+        ["elephentity/elephentity", "", $argv[2]],
+        ["elephentity/runtime", "/packages/runtime", $argv[2]],
+        ["elephentity/memory", "/packages/memory", $argv[2]],
+        ["elephentity/codegen-php", "/builders/codegen-php", "0.8.99"],
+    ];
+    foreach ($packages as [$name, $path, $version]) {
         $config["repositories"][] = ["type" => "path", "url" => $argv[1] . $path,
-            "options" => ["symlink" => false, "versions" => ["elephentity/" . $name => "0.14.0"]]];
+            "options" => ["symlink" => false, "versions" => [$name => $version]]];
     }
     file_put_contents($file, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
-  ' "$source_root"
+  ' "$source_root" "$family"
 fi
 composer update --no-interaction --prefer-dist
 cargo build --release --locked --manifest-path vendor/elephentity/codegen/Cargo.toml

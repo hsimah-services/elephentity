@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# Print the version the PHP package family is being developed towards, e.g. 0.17.0.
+#
+# runtime, memory, sqlite and graphql are released together under one version (see
+# docs/RELEASING.md), and the branch alias in packages/runtime/composer.json is where that
+# version is written down. CI resolves each package's siblings by path, and a checkout of a pull
+# request has no branch for Composer to read a version from, so it asks this instead.
+set -eu
+
+here="$(cd "$(dirname "$0")/.." && pwd)"
+
+version="$(sed -n 's/.*"dev-main": "\([0-9][0-9]*\.[0-9][0-9]*\)\.x-dev".*/\1.0/p' "$here/packages/runtime/composer.json")"
+
+if [ -z "$version" ]; then
+    echo "family-version: no dev-main branch alias in packages/runtime/composer.json" >&2
+    exit 1
+fi
+
+printf '%s\n' "$version"

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "46c98da5104d62b4feb9ad10ce813983",
+    "content-hash": "3093c8aaed36c1810a95fe9af4b7247d",
     "packages": [
         {
             "name": "elephentity/runtime",
