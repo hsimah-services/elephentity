@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-codegen-sqlite` is a read-only mirror of [`builders/codegen-sqlite/`](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-sqlite) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-codegen-sqlite
 
 Build-time SQLite generator for Elephentity's PHP runtime. It emits a storage

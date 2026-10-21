@@ -9,7 +9,8 @@ name: Release
 # (docs/RELEASING.md). Called from a branch or a pull request it publishes
 # nothing, which is how release-check.yml proves a change to this path without a tag.
 #
-# split.yml also runs on v* tags and still mirrors packages/*; the two are independent.
+# A `v*` tag releases the eleph binary only. The Composer packages are released by `php-v*` and
+# the builders' own tags (split.yml); eleph does not touch Composer.
 #
 # Tags: `v<version>` releases eleph; `<binary>-v<version>` releases that builder (for example
 # `eleph-gen-csharp-v0.1.0`). Each program is versioned on its own.

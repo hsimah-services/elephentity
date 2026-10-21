@@ -1,4 +1,11 @@
-# Releasing prebuilt binaries
+# Releasing
+
+Three kinds of thing are released from this repository, each by its own tag: prebuilt binaries
+(below), the .NET packages (`dotnet-v<version>`), and the PHP packages ([PHP packages](#php-packages)).
+One annotated tag per command: GitHub starts no workflows when more than three tags are pushed at
+once.
+
+## Prebuilt binaries
 
 `eleph` and every Rust builder ship as prebuilt binaries on GitHub Releases, so a project does
 not need Composer or cargo to use them. This repository hosts the one workflow they all reuse:
@@ -77,3 +84,55 @@ again after a fix updates the existing Release in place, replacing its assets.
 3. Copy a `release-check-<binary>.yml` so a change to the release path is tested on a pull
    request.
 4. Add it to `KNOWN` in `compiler/src/cli/install.rs` so a project can pin it.
+
+## PHP packages
+
+Packagist publishes one package per repository, so every Composer package is mirrored, read-only,
+to its own repository by [`split.yml`](../.github/workflows/split.yml), and a package's version is
+just a tag on its mirror. Packagist has no idea that `runtime`, `sqlite` and `graphql` belong
+together, so that has to be enforced here.
+
+**The PHP package family is released together.** `runtime`, `memory`, `sqlite` and `graphql` share
+one version. A `php-v<version>` tag syncs all four mirrors and tags each `v<version>`. This is how
+the .NET packages already work (`dotnet-v<version>`, seven packages, project references), and for
+the same reason: a number that means "one tested set" instead of four versions to keep compatible
+by hand. Unchanged members are released anyway.
+
+```bash
+git tag -a php-v0.17.0 <commit> -m "notes"   # annotated
+git push origin php-v0.17.0
+```
+
+**What a version means** (pre-1.0, so the minor carries the weight):
+
+- a **patch** (`0.17.1`) breaks nothing, including a release where only one member changed;
+- a **minor** (`0.18.0`) means something in the family breaks: a runtime interface, behaviour a
+  caller relies on, or a class name that generated code refers to by string.
+
+Members require each other at the same minor (`"elephentity/runtime": "^0.17"`). A minor bump is
+therefore a deliberate event, not a side effect of releasing the compiler.
+
+**Builders are not part of the family.** `codegen`, `codegen-php`, `codegen-sqlite`,
+`codegen-graphql-php` and `codegen-tsquid` each have their own line and their own tag,
+`<package>-v<version>`, because they are programs with a wire protocol, not libraries. A builder
+that depends on the runtime caps it at the minor it was tested with, and is re-released when the
+family takes a new minor.
+
+**`eleph` is not part of the family either.** A plain `v<version>` tag releases the binary and
+nothing on Packagist. (Until `v0.16.1` it also tagged the `runtime` and `memory` mirrors, which
+published runtime versions with no change in them and broke every package that capped the runtime.
+The empty versions 0.15.0, 0.16.0 and 0.16.1 are still on Packagist; the family starts at 0.17.0.)
+
+**In development.** `extra.branch-alias.dev-main` in `packages/runtime/composer.json` is the
+version the family is heading for. `tools/family-version` reads it, and CI resolves each package's
+siblings by path using it (`tests-sqlite.yml`, `tests-graphql.yml`, `tools/test-package-install.sh`),
+so a runtime change is tested against the adaptors in the same pull request, before anything is
+tagged. After releasing a minor, bump the alias to the next one.
+
+**Releasing a breaking family minor, in order:**
+
+1. A pull request raises the alias and every constraint between members to the new minor, and lets
+   the builders accept both lines. CI proves the family against itself by path.
+2. Tag `php-v<new>`.
+3. A second pull request moves the builders' locks and test pins onto the published family.
+4. Tag the builders that changed.

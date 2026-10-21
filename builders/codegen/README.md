@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-codegen` is a read-only mirror of [`builders/codegen/`](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-codegen
 
 The code generator for [Elephentity](https://github.com/hsimah-services/elephentity).

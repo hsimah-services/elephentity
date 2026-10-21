@@ -1,31 +1,36 @@
 name: Subtree split
 
 # Mirrors packages that are published as their own Composer package out to read-only
-# repositories. Runtime and memory are independently installable, and so are the PHP packages
-# under packages/ and the Composer-installable builders under builders/. Schema and CLI were
-# mirrored too until the PHP compiler was retired; their mirrors stop at v0.14.2.
+# repositories, because Packagist publishes one package per repository.
 #
 # Runs on push to main (keeps each mirror current) and on tags (tags the mirror's own main at
-# whatever it synced to). The original mirrors (runtime, memory) follow this repository's `v*` tag line, see
-# .llms/cross-repo.md; the later ones are versioned on their own, see Tags below.
+# whatever it synced to). Tag runs synchronize the tagged source revision too, avoiding tags on
+# stale mirrors.
 #
-# Runtime retains its existing mirror-owned tooling and Composer metadata. The memory
-# mirror copies the whole package, including bins and CI.
-# Tag runs synchronize the tagged source revision too, avoiding tags on stale mirrors.
+# Two kinds of tag, because there are two kinds of release (docs/RELEASING.md):
+#
+#   php-v<version>      releases the PHP package family together: runtime, memory, sqlite and
+#                       graphql, one number for all four. Each mirror gets `v<version>`. Packages
+#                       that were not touched are released anyway: that is what makes "0.17" mean
+#                       one tested set instead of four versions to keep compatible by hand.
+#   <package>-v<version>  releases one builder (codegen, codegen-php, codegen-sqlite,
+#                       codegen-graphql-php, codegen-tsquid) on its own line. The mirror gets
+#                       `v<version>`.
+#
+# `eleph` itself is released by a plain `v<version>` tag, which does not touch Composer.
+#
+# Runtime retains its existing mirror-owned tooling and Composer metadata; every other mirror
+# copies the whole package, including bins and CI.
 #
 # Requires a secret named SPLIT_PUSH_TOKEN: a token with push access to every mirror
 # repository listed below. The default GITHUB_TOKEN cannot push to another repository,
 # and actions/checkout's own persisted credentials silently shadow it if not disabled
 # (persist-credentials: false, below) — both steps are load bearing.
 
-# Tags: `v<version>` tags the original mirrors (runtime, memory). The other
-# packages are versioned on their own, so `<package>-v<version>` (for example `codegen-php-v0.8.1`)
-# tags that package's mirror `v<version>`. Pushes to main sync every mirror.
-
 on:
   push:
     branches: [main]
-    tags: ['v*', 'graphql-v*', 'sqlite-v*', 'codegen-v*', 'codegen-php-v*', 'codegen-sqlite-v*', 'codegen-graphql-php-v*', 'codegen-tsquid-v*']
+    tags: ['php-v*', 'codegen-v*', 'codegen-php-v*', 'codegen-sqlite-v*', 'codegen-graphql-php-v*', 'codegen-tsquid-v*']
 
 permissions:
   contents: read
@@ -45,19 +50,19 @@ jobs:
           - package: runtime
             repo: hsimah-services/elephentity-runtime
             path: packages/runtime
-            prefix: ''
+            prefix: 'php-'
           - package: memory
             repo: hsimah-services/elephentity-memory
             path: packages/memory
-            prefix: ''
+            prefix: 'php-'
           - package: graphql
             repo: hsimah-services/elephentity-graphql-php
             path: packages/graphql
-            prefix: 'graphql-'
+            prefix: 'php-'
           - package: sqlite
             repo: hsimah-services/elephentity-sqlite
             path: packages/sqlite
-            prefix: 'sqlite-'
+            prefix: 'php-'
           - package: codegen
             repo: hsimah-services/elephentity-codegen
             path: builders/codegen
@@ -89,11 +94,7 @@ jobs:
         run: |
           run=true
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            if [ -z "$PREFIX" ]; then
-              [[ "$GITHUB_REF_NAME" == v* ]] || run=false
-            else
-              [[ "$GITHUB_REF_NAME" == "${PREFIX}v"* ]] || run=false
-            fi
+            [[ "$GITHUB_REF_NAME" == "${PREFIX}v"* ]] || run=false
           fi
           echo "run=$run" >> "$GITHUB_OUTPUT"
 

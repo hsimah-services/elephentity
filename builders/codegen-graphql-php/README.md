@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-codegen-graphql-php` is a read-only mirror of [`builders/codegen-graphql-php/`](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-graphql-php) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-codegen-graphql-php
 
 Build-time generator for `elephentity/graphql`, the standalone PHP integration using

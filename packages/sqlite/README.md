@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-sqlite` is a read-only mirror of [`packages/sqlite/`](https://github.com/hsimah-services/elephentity/tree/main/packages/sqlite) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-sqlite
 
 Experimental SQLite storage for Elephentity's PHP runtime, extracted from Clog's
