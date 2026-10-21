@@ -61,6 +61,25 @@ generated($request, function (string $directory): void {
     echo "PASS: generated constraints, hostile literals, NULL, foreign keys and installation rollback\n";
 });
 
+$request = fixture('many-to-one');
+$owner = &$request['schema']['entities']['Owner']['fields'];
+$owner['checked'] = ['name' => 'checked', 'type' => ['primitive' => 'bool', 'declaredType' => null], 'origin' => ['pattern' => null, 'file' => 'fixture.yml'], 'nullable' => false, 'hasDefault' => true, 'default' => false];
+$owner['rank'] += ['hasDefault' => true, 'default' => 7];
+$owner['name'] += ['hasDefault' => true, 'default' => "it's {prefix}\\"];
+unset($owner);
+generated($request, function (string $directory): void {
+    $db = new Database(':memory:'); $install = require $directory . '/install.php'; $install($db->pdo, 'test_');
+    $manifest = (require $directory . '/storage-manifest.php')->withPrefix('test_');
+    $adapter = new SQLiteAdaptor($db, $manifest->tables, new FieldMap($manifest->columns), $manifest->placements);
+    $pending = new \Eleph\Runtime\Identity\PendingId('Owner');
+    $id = $adapter->write(new \Eleph\Runtime\Storage\Write\WriteBatch(new \Eleph\Runtime\Storage\Write\Insert('Owner', $pending, [])))->idFor($pending);
+    $row = $adapter->get('Owner', $id);
+    check($row->value('checked') === 0, 'A NOT NULL field left out of an insert must take its default');
+    check($row->value('rank') === 7, 'An integer default was not applied');
+    check($row->value('name') === "it's {prefix}\\", 'A string default did not survive quoting');
+    echo "PASS: generated column defaults fill fields an insert leaves out\n";
+});
+
 require __DIR__ . '/fixtures/PostStatus.php';
 $request = fixture('many-to-one');
 $request['schema']['types']['PostStatus'] = ['name' => 'PostStatus', 'primitive' => 'int', 'values' => ['draft', 'scheduled', 'published'], 'sourceFile' => 'status.yml'];

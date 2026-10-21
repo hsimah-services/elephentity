@@ -6,6 +6,7 @@ struct Column {
     ty: String,
     nullable: bool,
     identity: bool,
+    default: Option<String>,
     checks: Vec<String>,
     reference: Option<String>,
 }
@@ -54,6 +55,7 @@ fn column(name: &str, ty: &str, nullable: bool) -> Column {
         ty: ty.into(),
         nullable,
         identity: false,
+        default: None,
         checks: vec![],
         reference: None,
     }
@@ -92,12 +94,13 @@ impl Table {
             .iter()
             .map(|c| {
                 format!(
-                    "                {} => new Column({}, {}, {}, {}, null),",
+                    "                {} => new Column({}, {}, {}, {}, {}),",
                     q(&c.name),
                     q(&c.name),
                     q(&c.ty),
                     c.nullable,
-                    c.identity
+                    c.identity,
+                    c.default.as_deref().map(q).unwrap_or("null".into())
                 )
             })
             .collect::<Vec<_>>()
@@ -183,7 +186,55 @@ fn field(schema: &Value, f: &Value) -> Result<Column> {
     } else if primitive == "enum" {
         return Err(format!("Enum field {name} has no definition."));
     }
+    if b(&f["hasDefault"]) && !f["default"].is_null() {
+        c.default = Some(default(
+            &name,
+            primitive,
+            integer_enum,
+            values,
+            &f["default"],
+        )?);
+    }
     Ok(c)
+}
+/// The column's DEFAULT clause. Generated input seeds a default on create too, but a
+/// row written by anything else — or by input that predates the default — still needs
+/// the column to supply one, or a NOT NULL field without a value cannot be inserted.
+fn default(
+    name: &str,
+    primitive: &str,
+    integer_enum: bool,
+    values: &Value,
+    value: &Value,
+) -> Result<String> {
+    let invalid = || format!("Field {name} has a default that does not fit a {primitive} column.");
+    if let Some(values) = values.as_array() {
+        let label = value.as_str().ok_or_else(invalid)?;
+        let position = values
+            .iter()
+            .position(|v| v.as_str() == Some(label))
+            .ok_or_else(|| {
+                format!("Field {name} defaults to {label:?}, which is not one of its values.")
+            })?;
+        return Ok(if integer_enum {
+            position.to_string()
+        } else {
+            sql_string(label)
+        });
+    }
+    Ok(match primitive {
+        "bool" => if value.as_bool().ok_or_else(invalid)? {
+            "1"
+        } else {
+            "0"
+        }
+        .into(),
+        "int" | "id" => value.as_i64().ok_or_else(invalid)?.to_string(),
+        "float" if value.is_number() => value.to_string(),
+        "json" => sql_string(&value.to_string()),
+        "string" | "text" | "datetime" => sql_string(value.as_str().ok_or_else(invalid)?),
+        _ => return Err(invalid()),
+    })
 }
 fn pairs(entries: &[(String, String)]) -> String {
     entries
@@ -401,6 +452,9 @@ pub fn generate(schema: &Value) -> Result<(String, String)> {
                     sql.push_str(" PRIMARY KEY AUTOINCREMENT");
                 } else if !c.nullable {
                     sql.push_str(" NOT NULL");
+                }
+                if let Some(default) = &c.default {
+                    sql.push_str(&format!(" DEFAULT {default}"));
                 }
                 for check in &c.checks {
                     sql.push_str(&format!(" CHECK ({check})"));
