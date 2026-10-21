@@ -9,6 +9,6 @@
         }
     ],
     "require": {
-        "elephentity/sqlite": "0.1.0-alpha.7"
+        "elephentity/sqlite": "0.1.0-alpha.8"
     }
 }
