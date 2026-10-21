@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4294e78882bb6246ca58fd4058aea388",
+    "content-hash": "f5d1145b94ab562a52b2e1ecc8da6fd7",
     "packages": [
         {
             "name": "elephentity/runtime",
-            "version": "v0.14.1",
+            "version": "v0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
@@ -43,26 +43,26 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.1"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.16.1"
             },
             "time": "2026-10-18T22:32:08+00:00"
         },
         {
             "name": "elephentity/sqlite",
-            "version": "v0.1.0-alpha.7",
+            "version": "v0.1.0-alpha.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-sqlite.git",
-                "reference": "c7ae66a3bec4fda12cb55bab301f38faff2b7833"
+                "reference": "4859783aabe09d30f8dc9d04bae95f955aaa0967"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/c7ae66a3bec4fda12cb55bab301f38faff2b7833",
-                "reference": "c7ae66a3bec4fda12cb55bab301f38faff2b7833",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/4859783aabe09d30f8dc9d04bae95f955aaa0967",
+                "reference": "4859783aabe09d30f8dc9d04bae95f955aaa0967",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.13.1 || ^0.14",
+                "elephentity/runtime": "^0.13.1 || ^0.14 || ^0.15 || ^0.16",
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "ext-pdo_sqlite": "*",
@@ -84,10 +84,10 @@
             ],
             "description": "Experimental SQLite storage adaptor for the Elephentity PHP runtime.",
             "support": {
-                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.1.0-alpha.7",
+                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.1.0-alpha.8",
                 "issues": "https://github.com/hsimah-services/elephentity-sqlite/issues"
             },
-            "time": "2026-10-19T19:13:23+00:00"
+            "time": "2026-10-21T16:04:29+00:00"
         },
         {
             "name": "psr/container",

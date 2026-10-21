@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0ff425983a2328b591d69cbbd8c7e172",
+    "content-hash": "f1b6e3d40146e589a48b96275c3b2ed0",
     "packages": [
         {
             "name": "elephentity/graphql",
-            "version": "v0.2.0-alpha.3",
+            "version": "v0.2.0-alpha.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-graphql-php.git",
-                "reference": "e5f8893cfa2450dd93bbcc89bbbe357f89eff47b"
+                "reference": "b6bf4f306a5e0a64c0500d9b13fff8caec18053a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-graphql-php/zipball/e5f8893cfa2450dd93bbcc89bbbe357f89eff47b",
-                "reference": "e5f8893cfa2450dd93bbcc89bbbe357f89eff47b",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-graphql-php/zipball/b6bf4f306a5e0a64c0500d9b13fff8caec18053a",
+                "reference": "b6bf4f306a5e0a64c0500d9b13fff8caec18053a",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.13 || ^0.14",
+                "elephentity/runtime": "^0.13 || ^0.14 || ^0.15 || ^0.16",
                 "php": ">=8.3",
                 "webonyx/graphql-php": "^15.0"
             },
@@ -41,14 +41,14 @@
             ],
             "description": "Experimental Framework-independent GraphQL integration for the Elephentity PHP runtime.",
             "support": {
-                "source": "https://github.com/hsimah-services/elephentity-graphql-php/tree/v0.2.0-alpha.3",
+                "source": "https://github.com/hsimah-services/elephentity-graphql-php/tree/v0.2.0-alpha.4",
                 "issues": "https://github.com/hsimah-services/elephentity-graphql-php/issues"
             },
-            "time": "2026-10-19T19:13:29+00:00"
+            "time": "2026-10-21T16:04:29+00:00"
         },
         {
             "name": "elephentity/runtime",
-            "version": "v0.14.1",
+            "version": "v0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
@@ -83,7 +83,7 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.14.1"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.16.1"
             },
             "time": "2026-10-18T22:32:08+00:00"
         },
