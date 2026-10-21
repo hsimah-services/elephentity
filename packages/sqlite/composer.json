@@ -5,10 +5,15 @@
     "license": "MIT",
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "^0.13.1 || ^0.14 || ^0.15 || ^0.16",
+        "elephentity/runtime": "^0.17",
         "ext-pdo": "*",
         "ext-pdo_sqlite": "*",
         "ext-mbstring": "*"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.17.x-dev"
+        }
     },
     "autoload": {
         "psr-4": {

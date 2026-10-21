@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-codegen-php` is a read-only mirror of [`builders/codegen-php/`](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-php) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-codegen-php
 
 The PHP builder for [Elephentity](https://github.com/hsimah-services/elephentity).

@@ -1,3 +1,5 @@
+> **This is the source of truth.** `hsimah-services/elephentity-graphql-php` is a read-only mirror of [`packages/graphql/`](https://github.com/hsimah-services/elephentity/tree/main/packages/graphql) in [`hsimah-services/elephentity`](https://github.com/hsimah-services/elephentity), kept for Composer and Packagist. Open issues and pull requests on `elephentity`.
+
 # elephentity-graphql-php
 
 Experimental framework-independent GraphQL integration for Elephentity's PHP

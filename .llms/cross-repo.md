@@ -92,7 +92,7 @@ builders — plus the three C# builders once scaffolded.
 | `Signing/HeaderStyle` — the rendered header or its line count | regenerate **every** tree and commit it | re-freeze golden fixtures |
 | `Config/ProjectConfig` — which `eleph.json` keys are required | update the docs and `elephentity-examples`'s `clog/eleph.json` | — |
 | a target's `builder` pin `name@version`, its `source` key, and `targets` reporting `source` | strip `@version` when looking a builder up (never from a path); report `builder` as written and `source`; do not pass `source` to builders | — (a builder never sees the pin or `source`) |
-| the release artifact names (`release-binary.yml`, `docs/RELEASING.md`): tag `v<version>`, archives `<binary>-<version>-<rid>.tar.gz` (`.zip` on `win-x64`) holding `<binary>` and `LICENSE`, and one `SHA256SUMS` | `eleph install` finds and verifies archives by exactly these names | keep the released binary named as `eleph.json` pins it (`eleph-gen-csharp@0.1.0`) and tag `v<version>`; a repository adopting the workflow follows `docs/RELEASING.md` |
+| the release artifact names (`release-binary.yml`, `docs/RELEASING.md`): tag `v<version>` for `eleph` and `<binary>-v<version>` for every other program, archives `<binary>-<version>-<rid>.tar.gz` (`.zip` on `win-x64`) holding `<binary>` and `LICENSE`, and one `SHA256SUMS` | `eleph install` finds and verifies archives by exactly these names | keep the released binary named as `eleph.json` pins it (`eleph-gen-csharp@0.1.0`) and tag `<binary>-v<version>`; a repository adopting the workflow follows `docs/RELEASING.md` |
 
 **A header change invalidates every signature ever written.** Not just here: every
 generated file in every project using Elephentity fails verification at once, because the
@@ -160,7 +160,8 @@ Listed because guessing wrong in this direction is the expensive one.
 
 The memory mirror is entirely owned by `packages/memory` here, including Composer
 metadata, bins and CI. Change those in the source repository; the split workflow
-synchronizes it on main pushes and source tags. The memory builder lives in
+synchronizes it on main pushes and on `php-v*` tags, which release `runtime`, `memory`, `sqlite`
+and `graphql` together under one version (`docs/RELEASING.md#php-packages`). The memory builder lives in
 `packages/memory/bin` and depends on nothing, not even the runtime. The schema and CLI
 mirrors were retired with the PHP compiler and stop at v0.14.2.
 
