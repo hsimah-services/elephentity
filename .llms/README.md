@@ -23,14 +23,10 @@ is itself the thing this directory is about, so it needs its own issues.
 | `hsimah-services/elephentity-cli` | retired: last mirror of the PHP `eleph` (`packages/cli`), frozen at v0.14.2 | none |
 | `hsimah-services/elephentity-codegen` | Rust orchestrator, `eleph-codegen` | owns the protocol and the reusable `release-binary.yml`; runs builders; signs and writes |
 | `hsimah-services/elephentity-codegen-php` | PHP entity builder and, from step 6, `eleph-check-php` | builder protocol; PHP runtime type names; `provides.check` |
-| `hsimah-services/elephentity-codegen-wordpress` | WordPress storage builder | builder protocol; WordPress runtime type names |
-| `hsimah-services/elephentity-codegen-wpgraphql` | WPGraphQL builder | builder protocol; WPGraphQL runtime type names |
 | `hsimah-services/elephentity-codegen-sqlite` | SQLite storage builder | builder protocol; SQLite runtime type names |
 | `hsimah-services/elephentity-codegen-graphql-php` | generic PHP GraphQL builder | builder protocol; `graphql` integration; PHP GraphQL runtime type names |
 | `hsimah-services/elephentity-codegen-tsquid` | tsquid builder, adding C# output in step 20 | builder protocol; frontend and server initial-data output |
 | `hsimah-services/elephentity-codegen-typescript` | legacy TypeScript builder repository | no current protocol implementation |
-| `hsimah-services/elephentity-wordpress` | PHP WordPress storage adaptor | runtime storage contracts |
-| `hsimah-services/elephentity-wpgraphql` | PHP WPGraphQL runtime | runtime integration contracts |
 | `hsimah-services/elephentity-sqlite` | PHP SQLite storage adaptor | runtime storage contracts |
 | `hsimah-services/elephentity-graphql-php` | generic PHP GraphQL runtime | runtime integration contracts; webonyx schema |
 | `hsimah-services/elephentity-patterns` | reusable spec patterns | compiler pattern declarations |

@@ -83,7 +83,7 @@ hand corrections. Subsequent changes edit the yaml directly.
   inferred, and inferring it is what stops two entities disagreeing.
 - **Do not add fields the description does not mention** because they seem likely.
   `createdAt` is a reasonable suggestion, not a silent addition.
-- **Do not guess a `handle`.** Whether the entity needs a WordPress post type is a
+- **Do not guess a `handle`.** What the storage system should call the entity is a
   question with real consequences — ask it.
 
 ## What Elephentity cannot express

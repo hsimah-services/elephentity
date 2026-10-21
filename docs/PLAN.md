@@ -3,6 +3,13 @@
 An AI-native PHP framework that compiles human-readable specs into locked-down,
 deterministic business-logic code.
 
+> **Status note.** This is the original plan and decision record, kept as written. Since it was
+> written, Elephentity also targets C# (.NET, Cosmos DB), the compiler became a Rust binary, and
+> everything except `elephentity-examples` moved into this repository. **WordPress and WPGraphQL
+> support has been dropped**, so the passages below about `elephentity-wordpress`,
+> `elephentity-wpgraphql` and their builders are history, not a description of what is supported.
+> See [CLAUDE.md](../CLAUDE.md) and the [README](../README.md) for the current picture.
+
 > This document is the running record of design decisions. Every decision below has
 > been agreed unless marked **[proposed]** (suggested, not yet confirmed) or listed
 > under Open Questions.

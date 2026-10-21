@@ -32,8 +32,9 @@ Windows). It needs no PHP: the same `eleph` compiles specs for PHP and .NET proj
 
 `elephentity/memory` is the neutral driver: raw PHP objects, no platform. For a real database,
 add SQLite: `composer require elephentity/sqlite` and `composer require --dev
-elephentity/codegen-sqlite`. The WordPress adaptors are separate repositories and are not in
-active development: [elephentity-wordpress](https://github.com/hsimah-services/elephentity-wordpress).
+elephentity/codegen-sqlite`. There are no WordPress or WPGraphQL adaptors: support was dropped,
+and the last releases (`elephentity/wordpress` 0.4.x, `elephentity/wpgraphql` 0.3.x) are the end
+of those lines.
 
 For C#, install `eleph` the same way and add the runtime from NuGet instead of Composer:
 
@@ -125,10 +126,9 @@ generated/
 ```
 
 `memory` compiles to no physical schema — there is no `generated/memory/` beyond that
-directory existing, since `MemoryAdaptor` has no table or post type to provision.
-Install `elephentity/wordpress` instead and the `wordpress` target writes
-`generated/wordpress/storage-manifest.php`, `post-types.php` and `taxonomies.php`
-alongside it.
+directory existing, since `MemoryAdaptor` has no table to provision. Install
+`elephentity/sqlite`, set `driver: sqlite` in `spec/project.yml`, and a `sqlite` target writes
+`generated/sqlite/storage-manifest.php` and `install.php` alongside it.
 
 Every file carries a `sha256` digest in its header. Editing one is detected and
 rejected by the next build.
@@ -138,8 +138,8 @@ wiring, migrations.
 
 ## Repository layout
 
-The compiler, the code generator, every builder that isn't for WordPress, the PHP runtime and
-adaptors and the .NET packages live in this repository. Each is its own directory with its own CI
+The compiler, the code generator, every builder, the PHP runtime and adaptors and the .NET
+packages live in this repository. Each is its own directory with its own CI
 and its own version:
 
 | Directory | What it is | You install it from |
@@ -187,8 +187,8 @@ public function getBody(): string
 ```
 
 ```php
-// generated/wordpress/storage-manifest.php  (with elephentity/wordpress installed)
-'body' => new Column('body', 'LONGTEXT', false, false, null),
+// generated/sqlite/storage-manifest.php  (with elephentity/sqlite installed)
+'body' => new Column('body', 'TEXT', false, false, null),
 ```
 
 **Constraints reach the schema.** Nothing names a column or an index by hand:
@@ -202,9 +202,11 @@ public function getBody(): string
 ```
 
 ```php
-'barcode' => new Column('barcode', 'VARCHAR(64)', true, false, null),
+'barcode' => new Column('barcode', 'TEXT', true, false, null),
 'clog_item_barcode_uniq' => new Index('clog_item_barcode_uniq', ['barcode'], true),
 ```
+
+and `install.php` adds `CHECK (length("barcode") <= 64)` to the column.
 
 **A type is declared once and appears everywhere it is needed.**
 
@@ -215,8 +217,8 @@ primitive: string
 values: [days, months]
 ```
 
-A PHP backed enum, a `VARCHAR(6)` column sized to its longest member, and — with the
-`wpgraphql` integration configured — a GraphQL enum whose `DAYS`/`MONTHS` names sit
+A PHP backed enum, a `TEXT` column with a `CHECK ... IN ('days', 'months')` constraint, and —
+with the `graphql` integration configured — a GraphQL enum whose `DAYS`/`MONTHS` names sit
 over the stored values:
 
 ```php
@@ -240,7 +242,7 @@ edges:
       unique: false
 ```
 
-`cardinality: one` puts an indexed `location_id BIGINT UNSIGNED` on `clog_inventory`,
+`cardinality: one` puts an indexed `location_id INTEGER` on `clog_inventory`,
 and the inverse appears on the other side as a lazy query:
 
 ```php

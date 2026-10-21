@@ -1,11 +1,10 @@
 # Standalone packages (0.11)
 
 `elephentity/elephentity` is now a metapackage requiring only `elephentity/runtime`.
-It installs no compiler, CLI, generators, memory adaptor, WordPress or WPGraphQL code.
+It installs no compiler, CLI, generators, memory adaptor or platform adaptor code.
 
-**Upgrade warning:** upgrading the old bundle can remove its compiler commands and,
-for older bundled releases, WordPress integrations. Declare the packages your project
-uses explicitly before updating. Composer ignores a dependency's `require-dev`.
+**Upgrade warning:** upgrading the old bundle can remove its compiler commands. Declare the
+packages your project uses explicitly before updating. Composer ignores a dependency's `require-dev`.
 
 ```sh
 curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
@@ -15,15 +14,15 @@ composer require --dev elephentity/codegen elephentity/codegen-php
 
 The first line installs the `eleph` compiler, a single binary that needs no PHP.
 
-For WordPress, replace memory with these explicit dependencies:
+For a real database, replace memory with these explicit dependencies:
 
 ```sh
-composer require elephentity/wordpress
-composer require --dev elephentity/codegen-wordpress
+composer require elephentity/sqlite
+composer require --dev elephentity/codegen-sqlite
 ```
 
-For GraphQL also install `elephentity/wpgraphql` at runtime and
-`elephentity/codegen-wpgraphql` for development. `elephentity/cli` and
+For GraphQL also install `elephentity/graphql` at runtime and
+`elephentity/codegen-graphql-php` for development. `elephentity/cli` and
 `elephentity/schema`, the retired PHP compiler, stop at v0.14.2: remove them, and install
 `eleph` with `install.sh` instead. Remove `elephentity/elephentity` from require-dev too.
 

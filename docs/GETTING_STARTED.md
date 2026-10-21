@@ -14,17 +14,17 @@ Windows).
 **Installation is additive, by driver and by integration.** `elephentity/runtime`
 carries the storage port and the unit of work.
 `elephentity/memory` is the neutral driver — raw PHP objects, no platform — so a project
-that installs nothing else still has somewhere to write. Want WordPress instead?
+that installs nothing else still has somewhere to write. Want a real database instead?
 
 ```bash
-composer require elephentity/wordpress
-composer require --dev elephentity/codegen-wordpress
+composer require elephentity/sqlite
+composer require --dev elephentity/codegen-sqlite
 ```
 
 and drop `elephentity/memory` if you are not keeping it as a second driver. Want
-WPGraphQL on top of that? `composer require elephentity/wpgraphql` and
-`composer require --dev elephentity/codegen-wpgraphql`. Nobody who does not ask for
-WordPress gets WordPress.
+GraphQL on top of that? `composer require elephentity/graphql` and
+`composer require --dev elephentity/codegen-graphql-php`. Nobody who does not ask for
+SQLite gets SQLite.
 
 **The code generator is separate software**, which is why it is a second line and a dev
 dependency. `elephentity/codegen` runs your builders and writes the tree;
@@ -34,7 +34,7 @@ else changes, and no part of the framework learns what TypeScript is.
 
 That gives you `eleph` on your `PATH`, and in `vendor/bin`: `eleph-codegen` and
 `eleph-gen-php`, plus `eleph-gen-memory` from `elephentity/memory` and whichever of
-`eleph-gen-wordpress` / `eleph-gen-wpgraphql` you installed.
+`eleph-gen-sqlite` / `eleph-gen-graphql-php` you installed.
 `vendor/bin/eleph-codegen doctor` is the quickest way to confirm they are all where the
 config expects.
 
@@ -120,8 +120,8 @@ generated/           machine-owned, committed, never edited
 }
 ```
 
-Add a `wordpress` target (`vendor/bin/eleph-gen-wordpress`) and a `wpgraphql` target
-(`vendor/bin/eleph-gen-wpgraphql`) if you installed those packages above.
+Add a `sqlite` target (`vendor/bin/eleph-gen-sqlite`) and a `graphql-php` target
+(`vendor/bin/eleph-gen-graphql-php`) if you installed those packages above.
 
 Every target names the program that produces it. Elephentity generates nothing itself, so
 a target without a `builder` is one nothing can produce and `eleph.json` refuses it.
@@ -130,9 +130,9 @@ a target without a `builder` is one nothing can produce and `eleph.json` refuses
 
 **Configure a target for your driver, and one per integration you use.** They are what
 declares those things exist: `eleph generate` asks every configured builder what it
-provides *before* it reads a spec, so `driver: wordpress` with no wordpress target is an
-error naming the drivers that are installed, and `integrations: { wpgraphql: … }` with
-no wpgraphql target is an unknown integration. A project on the neutral `memory` driver
+provides *before* it reads a spec, so `driver: sqlite` with no sqlite target is an
+error naming the drivers that are installed, and `integrations: { graphql: … }` with
+no graphql-php target is an unknown integration. A project on the neutral `memory` driver
 configures neither and installs neither.
 
 They write **inside** the PHP tree, each in its own directory. The manifests are PHP the
@@ -161,8 +161,8 @@ storage:
   driver: memory
 ```
 
-Required. It holds the settings no entity can sensibly vary. On `driver: wordpress`,
-`storage` also takes `tablePrefix`, from `elephentity/wordpress`'s own declaration.
+Required. It holds the settings no entity can sensibly vary. On `driver: sqlite`,
+`storage` also takes `tablePrefix`, from `elephentity/codegen-sqlite`'s own declaration.
 
 ## Write the first entity
 
@@ -209,54 +209,35 @@ the whole workflow.
 
 ## Wire it up
 
-Codegen produces classes; something has to assemble them. The order matters, so the
-example carries a working one rather than this page describing it:
-[`clog/src/Bootstrap.php`](https://github.com/hsimah-services/elephentity-examples/blob/main/clog/src/Bootstrap.php),
-with
-[`clog/clog.php`](https://github.com/hsimah-services/elephentity-examples/blob/main/clog/clog.php)
-as the WordPress plugin around it, in
-[elephentity-examples](https://github.com/hsimah-services/elephentity-examples). Both
-are analysed at PHPStan level max against the committed generated tree, so a reference
-that no longer compiles is a build failure rather than a surprise. It requires
-`elephentity/wordpress` and `elephentity/wpgraphql` — the outline below does too, past
-the first three lines.
+Codegen produces classes; something has to assemble them: the storage adaptor, a PSR-11
+container holding the generated classes and your contracts, then the runtime on top. The order
+matters, and it is easy to get subtly wrong, so read a working one rather than this page:
 
-In outline:
+- [hsimah/clog](https://github.com/hsimah/clog) is a real application on the PHP and SQLite stack
+  (`server/standalone/`), with its generated tree committed.
+- [elephentity-examples](https://github.com/hsimah-services/elephentity-examples) has minimal
+  examples. Its `clog` is still a WordPress plugin, so use its `Bootstrap.php` for the shape of
+  the assembly only, not for the adaptor.
 
-```php
-$storage   = WordPress::adaptor($database, WordPress::manifest('generated/wordpress/storage-manifest.php'));
-$container = /* your PSR-11 container, holding the generated classes and your contracts */;
-$catalogue = new Catalogue($container);
-
-$runtime = new Runtime(
-    $storage,
-    $catalogue,
-    new UnitOfWorkFactory($storage, $catalogue, $processors),
-);
-
-(new BootCheck($catalogue, $container))->run();
-```
-
-`$runtime` is the one object the application holds. It is the `EntityGateway`, so the
-GraphQL layer takes it directly:
-
-```php
-Plugin::fromManifest('generated/wpgraphql/graphql-manifest.php', $runtime, $processors)->boot();
-```
+What the pieces are: `elephentity/sqlite` provides `Database` (a PDO SQLite connection) and
+`SQLiteAdaptor`, which implements the runtime's `StorageAdaptor`; the generated
+`generated/sqlite/storage-manifest.php` describes the tables it reads and writes. The runtime's
+`Runtime` is the one object the application holds. It is the `EntityGateway`, and
+`elephentity/graphql` takes it directly.
 
 ## Create the tables
 
-Migrating means diffing against a live database, which the build cannot reach — so
-this is a runtime call, on plugin activation:
+`generated/sqlite/install.php` returns a closure that creates the initial schema, atomically:
 
 ```php
-$plan = (new SchemaInstaller($database, $manifest))->install();
+$install = require 'generated/sqlite/install.php';
+$install($database->pdo, 'app_'); // the second argument is an optional extra table prefix
 ```
 
-Additive changes — a new table, a new nullable column, a new index — are applied.
-Anything destructive or ambiguous is refused, and then **nothing** is applied:
-`$plan->refusals` says what it saw and why it will not guess, and an explicit migration
-is the answer. A half-migrated schema is worse than an unmigrated one.
+It is an explicit initial installation: existing tables make it fail and roll back. Evolving
+a populated database is an application migration you write and review, because the build cannot
+see a live database. Use the same prefix when loading the manifest with
+`StorageManifest::withPrefix()`.
 
 ## .NET projects
 

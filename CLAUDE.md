@@ -16,8 +16,7 @@ There is no local PHP. Everything runs in a container:
 ./tools/php vendor/bin/phpunit --filter SomeTest
 ```
 
-For the four gates against a real spec and real builders — including the WordPress and
-WPGraphQL ones — see `clog` in
+For the four gates against a real spec and real builders, see the examples in
 [elephentity-examples](https://github.com/hsimah-services/elephentity-examples); it is
 a separate repository now, not something this one can run against.
 
@@ -52,14 +51,12 @@ The PHP compiler (`packages/schema`, `packages/cli`) was retired after the Rust 
 parity in v0.14.0. Its last releases, and the `elephentity-schema`/`elephentity-cli` mirrors,
 stop at v0.14.2.
 
-**This repository has no platform adaptor.** WordPress lives in
-[`elephentity-wordpress`](https://github.com/hsimah-services/elephentity-wordpress),
-WPGraphQL in
-[`elephentity-wpgraphql`](https://github.com/hsimah-services/elephentity-wpgraphql) —
-both moved out in elephentity#79, so a project installs WordPress by adding a
-dependency, not by removing one. `tools/check-architecture.php` enforces that no
-package here references WordPress at all. It uses the tokenizer, so prose in a doc
-comment is fine and a real call is not.
+**This repository has no platform adaptor, and WordPress and WPGraphQL are no longer supported.**
+Their packages (`elephentity/wordpress`, `elephentity/wpgraphql`) and builders
+(`elephentity/codegen-wordpress`, `elephentity/codegen-wpgraphql`) lived in their own repositories
+and end at their last releases; do not add to them or depend on them.
+`tools/check-architecture.php` still enforces that no package here references WordPress at all.
+It uses the tokenizer, so prose in a doc comment is fine and a real call is not.
 
 `packages/runtime` stays here — `memory` builds on it in-process — but is also mirrored, read-only, to
 [`elephentity-runtime`](https://github.com/hsimah-services/elephentity-runtime) on
@@ -91,14 +88,14 @@ edit a mirror; PRs go here. Workflows are path-filtered: `ci-<name>.yml`, `tests
 `release.yml` (binaries), `release-dotnet.yml` (NuGet).
 
 `eleph install` reads a builder's release from this repository under its prefixed tag
-(`compiler/src/cli/install.rs`, `tag_of`). The WordPress and WPGraphQL packages and builders, and
-`elephentity-examples`, remain separate repositories.
+(`compiler/src/cli/install.rs`, `tag_of`). `elephentity-examples` remains a separate repository.
 
 **Worked examples live in their own repository.**
 [`elephentity-examples`](https://github.com/hsimah-services/elephentity-examples) holds
-`clog`, a real WordPress plugin built on this framework, tested end to end against real
-builders and adaptors — that is where a runtime class renamed out from under a builder
-actually gets caught, not here.
+`clog` (a minimal repro of the real application, still a WordPress plugin for now; WordPress is
+being removed from it) and a `dotnet/` example, tested end to end against real builders and
+adaptors — that is where a runtime class renamed out from under a builder actually gets caught,
+not here.
 
 ## Conventions that are load bearing
 
@@ -122,8 +119,8 @@ actually gets caught, not here.
 
 ## Testing
 
-Pure logic is tested directly; anything touching WordPress is kept thin enough that the
-thin part needs no test. `tools/test-package-install.sh` runs all four gates end to end
+Pure logic is tested directly; anything touching a database or the filesystem is kept thin
+enough that the thin part needs no test. `tools/test-package-install.sh` runs all four gates end to end
 in a fresh Composer project, and is what proves the layers are wired together at all.
 
 `compiler/tests/specs/valid/` is the canonical spec exercising every construct. Most
@@ -135,8 +132,7 @@ The compiler, the code generator, the builders and the adaptors talk over a wire
 shared classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
 behind the compiler fails at run time rather than at build time. Most of them share this
 repository now, which lets one pull request change both sides, but it does not make the gap
-type-check. The WordPress and WPGraphQL packages and builders, and `elephentity-examples`, are
-still separate repositories.
+type-check. `elephentity-examples` is still a separate repository.
 
 **[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If
 you changed something on it, open an issue on each repository it reaches, before or with
