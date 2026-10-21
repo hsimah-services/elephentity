@@ -78,10 +78,12 @@ dependencies so that `tools/test-rust-ir` can run.
 | `builders/codegen` | `eleph-codegen`, the orchestrator | binary; Composer `elephentity/codegen` | binary `eleph-codegen-v<version>`, mirror `codegen-v<version>` |
 | `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp`, `-tsquid` | the C#, Cosmos, GraphQL.NET and tsquid builders | binary `eleph-gen-<name>`; tsquid also Composer | `eleph-gen-<name>-v<version>` |
 | `builders/codegen-php`, `-sqlite`, `-graphql-php` | the PHP-side builders | Composer (mirrors) | `codegen-<name>-v<version>` |
-| `packages/graphql`, `packages/sqlite` | PHP GraphQL and SQLite adaptors | Composer (mirrors) | `graphql-v<version>`, `sqlite-v<version>` |
+| `packages/runtime`, `memory`, `sqlite`, `graphql` | the PHP package family: runtime, memory driver, SQLite and GraphQL adaptors | Composer (mirrors) | `php-v<version>`: one tag, one version, all four |
 | `patterns/` | the pattern catalogue | — | — |
 
-Each program is versioned independently, so a tag names the program it releases. Packagist cannot
+Each program is versioned independently, so a tag names the program it releases. The exception is
+the PHP package family (runtime, memory, sqlite, graphql), which is released together under one
+version; see [docs/RELEASING.md](docs/RELEASING.md#php-packages). Packagist cannot
 publish several packages from one repository, so everything installed with Composer is mirrored,
 read-only, to its old repository by `split.yml` (the mirror gets the plain `v<version>` tag). Never
 edit a mirror; PRs go here. Workflows are path-filtered: `ci-<name>.yml`, `tests-<name>.yml`,

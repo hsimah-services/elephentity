@@ -5,10 +5,14 @@ on:
     branches: [main]
     paths:
       - 'packages/graphql/**'
+      - 'packages/runtime/**'
+      - 'tools/family-version'
       - '.github/workflows/tests-graphql.yml'
   pull_request:
     paths:
       - 'packages/graphql/**'
+      - 'packages/runtime/**'
+      - 'tools/family-version'
       - '.github/workflows/tests-graphql.yml'
 
 permissions:
@@ -31,6 +35,13 @@ jobs:
           extensions: pdo_sqlite, mbstring
           coverage: none
           tools: composer:v2
+      # The adaptor is tested against the runtime in this commit, not the last one on Packagist, so
+      # a runtime change that breaks it fails here. A pull request checkout has no branch for
+      # Composer to read a version from, so the version comes from tools/family-version.
+      - name: Resolve the runtime from this checkout
+        run: |
+          version="$(../../tools/family-version)"
+          composer config repositories.runtime "{\"type\":\"path\",\"url\":\"../runtime\",\"options\":{\"versions\":{\"elephentity/runtime\":\"$version\"}}}"
       - uses: ramsey/composer-install@v3
         with:
           working-directory: packages/graphql

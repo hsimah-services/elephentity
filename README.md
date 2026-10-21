@@ -156,9 +156,10 @@ and its own version:
 Packagist can't publish several packages from one repository, so every Composer package is
 mirrored, read-only, to its own repository. Open issues and pull requests here, never on a mirror.
 
-**Releases are per program.** A tag names what it releases: `v1.2.3` is `eleph` (and the `runtime`
-and `memory` mirrors), `eleph-gen-csharp-v1.2.3` is that builder, `dotnet-v1.2.3` publishes the
-NuGet packages, and `sqlite-v1.2.3` tags the SQLite mirror. [docs/RELEASING.md](docs/RELEASING.md)
+**Releases are per program.** A tag names what it releases: `v1.2.3` is `eleph`,
+`eleph-gen-csharp-v1.2.3` is that builder, `dotnet-v1.2.3` publishes the NuGet packages, and
+`php-v1.2.3` releases the PHP packages (`runtime`, `memory`, `sqlite` and `graphql`) together under
+one version, like the NuGet packages. [docs/RELEASING.md](docs/RELEASING.md)
 has the details. The full layout, with the conventions that apply to each, is in
 [CLAUDE.md](CLAUDE.md#layout).
 
