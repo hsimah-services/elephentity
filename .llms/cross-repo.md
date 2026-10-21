@@ -5,17 +5,18 @@
 > repository (`builders/*`, `dotnet/`, `packages/graphql`, `packages/sqlite`, `patterns/`); the
 > table of what is where is in [CLAUDE.md](../CLAUDE.md). A "repository boundary" below is now a
 > directory boundary: the contracts are unchanged, but one pull request can change both sides. The
-> WordPress and WPGraphQL packages and builders, and `elephentity-examples`, are still separate.
+> `elephentity-examples` is still separate. WordPress and WPGraphQL support has been dropped, and
+> their repositories are not part of this contract any more.
 
 Everything shared by the repositories in [README.md](README.md). A change to anything
 on this list needs issues on the repositories named beside it; internal changes do not.
 
-There are nine current protocol implementations across eight repositories:
+There are seven current protocol implementations across six repositories:
 `elephentity` (compiler client and memory builder), `elephentity-codegen` (orchestrator)
-and six Rust builders: php, wordpress, wpgraphql, sqlite, graphql-php and tsquid.
-The three planned C# builders bring this to twelve implementations across eleven
+and four Rust builders: php, sqlite, graphql-php and tsquid.
+The three C# builders bring this to ten implementations across nine
 repositories; rewriting the compiler in Rust replaces its client rather than adding one.
-Typed builders (php, wordpress, wpgraphql, sqlite, graphql-php) keep their live IR copy in
+Typed builders (php, sqlite, graphql-php) keep their live IR copy in
 `rust/ir.rs`; the PHP `src/Ir/*` those repositories still ship is not the live copy. The
 tsquid builder has no typed copy: it reads `schema.project.integrations` straight from
 the request JSON in `rust/main.rs`.
@@ -40,11 +41,11 @@ together, but C# builders' `rust/runtime.rs` constants still cross a repository 
 | the compiler request (`Ir::request()` in `compiler/src/ir/mod.rs`) | update `Protocol/CompilerRequest` | — |
 | what `provides` may contain (`compiler/src/cli/installed.rs`) | — nothing; `provides` is opaque to it | answer the new shape to `describe` (only the builder(s) the new shape concerns) |
 | a class name or namespace under `packages/runtime/src/` | — | update the matching constant in its own `src/Runtime.php` (php builder: `rust/runtime.rs`), if it names that class |
-| an interface under `packages/runtime/src/` that `elephentity-wordpress` or `elephentity-wpgraphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | `elephentity-wordpress`/`elephentity-wpgraphql` must update the implementing class to match |
+| an interface under `packages/runtime/src/` that `packages/sqlite` or `packages/graphql` implements (`StorageAdaptor`, `Verifier`, `Viewer`, …) | — | the adaptor that implements it must update the class to match |
 | `eleph.json` keys **it** reads (`spec`, `codegen`, `builders`; `codegen` may be pinned as `name@version`) | only if the key is also the orchestrator's (`builders` is) | — |
 
-**Every builder repository** means php, wordpress, wpgraphql, sqlite, graphql-php
-and tsquid, plus csharp, cosmos and graphql-csharp once scaffolded. Update each
+**Every builder** means php, sqlite, graphql-php
+and tsquid, plus csharp, cosmos and graphql-csharp. Update each
 typed `rust/ir.rs` copy that reads the changed fields and its version gate; for tsquid,
 check the JSON paths `rust/main.rs` reads. The memory
 builder reads no IR fields and only needs envelope-version changes.
@@ -100,9 +101,9 @@ expensive change available in this system. Say so in the issue title.
 
 ---
 
-## Changing `elephentity-codegen-php`, `elephentity-codegen-wordpress` or `elephentity-codegen-wpgraphql`
+## Changing a PHP builder: `codegen-php`, `codegen-sqlite` or `codegen-graphql-php`
 
-The three builder repositories reach the rest of the ecosystem the same way; read the
+The three PHP builders reach the rest of the ecosystem the same way; read the
 row for the one you changed.
 
 | You changed | `elephentity-examples` must | `elephentity-codegen` must |
@@ -111,9 +112,8 @@ row for the one you changed.
 | the shape of `class-map.php` (php builder only) | — (`eleph-check-php` reads it; it lives in `elephentity-codegen-php` with the builder) | — |
 | what it answers to `describe` | — (`Installed` lives in `elephentity`; open an issue there too) | — |
 | `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `elephentity`'s compiler `IR_VERSION` and IR, and `eleph-gen-memory`'s `IR_VERSION`, in step | bump `Envelope::IR_VERSION` |
-| its `src/Runtime.php` constants (php builder: `rust/runtime.rs`) | regenerate `clog` — a stale constant fails there, at boot | — (`elephentity-wordpress`/`elephentity-wpgraphql` own the classes named; keep them in step, or file there too) |
+| its `src/Runtime.php` constants (php builder: `rust/runtime.rs`) | regenerate `clog` — a stale constant fails there, at boot | — (`packages/sqlite` and `packages/graphql` own the classes named; keep them in step) |
 | which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
-| a package pattern it ships (wordpress builder: `resources/patterns/*.yml`) | none, if the pattern's shape is unchanged; regenerate if it is | — |
 
 **Generated-byte changes always reach `elephentity-examples`,** even the cosmetic ones.
 Its committed `clog/generated/` tree is signed, so a whitespace change is a digest
@@ -122,22 +122,21 @@ thing as a change in a builder that the example does not notice.
 
 ---
 
-## Changing `elephentity-wordpress` or `elephentity-wpgraphql`
+## Changing `packages/sqlite` or `packages/graphql`
 
-The two runtime adaptor repositories (elephentity#79). Neither speaks the wire protocol
-itself — a builder names their classes as strings, not imports — so nothing here bumps
-`Envelope::VERSION` or `IrCodec::VERSION`.
+The two PHP runtime adaptors. Neither speaks the wire protocol itself — a builder names their
+classes as strings, not imports — so nothing here bumps `Envelope::VERSION` or `IrCodec::VERSION`.
 
-| You changed | the matching builder repository must | `elephentity-examples` must |
+| You changed | the matching builder must | `elephentity-examples` must |
 |---|---|---|
-| a class name or namespace this package exports (`elephentity-wordpress`: anything under `Eleph\WordPress\`; `elephentity-wpgraphql`: `Eleph\WPGraphQL\`) | update the matching constant in its own `src/Runtime.php` — nothing fails there until a project boots on the old name | regenerate `clog` and confirm it still boots; this is the check that actually catches a missed update |
+| a class name or namespace this package exports (`packages/sqlite`: anything under `Eleph\SQLite\`; `packages/graphql`: `Eleph\GraphQL\`) | update the matching constant in its own `src/Runtime.php` (`rust/runtime.rs` for the Rust builders) — nothing fails there until a project boots on the old name | regenerate the example and confirm it still boots; this is the check that actually catches a missed update |
 | a class implementing `Eleph\Runtime\Storage\StorageAdaptor`, `Conformance\Verifier`, `Policy\Viewer` or `Policy\ViewerProvider` | — | run the four gates; `eleph check` exercises the verifier for real |
-| its own `composer.json` version constraint on `elephentity/runtime` | — | bump the matching constraint in `clog/composer.json` once a new version is tagged |
+| its own `composer.json` constraint on `elephentity/runtime` | — | bump the matching constraint in the example's `composer.json` once a new version is tagged |
 
-**A rename here is invisible to every test in this repository, in the matching builder
-repository, and in `elephentity`.** It fails in a real project, at boot, when the
-exported manifest or verifier names a class that no longer exists. Regenerating `clog`
-in `elephentity-examples` is the only thing that actually runs that path.
+**A rename here is invisible to every test in this repository, in the matching builder, and
+in `compiler/`.** It fails in a real project, at boot, when the exported manifest or verifier
+names a class that no longer exists. Regenerating an example is the only thing that actually
+runs that path.
 
 ---
 
@@ -156,8 +155,8 @@ Listed because guessing wrong in this direction is the expensive one.
   at which point it is the first row of the builder table above, and it is the bytes
   that are the contract, not the decision.
 - **One builder's `src/Runtime.php`, `rust/ir.rs` or `src/Protocol/*` copy is invisible to
-  every other builder.** Each is independent; `elephentity-codegen-wordpress` falling
-  behind the IR does not reach `elephentity-codegen-wpgraphql` or vice versa.
+  every other builder.** Each is independent; `codegen-sqlite` falling
+  behind the IR does not reach `codegen-graphql-php` or vice versa.
 
 The memory mirror is entirely owned by `packages/memory` here, including Composer
 metadata, bins and CI. Change those in the source repository; the split workflow

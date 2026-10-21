@@ -94,14 +94,18 @@ compiler/              the eleph command (Rust): spec parser, JSON Schemas,  (re
 packages/
   runtime/             storage port, unit of work, verification, loaders     (shipped, mirrored)
   memory/              the neutral driver and its builder; no physical schema (shipped, mirrored)
+  sqlite/              the PHP SQLite storage adaptor                        (shipped, mirrored)
+  graphql/             the PHP GraphQL integration                           (shipped, mirrored)
+builders/              the code generator and every builder (Rust, some with PHP launchers)
+dotnet/                the .NET runtime and adaptors (NuGet)
+patterns/              the pattern catalogue
 tools/
   php                  run a command in the throwaway PHP container
   check-architecture.php  enforces the platform-free core
 ```
 
-The code generator, the WordPress adaptor and the WPGraphQL runtime are separate
-repositories now — `elephentity-codegen(-php)`, `elephentity-wordpress` and
-`elephentity-wpgraphql` — not packages here. `packages/runtime` stays in this
-repository (`schema`, `cli` and `memory` all build on it in-process) but is also
+Everything above is in this repository, each with its own CI workflow; the table of what
+ships where is in [`CLAUDE.md`](../CLAUDE.md#layout). `packages/runtime` is also
 mirrored out, read-only, so it is installable without the rest of this repository —
-see [`.llms/cross-repo.md`](../.llms/cross-repo.md).
+see [`.llms/cross-repo.md`](../.llms/cross-repo.md). There is no WordPress or WPGraphQL
+adaptor: that support was dropped.

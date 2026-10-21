@@ -39,8 +39,6 @@ const KNOWN: &[(&str, &str)] = &[
     ("eleph", "elephentity"),
     ("eleph-codegen", "elephentity"),
     ("eleph-gen-php", "elephentity"),
-    ("eleph-gen-wordpress", "elephentity-codegen-wordpress"),
-    ("eleph-gen-wpgraphql", "elephentity-codegen-wpgraphql"),
     ("eleph-gen-sqlite", "elephentity"),
     ("eleph-gen-graphql-php", "elephentity"),
     ("eleph-gen-tsquid", "elephentity"),

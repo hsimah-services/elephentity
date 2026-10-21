@@ -1,5 +1,12 @@
 # The spec format
 
+> **WordPress and WPGraphQL are no longer supported.** Their adaptors and builders have been
+> dropped, so a new spec should use `driver: memory` or `driver: sqlite`, and the `graphql`
+> integration for GraphQL. The sections and examples below that mention `driver: wordpress`,
+> `wpgraphql`, `handle` as a post type, or `integrations.wordpress` describe behaviour the
+> compiler still parses but that has no supported adaptor; do not copy them into a new project.
+> They will be removed when the compiler's own support is.
+
 **The JSON Schemas are the authority.** When this document and a schema disagree, the
 schema is right.
 

@@ -16,7 +16,7 @@ Two words carry real ambiguity, so they are always qualified.
 - the **compiled schema** — the compiler's `Schema` (`compiler/src/ir`), the in-memory result of compiling
   every spec file, also called the IR;
 - the **database schema** — tables and columns, produced by whichever driver's adaptor
-  is installed (`elephentity/wordpress`, today; `elephentity/memory` has none).
+  is installed (`elephentity/sqlite`, for example; `elephentity/memory` has none).
 
 Never write "the schema" unqualified.
 
@@ -67,7 +67,7 @@ non-skip result wins.
 **Declared type.** A value type in `types/`, aliasing exactly one primitive. Either an
 **enum** (it has `values:`) or a **value type** (it has `processors: true`).
 
-**Integration.** An external system an entity can be exposed to — `wpgraphql` today.
+**Integration.** An external system an entity can be exposed to — `graphql`, for example.
 Unlike a pattern it contributes no structure, only the settings the exposure needs, and
 its permitted keys are declared in PHP by the package providing it rather than in user
 YAML. Opt-in twice: the project declares what it speaks, each entity declares whether
@@ -75,16 +75,16 @@ it is exposed.
 
 **Configuration.** Parameters a pattern declares with `config:` and each entity supplies
 with `configure:`. The compiler validates values against the pattern's own declaration,
-which is what lets a WordPress pattern carry WordPress settings without the core
+which is what lets a pattern carry settings for one platform without the core
 learning what any of them mean.
 
 **Driver.** Which storage backend the project uses. Declared once in the project spec,
-because a unit of work has one adaptor. `memory` (no physical schema) and `wordpress`
-exist; each ships from its own package (`elephentity/memory`, `elephentity/wordpress`)
+because a unit of work has one adaptor. `memory` (no physical schema) and `sqlite`
+exist; each ships from its own package (`elephentity/memory`, `elephentity/sqlite`)
 and is answered over the wire, at `describe`, by the matching builder.
 
-**Handle.** What the storage system calls this entity — a post type slug under
-WordPress, a collection name elsewhere. Deliberately driver-agnostic in name, and
+**Handle.** What the storage system calls this entity — a table name under
+SQLite, a collection name elsewhere. Deliberately driver-agnostic in name, and
 validated per driver.
 
 ---
@@ -148,7 +148,7 @@ touch anything else.
 rather than discoverable by reading the implementation.
 
 **SideEffect.** Something that runs as part of a commit. Declared in the entity spec and
-nowhere else, which is the difference between this and WordPress hooks.
+nowhere else, which is the difference between this and hooks registered anywhere in the code.
 
 **preCommit.** After actions, before verification and storage. Side effects may change
 pending fields and relationships; a throw cancels before writes. Creates still have
@@ -211,8 +211,8 @@ targets, field types, deletion rules, and every contract the project owes. All o
 a walk over the spec, done once at build rather than per request.
 
 **Storage manifest.** The compiled physical schema — tables, columns, edge placements —
-emitted per driver. Unprefixed, because a WordPress install's prefix is a property of
-the installation rather than the spec.
+emitted per driver. Unprefixed by the installation: a deployment can add its own table prefix when the
+schema is installed.
 
 **Gateway.** `EntityGateway` — entities addressed by name rather than type. The one
 place the framework gives up type safety, because a protocol layer is handed strings
@@ -297,7 +297,3 @@ fails only here.
 **Canonical order.** The fixed order keys are written in. Applies to **keys**, never to
 **members** — sideEffect declaration order is execution order, so sorting members would
 change behaviour.
-
-**WordPress-specific vocabulary** — Projection, Orphan guard, Refusal — moved to
-[`elephentity-wordpress`'s own glossary](https://github.com/hsimah-services/elephentity-wordpress/blob/main/docs/GLOSSARY.md)
-when the adaptor did (elephentity#79). Nothing above this line is WordPress-specific.

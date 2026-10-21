@@ -107,9 +107,9 @@ Say so plainly rather than working around it:
 - **Field visibility and access rules.** Every exposed field is readable and every
   settable one is writable by anyone who can reach the API. Authorisation belongs in
   the layer above.
-- **The WordPress post row's contents.** A `handle:` registers the post type, and
-  `postId` is a column like any other — nothing creates or maintains the `wp_posts`
-  row, so an application that wants one writes it in a `postCommit` sideEffect.
+- **Rows outside the entity's own table.** `postId`, where an entity has one, is a column
+  like any other — nothing creates or maintains a row elsewhere for it, so an application that
+  wants one writes it in a `postCommit` sideEffect.
 
 ## Reference
 
