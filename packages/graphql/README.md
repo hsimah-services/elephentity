@@ -44,9 +44,6 @@ built client. Add `--package-version 0.1.0-alpha.3` after publishing both integr
 packages to validate the published artifacts. See
 [runtime compatibility validation](docs/runtime-compatibility.md) for release evidence.
 
-See [extraction notes](docs/extraction.md) for behavior still implemented in Clog
-and the work required before a general release.
-
 ## Package regression checks
 
 After installing Composer dependencies, run `composer test` with PHP 8.3 or later.

@@ -64,8 +64,6 @@ release evidence and fixture revision.
 Session monitoring is performed by the active agent. No background service or
 scheduled job is installed by this repository.
 
-See [the extraction notes](docs/extraction.md) before using this prototype.
-
 ## Package regression checks
 
 After installing Composer dependencies, run `composer test` with PHP 8.3 or later.
