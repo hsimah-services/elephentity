@@ -108,7 +108,7 @@ final readonly class GlobalId implements Stringable
         $decoded = is_string($value) ? self::decode($value) : null;
 
         if (null !== $decoded && null !== $expectedType && $decoded->type !== $expectedType) {
-            throw new InvalidArgumentException(sprintf('Expected a %s ID, received %s.', $expectedType, $decoded->type));
+            throw new WrongIdType(sprintf('Expected a %s ID, received %s.', $expectedType, $decoded->type));
         }
 
         return null === $decoded ? $value : $decoded->id;
