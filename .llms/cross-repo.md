@@ -5,7 +5,7 @@
 > repository (`builders/*`, `dotnet/`, `packages/graphql`, `packages/sqlite`, `patterns/`); the
 > table of what is where is in [CLAUDE.md](../CLAUDE.md). A "repository boundary" below is now a
 > directory boundary: the contracts are unchanged, but one pull request can change both sides. The
-> `elephentity-examples` is still separate. WordPress and WPGraphQL support has been dropped, and
+> `elephentity-examples` is still separate. This is the only copy of `.llms/`; the per-program copies were removed. WordPress and WPGraphQL support has been dropped, and
 > their repositories are not part of this contract any more.
 
 Everything shared by the repositories in [README.md](README.md). A change to anything

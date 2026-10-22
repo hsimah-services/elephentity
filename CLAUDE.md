@@ -1,10 +1,28 @@
 # Elephentity
 
-An AI-native PHP framework that compiles human-readable specs into locked, signed
-business logic. Read [docs/PLAN.md](docs/PLAN.md) first — it carries every design
-decision and the reasoning behind it, and this file assumes it.
-[docs/GLOSSARY.md](docs/GLOSSARY.md) defines the vocabulary, and
+An AI-native framework that compiles human-readable specs into locked, signed business
+logic, in PHP or C#. [docs/PLAN.md](docs/PLAN.md) carries every design decision and the
+reasoning behind it, and this file assumes it — but it is long: search it, do not read it
+through. [docs/GLOSSARY.md](docs/GLOSSARY.md) defines the vocabulary, and
 [docs/BUILDERS.md](docs/BUILDERS.md) is the contract a code generator implements.
+
+## Start from the task
+
+[docs/README.md](docs/README.md) indexes the docs by task, and [skills/README.md](skills/README.md)
+the agent skills. They are symlinked into `.claude/skills`, so they load here automatically.
+
+| You are… | Go to |
+|---|---|
+| adding a builder (output generator) | `skills/eleph-add-builder` |
+| adding a storage adaptor / driver | `skills/eleph-add-adaptor` |
+| adding an integration (API surface) | `skills/eleph-add-integration` |
+| changing the spec format or compiler | `compiler/`, `skills/eleph/reference/spec-format.md` (keep it in step with `compiler/resources/*.schema.json`) |
+| changing anything a builder or runtime reads | [`.llms/README.md`](.llms/README.md), then [`.llms/cross-repo.md`](.llms/cross-repo.md) |
+| releasing | [docs/RELEASING.md](docs/RELEASING.md) — only when asked |
+
+When a change alters how a project is used (a command, an `eleph.json` key, a generated
+contract), update the usage skills in the same pull request: `skills/eleph` and
+`skills/eleph-spec-author` are what other people's agents read.
 
 ## Working in this repository
 
@@ -128,19 +146,21 @@ in a fresh Composer project, and is what proves the layers are wired together at
 `compiler/tests/specs/valid/` is the canonical spec exercising every construct. Most
 compiler tests compile it.
 
-## Before you commit anything that crosses a repository boundary
+## Before you commit anything that crosses a program boundary
 
 The compiler, the code generator, the builders and the adaptors talk over a wire format, not a
 shared classpath — so nothing type-checks across the gap, and a builder or adaptor that falls
-behind the compiler fails at run time rather than at build time. Most of them share this
-repository now, which lets one pull request change both sides, but it does not make the gap
-type-check. `elephentity-examples` is still a separate repository.
+behind the compiler fails at run time rather than at build time. They share this repository,
+which lets one pull request change both sides, but it does not make the gap type-check.
+`elephentity-examples` is still a separate repository.
 
-**[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If
-you changed something on it, open an issue on each repository it reaches, before or with
-the push. [`.llms/README.md`](.llms/README.md) has the rule and
-[`.llms/issue-template.md`](.llms/issue-template.md) the shape. Everything depends on
-`dev-main`, so a contract change that lands alone breaks somebody's build that afternoon.
+**[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If you
+changed something on it, change every program it reaches in the same pull request, and open an
+issue on `elephentity-examples` before or with the push. [`.llms/README.md`](.llms/README.md)
+has the rule and [`.llms/issue-template.md`](.llms/issue-template.md) the shape. There is one
+copy of `.llms/`, here; programs under `builders/` and `dotnet/` do not carry their own.
+Everything depends on `dev-main`, so a contract change that lands alone breaks somebody's
+build that afternoon.
 
 ## Before you commit
 
