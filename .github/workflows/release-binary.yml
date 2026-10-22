@@ -69,8 +69,29 @@ jobs:
       - name: Set up Rust
         run: rustup toolchain install stable --profile minimal --target "$TARGET"
 
+      - name: Stamp the version into the manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # `--version` reports the crate version, so a tagged build takes the tag's. The edit is
+          # scoped to [package] and is never committed. A dev build keeps the crate version.
+          awk -v v="$VERSION" '
+            /^\[/ { in_package = ($0 == "[package]") }
+            in_package && !done && /^version[ \t]*=/ { print "version = \"" v "\""; done = 1; next }
+            { print }
+            END { if (!done) { print "no [package] version in the manifest" > "/dev/stderr"; exit 1 } }
+          ' "$MANIFEST_PATH" > "$MANIFEST_PATH.stamped"
+          mv "$MANIFEST_PATH.stamped" "$MANIFEST_PATH"
+          grep -m1 '^version' "$MANIFEST_PATH"
+
       - name: Build
-        run: cargo +stable build --release --locked --manifest-path "$MANIFEST_PATH" --target "$TARGET"
+        run: |
+          # The stamp changes the package's own entry in Cargo.lock, which --locked refuses;
+          # cargo still keeps every dependency at its locked version.
+          locked=--locked
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then locked=; fi
+          cargo +stable build --release $locked --manifest-path "$MANIFEST_PATH" --target "$TARGET"
 
       - name: Package
         id: package
