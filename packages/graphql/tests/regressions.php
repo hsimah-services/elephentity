@@ -13,6 +13,7 @@ spl_autoload_register(static function (string $class): void {
 use Eleph\GraphQL\Manifest\{Manifest, ObjectTypeEntry, FieldEntry, GraphQLType, ConnectionEntry, MutationEntry, RootFieldEntry, QueryFieldEntry};
 use Eleph\GraphQL\Registration\{MutationRegistrar, TypeRegistrar};
 use Eleph\GraphQL\Relay\GlobalId;
+use Eleph\GraphQL\Relay\WrongIdType;
 use Eleph\GraphQL\Resolver\Connections;
 use Eleph\GraphQL\SchemaBuilder;
 use Eleph\Runtime\Gateway\EntityGateway;
@@ -82,6 +83,7 @@ rejects(fn () => $root(null, ['id' => $wrong]));
 rejects(fn () => $configs['createApiBook']['mutateAndGetPayload'](['author' => GlobalId::encode('ApiBook', 1)]));
 rejects(fn () => $configs['createApiBook']['mutateAndGetPayload'](['authors' => [$wrong, GlobalId::encode('ApiBook', 1)]]));
 check($gateway->calls === [], 'A rejected ID reached the gateway.');
+try { GlobalId::raw($wrong, 'ApiBook'); } catch (WrongIdType $e) { check($e->isClientSafe() && $e->getMessage() === 'Expected a ApiBook ID, received ApiAuthor.', 'A wrong-type ID error is not client-safe.'); }
 $configs['createApiBook']['mutateAndGetPayload'](['author' => $wrong, 'authors' => [$wrong, '2']]);
 check($gateway->input === ['author' => '1', 'authors' => ['1', '2']], 'Matching relationship IDs were not decoded.');
 $configs['updateApiBook']['mutateAndGetPayload'](['id' => GlobalId::encode('ApiBook', 1)]);
