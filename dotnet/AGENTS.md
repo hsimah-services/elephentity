@@ -64,14 +64,12 @@ once, in `Directory.Packages.props`. Do not put a `Version` on a `PackageReferen
 - **Keep it simple.** This is a runtime for generated code, not a framework. No
   abstraction with one implementation, no option nobody asked for.
 
-## Before you commit anything that crosses a repository boundary
+## Before you commit anything that crosses a program boundary
 
 The C# builders name types and constructors in this repository as strings
 (`rust/runtime.rs`), so renaming one is invisible here and fails in a generated project.
 
-**[`.llms/cross-repo.md`](.llms/cross-repo.md) is the closed list of what crosses.** If you
+**[`.llms/cross-repo.md`](../.llms/cross-repo.md) is the closed list of what crosses.** If you
 changed something on it, open an issue on each repository it reaches, before or with the
-push. [`.llms/README.md`](.llms/README.md) has the rule and
-[`.llms/issue-template.md`](.llms/issue-template.md) the shape. The `.llms/` files are
-identical in every repository that carries them: change the source in `elephentity` first,
-then copy it here byte for byte.
+push. [`.llms/README.md`](../.llms/README.md) has the rule and
+[`.llms/issue-template.md`](../.llms/issue-template.md) the shape. There is one copy of the `.llms/` files, at the root of the monorepo; do not copy it here.

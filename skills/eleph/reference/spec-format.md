@@ -1,12 +1,5 @@
 # The spec format
 
-> **WordPress and WPGraphQL are no longer supported.** Their adaptors and builders have been
-> dropped, so a new spec should use `driver: memory` or `driver: sqlite`, and the `graphql`
-> integration for GraphQL. The sections and examples below that mention `driver: wordpress`,
-> `wpgraphql`, `handle` as a post type, or `integrations.wordpress` describe behaviour the
-> compiler still parses but that has no supported adaptor; do not copy them into a new project.
-> They will be removed when the compiler's own support is.
-
 **The JSON Schemas are the authority.** When this document and a schema disagree, the
 schema is right.
 
@@ -37,7 +30,7 @@ One file, `spec/project.yml`, and **every project needs one**.
 project: Clog
 description: Inventory tracking.
 storage:
-  driver: wordpress
+  driver: sqlite        # memory | sqlite | cosmos — whichever a configured target provides
   tablePrefix: clog_
 ```
 
@@ -45,9 +38,8 @@ storage:
 letting entities differ would invite a lie the format cannot honour. Pattern
 `requires: { driver: … }` is checked against this, once.
 
-`tablePrefix` is prepended to every entity's table and **stacks** with whatever the
-driver adds: under WordPress the real table is `$wpdb->prefix` + this + the entity's
-own `table`.
+`tablePrefix` is prepended to every entity's table. A driver may take further storage
+keys of its own, declared by its builder (`eleph-codegen describe` lists them).
 
 It is deliberately shallow. It may **not** declare patterns or fields applied to every
 entity — that would mean reading an entity spec no longer tells you what that entity
@@ -59,16 +51,18 @@ An integration exposes an entity to an external system. Distinct from a pattern,
 the difference is what they contribute: a pattern adds fields, edges and actions; an
 integration adds no structure at all, only settings for the exposure.
 
-Its permitted keys are declared **in PHP by the package providing it**, not as user
-YAML — the keys are a property of the integration rather than a choice the project
-makes. `eleph validate` checks against whatever is installed.
+Its permitted keys are declared **by the builder providing it** (in its `describe`
+answer), not as user YAML — the keys are a property of the integration rather than a
+choice the project makes. `eleph validate` checks against the builders `eleph.json`
+configures. The one integration today is `graphql`, provided by `eleph-gen-graphql-php`
+and `eleph-gen-graphql-csharp`; to add another, see the `eleph-add-integration` skill.
 
 Opt-in twice. The project says what it speaks:
 
 ```yaml
 # spec/project.yml
 integrations:
-  wpgraphql:            # or with settings: { rootQueries: false }
+  graphql: {}           # or with project settings, if the builder declares any
 ```
 
 and each entity says whether it is exposed, and how:
@@ -76,16 +70,16 @@ and each entity says whether it is exposed, and how:
 ```yaml
 # spec/entities/Post.yml
 integrations:
-  wpgraphql:
-    singular: ClogItem
-    plural: ClogItems
+  graphql:
+    singular: Post        # defaults to the entity name
+    plural: Posts         # defaults to <Singular>Collection
 ```
 
 An entity that says nothing is not exposed. Adding an entity should never silently
 widen a public API, so the extra two lines are the point rather than a cost.
 
-`wpgraphql` requires both names because nothing pluralises on your behalf — the same
-rule as edge inverses, and "Inventory Entry" / "Inventory" is why.
+The generator never pluralises on your behalf — the same rule as edge inverses, and
+"Inventory Entry" / "Inventory" is why — so `plural` is yours to name.
 
 ## Entity
 
@@ -96,7 +90,7 @@ use:                              # patterns to pull in
   - Timestamps
 storage:
   table: post                     # snake_case; the project prefix is prepended
-  handle: post                    # what the storage system calls it
+  handle: post                    # optional; what the storage system calls it
 fields: { }
 edges: { }
 queries: { }
@@ -104,9 +98,8 @@ actions: { }
 sideEffects: { }
 ```
 
-`handle` is driver-agnostic — a WordPress post type slug here, a collection name
-elsewhere — but validated per driver. Under `wordpress` it must be lowercase and at
-most 20 characters, because WP silently truncates longer slugs at registration.
+`handle` is driver-agnostic — what the storage system calls the entity, such as a
+collection name — and validated per driver. Leave it out unless asked; do not guess one.
 
 Every entity has an implicit `id`. Declaring one is an error.
 
@@ -251,8 +244,8 @@ A query reaches the API only if it says so, separately from the entity's own exp
 
 ```yaml
     integrations:
-      wpgraphql:
-        field: clogItemSearch
+      graphql:
+        field: itemSearch
 ```
 
 `cardinality: many` registers a connection — paging, cursors, `totalCount`; `one`
@@ -291,8 +284,7 @@ sideEffects:
     handler: true
 ```
 
-Declared in the entity spec and nowhere else. That is the difference between this and
-WordPress hooks: reading the yaml tells you everything that happens on commit.
+Declared in the entity spec and nowhere else. Reading the yaml tells you everything that happens on commit.
 
 **Execution order is declaration order.** No priority numbers.
 
@@ -338,11 +330,11 @@ A pattern is a fragment of an entity spec — any section an entity may declare,
 declare.
 
 ```yaml
-pattern: WordPressPost
+pattern: Slugged
 requires:
-  driver: wordpress    # using it elsewhere is a compile error naming the reason
+  driver: sqlite       # using it elsewhere is a compile error naming the reason
 fields:
-  postId: { type: int, unique: true, indexed: true }
+  slug: { type: string, unique: true, immutable: true, required: true }
 ```
 
 ### Configuration
@@ -350,16 +342,14 @@ fields:
 A pattern may declare parameters each entity supplies:
 
 ```yaml
-# patterns/WordPressPost.yml
-pattern: WordPressPost
-requires:
-  driver: wordpress
+# patterns/Exportable.yml
+pattern: Exportable
 config:
   visibility:
     type: enum
     values: [public, private]
     default: private
-  supports:
+  formats:
     type: list
     of: string
     default: []
@@ -368,16 +358,16 @@ config:
 ```yaml
 # entities/Post.yml
 use:
-  - WordPressPost
+  - Exportable
 configure:
-  WordPressPost:
+  Exportable:
     visibility: public
-    supports: [title, editor]
+    formats: [csv, json]
 ```
 
 The core validates values against the *pattern's own declaration* and has no idea what
-any of them mean — which is what lets a WordPress pattern carry WordPress configuration
-without WordPress leaking into the framework.
+any of them mean — which is what lets a pattern carry platform configuration without that platform
+leaking into the framework.
 
 Every applied pattern contributes into one map, so a consumer reads the keys it knows
 rather than looking a pattern up by name. Two patterns declaring the same key is a
@@ -427,37 +417,9 @@ comments, and deleting an author's notes to fix an ordering nit is the wrong tra
 Order applies to **keys**, never to **members**: sideEffect declaration order is execution
 order, so sorting members would change behaviour.
 
-## WordPress integration settings
+## Where patterns come from
 
-With the WordPress builder installed, `integrations.wordpress` accepts
-`adminTemplates` (default `true`) and `linkPosts` (default `false`) on the project.
-Entities can override either boolean; omitted or null entity values inherit the
-project setting. Declare the integration on the project before entity overrides.
-Admin list/detail views use Elephentity records and read policies. Linked posts are
-optional projections with a storage-owned `wp_post_id`; entity relationships keep
-using Elephentity IDs. Do not declare a post ID field to enable linking.
-
-```yaml
-# project.yml
-integrations:
-  wordpress:
-    adminTemplates: true
-    linkPosts: false
-```
-
-```yaml
-# entities/Item.yml
-entity: Item
-storage:
-  table: item
-  handle: item
-integrations:
-  wordpress:
-    linkPosts: true
-```
-
-The builder emits `admin-pages.php` plus list/detail templates. Hook the runtime's
-`Eleph\WordPress\Admin\Pages` registrar on `admin_menu`. When templates are enabled,
-native post admin screens are hidden. With templates disabled and linking enabled,
-WordPress's native post screens remain available. Accounts and taxonomy entities
-retain their native WordPress storage and are excluded from these generated views.
+The pattern catalogue is `patterns/` in the framework repository (`patterns/README.md`,
+with a machine-readable `catalog.json`). You copy a pattern into your own `spec/patterns/`
+and own the copy; nothing is fetched at build time. A builder can also ship patterns and
+types of its own, which `describe` pools into the compiler.

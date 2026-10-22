@@ -289,11 +289,15 @@ Elephentity ships skills that teach an agent how to use it:
 
 ```bash
 git clone --depth 1 https://github.com/hsimah-services/elephentity.git /tmp/elephentity-skills
-cp -r /tmp/elephentity-skills/skills/* .claude/skills/
+cp -r /tmp/elephentity-skills/skills/eleph /tmp/elephentity-skills/skills/eleph-spec-author .claude/skills/
 ```
 
-- `eleph` — the spec format, the build loop, and how to find what is left to implement
+- `eleph` — the spec format, the build loop for PHP and C#, and how to find what is left to implement
 - `eleph-spec-author` — turning a written description into a spec, and what to ask first
+
+For agents that do not read `.claude/skills`, add a short pointer to `AGENTS.md`; see
+[skills/README.md](../skills/README.md#installing). Extending Elephentity itself (a builder, a
+storage adaptor, an integration) has [its own skills](../skills/README.md#pick-by-task).
 
 ## Committing generated code
 

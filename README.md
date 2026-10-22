@@ -325,15 +325,26 @@ covers what the port to a spec captured cleanly, and what it did not.
 - [docs/BUILDERS.md](docs/BUILDERS.md) — writing a builder for another language
 - [docs/PUBLISHING-SCHEMAS.md](docs/PUBLISHING-SCHEMAS.md) — hosting the JSON Schemas for editor validation
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — working on the framework itself
+- [docs/README.md](docs/README.md) — all of the above, indexed by task
 
 ## Agent skills
 
-Elephentity ships skills that teach an agent to use it, in [skills/](skills):
+Elephentity ships skills that teach an agent to use and extend it, in [skills/](skills). They are
+short, and the detail sits one hop away, so an agent loads only what the task needs.
+[skills/README.md](skills/README.md) is the index.
 
-- `eleph` — the spec format, the build loop, finding what is left to implement
-- `eleph-spec-author` — turning a written description into a spec, and what to ask first
+| Skill | For |
+|---|---|
+| `eleph` | working in a project: the spec format, the build loop (PHP and C#), finding what is left to implement |
+| `eleph-spec-author` | turning a written description into a spec, and what to ask first |
+| `eleph-add-builder` | writing an output generator for a new language or file type |
+| `eleph-add-adaptor` | adding a storage driver |
+| `eleph-add-integration` | exposing entities over a new API |
 
 ```bash
 git clone --depth 1 https://github.com/hsimah-services/elephentity.git /tmp/elephentity-skills
-cp -r /tmp/elephentity-skills/skills/* .claude/skills/
+cp -r /tmp/elephentity-skills/skills/eleph /tmp/elephentity-skills/skills/eleph-spec-author .claude/skills/
 ```
+
+The three `eleph-add-*` skills are for working inside this repository. The docs have a task-first
+index too: [docs/README.md](docs/README.md).
