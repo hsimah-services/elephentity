@@ -1,5 +1,6 @@
 format: 1
 status: implementation-notes
+superseded_by: skills/eleph-add-builder, skills/eleph-add-adaptor and skills/eleph-add-integration (start at skills/README.md); repository names below predate the monorepo
 updated: '2026-10-11'
 purpose: >-
   A focused starting point for new storage adaptors, PHP and C# integrations and their

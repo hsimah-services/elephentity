@@ -1,12 +1,5 @@
 # A description, and the spec it produces
 
-> **WordPress and WPGraphQL are no longer supported.** Their adaptors and builders have been
-> dropped, so a new spec should use `driver: memory` or `driver: sqlite`, and the `graphql`
-> integration for GraphQL. The sections and examples below that mention `driver: wordpress`,
-> `wpgraphql`, `handle` as a post type, or `integrations.wordpress` describe behaviour the
-> compiler still parses but that has no supported adaptor; do not copy them into a new project.
-> They will be removed when the compiler's own support is.
-
 The reasoning matters more than the output. Most of the decisions below are not in the
 description — they came from the interview, and that is the point.
 
@@ -28,7 +21,7 @@ Everything the spec actually needs:
 - Can an inventory entry exist without a location? (**no**)
 - Does an item have one barcode or several? (**one**, after discussion — see below)
 - Is `dateAdded` editable after the fact? (**yes** — corrections happen)
-- Do these need to appear in wp-admin? (**yes** — there is an existing admin list)
+- Do these need an exposed API? (**yes** — GraphQL, so `integrations.graphql` on each)
 - What happens to inventory when its item is deleted? (**deferred**)
 
 Six of those seven change the spec. None were in the prose.
@@ -62,19 +55,11 @@ values:
 ```
 
 ```yaml
-# spec/patterns/ClogPost.yml
-pattern: ClogPost
-description: Participation in the WordPress admin, which every type here needs.
-requires:
-  driver: wordpress
+# spec/patterns/Tracked.yml
+pattern: Tracked
+description: Created and modified timestamps, which every type here needs.
 use:
   - Timestamps
-fields:
-  postId:
-    type: int
-    description: The wp_posts row this entity projects to.
-    unique: true
-    indexed: true
 ```
 
 ```yaml
@@ -82,11 +67,9 @@ fields:
 entity: Item
 description: A thing that can be stocked, identified by its barcode.
 use:
-  - ClogPost
+  - Tracked
 storage:
-  driver: wordpress
-  table: clog_item
-  handle: clog_item
+  table: item
 fields:
   name:
     type: string
@@ -116,11 +99,9 @@ fields:
 entity: Inventory
 description: One stocked instance of an item, in a location, with its own expiry.
 use:
-  - ClogPost
+  - Tracked
 storage:
-  driver: wordpress
-  table: clog_inventory
-  handle: clog_inventory
+  table: inventory
 fields:
   dateAdded:
     type: datetime
@@ -149,7 +130,7 @@ edges:
 An inventory entry has one item; an item has many inventory entries. So on the
 `Inventory` side: `cardinality: one`, and the reverse is not unique — hence
 `inverse: { name: inventoryEntries, unique: false }`. That is many-to-one, so the key
-lands on `clog_inventory` as `item_id`, indexed.
+lands on `inventory` as `item_id`, indexed.
 
 The inverse **must** be named. The reverse is to-many, the derived name would be
 singular, and the generator does not pluralise.

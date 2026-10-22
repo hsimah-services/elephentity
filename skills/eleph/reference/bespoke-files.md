@@ -17,7 +17,7 @@ Boot time is deliberate. Later than generate time, so codegen stays a pure funct
 the spec and never scans your source; earlier than call time, so a missing handler
 cannot lurk in production until the wrong request arrives.
 
-## The seven kinds
+## The seven kinds (PHP names; C# is in the last section)
 
 ### 1. Query handlers — `{Entity}{Query}Query`
 
@@ -164,13 +164,20 @@ $mutator = PostMutator::of($buffer, $publishAction);
 Your container supplies the handlers. Nothing is auto-discovered — if a handler is not
 wired, boot fails and says which.
 
-**The reference assembly is `examples/clog/src/Bootstrap.php`** in the framework
-repository, with `examples/clog/clog.php` as the WordPress plugin around it. It is
-analysed at PHPStan level max against the real generated tree, so it cannot drift into
-being a snippet that no longer compiles. The order it lays out:
+**Copy the assembly from a working application, not from this page.** The order is easy to
+get subtly wrong:
 
-1. `WordPress::manifest()` then `WordPress::adaptor()` — the manifest is generated, the
-   table prefix comes from `$wpdb`.
+- [hsimah/clog](https://github.com/hsimah/clog) is a real application on the PHP and SQLite
+  stack, with `server/standalone/` as the wiring and its generated tree committed.
+- [elephentity-examples](https://github.com/hsimah-services/elephentity-examples) holds
+  smaller ones. Its `clog/src/Bootstrap.php` shows the shape of the assembly; its adaptor
+  (WordPress) is not supported, so substitute `SQLiteAdaptor` or `MemoryAdaptor`.
+
+The order, in PHP:
+
+1. The storage adaptor: `MemoryAdaptor`, or `Database` + `SQLiteAdaptor` with the
+   generated `generated/sqlite/storage-manifest.php` (load it with
+   `StorageManifest::withPrefix()` if the project sets a table prefix).
 2. A container holding the generated classes and your contract implementations.
 3. `new Catalogue($container)` — generated; it resolves everything through the
    container, so adding an entity never widens your wiring's signature.
@@ -188,13 +195,38 @@ Three things are easy to get wrong on the first attempt:
 ## Creating the tables
 
 Nothing at build time can migrate a database it cannot reach, so this is a runtime
-call — plugin activation, in WordPress terms:
+call. With SQLite, `generated/sqlite/install.php` returns a closure that creates the
+initial schema atomically:
 
 ```php
-$plan = (new SchemaInstaller($database, $manifest))->install();
-
-if (!$plan->isSafe()) {
-    // Additive changes are applied; anything destructive or ambiguous is refused
-    // and then nothing is applied at all. $plan->refusals says what and why.
-}
+$install = require 'generated/sqlite/install.php';
+$install($database->pdo, 'app_'); // optional extra table prefix; use the same one for the manifest
 ```
+
+It is an explicit initial installation: existing tables make it fail and roll back.
+Evolving a populated database is a migration the application writes and reviews, because
+the build cannot see a live database. The `memory` driver has no schema at all.
+
+## C#
+
+The same seven kinds exist, as interfaces in the `{namespace}.Contract` namespace:
+`I<Entity><Name>Query`, `…Action`, `…SideEffect`, `…Verifier`, `…ReadPolicy` and
+`…WritePolicy`, plus `I<Type>ReadProcessor` / `I<Type>WriteProcessor` in `{namespace}.Types`.
+What differs from PHP:
+
+- **Async-first.** Storage, queries and handlers take a `CancellationToken` and return
+  `Task`/`ValueTask`. Match the generated signature exactly; do not guess it.
+- **Wiring is dependency injection.** `Add<Project>Entities(this IServiceCollection)`, in
+  the generated `Wiring.cs`, registers everything generated and leaves the contracts to
+  you. Register your implementations after it. Add the runtime and the adaptor the project
+  uses (`Elephentity.Runtime`, `Elephentity.Runtime.Memory` or `Elephentity.Cosmos`).
+- **Declared types are yours.** A type with `processors: true` is a class you put in
+  `typeNamespace`; the builder assumes a reference type. Spec `int` is `long`, `datetime` is
+  `DateTimeOffset` and `json` is `JsonElement`.
+- **No reflection.** The libraries are AOT-compatible, so register concrete types rather
+  than scanning assemblies.
+- **Checking** is `eleph check`, which runs the target's `check` command (`ContractCheck`
+  in a test project) and names every contract that has no registered implementation.
+
+Every difference from the PHP runtime is listed in `dotnet/docs/divergence.md` in the
+framework repository.

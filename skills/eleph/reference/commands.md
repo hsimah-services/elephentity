@@ -12,7 +12,12 @@ eleph check
 ```
 
 All commands take `--project` (default `.`), the directory holding `eleph.json`.
-`validate` also takes the spec directory as an argument (default `spec`).
+`validate` also takes the spec directory as an argument (default `spec`), and `generate`
+takes `--targets a,b` to build only some targets.
+
+A project that pins its programs as `name@version` runs `eleph install` first (and
+`eleph install --check` in CI). It fetches exactly what is pinned, verifies it against the
+release's `SHA256SUMS`, and fails if a program is missing, another version, or modified.
 
 ---
 
@@ -46,8 +51,8 @@ the snapshot when packages change and use live discovery in build CI.
 **Catches:** unknown keys, wrong types, and then — the more interesting half — a spec
 that parses but does not mean anything. Every edge target must resolve, every declared
 type must exist, every pattern's `requires` must be satisfied, every action must write
-only members the entity declares, an indexed string must fit the index, a WordPress
-handle must be a legal post type slug.
+only members the entity declares, an indexed string must fit the index, and every driver
+and integration the spec names must be provided by a configured target.
 
 **Errors accumulate.** One run reports everything, each with a file, a JSON pointer, a
 message and a stable code:
@@ -92,9 +97,15 @@ backs an API field that no longer resolves.
 Post.title resolves via App\Entity\Post\Post::getTitle(), which does not exist.
 ```
 
-Must run after `generate`, because it inspects the classes on disk. It loads them with
-its own autoloader rather than the project's, so a broken Composer configuration cannot
-make the gate pass silently.
+Must run after `generate`, because it inspects the classes on disk.
+
+`eleph` checks nothing itself: each builder declares its checker (`provides.check`) and
+`eleph check` runs it per target. For PHP that is `eleph-check-php`, which loads the classes
+with its own autoloader rather than the project's, so a broken Composer configuration cannot
+make the gate pass silently. For C# it is `ContractCheck` from `Elephentity.Runtime.Testing`,
+run as a test project named in the target's `check` array in `eleph.json`. A target with no
+checker is reported as a warning, never passed silently, and if nothing at all was checked
+the gate fails.
 
 ---
 
@@ -106,7 +117,8 @@ without a human reading it:
 1. `fmt` — did it follow the conventions?
 2. `validate` — does the spec mean anything?
 3. `generate` — does it produce code?
-4. `check` + `phpstan` — is the result coherent and type-safe?
+4. `check`, then `phpstan` (PHP) or `dotnet build` with warnings as errors (C#) — is the
+   result coherent and type-safe?
 
 A spec that clears all four is not necessarily the *right* model, but it is a real one.
 Anything less is objectively wrong, and the error message says why. Use this rather

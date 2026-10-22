@@ -13,24 +13,20 @@ wrong, and nobody enjoys twelve consecutive questions.
 
 ### 1. What should the table be called?
 
-Snake case. The project's `tablePrefix` and the driver's own prefix are both prepended,
-so ask for the bare name — `item`, not `wp_clog_item`.
+Snake case. The project's `tablePrefix` is prepended, so ask for the bare name —
+`item`, not `clog_item`.
 
 The driver is **not** an entity question: it lives in `spec/project.yml`. If there is no
 project spec yet, that is the first thing to write, and it needs a project name and a
 driver.
 
-### 2. Does it need to be a WordPress post type?
+### 2. Does the storage system need its own name for it?
 
-> Does anything outside this framework need to see these as posts — the wp-admin list,
-> a plugin, an existing query, permalinks?
+> Does anything outside this framework refer to these by a fixed name — an existing
+> collection, a table another system reads?
 
-If yes, it needs a `handle` (a post type slug: lowercase, ≤20 characters) and a pattern
-carrying `postId`. If no, leave `handle` out entirely and it is a plain table.
-
-This is not a small question. A post type means the row exists in two places, and the
-custom table is authoritative while the post row is a projection — so anything editing
-the post directly is editing a copy.
+If yes, that name is the `handle`; ask for it, never guess. If no, leave `handle` out
+and the entity is a plain table or collection.
 
 ### 3. What makes two of these the same thing?
 
@@ -74,26 +70,6 @@ to-many, because the generator will not invent a plural.
 ---
 
 ## Shapes the model
-
-### 6b. If it is a post type, how should it behave?
-
-Ask alongside question 2, because the answers travel together: publicly queryable or
-private? Listed in wp-admin, and under which menu? Should the post editor be able to
-edit anything at all?
-
-These are pattern configuration, supplied per entity:
-
-```yaml
-configure:
-  WordPressPost:
-    visibility: private
-    adminMenu: clog
-    supports: []
-```
-
-Default `supports` to empty unless someone asks otherwise. The post row is a projection
-of the custom table, so anything editable in the post editor edits a copy that nothing
-will notice diverging.
 
 ### 7. What do you search or filter by?
 
