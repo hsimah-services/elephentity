@@ -7,8 +7,7 @@ declare(strict_types=1);
 //
 //   php assemble.php <vendor/autoload.php> <elephentity-graphql-php/src> <graphql-manifest.php>
 //
-// The assembly is the one the PHP application does (clog's server/standalone/src/GraphQL.php, minus clog): Node, PageInfo and
-// node(id:) are the application's to register in PHP, and the .NET package registers them itself.
+// SchemaBuilder::fromManifest registers Node, PageInfo and node(id:) itself, as the .NET package does.
 
 require $argv[1];
 spl_autoload_register(static function (string $class) use ($argv): void {
@@ -18,7 +17,6 @@ spl_autoload_register(static function (string $class) use ($argv): void {
     }
 }, prepend: true);
 
-use Eleph\GraphQL\Registration\{MutationRegistrar, TypeRegistrar};
 use Eleph\GraphQL\SchemaBuilder;
 use Eleph\Runtime\Gateway\EntityGateway;
 use Eleph\Runtime\Identity\EntityId;
@@ -39,31 +37,7 @@ $gateway = new class implements EntityGateway {
 
 $manifest = require $argv[3];
 
-$builder = new SchemaBuilder();
-$builder->interface('Node', ['id' => ['type' => ['non_null' => 'ID']]], static fn () => null);
-$builder->object('PageInfo', ['fields' => [
-    'hasNextPage' => ['type' => ['non_null' => 'Boolean']],
-    'hasPreviousPage' => ['type' => ['non_null' => 'Boolean']],
-    'startCursor' => ['type' => 'String'],
-    'endCursor' => ['type' => 'String'],
-]]);
-$types = new TypeRegistrar($manifest, $gateway);
-foreach ($types->enumConfigs() as $name => $config) {
-    $builder->enum($name, $config);
-}
-foreach ($types->objectConfigs() as $name => $config) {
-    $builder->object($name, $config);
-}
-foreach ($types->rootFieldConfigs() as $config) {
-    $builder->field('RootQuery', $config['name'], $config['field']);
-}
-foreach ($types->connectionConfigs() as $config) {
-    $builder->connection($config);
-}
-foreach ((new MutationRegistrar($manifest, $gateway))->configs() as $name => $config) {
-    $builder->mutation($name, $config);
-}
-$builder->field('RootQuery', 'node', ['type' => 'Node', 'args' => ['id' => ['type' => ['non_null' => 'ID']]], 'resolve' => static fn () => null]);
+$builder = SchemaBuilder::fromManifest($manifest, $gateway);
 
 $schema = $builder->build();
 $schema->assertValid();

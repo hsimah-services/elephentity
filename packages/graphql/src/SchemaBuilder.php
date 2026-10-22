@@ -5,13 +5,62 @@ namespace Eleph\GraphQL;
 
 use GraphQL\Type\Definition\{Type, ObjectType, InputObjectType, InterfaceType, EnumType};
 use GraphQL\Type\Schema;
+use Eleph\GraphQL\Manifest\Manifest;
+use Eleph\GraphQL\Registration\{MutationRegistrar, TypeRegistrar};
+use Eleph\GraphQL\Relay\GlobalId;
+use Eleph\Runtime\Gateway\EntityGateway;
+use Eleph\Runtime\Type\ProcessorRegistry;
 use RuntimeException;
+use WeakMap;
 
 /** Turns Elephentity registration configs into a webonyx schema, without global hooks. */
 final class SchemaBuilder
 {
     private array $configs = ['RootQuery' => ['fields' => []], 'RootMutation' => ['fields' => []]];
     private array $types = [];
+    /**
+     * The whole generated surface, plus the Relay scaffolding it refers to: `Node`,
+     * `PageInfo` and `node(id:)`. A consumer adds only its own fields on top.
+     */
+    public static function fromManifest(Manifest $manifest, EntityGateway $gateway, ?ProcessorRegistry $processors = null): self
+    {
+        $builder = new self();
+        $builder->relay($manifest, $gateway);
+        $types = new TypeRegistrar($manifest, $gateway, processors: $processors);
+        foreach ($types->enumConfigs() as $name => $config) $builder->enum($name, $config);
+        foreach ($types->objectConfigs() as $name => $config) $builder->object($name, $config);
+        foreach ($types->rootFieldConfigs() as $config) $builder->field('RootQuery', $config['name'], $config['field']);
+        foreach ($types->connectionConfigs() as $config) $builder->connection($config);
+        foreach ((new MutationRegistrar($manifest, $gateway))->configs() as $name => $config) $builder->mutation($name, $config);
+        return $builder;
+    }
+    /** `Node`, `PageInfo` and `node(id:)`: null for an id of an unknown type, a missing row or a malformed id. */
+    private function relay(Manifest $manifest, EntityGateway $gateway): void
+    {
+        $typeOf = new WeakMap();
+        $entities = [];
+        foreach ($manifest->roots as $root) $entities[$root->type] = $root->entity;
+        $this->interface('Node', ['id' => ['type' => ['non_null' => 'ID']]], static fn (object $value): ?string => $typeOf[$value] ?? null);
+        $this->object('PageInfo', ['fields' => [
+            'hasNextPage' => ['type' => ['non_null' => 'Boolean']],
+            'hasPreviousPage' => ['type' => ['non_null' => 'Boolean']],
+            'startCursor' => ['type' => 'String'],
+            'endCursor' => ['type' => 'String'],
+        ]]);
+        $this->field('RootQuery', 'node', [
+            'type' => 'Node',
+            'description' => 'Fetch any object by its global ID.',
+            'args' => ['id' => ['type' => ['non_null' => 'ID']]],
+            'resolve' => static function (mixed $source, array $args) use ($gateway, $entities, $typeOf): ?object {
+                $global = is_string($args['id'] ?? null) ? GlobalId::decode($args['id']) : null;
+                if ($global === null || !isset($entities[$global->type])) return null;
+                $id = GlobalId::entityId($global->id);
+                $entity = $id === null ? null : $gateway->find($entities[$global->type], $id);
+                if ($entity !== null) $typeOf[$entity] = $global->type;
+                return $entity;
+            },
+        ]);
+    }
     public function object(string $name, array $config): void { $this->configs[$name] = $config; }
     public function input(string $name, array $fields): void { $this->configs[$name] = ['input' => true, 'fields' => $fields]; }
     public function field(string $type, string $name, array $config): void { $this->configs[$type]['fields'][$name] = $config; }
