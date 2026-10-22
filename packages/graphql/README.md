@@ -19,6 +19,10 @@ namespace and package layout. It requires PHP 8.3+, `elephentity/runtime ^0.10 |
 - `Registration`: maps those descriptions to resolver configurations.
 - `Relay` and `Resolver`: global IDs and connection results.
 
+`SchemaBuilder::fromManifest($manifest, $gateway)` builds the whole surface, including
+the Relay scaffolding the types refer to: the `Node` interface, `PageInfo` and
+`node(id:)`. A consumer adds only its own fields before calling `build()`.
+
 Storage remains behind the Elephentity runtime, so GraphQL does not depend on the
 SQLite package. The same generated PHP entities can be exposed through this package
 with an appropriate runtime and storage adapter.

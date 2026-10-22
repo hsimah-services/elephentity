@@ -45,7 +45,7 @@ final class TestQuery implements EntityQuery {
         return new Page(array_slice($this->items, $start, $limit), $start + $limit < count($this->items) ? (new Offset($start + $limit))->toCursor() : null);
     }
 }
-final class TestGateway implements EntityGateway {
+class TestGateway implements EntityGateway {
     public array $calls = [];
     public array $input = [];
     public ?object $queryResult = null;
@@ -127,3 +127,23 @@ $gateway->queryResult = (object) [];
 try { $connection(null, []); throw new LogicException('Scalar collection result accepted.'); }
 catch (RuntimeException $e) { check(str_contains($e->getMessage(), 'must return EntityQuery'), 'Collection contract failure missing.'); }
 echo "PASS: singular entity/null query results and collection result contract\n";
+
+// A schema from a manifest and a gateway alone: Node, PageInfo and node(id:) come with the package.
+final class NodeGateway extends TestGateway {
+    public function find(string $entity, EntityId $id): ?object { return $entity === 'Book' && (string) $id === '1' ? new class { public function getId(): string { return '1'; } } : null; }
+}
+$nodeManifest = new Manifest(
+    objects: [
+        'ApiBook' => new ObjectTypeEntry('ApiBook', 'Book', ['id' => new FieldEntry('id', new GraphQLType('ID', nonNull: true), 'getId')]),
+        'ApiAuthor' => new ObjectTypeEntry('ApiAuthor', 'Author', ['id' => new FieldEntry('id', new GraphQLType('ID', nonNull: true), 'getId')]),
+    ],
+    roots: ['ApiBook' => new RootFieldEntry('ApiBook', 'ApiBooks', 'Book'), 'ApiAuthor' => new RootFieldEntry('ApiAuthor', 'ApiAuthors', 'Author')],
+);
+$schema = SchemaBuilder::fromManifest($nodeManifest, new NodeGateway())->build();
+$schema->assertValid();
+$node = static fn (string $id): array => GraphQL::executeQuery($schema, '{ node(id: "' . $id . '") { __typename id } }')->toArray();
+check(($node(GlobalId::encode('ApiBook', 1))['data']['node']['__typename'] ?? null) === 'ApiBook', 'node(id:) did not resolve an entity type.');
+foreach ([GlobalId::encode('ApiBook', 2), GlobalId::encode('Missing', 1), GlobalId::encode('ApiAuthor', 1), 'not-an-id'] as $id) {
+    check($node($id) === ['data' => ['node' => null]], 'node(id:) returned something for an unresolvable ID.');
+}
+echo "PASS: Node, PageInfo and node(id:) from a manifest alone\n";
