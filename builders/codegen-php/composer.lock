@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3093c8aaed36c1810a95fe9af4b7247d",
+    "content-hash": "6eed8eb48f3e3c43bc36529d72702c9e",
     "packages": [
         {
             "name": "elephentity/runtime",
-            "version": "v0.16.1",
+            "version": "v0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
@@ -43,7 +43,7 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.16.1"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.17.0"
             },
             "time": "2026-10-18T22:32:08+00:00"
         },
@@ -602,24 +602,29 @@
         },
         {
             "name": "elephentity/graphql",
-            "version": "v0.2.0-alpha.4",
+            "version": "v0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-graphql-php.git",
-                "reference": "b6bf4f306a5e0a64c0500d9b13fff8caec18053a"
+                "reference": "75406fee6742c013122104e9b10f0e089d6618e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-graphql-php/zipball/b6bf4f306a5e0a64c0500d9b13fff8caec18053a",
-                "reference": "b6bf4f306a5e0a64c0500d9b13fff8caec18053a",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-graphql-php/zipball/75406fee6742c013122104e9b10f0e089d6618e1",
+                "reference": "75406fee6742c013122104e9b10f0e089d6618e1",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.13 || ^0.14 || ^0.15 || ^0.16",
+                "elephentity/runtime": "^0.17",
                 "php": ">=8.3",
                 "webonyx/graphql-php": "^15.0"
             },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.17.x-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Eleph\\GraphQL\\": "src/"
@@ -632,26 +637,26 @@
             "description": "Experimental Framework-independent GraphQL integration for the Elephentity PHP runtime.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-graphql-php/issues",
-                "source": "https://github.com/hsimah-services/elephentity-graphql-php/tree/v0.2.0-alpha.4"
+                "source": "https://github.com/hsimah-services/elephentity-graphql-php/tree/v0.17.0"
             },
-            "time": "2026-10-21T16:04:29+00:00"
+            "time": "2026-10-21T23:48:15+00:00"
         },
         {
             "name": "elephentity/memory",
-            "version": "v0.16.1",
+            "version": "v0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-memory.git",
-                "reference": "9c9ed05672393ba2ed44801a2169218723fe98ef"
+                "reference": "13ba2c2a4d78562b8229a8f8ce15fa81444304a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-memory/zipball/9c9ed05672393ba2ed44801a2169218723fe98ef",
-                "reference": "9c9ed05672393ba2ed44801a2169218723fe98ef",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-memory/zipball/13ba2c2a4d78562b8229a8f8ce15fa81444304a4",
+                "reference": "13ba2c2a4d78562b8229a8f8ce15fa81444304a4",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.10 || ^0.11 || ^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16",
+                "elephentity/runtime": "^0.17",
                 "php": ">=8.3"
             },
             "require-dev": {
@@ -661,6 +666,11 @@
                 "bin/eleph-gen-memory"
             ],
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.17.x-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Eleph\\Memory\\": "src/"
@@ -673,32 +683,37 @@
             "description": "An in-process StorageAdaptor with no backend of its own. The neutral driver for a project that wants raw PHP objects rather than WordPress.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-memory/issues",
-                "source": "https://github.com/hsimah-services/elephentity-memory/tree/v0.16.1"
+                "source": "https://github.com/hsimah-services/elephentity-memory/tree/v0.17.0"
             },
-            "time": "2026-10-21T16:04:30+00:00"
+            "time": "2026-10-21T23:48:11+00:00"
         },
         {
             "name": "elephentity/sqlite",
-            "version": "v0.1.0-alpha.8",
+            "version": "v0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-sqlite.git",
-                "reference": "4859783aabe09d30f8dc9d04bae95f955aaa0967"
+                "reference": "412155d26106a0f4d55ea83e3909e3e28b351370"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/4859783aabe09d30f8dc9d04bae95f955aaa0967",
-                "reference": "4859783aabe09d30f8dc9d04bae95f955aaa0967",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/412155d26106a0f4d55ea83e3909e3e28b351370",
+                "reference": "412155d26106a0f4d55ea83e3909e3e28b351370",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.13.1 || ^0.14 || ^0.15 || ^0.16",
+                "elephentity/runtime": "^0.17",
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "ext-pdo_sqlite": "*",
                 "php": ">=8.3"
             },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.17.x-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Eleph\\SQLite\\": "src/"
@@ -711,9 +726,9 @@
             "description": "Experimental SQLite storage adaptor for the Elephentity PHP runtime.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-sqlite/issues",
-                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.1.0-alpha.8"
+                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.17.0"
             },
-            "time": "2026-10-21T16:04:29+00:00"
+            "time": "2026-10-21T23:48:01+00:00"
         },
         {
             "name": "ergebnis/agent-detector",
@@ -4868,10 +4883,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "elephentity/graphql": 15,
-        "elephentity/sqlite": 15
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
