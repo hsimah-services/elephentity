@@ -1,7 +1,8 @@
 //! `eleph-gen-tsquid`: compiles tsquid's route manifest for the app's server, in PHP or C#.
 //!
 //! The validation is language-neutral (`validate.rs`); only the output differs (`emit_php.rs`, `emit_csharp.rs`). The target's
-//! `language` is `"php"` (the default, and unchanged) or `"csharp"`, which also needs a `namespace`.
+//! `language` is required: `"php"` or `"csharp"` (which also needs a `namespace`). There is no default, so a project never gets the wrong
+//! language's output by omission.
 
 mod emit_csharp;
 mod emit_php;
@@ -108,7 +109,7 @@ fn is_namespace(namespace: &str) -> bool {
         })
 }
 
-/// Which language a run writes. PHP is what every existing project gets.
+/// Which language a run writes. The target must say.
 #[derive(PartialEq)]
 enum Language {
     Php,
@@ -117,7 +118,9 @@ enum Language {
 
 fn language(config: &Value) -> Result<Language, String> {
     match config.get("language") {
-        None | Some(Value::Null) => Ok(Language::Php),
+        None | Some(Value::Null) => {
+            Err("The tsquid target needs \"language\" set to \"php\" or \"csharp\".".into())
+        }
         Some(Value::String(name)) if name == "php" => Ok(Language::Php),
         Some(Value::String(name)) if name == "csharp" => Ok(Language::Csharp),
         _ => Err("The tsquid target's \"language\" must be \"php\" or \"csharp\".".into()),

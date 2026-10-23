@@ -39,7 +39,8 @@ Add a target alongside your existing targets in `eleph.json`:
   "tsquid": {
     "builder": "vendor/bin/eleph-gen-tsquid",
     "output": "generated/tsquid",
-    "manifest": "../../../client/src/routes/__generated__/routes.manifest.json"
+    "manifest": "../../../client/src/routes/__generated__/routes.manifest.json",
+    "language": "php"
   }
 }
 ```
@@ -59,8 +60,8 @@ integration skill. The entrypoint must preload the same operation and variables.
 
 ## C# (.NET)
 
-The same builder emits C# for `Elephentity.Tsquid`. Set the target's `language` to `"csharp"` (`"php"` is the default, and its output is
-unchanged) and give it a `namespace`:
+The same builder emits C# for `Elephentity.Tsquid`. Set the target's `language` to `"csharp"` and give it a `namespace`. `language` is required (`"php"` or
+`"csharp"`); there is no default:
 
 ```json
 {

@@ -58,28 +58,26 @@ fn request(manifest: &str, config: Value) -> Value {
 #[test]
 fn php_output_is_byte_for_byte_what_it_was_before_the_csharp_target() {
     for name in MANIFESTS {
-        for config in [json!({}), json!({"language": "php"})] {
-            let response = answer(&request(name, config));
+        let response = answer(&request(name, json!({"language": "php"})));
 
-            assert_eq!(response["errors"], json!([]), "{name}");
-            assert_eq!(response["headerStyle"], "php", "{name}");
-            assert_eq!(response["extensions"], json!(["php"]), "{name}");
-            assert_eq!(
-                response["files"][0]["path"], "tsquid-manifest.php",
-                "{name}"
-            );
-            assert_eq!(
-                response["files"][0]["body"].as_str().unwrap(),
-                std::fs::read_to_string(
-                    root()
-                        .join("golden/php")
-                        .join(name)
-                        .join("tsquid-manifest.php")
-                )
-                .unwrap(),
-                "{name}"
-            );
-        }
+        assert_eq!(response["errors"], json!([]), "{name}");
+        assert_eq!(response["headerStyle"], "php", "{name}");
+        assert_eq!(response["extensions"], json!(["php"]), "{name}");
+        assert_eq!(
+            response["files"][0]["path"], "tsquid-manifest.php",
+            "{name}"
+        );
+        assert_eq!(
+            response["files"][0]["body"].as_str().unwrap(),
+            std::fs::read_to_string(
+                root()
+                    .join("golden/php")
+                    .join(name)
+                    .join("tsquid-manifest.php")
+            )
+            .unwrap(),
+            "{name}"
+        );
     }
 }
 
@@ -153,6 +151,22 @@ fn a_csharp_target_needs_a_valid_namespace_and_says_so_with_no_files() {
 }
 
 #[test]
+fn a_missing_language_is_an_error_not_php() {
+    for config in [json!({}), json!({"language": null})] {
+        let response = answer(&request("starter", config));
+
+        assert_eq!(response["files"], json!([]));
+        assert!(
+            response["errors"][0]
+                .as_str()
+                .unwrap()
+                .contains("needs \"language\""),
+            "{response}"
+        );
+    }
+}
+
+#[test]
 fn an_unknown_language_is_an_error() {
     for language in [json!("java"), json!(3), json!("PHP")] {
         let response = answer(&request("starter", json!({"language": language})));
@@ -173,7 +187,7 @@ fn an_unknown_language_is_an_error() {
 #[test]
 fn a_manifest_of_another_version_is_refused_for_both_languages() {
     for (tag, config) in [
-        ("php", json!({})),
+        ("php", json!({"language": "php"})),
         ("cs", json!({"language": "csharp", "namespace": "App"})),
     ] {
         let directory = root().join(format!("out-version-{tag}"));
@@ -249,7 +263,8 @@ fn every_problem_in_a_manifest_is_reported_in_one_run_and_names_its_route() {
         {"name": "Gamma", "path": "/g/:id", "ssr": true, "fields": {}, "query": {"operation": "", "id": "q", "text": "query { x }", "variables": {"v": {"input": "nope"}}}},
         {"name": "Alpha", "path": "/again", "ssr": true, "fields": {}},
     ]);
-    let problems: Vec<String> = manifest_with("every", routes, json!({}))["errors"]
+    let problems: Vec<String> = manifest_with("every", routes, json!({"language": "php"}))
+        ["errors"]
         .as_array()
         .unwrap()
         .iter()
