@@ -58,28 +58,26 @@ fn request(manifest: &str, config: Value) -> Value {
 #[test]
 fn php_output_is_byte_for_byte_what_it_was_before_the_csharp_target() {
     for name in MANIFESTS {
-        for config in [json!({"language": "php"})] {
-            let response = answer(&request(name, config));
+        let response = answer(&request(name, json!({"language": "php"})));
 
-            assert_eq!(response["errors"], json!([]), "{name}");
-            assert_eq!(response["headerStyle"], "php", "{name}");
-            assert_eq!(response["extensions"], json!(["php"]), "{name}");
-            assert_eq!(
-                response["files"][0]["path"], "tsquid-manifest.php",
-                "{name}"
-            );
-            assert_eq!(
-                response["files"][0]["body"].as_str().unwrap(),
-                std::fs::read_to_string(
-                    root()
-                        .join("golden/php")
-                        .join(name)
-                        .join("tsquid-manifest.php")
-                )
-                .unwrap(),
-                "{name}"
-            );
-        }
+        assert_eq!(response["errors"], json!([]), "{name}");
+        assert_eq!(response["headerStyle"], "php", "{name}");
+        assert_eq!(response["extensions"], json!(["php"]), "{name}");
+        assert_eq!(
+            response["files"][0]["path"], "tsquid-manifest.php",
+            "{name}"
+        );
+        assert_eq!(
+            response["files"][0]["body"].as_str().unwrap(),
+            std::fs::read_to_string(
+                root()
+                    .join("golden/php")
+                    .join(name)
+                    .join("tsquid-manifest.php")
+            )
+            .unwrap(),
+            "{name}"
+        );
     }
 }
 
