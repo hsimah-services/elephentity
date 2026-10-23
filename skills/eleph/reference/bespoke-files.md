@@ -207,6 +207,9 @@ It is an explicit initial installation: existing tables make it fail and roll ba
 Evolving a populated database is a migration the application writes and reviews, because
 the build cannot see a live database. The `memory` driver has no schema at all.
 
+With C#, the SQLite target (`"language": "csharp"`) writes `SqliteStorageManifest.cs` instead, and the statements travel inside the
+manifest: `await SqliteInstaller.InstallAsync(connection, SqliteStorageManifestFactory.Create())`, with the same rules.
+
 ## C#
 
 The same seven kinds exist, as interfaces in the `{namespace}.Contract` namespace:
@@ -219,7 +222,7 @@ What differs from PHP:
 - **Wiring is dependency injection.** `Add<Project>Entities(this IServiceCollection)`, in
   the generated `Wiring.cs`, registers everything generated and leaves the contracts to
   you. Register your implementations after it. Add the runtime and the adaptor the project
-  uses (`Elephentity.Runtime`, `Elephentity.Runtime.Memory` or `Elephentity.Cosmos`).
+  uses (`Elephentity.Runtime`, `Elephentity.Runtime.Memory`, `Elephentity.Sqlite` or `Elephentity.Cosmos`).
 - **Declared types are yours.** A type with `processors: true` is a class you put in
   `typeNamespace`; the builder assumes a reference type. Spec `int` is `long`, `datetime` is
   `DateTimeOffset` and `json` is `JsonElement`.

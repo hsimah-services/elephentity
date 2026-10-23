@@ -45,7 +45,7 @@ try {
         'spec' => 'spec',
         'codegen' => $workspace . '/elephentity-codegen/bin/eleph-codegen',
         'targets' => [
-            'sqlite' => ['builder' => $workspace . '/elephentity-codegen-sqlite/bin/eleph-gen-sqlite', 'output' => 'generated/sqlite'],
+            'sqlite' => ['builder' => $workspace . '/elephentity-codegen-sqlite/bin/eleph-gen-sqlite', 'output' => 'generated/sqlite', 'language' => 'php'],
             'tsquid' => ['builder' => dirname(__DIR__) . '/bin/eleph-gen-tsquid', 'output' => 'generated/tsquid', 'manifest' => '../../routes.manifest.json'],
         ],
     ], JSON_THROW_ON_ERROR));

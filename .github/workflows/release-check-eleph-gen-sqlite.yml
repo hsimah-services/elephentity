@@ -1,0 +1,29 @@
+name: Release check eleph-gen-sqlite
+
+# Builds, packages and verifies eleph-gen-sqlite's release archives without publishing anything, so a change
+# to the release workflow (or to what it builds) is proven before a tag is pushed.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-binary.yml'
+      - '.github/workflows/release-check-eleph-gen-sqlite.yml'
+      - 'builders/codegen-sqlite/Cargo.toml'
+      - 'builders/codegen-sqlite/Cargo.lock'
+      - 'builders/codegen-sqlite/rust/**'
+
+# GitHub checks the called workflow's permissions against this one even for a job that does not
+# run, and its publish job asks for write. Nothing here publishes: that job only runs for a tag.
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  binary:
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-sqlite
+      manifest-path: builders/codegen-sqlite/Cargo.toml

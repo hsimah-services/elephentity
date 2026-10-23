@@ -1,7 +1,7 @@
 # Elephentity for .NET
 
 The .NET side of [Elephentity](https://github.com/hsimah-services/elephentity): the runtime
-that generated C# code runs on, a Cosmos DB storage adaptor, GraphQL, and server-side
+that generated C# code runs on, SQLite and Cosmos DB storage adaptors, GraphQL, and server-side
 initial data for [tsquid](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-tsquid).
 One repository, one NuGet package per concern, all type-checked together.
 
@@ -25,6 +25,7 @@ code needs at run time. The plan, the decisions and the ordered steps are in the
 | `Elephentity.Runtime.Testing` | Storage adaptor conformance cases and `ContractCheck`, which `eleph check` runs for C#. | `AdaptorConformance` |
 | `Elephentity.Runtime.Testing.Xunit` | An xUnit base class that runs the conformance cases as a theory; inherit it to test an adaptor. | |
 | `Elephentity.Cosmos` | The storage adaptor for Azure Cosmos DB. | `elephentity-sqlite` |
+| `Elephentity.Sqlite` | The storage adaptor for SQLite. See [docs/sqlite.md](docs/sqlite.md). | `elephentity/packages/sqlite` |
 | `Elephentity.GraphQL` | GraphQL.NET support that emits the same schema as the PHP runtime. | `elephentity-graphql-php` |
 | `Elephentity.Tsquid` | Server-side initial route data for ASP.NET Core. | `elephentity-codegen-tsquid` |
 
@@ -37,7 +38,7 @@ project asks for:
 
 ```bash
 dotnet add package Elephentity.Runtime
-dotnet add package Elephentity.Cosmos
+dotnet add package Elephentity.Cosmos   # or Elephentity.Sqlite
 ```
 
 The libraries target `net10.0`, enable nullable reference types, treat warnings as errors

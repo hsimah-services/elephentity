@@ -5,10 +5,12 @@ on:
     paths:
       - 'builders/codegen-sqlite/**'
       - '.github/workflows/ci-codegen-sqlite.yml'
+      - 'dotnet/**'
   pull_request:
     paths:
       - 'builders/codegen-sqlite/**'
       - '.github/workflows/ci-codegen-sqlite.yml'
+      - 'dotnet/**'
 permissions:
   contents: read
 concurrency:
@@ -47,3 +49,37 @@ jobs:
         run: composer --working-dir=tests install --no-interaction --no-plugins --no-scripts --prefer-dist
       - name: Execute generated PHP against the runtimes
         run: php tests/runtime.php
+
+  # The C# this builder emits, loaded into Elephentity.Sqlite (this repository's dotnet/ tree, copied in) and run against SQLite:
+  # every generated manifest installs, and the conformance suite passes on each relation shape.
+  generated:
+    name: The emitted C# installs and conforms
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: builders/codegen-sqlite
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: builders/codegen-sqlite/tests/dotnet/global.json
+
+      - name: The runtime the manifest is loaded into
+        run: |
+          mkdir -p tests/dotnet/.deps
+          cp -R ../../dotnet tests/dotnet/.deps/elephentity-dotnet
+
+      - name: Build the builder
+        run: cargo +stable build --locked
+
+      - name: Write the manifests out
+        run: python3 tests/dotnet/materialize.py
+
+      - name: Install them and run the conformance cases
+        run: dotnet run --project tests/dotnet -c Release

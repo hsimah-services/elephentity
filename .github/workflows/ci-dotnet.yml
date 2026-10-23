@@ -49,7 +49,7 @@ jobs:
 
       - name: One package per project, each declaring the MIT licence
         run: |
-          test "$(ls artifacts/*.nupkg | wc -l)" -eq 7
+          test "$(ls artifacts/*.nupkg | wc -l)" -eq 8
           for package in artifacts/*.nupkg; do
             unzip -p "$package" '*.nuspec' | grep -q '<license type="expression">MIT</license>'
           done

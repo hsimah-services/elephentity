@@ -15,9 +15,11 @@ One spec language, compiled by one `eleph` binary, with a builder per target:
 |---|---|---|---|
 | PHP and SQLite | `eleph-gen-php`, `eleph-gen-sqlite`, `eleph-gen-graphql-php` | Composer: `elephentity/runtime`, `elephentity/sqlite`, `elephentity/graphql` | Established |
 | C# and Cosmos DB | `eleph-gen-csharp`, `eleph-gen-cosmos`, `eleph-gen-graphql-csharp` | NuGet: `Elephentity.Runtime`, `Elephentity.Cosmos`, `Elephentity.GraphQL` | Experimental: alpha releases |
+| C# and SQLite | `eleph-gen-csharp`, `eleph-gen-sqlite`, `eleph-gen-graphql-csharp` | NuGet: `Elephentity.Runtime`, `Elephentity.Sqlite`, `Elephentity.GraphQL` | Experimental |
 
+`eleph-gen-sqlite` and `eleph-gen-tsquid` write either stack: the target's `language` (`"php"` or `"csharp"`) says which.
 `eleph-gen-tsquid` generates the route manifest a [tsquid](https://github.com/hsimah-services/elephentity/tree/main/builders/codegen-tsquid)
-client reads, for either stack. [`dotnet/`](dotnet) documents the NuGet packages.
+client reads. [`dotnet/`](dotnet) documents the NuGet packages.
 
 ## Quick start
 
@@ -128,7 +130,8 @@ generated/
 `memory` compiles to no physical schema — there is no `generated/memory/` beyond that
 directory existing, since `MemoryAdaptor` has no table to provision. Install
 `elephentity/sqlite`, set `driver: sqlite` in `spec/project.yml`, and a `sqlite` target writes
-`generated/sqlite/storage-manifest.php` and `install.php` alongside it.
+`generated/sqlite/storage-manifest.php` and `install.php` alongside it (`"language": "php"` on the target; with
+`"language": "csharp"` it writes `SqliteStorageManifest.cs` for `Elephentity.Sqlite` instead).
 
 Every file carries a `sha256` digest in its header. Editing one is detected and
 rejected by the next build.
@@ -146,7 +149,7 @@ and its own version:
 |---|---|---|
 | `compiler/` | `eleph`, the spec compiler (Rust) | GitHub Releases (`install.sh`) |
 | `builders/codegen` | `eleph-codegen`, which runs the builders | GitHub Releases, or Composer |
-| `builders/codegen-php`, `-sqlite`, `-graphql-php`, `-tsquid` | PHP, SQLite, GraphQL and tsquid builders | Composer (tsquid also GitHub Releases) |
+| `builders/codegen-php`, `-sqlite`, `-graphql-php`, `-tsquid` | PHP, SQLite, GraphQL and tsquid builders | Composer (sqlite and tsquid also GitHub Releases, for C#) |
 | `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp` | C#, Cosmos and GraphQL.NET builders | GitHub Releases, via `eleph install` |
 | `packages/runtime`, `memory` | PHP runtime and the neutral memory driver | Composer |
 | `packages/sqlite`, `graphql` | PHP SQLite and GraphQL adaptors | Composer |

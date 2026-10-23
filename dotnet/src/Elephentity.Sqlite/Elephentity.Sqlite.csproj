@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The Elephentity storage adaptor for SQLite.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Elephentity.Runtime/Elephentity.Runtime.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <InternalsVisibleTo Include="Elephentity.Sqlite.Tests" />
+  </ItemGroup>
+
+</Project>

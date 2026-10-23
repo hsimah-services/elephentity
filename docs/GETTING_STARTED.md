@@ -120,7 +120,8 @@ generated/           machine-owned, committed, never edited
 }
 ```
 
-Add a `sqlite` target (`vendor/bin/eleph-gen-sqlite`) and a `graphql-php` target
+Add a `sqlite` target (`vendor/bin/eleph-gen-sqlite`, with `"language": "php"`: the key is required, because
+the same builder writes C# for `Elephentity.Sqlite`) and a `graphql-php` target
 (`vendor/bin/eleph-gen-graphql-php`) if you installed those packages above.
 
 Every target names the program that produces it. Elephentity generates nothing itself, so

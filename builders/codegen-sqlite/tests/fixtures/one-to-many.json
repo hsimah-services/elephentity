@@ -2,7 +2,9 @@
   "elephentity": 1,
   "irVersion": "1.2",
   "request": "generate",
-  "config": {},
+  "config": {
+    "language": "php"
+  },
   "outputDirectory": "out",
   "schema": {
     "project": {

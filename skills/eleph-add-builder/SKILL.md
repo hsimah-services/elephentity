@@ -29,7 +29,7 @@ Look for the nearest existing builder and copy its shape rather than starting bl
 |---|---|---|---|
 | entities, contracts, DI | `builders/codegen-csharp` | Rust | release binary |
 | entities in PHP | `builders/codegen-php` | Rust + Composer shell | Composer mirror |
-| storage manifest | `builders/codegen-sqlite`, `builders/codegen-cosmos` | Rust | Composer / binary |
+| storage manifest | `builders/codegen-sqlite` (PHP and C#), `builders/codegen-cosmos` | Rust | Composer / binary |
 | API manifest | `builders/codegen-graphql-php`, `builders/codegen-graphql-csharp` | Rust | Composer / binary |
 | frontend route manifest | `builders/codegen-tsquid` | Rust | binary + Composer |
 

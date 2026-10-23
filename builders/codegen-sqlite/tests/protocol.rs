@@ -131,7 +131,7 @@ fn refuses_identifier_collisions_and_unknown_edges() {
 #[test]
 fn accepts_php_empty_maps_and_does_not_double_prefix_tables() {
     let response = generate(
-        &json!({"elephentity":1,"irVersion":"1.2","schema":{"project":{"name":"Empty","driver":"sqlite","sourceFile":"p.yml"},"entities":[],"types":[]}}),
+        &json!({"elephentity":1,"irVersion":"1.2","config":{"language":"php"},"schema":{"project":{"name":"Empty","driver":"sqlite","sourceFile":"p.yml"},"entities":[],"types":[]}}),
     );
     assert_eq!(response["errors"], json!([]));
     let mut request = fixture("one-to-one");
@@ -199,4 +199,175 @@ fn field_defaults_become_column_defaults() {
             "{field}"
         );
     }
+}
+
+fn csharp(name: &str) -> Value {
+    let mut request = fixture(name);
+    request["config"] = json!({"language": "csharp", "namespace": format!("Golden.{}", name.split('-').map(|p| p[..1].to_uppercase() + &p[1..]).collect::<String>())});
+    request
+}
+
+const FIXTURES: [&str; 6] = [
+    "clog",
+    "relations",
+    "one-to-one",
+    "many-to-one",
+    "one-to-many",
+    "many-to-many",
+];
+
+#[test]
+fn freezes_the_csharp_output() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/csharp");
+    for name in FIXTURES {
+        let response = generate(&csharp(name));
+        assert_eq!(response["errors"], json!([]), "{name}");
+        assert_eq!(response["headerStyle"], "line-comment");
+        assert_eq!(response["extensions"], json!(["cs"]));
+        assert_eq!(response["files"].as_array().unwrap().len(), 1);
+        let path = root.join(name).join("SqliteStorageManifest.cs");
+        let body = file(&response, "SqliteStorageManifest.cs");
+        if std::env::var_os("ELEPH_REFRESH").is_some() {
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, &body).unwrap();
+        }
+        assert_eq!(
+            body,
+            std::fs::read_to_string(&path).unwrap(),
+            "{}",
+            path.display()
+        );
+        assert!(!body.contains("<?php"));
+    }
+}
+
+#[test]
+fn the_language_is_required_and_must_be_known() {
+    for config in [
+        json!({}),
+        json!(null),
+        json!({"language": null}),
+        json!({"language": "ruby"}),
+        json!({"language": 3}),
+        json!({"language": "PHP"}),
+    ] {
+        let mut request = fixture("one-to-one");
+        request["config"] = config.clone();
+        let response = generate(&request);
+        assert_eq!(response["files"], json!([]), "{config}");
+        assert_eq!(response["extensions"], json!([]), "{config}");
+        assert_eq!(response["headerStyle"], "line-comment");
+        let errors = response["errors"].as_array().unwrap();
+        assert_eq!(errors.len(), 1, "{config}");
+        assert!(
+            errors[0].as_str().unwrap().contains("\"language\""),
+            "{config}"
+        );
+    }
+    let mut request = fixture("one-to-one");
+    request.as_object_mut().unwrap().remove("config");
+    assert!(!generate(&request)["errors"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn a_csharp_target_needs_a_namespace_that_is_a_namespace() {
+    for namespace in [
+        json!(null),
+        json!(""),
+        json!("a..b"),
+        json!("App.class"),
+        json!("1App"),
+        json!("My-App"),
+        json!(7),
+    ] {
+        let mut request = fixture("one-to-one");
+        request["config"] = json!({"language": "csharp", "namespace": namespace});
+        let response = generate(&request);
+        assert_eq!(response["files"], json!([]), "{namespace}");
+        assert_eq!(
+            response["extensions"],
+            json!([]),
+            "a failed run claims nothing: {namespace}"
+        );
+        assert!(
+            response["errors"][0]
+                .as_str()
+                .unwrap()
+                .contains("namespace"),
+            "{namespace}"
+        );
+    }
+    let mut request = fixture("one-to-one");
+    request["config"] = json!({"language": "csharp"});
+    assert!(!generate(&request)["errors"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn a_php_target_ignores_the_namespace_and_claims_php_even_when_it_fails() {
+    let mut request = fixture("one-to-one");
+    request["config"] = json!({"language": "php", "namespace": "not a namespace"});
+    let response = generate(&request);
+    assert_eq!(response["errors"], json!([]));
+    assert_eq!(response["headerStyle"], "php");
+    assert_eq!(response["extensions"], json!(["php"]));
+    request["schema"]["project"]["driver"] = json!("cosmos");
+    let failed = generate(&request);
+    assert_eq!(failed["extensions"], json!(["php"]));
+    assert_eq!(failed["files"], json!([]));
+}
+
+#[test]
+fn every_problem_comes_back_at_once() {
+    let mut request = fixture("one-to-one");
+    request["config"] = json!({"language": "csharp", "namespace": "class"});
+    request["schema"]["project"]["driver"] = json!("cosmos");
+    assert_eq!(generate(&request)["errors"].as_array().unwrap().len(), 2);
+    request["config"] = json!({});
+    assert_eq!(generate(&request)["errors"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn csharp_refuses_what_php_refuses() {
+    for scenario in 0..5 {
+        let mut request = csharp("one-to-one");
+        match scenario {
+            0 => request["schema"]["entities"]["Target"]["storage"]["table"] = json!("OWNER"),
+            1 => {
+                request["schema"]["entities"]["Owner"]["storage"]["table"] =
+                    json!("owner\"; DROP TABLE target;--")
+            }
+            2 => request["schema"]["entities"]["Owner"]["edges"]["target"]["to"] = json!("Missing"),
+            3 => {
+                request["schema"]["entities"]["Owner"]["fields"]["name"]["name"] = json!("targetId")
+            }
+            _ => request["schema"]["entities"]["Owner"]["config"] = json!({"account":true}),
+        }
+        let response = generate(&request);
+        assert_eq!(response["files"], json!([]), "scenario {scenario}");
+        assert_eq!(response["extensions"], json!([]), "scenario {scenario}");
+        assert!(
+            !response["errors"].as_array().unwrap().is_empty(),
+            "scenario {scenario}"
+        );
+    }
+}
+
+#[test]
+fn csharp_literals_never_end_a_line_or_a_string() {
+    let mut request = csharp("many-to-one");
+    let fields = &mut request["schema"]["entities"]["Owner"]["fields"];
+    fields["mood"] = json!({"name":"mood","type":{"primitive":"enum","declaredType":null},"enum":{"inlineValues":["a\"b","c\\d","it's"],"declaredType":null},"origin":{"pattern":null,"file":"fixture.yml"},"nullable":false,"hasDefault":true,"default":"it's"});
+    let body = file(&generate(&request), "SqliteStorageManifest.cs");
+    assert!(body.contains("DEFAULT 'it''s'"));
+    assert!(body.contains("'a\\\"b'"));
+    assert!(body.contains("'c\\\\d'"));
+    assert!(body.lines().all(|line| !line.contains('\r')));
+}
+
+#[test]
+fn the_csharp_target_provides_the_same_driver() {
+    let describe = generate(
+        &json!({"elephentity":1,"irVersion":"1.2","request":"describe","config":{"language":"csharp"}}),
+    );
+    assert_eq!(describe["provides"]["drivers"], json!(["sqlite"]));
 }

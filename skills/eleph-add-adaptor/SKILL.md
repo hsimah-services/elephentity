@@ -22,7 +22,8 @@ halves, so design it first.
 
 | Stack | Adaptor | Builder |
 |---|---|---|
-| PHP, relational | `packages/sqlite` | `builders/codegen-sqlite` |
+| PHP, relational | `packages/sqlite` | `builders/codegen-sqlite` (`language: php`) |
+| C#, relational | `dotnet/src/Elephentity.Sqlite` | `builders/codegen-sqlite` (`language: csharp`, the same builder) |
 | PHP, no schema | `packages/memory` (also holds its builder) | — |
 | C#, document | `dotnet/src/Elephentity.Cosmos` | `builders/codegen-cosmos` |
 | C#, no schema | `dotnet/src/Elephentity.Runtime.Memory` | — |
