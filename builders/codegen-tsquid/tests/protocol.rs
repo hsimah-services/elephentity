@@ -265,7 +265,8 @@ fn every_problem_in_a_manifest_is_reported_in_one_run_and_names_its_route() {
         {"name": "Gamma", "path": "/g/:id", "ssr": true, "fields": {}, "query": {"operation": "", "id": "q", "text": "query { x }", "variables": {"v": {"input": "nope"}}}},
         {"name": "Alpha", "path": "/again", "ssr": true, "fields": {}},
     ]);
-    let problems: Vec<String> = manifest_with("every", routes, json!({"language": "php"}))["errors"]
+    let problems: Vec<String> = manifest_with("every", routes, json!({"language": "php"}))
+        ["errors"]
         .as_array()
         .unwrap()
         .iter()

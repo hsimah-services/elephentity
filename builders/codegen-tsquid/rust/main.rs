@@ -118,7 +118,9 @@ enum Language {
 
 fn language(config: &Value) -> Result<Language, String> {
     match config.get("language") {
-        None | Some(Value::Null) => Err("The tsquid target needs \"language\" set to \"php\" or \"csharp\".".into()),
+        None | Some(Value::Null) => {
+            Err("The tsquid target needs \"language\" set to \"php\" or \"csharp\".".into())
+        }
         Some(Value::String(name)) if name == "php" => Ok(Language::Php),
         Some(Value::String(name)) if name == "csharp" => Ok(Language::Csharp),
         _ => Err("The tsquid target's \"language\" must be \"php\" or \"csharp\".".into()),
