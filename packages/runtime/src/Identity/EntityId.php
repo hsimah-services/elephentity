@@ -9,7 +9,7 @@ use InvalidArgumentException;
 /**
  * The identity of a persisted row, opaque above the storage layer.
  *
- * The underlying value is currently a WordPress-style auto-increment integer, but
+ * The underlying value is currently an auto-increment integer, but
  * nothing outside the adaptor may do arithmetic on it or assume it is numeric — the
  * entity exposes this object and GraphQL exposes a string. Keeping it opaque is what
  * makes a later move to UUIDv7 a change to the adaptor and a migration, rather than a
@@ -51,7 +51,8 @@ final readonly class EntityId implements Identifier
 
     public function equals(Identifier $other): bool
     {
-        return $other instanceof self && $other->value === $this->value;
+        // Storage hands back integers and clients hand in strings; they name the same row.
+        return $other instanceof self && (string) $other->value === (string) $this->value;
     }
 
     public function __toString(): string

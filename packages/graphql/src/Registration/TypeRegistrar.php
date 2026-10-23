@@ -379,7 +379,10 @@ final readonly class TypeRegistrar
     private function queryResolver(QueryFieldEntry $query): callable
     {
         return function (mixed $source, array $args) use ($query): array {
-            $result = $this->gateway->runQuery($query->entity, $query->query, $this->rawIds($query->args, $args));
+            // SchemaBuilder nests a connection's query arguments under `where`; the query
+            // itself declared them flat.
+            $filters = is_array($args['where'] ?? null) ? $args['where'] : [];
+            $result = $this->gateway->runQuery($query->entity, $query->query, $this->rawIds($query->args, $filters));
             if (!$result instanceof EntityQuery) {
                 throw new RuntimeException(sprintf('Collection query %s.%s must return EntityQuery.', $query->entity, $query->query));
             }

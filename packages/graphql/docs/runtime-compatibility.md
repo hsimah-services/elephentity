@@ -1,5 +1,10 @@
 # Runtime compatibility for 0.1.0-alpha.3
 
+> **Historical record.** This validated the 0.1.0-alpha releases against runtime 0.11–0.12 from the
+> separate `elephentity-sqlite` and `elephentity-graphql-php` checkouts, using `tools/test-clog.py`
+> (since deleted). The packages now release
+> with the monorepo's PHP family and require `elephentity/runtime ^0.17`; see the package README.
+
 Validated on 2026-10-10 with Clog commit
 `213dc165944d5111c003ee36dccb51bfbf78758e`, including its generated PHP entities,
 SQLite installation/storage manifest and GraphQL manifest.
