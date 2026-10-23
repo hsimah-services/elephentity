@@ -21,6 +21,7 @@ on:
       - 'v*'
       - 'eleph-codegen-v*'
       - 'eleph-gen-tsquid-v*'
+      - 'eleph-gen-sqlite-v*'
       - 'eleph-gen-csharp-v*'
       - 'eleph-gen-cosmos-v*'
       - 'eleph-gen-graphql-csharp-v*'
@@ -49,6 +50,13 @@ jobs:
     with:
       binary: eleph-gen-tsquid
       manifest-path: builders/codegen-tsquid/Cargo.toml
+
+  eleph-gen-sqlite:
+    if: startsWith(github.ref_name, 'eleph-gen-sqlite-v')
+    uses: ./.github/workflows/release-binary.yml
+    with:
+      binary: eleph-gen-sqlite
+      manifest-path: builders/codegen-sqlite/Cargo.toml
 
   eleph-gen-csharp:
     if: startsWith(github.ref_name, 'eleph-gen-csharp-v')

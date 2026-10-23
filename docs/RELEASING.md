@@ -114,7 +114,9 @@ therefore a deliberate event, not a side effect of releasing the compiler.
 
 **Builders are not part of the family.** `codegen`, `codegen-php`, `codegen-sqlite`,
 `codegen-graphql-php` and `codegen-tsquid` each have their own line and their own tag,
-`<package>-v<version>`, because they are programs with a wire protocol, not libraries. A builder
+`<package>-v<version>`, because they are programs with a wire protocol, not libraries. `codegen-sqlite`
+and `codegen-tsquid` also write C#, so they are released as binaries too, under `eleph-gen-sqlite-v<version>`
+and `eleph-gen-tsquid-v<version>`. A builder
 that depends on the runtime caps it at the minor it was tested with, and is re-released when the
 family takes a new minor.
 

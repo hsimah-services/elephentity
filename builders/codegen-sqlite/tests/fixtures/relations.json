@@ -3,7 +3,9 @@
   "irVersion": "1.2",
   "request": "generate",
   "target": "sqlite",
-  "config": {},
+  "config": {
+    "language": "php"
+  },
   "outputDirectory": "generated/wordpress",
   "schema": {
     "project": {

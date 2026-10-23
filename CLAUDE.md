@@ -94,8 +94,8 @@ dependencies so that `tools/test-rust-ir` can run.
 | `compiler/` | the Rust `eleph` | GitHub Release binary | `v<version>` |
 | `dotnet/` | the .NET runtime and adaptors | NuGet (`dotnet-v*`) | `dotnet-v<version>` |
 | `builders/codegen` | `eleph-codegen`, the orchestrator | binary; Composer `elephentity/codegen` | binary `eleph-codegen-v<version>`, mirror `codegen-v<version>` |
-| `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp`, `-tsquid` | the C#, Cosmos, GraphQL.NET and tsquid builders | binary `eleph-gen-<name>`; tsquid also Composer | `eleph-gen-<name>-v<version>` |
-| `builders/codegen-php`, `-sqlite`, `-graphql-php` | the PHP-side builders | Composer (mirrors) | `codegen-<name>-v<version>` |
+| `builders/codegen-csharp`, `-cosmos`, `-graphql-csharp`, `-tsquid`, `-sqlite` | the C#, Cosmos, GraphQL.NET, tsquid and SQLite builders (tsquid and sqlite write PHP or C#, by the target's `language`) | binary `eleph-gen-<name>`; tsquid and sqlite also Composer | `eleph-gen-<name>-v<version>` |
+| `builders/codegen-php`, `-sqlite`, `-graphql-php`, `-tsquid` | the PHP-side builders | Composer (mirrors) | `codegen-<name>-v<version>` |
 | `packages/runtime`, `memory`, `sqlite`, `graphql` | the PHP package family: runtime, memory driver, SQLite and GraphQL adaptors | Composer (mirrors) | `php-v<version>`: one tag, one version, all four |
 | `patterns/` | the pattern catalogue | — | — |
 

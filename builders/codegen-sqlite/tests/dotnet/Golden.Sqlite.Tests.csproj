@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Loads every generated manifest into Elephentity.Sqlite, installs it into SQLite and runs the conformance cases that apply to its
+       relations. A renamed manifest type fails here, at compile time, which nothing else in this repository can do. SQLite is
+       in-process, so unlike the Cosmos tests nothing here needs a server and nothing is skipped. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Where elephentity-dotnet is checked out: this repository's dotnet/ tree, copied there by CI (tools/dotnet mounts it locally). -->
+    <ElephentityDotnet Condition="'$(ElephentityDotnet)' == ''">$(ELEPH_DOTNET_DIR)</ElephentityDotnet>
+    <ElephentityDotnet Condition="'$(ElephentityDotnet)' == ''">$(MSBuildThisFileDirectory).deps/elephentity-dotnet</ElephentityDotnet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(ElephentityDotnet)/src/Elephentity.Sqlite/Elephentity.Sqlite.csproj" />
+    <ProjectReference Include="$(ElephentityDotnet)/src/Elephentity.Runtime.Testing.Xunit/Elephentity.Runtime.Testing.Xunit.csproj" />
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

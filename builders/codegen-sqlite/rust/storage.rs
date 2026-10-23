@@ -1,35 +1,35 @@
 use super::*;
 use std::collections::{BTreeMap, BTreeSet};
 
-struct Column {
-    name: String,
-    ty: String,
-    nullable: bool,
-    identity: bool,
-    default: Option<String>,
-    checks: Vec<String>,
-    reference: Option<String>,
+pub struct Column {
+    pub name: String,
+    pub ty: String,
+    pub nullable: bool,
+    pub identity: bool,
+    pub default: Option<String>,
+    pub checks: Vec<String>,
+    pub reference: Option<String>,
 }
-struct Index {
-    name: String,
-    columns: Vec<String>,
-    unique: bool,
+pub struct Index {
+    pub name: String,
+    pub columns: Vec<String>,
+    pub unique: bool,
 }
-struct Table {
-    name: String,
-    columns: Vec<Column>,
-    indexes: Vec<Index>,
-    primary: String,
+pub struct Table {
+    pub name: String,
+    pub columns: Vec<Column>,
+    pub indexes: Vec<Index>,
+    pub primary: String,
 }
-struct Placement {
-    entity: String,
-    edge: String,
-    target: String,
-    relation: &'static str,
-    table: String,
-    local: String,
-    remote: Option<String>,
-    target_table: String,
+pub struct Placement {
+    pub entity: String,
+    pub edge: String,
+    pub target: String,
+    pub relation: &'static str,
+    pub table: String,
+    pub local: String,
+    pub remote: Option<String>,
+    pub target_table: String,
 }
 fn identifier(name: &str) -> Result<()> {
     let mut chars = name.chars();
@@ -88,42 +88,63 @@ impl Table {
             unique,
         });
     }
-    fn expr(&self) -> String {
-        let columns = self
-            .columns
-            .iter()
-            .map(|c| {
-                format!(
-                    "                {} => new Column({}, {}, {}, {}, {}),",
-                    q(&c.name),
-                    q(&c.name),
-                    q(&c.ty),
-                    c.nullable,
-                    c.identity,
-                    c.default.as_deref().map(q).unwrap_or("null".into())
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        let indexes = self
-            .indexes
-            .iter()
-            .map(|i| {
-                format!(
-                    "                {} => new Index({}, [{}], {}),",
-                    q(&i.name),
-                    q(&i.name),
-                    i.columns
+    /// The statements that create this table and its indexes, as literal SQL and the names a deployment prefix applies to.
+    pub fn statements(&self) -> Vec<Vec<Part>> {
+        let mut create = vec![
+            Part::Sql("CREATE TABLE ".into()),
+            Part::Name(self.name.clone()),
+            Part::Sql(" (\n    ".into()),
+        ];
+        for (position, c) in self.columns.iter().enumerate() {
+            if position > 0 {
+                create.push(Part::Sql(",\n    ".into()));
+            }
+            let mut sql = format!("{} {}", sql_name(&c.name), c.ty);
+            if c.identity {
+                sql.push_str(" PRIMARY KEY AUTOINCREMENT");
+            } else if !c.nullable {
+                sql.push_str(" NOT NULL");
+            }
+            if let Some(default) = &c.default {
+                sql.push_str(&format!(" DEFAULT {default}"));
+            }
+            for check in &c.checks {
+                sql.push_str(&format!(" CHECK ({check})"));
+            }
+            create.push(Part::Sql(sql));
+            if let Some(reference) = &c.reference {
+                create.push(Part::Sql(" REFERENCES ".into()));
+                create.push(Part::Name(reference.clone()));
+                create.push(Part::Sql("(\"id\") ON DELETE RESTRICT".into()));
+            }
+        }
+        create.push(Part::Sql("\n)".into()));
+        let mut statements = vec![create];
+        for index in &self.indexes {
+            statements.push(vec![
+                Part::Sql(
+                    if index.unique {
+                        "CREATE UNIQUE INDEX "
+                    } else {
+                        "CREATE INDEX "
+                    }
+                    .into(),
+                ),
+                Part::Name(index.name.clone()),
+                Part::Sql(" ON ".into()),
+                Part::Name(self.name.clone()),
+                Part::Sql(format!(
+                    " ({})",
+                    index
+                        .columns
                         .iter()
-                        .map(|c| q(c))
+                        .map(|c| sql_name(c))
                         .collect::<Vec<_>>()
-                        .join(", "),
-                    i.unique
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        format!("new TableSchema(\n            {},\n            [\n{columns}\n            ],\n            [\n{indexes}\n            ],\n            {},\n        )", q(&self.name), q(&self.primary))
+                        .join(", ")
+                )),
+            ]);
+        }
+        statements
     }
 }
 fn field(schema: &Value, f: &Value) -> Result<Column> {
@@ -236,14 +257,39 @@ fn default(
         _ => return Err(invalid()),
     })
 }
-fn pairs(entries: &[(String, String)]) -> String {
-    entries
-        .iter()
-        .map(|(key, value)| format!("        {} => {value},", q(key)))
-        .collect::<Vec<_>>()
-        .join("\n")
+/// A piece of an installer statement.
+pub enum Part {
+    /// Literal SQL, written as it is.
+    Sql(String),
+    /// A table or index name, which a deployment prefix goes in front of.
+    Name(String),
 }
-pub fn generate(schema: &Value) -> Result<(String, String)> {
+
+/// One entity: the table its rows live in, and the column each field is stored in.
+pub struct EntityModel {
+    pub name: String,
+    pub table: String,
+    pub fields: Vec<(String, String)>,
+}
+
+/// The physical schema of a project, before it is written in any language.
+pub struct Model {
+    /// Every table, entity and join alike, by name.
+    pub tables: BTreeMap<String, Table>,
+    pub entities: Vec<EntityModel>,
+    pub placements: Vec<Placement>,
+    /// The names of the many-to-many link tables.
+    pub join_tables: Vec<String>,
+}
+
+impl Model {
+    /// The statements that create the initial schema, in order.
+    pub fn install(&self) -> Vec<Vec<Part>> {
+        self.tables.values().flat_map(Table::statements).collect()
+    }
+}
+
+pub fn generate(schema: &Value) -> Result<Model> {
     let entities = vals(&schema["entities"]);
     let mut tables: BTreeMap<String, Table> = BTreeMap::new();
     let mut names = BTreeSet::new();
@@ -378,127 +424,30 @@ pub fn generate(schema: &Value) -> Result<(String, String)> {
             }
         }
     }
-    let mut manifest="namespace Eleph\\SQLite\\Manifest;\n\nuse Eleph\\SQLite\\Sql\\{Column, EdgePlacement, Index, TableSchema};\nuse Eleph\\Runtime\\Storage\\RelationKind;\n\nreturn new StorageManifest(\n".to_owned();
-    let entity_tables = entities
-        .iter()
-        .map(|e| {
-            (
-                s(&e["name"]).to_owned(),
-                tables[s(&e["storage"]["table"])].expr(),
-            )
-        })
-        .collect::<Vec<_>>();
-    let columns = entities
-        .iter()
-        .map(|e| {
-            (
-                s(&e["name"]).to_owned(),
-                format!(
-                    "[{}]",
-                    vals(&e["fields"])
-                        .iter()
-                        .map(|f| format!("{} => {}", q(s(&f["name"])), q(&snake(s(&f["name"])))))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ),
-            )
-        })
-        .collect::<Vec<_>>();
-    let placement_exprs = placements
-        .iter()
-        .map(|p| {
-            (
-                format!("{}.{}", p.entity, p.edge),
-                format!(
-                    "new EdgePlacement({}, {}, {}, RelationKind::{}, {}, {}, {}, {})",
-                    q(&p.entity),
-                    q(&p.edge),
-                    q(&p.target),
-                    p.relation,
-                    q(&p.table),
-                    q(&p.local),
-                    p.remote.as_ref().map(|s| q(s)).unwrap_or("null".into()),
-                    q(&p.target_table)
-                ),
-            )
-        })
-        .collect::<Vec<_>>();
     let claimed = entities
         .iter()
         .map(|e| s(&e["storage"]["table"]))
         .collect::<Vec<_>>();
-    let joins = tables
+    let join_tables = tables
+        .keys()
+        .filter(|name| !claimed.contains(&name.as_str()))
+        .cloned()
+        .collect();
+    let entity_models = entities
         .iter()
-        .filter(|(name, _)| !claimed.contains(&name.as_str()))
-        .map(|(name, t)| (name.clone(), t.expr()))
-        .collect::<Vec<_>>();
-    for (name, entries) in [
-        ("tables", entity_tables),
-        ("placements", placement_exprs),
-        ("columns", columns),
-        ("joinTables", joins),
-    ] {
-        manifest.push_str(&format!("    {name}: [\n{}\n    ],\n", pairs(&entries)));
-    }
-    manifest.push_str(");\n");
-    let mut installer = include_str!("install-header.php").to_owned();
-    for table in tables.values() {
-        let definitions = table
-            .columns
-            .iter()
-            .map(|c| {
-                let mut sql = format!("{} {}", sql_name(&c.name), c.ty);
-                if c.identity {
-                    sql.push_str(" PRIMARY KEY AUTOINCREMENT");
-                } else if !c.nullable {
-                    sql.push_str(" NOT NULL");
-                }
-                if let Some(default) = &c.default {
-                    sql.push_str(&format!(" DEFAULT {default}"));
-                }
-                for check in &c.checks {
-                    sql.push_str(&format!(" CHECK ({check})"));
-                }
-                let mut expression = q(&sql);
-                if let Some(reference) = &c.reference {
-                    expression.push_str(&format!(
-                        " . ' REFERENCES ' . $table({}) . {}",
-                        q(reference),
-                        q("(\"id\") ON DELETE RESTRICT")
-                    ));
-                }
-                expression
-            })
-            .collect::<Vec<_>>()
-            .join(&format!(" . {} . ", q(",\n    ")));
-        installer.push_str(&format!(
-            "        'CREATE TABLE ' . $table({}) . {} . {definitions} . {},\n",
-            q(&table.name),
-            q(" (\n    "),
-            q("\n)")
-        ));
-        for index in &table.indexes {
-            installer.push_str(&format!(
-                "        {} . $table({}) . ' ON ' . $table({}) . {},\n",
-                q(if index.unique {
-                    "CREATE UNIQUE INDEX "
-                } else {
-                    "CREATE INDEX "
-                }),
-                q(&index.name),
-                q(&table.name),
-                q(&format!(
-                    " ({})",
-                    index
-                        .columns
-                        .iter()
-                        .map(|c| sql_name(c))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ))
-            ));
-        }
-    }
-    installer.push_str(include_str!("install-footer.php"));
-    Ok((manifest, installer))
+        .map(|e| EntityModel {
+            name: s(&e["name"]).to_owned(),
+            table: s(&e["storage"]["table"]).to_owned(),
+            fields: vals(&e["fields"])
+                .iter()
+                .map(|f| (s(&f["name"]).to_owned(), snake(s(&f["name"]))))
+                .collect(),
+        })
+        .collect();
+    Ok(Model {
+        tables,
+        entities: entity_models,
+        placements,
+        join_tables,
+    })
 }

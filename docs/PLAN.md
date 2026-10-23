@@ -2163,3 +2163,18 @@ WordPress work, C# ports of bundled PHP triggers, dotnet-tool packaging, whole-a
 Native AOT and application HTTP/authentication/deployment remain outside this epic.
 The final proof is the .NET example generating, checking and testing in CI where
 `command -v php` fails; releases and hblake's hand-off remain owner-approved.
+
+### SQLite for .NET: one builder, two languages
+
+`Elephentity.Sqlite` ports `packages/sqlite`, and `eleph-gen-sqlite` writes C# as well as PHP rather than a second builder
+appearing beside it. The tables, columns, indexes, constraints and edge placements are one decision, made once in the builder's
+language-neutral model (`rust/storage.rs`); `emit_php.rs` and `emit_csharp.rs` only spell it. Two builders would be two chances to
+disagree about a table, which is the reason `EdgePlanner` is shared. This is the shape `eleph-gen-tsquid` already has.
+
+- **`language` is required** (`"php"` or `"csharp"`), with no default, and a C# target needs a `namespace`. A missing key used to mean
+  PHP, so a C# project that forgot it would get `storage-manifest.php` and no error; existing PHP projects add `"language": "php"`.
+- **One file for C#.** The installer's statements travel in the manifest (table and index names left open for a deployment
+  prefix) and `SqliteInstaller` runs them, where PHP generates an `install.php` closure. The rules are the same.
+- **PHP's bytes did not change.** The frozen responses in `builders/codegen-sqlite/tests/fixtures` are the proof.
+- **The adaptor honours `KeysetCursor`**, which PHP has no use for, because reading a policy-gated entity relies on it.
+  Everything else it does, SQL included, is PHP's; the differences are listed in `dotnet/docs/divergence.md`.

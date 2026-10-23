@@ -38,9 +38,9 @@ eleph --version
 
 | `eleph.json` builder | Stack | Hand-written code is |
 |---|---|---|
-| `eleph-gen-php`, `-memory`, `-sqlite`, `-graphql-php` | PHP (Composer packages `elephentity/*`) | `src/`, built by your container |
+| `eleph-gen-php`, `-memory`, `-graphql-php` | PHP (Composer packages `elephentity/*`) | `src/`, built by your container |
 | `eleph-gen-csharp`, `-cosmos`, `-graphql-csharp` | C# (NuGet `Elephentity.*`) | your project, registered with DI |
-| `eleph-gen-tsquid` | route manifest for a tsquid client, either stack | none |
+| `eleph-gen-sqlite`, `eleph-gen-tsquid` | either stack: the target's `language` is `"php"` or `"csharp"` (required, no default; `csharp` also needs a `namespace`) | none |
 
 A builder written `name@version` is pinned and fetched by `eleph install`; a path such as
 `vendor/bin/eleph-gen-php` was installed by Composer. If `eleph` is not on the `PATH`:

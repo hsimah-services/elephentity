@@ -201,3 +201,31 @@ SKILL, whose `vectors.json` runs in the tests. Where the C# differs from the PHP
   `routes.manifest.json` at deploy time and for the conformance vectors; the C# builder (step 20) emits the same data as code.
 - **Escaping.** `<` is escaped to `\u003c` (as the SKILL says) and not `>` (PHP's `JSON_HEX_TAG` escapes both), and U+2028/U+2029 are escaped.
 - **`FieldKind` is `Text`, `Whole`, `Flag`** (a .NET analyzer refuses `String` and `Int`).
+
+## SQLite
+
+`Elephentity.Sqlite` ports `packages/sqlite` (`SQLiteAdaptor`, `Database`, `QueryCompiler`, `FieldMap` and the manifest types). It
+writes the same tables and the same SQL for the same query; see [sqlite.md](sqlite.md). Where it differs:
+
+- **Names.** The manifest types carry the package's prefix, as Cosmos's do: `Column` is `SqliteColumn`, `Index` is `SqliteIndex`,
+  `TableSchema` is `SqliteTable`, `EdgePlacement` is `SqliteEdgePlacement` and `StorageManifest` is `SqliteStorageManifest`
+  (`Manifest` is a namespace, and `Index` would collide with `System.Index`). `FieldMap` is not a type: the manifest answers
+  `Column(entity, field)` and `Field(entity, column)` itself. `Database` is not a type either; the adaptor owns its connection.
+- **One lock.** PDO runs one statement at a time because PHP is single-threaded. Here an adaptor serialises every call with a lock a
+  transaction holds, which is the same guarantee for code that is not.
+- **The installer is a library call.** PHP generates an `install.php` closure around the statements. C# generates the statements
+  (`SqliteStorageManifest.Install`, with table and index names left open for a prefix) and `SqliteInstaller.InstallAsync` runs them
+  with the same rules: foreign keys on, one transaction, an existing table fails and rolls back, a surrounding transaction is
+  refused, a prefix must be an identifier. The PDO driver check has no equivalent; the type is the check.
+- **`KeysetCursor` is honoured.** PHP has no keyset cursor. A `KeysetCursor` passed in resumes strictly after its position, and the
+  page's `Next` is another; any other cursor is an offset, as in PHP.
+- **Values are bound as their type.** PDO binds a float as text, which a `REAL` column then converts; a C# `double` is bound as a
+  `REAL`. A `bool` is bound as the integer 1 or 0 in both. A value that is not a string, a number, a bool or null is refused with
+  an `ArgumentException` naming the field, before any SQL runs.
+- **The `CLOG_NOCASE` collation is not registered.** PHP's `Database` creates it for Clog; no schema this builder writes uses it.
+- **A failed rollback does not replace the failure that caused it.** SQLite may already have undone the transaction (a disk error does);
+  the original exception is the one that propagates.
+- **A link query binds ids as the numbers they are.** PHP binds them as text, which SQLite compares as the same number.
+
+What is the same as PHP, and so differs from the memory driver and from Cosmos (listed in [sqlite.md](sqlite.md)): `LIKE` ignores
+the case of ASCII letters, `NotEqual` leaves out rows with no value, and updating a row that does not exist is not an error.

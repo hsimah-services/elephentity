@@ -114,6 +114,7 @@ row for the one you changed.
 | `Envelope::IR_VERSION` or its `rust/ir.rs` | keep `elephentity`'s compiler `IR_VERSION` and IR, and `eleph-gen-memory`'s `IR_VERSION`, in step | bump `Envelope::IR_VERSION` |
 | its `src/Runtime.php` constants (php builder: `rust/runtime.rs`) | regenerate `clog` — a stale constant fails there, at boot | — (`packages/sqlite` and `packages/graphql` own the classes named; keep them in step) |
 | which `eleph.json` target keys it needs (`PhpConfig`, or the target's own config reader) | update `clog/eleph.json` and the docs | — |
+| `codegen-sqlite` only: the target's `language` (`"php"` or `"csharp"`, required) or its C# `namespace` | add `"language": "php"` to `clog/eleph.json`'s sqlite target (and `"language": "csharp"` + `namespace` to a C# example that uses it) | — |
 
 **Generated-byte changes always reach `elephentity-examples`,** even the cosmetic ones.
 Its committed `clog/generated/` tree is signed, so a whitespace change is a digest
@@ -192,6 +193,7 @@ PHP advertises `eleph-check-php`; C# runs `ContractCheck` through its configured
 |---|---|---|
 | Exported type/namespace/constructor in `elephentity-dotnet` Runtime | `elephentity-codegen-csharp`: update strings in `rust/runtime.rs` and constructor output | regenerate and compile/check the .NET example |
 | Exported type/namespace/constructor in `Elephentity.Cosmos` | `elephentity-codegen-cosmos`: update `rust/runtime.rs` and emitted manifest calls | regenerate and run Cosmos conformance |
+| Exported type/namespace/constructor in `Elephentity.Sqlite` (`Manifest/*`, `SqliteInstaller`) | `builders/codegen-sqlite`: update `rust/emit_csharp.rs` (`NS`, `RUNTIME` and the emitted constructor calls); `tests/dotnet` fails at compile time if one is missed | regenerate and run the SQLite conformance |
 | Exported type/namespace/constructor in `Elephentity.GraphQL` | `elephentity-codegen-graphql-csharp`: update `rust/runtime.rs` and emitted manifest calls | regenerate and execute the GraphQL schema |
 | Exported initial-data API in `Elephentity.Tsquid` | `elephentity-codegen-tsquid`: update C# runtime names and output | regenerate and verify route data before the first script |
 | Runtime-name constant or emitted C# constructor call in a builder | `elephentity-dotnet`: confirm the named type and signature exist | regenerate, compile and run the affected integration |
