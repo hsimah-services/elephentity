@@ -51,7 +51,8 @@ class TestGateway implements EntityGateway {
     public ?object $queryResult = null;
     public function find(string $entity, EntityId $id): ?object { $this->calls[] = [$entity, (string) $id]; return null; }
     public function all(string $entity): EntityQuery { return new TestQuery(); }
-    public function runQuery(string $entity, string $query, array $args): ?object { return $this->queryResult; }
+    public array $queryArgs = [];
+    public function runQuery(string $entity, string $query, array $args): ?object { $this->queryArgs = $args; return $this->queryResult; }
     public function create(string $entity, array $input): MutationResult { $this->calls[] = [$entity]; $this->input = $input; return new MutationResult(EntityId::of(1), null); }
     public function update(string $entity, EntityId $id, array $input): MutationResult { $this->calls[] = [$entity, (string) $id]; $this->input = $input; return new MutationResult($id, null); }
     public function runAction(string $entity, string $action, EntityId $id, array $args): MutationResult { return $this->update($entity, $id, $args); }
@@ -123,6 +124,8 @@ foreach ([(object) ['title' => 'Visible'], null, null] as $result) {
 $connection = (new TypeRegistrar($singularManifest, $gateway))->connectionConfigs()[0]['resolve'];
 $gateway->queryResult = new TestQuery([(object) ['title' => 'Visible']]);
 check(count($connection(null, ['first' => 1])['nodes']) === 1, 'Collection query must still resolve a page.');
+$connection(null, ['first' => 1, 'where' => ['term' => 'ab']]);
+check($gateway->queryArgs === ['term' => 'ab'], 'Connection filters reach the query flat, without paging arguments.');
 $gateway->queryResult = (object) [];
 try { $connection(null, []); throw new LogicException('Scalar collection result accepted.'); }
 catch (RuntimeException $e) { check(str_contains($e->getMessage(), 'must return EntityQuery'), 'Collection contract failure missing.'); }

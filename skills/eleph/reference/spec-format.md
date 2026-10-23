@@ -312,7 +312,9 @@ writePolicies:
 ```
 
 Policies are ordered rules. Each returns `allow`, `skip` or `deny` with a reason; the
-first non-skip result wins. Read policies gate single reads and filter denied collection
+first non-skip result wins, so an `allow` ends evaluation: a later policy cannot restrict a
+write an earlier one allowed. Put a restriction in the policy that allows, or have the
+earlier policy return `skip`. Read policies gate single reads and filter denied collection
 rows. Write policies gate create, update, delete and actions. `terminalRule` is an
 entity-only fallback when all policies skip, and defaults to deny. An entity with no
 policies is not gated, so the terminal rule is irrelevant and `count()` keeps its fast

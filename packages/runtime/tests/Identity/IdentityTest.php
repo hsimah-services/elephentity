@@ -20,6 +20,14 @@ final class IdentityTest extends TestCase
         self::assertFalse(EntityId::of(7)->equals(EntityId::of(8)));
     }
 
+    public function testAnIdComparesEqualWhetherItArrivedAsAnIntegerOrAString(): void
+    {
+        // Storage returns integers; clients and decoded input supply strings.
+        self::assertTrue(EntityId::of(7)->equals(EntityId::of('7')));
+        self::assertTrue(EntityId::of('7')->equals(EntityId::of(7)));
+        self::assertFalse(EntityId::of(7)->equals(EntityId::of('8')));
+    }
+
     public function testAPersistedIdRendersAsAString(): void
     {
         // Opaque above the storage layer: consumers see a string, never an integer.
