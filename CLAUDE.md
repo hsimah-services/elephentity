@@ -48,6 +48,25 @@ tools/test-rust-ir                 # the built builders accept the IR the compil
 tools/test-package-install.sh      # a Composer project, end to end: runtime, builders and eleph
 ```
 
+### Running a program's tests
+
+**Everything has a runner in `tools/`, so before you decide a test cannot run here, try it there.** Inside
+the containers the repository is mounted at `/app`. Run these from the repository root:
+
+| Program | Command |
+|---|---|
+| any Rust crate (`compiler/`, `builders/*`) | `./tools/cargo cargo test --locked --manifest-path <dir>/Cargo.toml`, plus `fmt --check` and `clippy --locked --all-targets -- -D warnings` |
+| a Rust test that reads an environment variable | `./tools/cargo env ELEPH_REFRESH=1 cargo test …` (the wrapper passes no environment through, so set it with `env`) |
+| the PHP packages | `./tools/php composer ci` |
+| a builder's PHP acceptance test (`builders/codegen-sqlite/tests/runtime.php`) | build the builder first (`./tools/cargo cargo build --manifest-path builders/codegen-sqlite/Cargo.toml`; its `bin/` launcher runs `target/`), then `./tools/php sh -c 'cd builders/codegen-sqlite && composer --working-dir=tests install --no-interaction --no-plugins --no-scripts && php tests/runtime.php'` |
+| the compiler → orchestrator → builders pipeline (`builders/codegen-sqlite/tools/test-pipeline.php`) | build `compiler`, `builders/codegen`, `builders/codegen-php` and `builders/codegen-graphql-php` with `./tools/cargo cargo build --locked --manifest-path <dir>/Cargo.toml`, then `./tools/php env ELEPH=/app/compiler/target/debug/eleph php builders/codegen-sqlite/tools/test-pipeline.php /app` |
+| the .NET packages | `cd dotnet && ./tools/dotnet dotnet test -c Release` (also `dotnet format --verify-no-changes`) |
+| the C# a builder emits (`builders/codegen-sqlite/tests/dotnet`, `-cosmos`, `-tsquid`) | build the builder, `python3 tests/dotnet/materialize.py`, then `./tools/dotnet dotnet run --project tests/dotnet -c Release` from that builder's directory (it mounts `dotnet/` for you). Cosmos needs an emulator and skips without one. |
+
+Frozen outputs (`tests/fixtures/*.response.json`, `tests/fixtures/csharp/`) only detect change. A passing
+snapshot says the output did not move, not that it is right: the tests that run the output (the PHP
+acceptance test, `tests/dotnet`) say that.
+
 `compiler/tests/oracle/` holds what the retired PHP compiler produced for every spec in
 `compiler/tests/specs/`. It is frozen: the compiler must keep reproducing it, and a
 deliberate change to the output updates it by hand, with the reason in

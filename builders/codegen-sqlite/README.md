@@ -152,13 +152,16 @@ in [elephentity#89](https://github.com/hsimah-services/elephentity/issues/89).
 
 ## Verify
 
+There is no host cargo, PHP or dotnet; each runs in a container through `tools/` at the repository root
+(see "Running a program's tests" in [CLAUDE.md](../../CLAUDE.md)). From the repository root:
+
 ```sh
-cargo fmt --check
-cargo clippy --locked --all-targets -- -D warnings
-cargo test --locked                  # includes the frozen PHP responses and the frozen C# trees
-ELEPH_REFRESH=1 cargo test --locked freezes_the_csharp_output   # rewrite tests/fixtures/csharp
-composer --working-dir=tests install --no-interaction --no-plugins --no-scripts
-php tests/runtime.php
+M=builders/codegen-sqlite/Cargo.toml
+./tools/cargo cargo fmt --check --manifest-path $M
+./tools/cargo cargo clippy --locked --all-targets --manifest-path $M -- -D warnings
+./tools/cargo cargo test --locked --manifest-path $M    # includes the frozen PHP responses and the frozen C# trees
+./tools/cargo env ELEPH_REFRESH=1 cargo test --locked --manifest-path $M freezes_the_csharp_output   # rewrite tests/fixtures/csharp
+./tools/php sh -c 'cd builders/codegen-sqlite && composer --working-dir=tests install --no-interaction --no-plugins --no-scripts && php tests/runtime.php'
 ```
 
 PHP tests use the tagged SQLite/runtime packages, create disposable databases and
@@ -168,7 +171,9 @@ also check constraints, identifier prefixes, NULL, literal escaping and rollback
 The C# is held to the same cases against a real SQLite, in `Elephentity.Sqlite` at this repository's `dotnet/` tree:
 
 ```sh
-cargo build && python3 tests/dotnet/materialize.py
+# from the repository root, then from this directory
+./tools/cargo cargo build --manifest-path builders/codegen-sqlite/Cargo.toml
+cd builders/codegen-sqlite && python3 tests/dotnet/materialize.py
 ./tools/dotnet dotnet run --project tests/dotnet -c Release
 ```
 
@@ -177,17 +182,18 @@ builds, into `tests/dotnet/Generated` (not committed); the project compiles them
 runs the conformance suite on every relation shape. A manifest type renamed in `Elephentity.Sqlite` fails here, at compile time.
 
 [The standalone example](examples/standalone/eleph.json) combines PHP, SQLite and
-GraphQL PHP generation. With `eleph` on PATH (`install.sh`, or set `ELEPH`), and in the
-sibling-repository workspace with all three builders plus the orchestrator built and their
-test dependencies installed (`composer install` in `elephentity-codegen-php` and in each
-builder's `tests/`), run:
+GraphQL PHP generation. Build the compiler, the orchestrator and the PHP and GraphQL
+builders, then run the pipeline test, from the repository root:
 
 ```sh
-php tools/test-pipeline.php /path/to/elephentity-dev
+for m in compiler builders/codegen builders/codegen-php builders/codegen-graphql-php; do
+  ./tools/cargo cargo build --locked --manifest-path $m/Cargo.toml
+done
+./tools/php env ELEPH=/app/compiler/target/debug/eleph php builders/codegen-sqlite/tools/test-pipeline.php /app
 ```
 
 This generates from YAML, checks signed output for drift, runs `eleph check` against
-actual generated entities and installs the generated SQLite schema. The GraphQL
-builder's test dependencies must also be installed for that workspace test.
+actual generated entities and installs the generated SQLite schema. The test
+dependencies of the sqlite and GraphQL builders (`tests/vendor`) must be installed.
 
 See [SOURCE.md](SOURCE.md) for the source of reused protocol and fixture code.
