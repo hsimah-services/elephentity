@@ -1,6 +1,7 @@
 # Elephentity
-![Elephentity logo](./assets/elephentity.svg)
-
+<p align="center">
+  <img src="./assets/elephentity.svg" alt="Elephentity Logo" style="width: 400px" />
+</p>
 An AI-native framework for building business logic in PHP or C#. Utilizes layers of
 agentic rules and skills to turn human readable specs into consistent, scalable and
 reliable underlying code.
