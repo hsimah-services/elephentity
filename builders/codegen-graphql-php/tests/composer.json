@@ -9,6 +9,6 @@
         }
     ],
     "require": {
-        "elephentity/graphql": "0.17.0"
+        "elephentity/graphql": "0.18.0"
     }
 }
