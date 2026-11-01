@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8f70e49983042e94660fbb3aae6f1b5f",
+    "content-hash": "2afa4a8d97f577969242b1066426f59e",
     "packages": [
         {
             "name": "elephentity/runtime",
-            "version": "v0.17.0",
+            "version": "v0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-runtime.git",
-                "reference": "399619b88c28590b4ac1bec6bef6e5ac4592c2b4"
+                "reference": "b4b3a2d9fa184089ecc37f9475917d72fd560149"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-runtime/zipball/399619b88c28590b4ac1bec6bef6e5ac4592c2b4",
-                "reference": "399619b88c28590b4ac1bec6bef6e5ac4592c2b4",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-runtime/zipball/b4b3a2d9fa184089ecc37f9475917d72fd560149",
+                "reference": "b4b3a2d9fa184089ecc37f9475917d72fd560149",
                 "shasum": ""
             },
             "require": {
@@ -43,26 +43,26 @@
             "description": "Elephentity runtime contracts: storage port, unit of work, verification, loaders.",
             "support": {
                 "issues": "https://github.com/hsimah-services/elephentity-runtime/issues",
-                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.17.0"
+                "source": "https://github.com/hsimah-services/elephentity-runtime/tree/v0.18.0"
             },
-            "time": "2026-10-18T22:32:08+00:00"
+            "time": "2026-10-23T00:50:54+00:00"
         },
         {
             "name": "elephentity/sqlite",
-            "version": "v0.17.0",
+            "version": "v0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hsimah-services/elephentity-sqlite.git",
-                "reference": "412155d26106a0f4d55ea83e3909e3e28b351370"
+                "reference": "77d331b9dabbe46ab08f1449e24474d33297f0a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/412155d26106a0f4d55ea83e3909e3e28b351370",
-                "reference": "412155d26106a0f4d55ea83e3909e3e28b351370",
+                "url": "https://api.github.com/repos/hsimah-services/elephentity-sqlite/zipball/77d331b9dabbe46ab08f1449e24474d33297f0a0",
+                "reference": "77d331b9dabbe46ab08f1449e24474d33297f0a0",
                 "shasum": ""
             },
             "require": {
-                "elephentity/runtime": "^0.17",
+                "elephentity/runtime": "^0.18",
                 "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "ext-pdo_sqlite": "*",
@@ -71,7 +71,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "0.17.x-dev"
+                    "dev-main": "0.18.x-dev"
                 }
             },
             "autoload": {
@@ -89,10 +89,10 @@
             ],
             "description": "Experimental SQLite storage adaptor for the Elephentity PHP runtime.",
             "support": {
-                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.17.0",
+                "source": "https://github.com/hsimah-services/elephentity-sqlite/tree/v0.18.0",
                 "issues": "https://github.com/hsimah-services/elephentity-sqlite/issues"
             },
-            "time": "2026-10-21T23:48:01+00:00"
+            "time": "2026-11-01T21:47:12+00:00"
         },
         {
             "name": "psr/container",
