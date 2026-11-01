@@ -92,6 +92,10 @@ internal static class BookModel
                 ["title"] = new("String"),
                 ["status"] = new("BookStatus"),
             }),
+            ["deleteBook"] = new("deleteBook", MutationKind.Delete, "Book", new Dictionary<string, GraphQLType>
+            {
+                ["id"] = new("ID", NonNull: true),
+            }),
             ["publishBook"] = new("publishBook", MutationKind.Action, "Book", new Dictionary<string, GraphQLType>
             {
                 ["id"] = new("ID", NonNull: true),
@@ -100,6 +104,10 @@ internal static class BookModel
             ["createAuthor"] = new("createAuthor", MutationKind.Create, "Author", new Dictionary<string, GraphQLType>
             {
                 ["name"] = new("String", NonNull: true),
+            }),
+            ["deleteAuthor"] = new("deleteAuthor", MutationKind.Delete, "Author", new Dictionary<string, GraphQLType>
+            {
+                ["id"] = new("ID", NonNull: true),
             }),
         },
         roots: new Dictionary<string, RootFieldEntry>

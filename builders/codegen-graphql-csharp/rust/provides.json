@@ -21,6 +21,15 @@
                     "nullable": false,
                     "default": null,
                     "hasDefault": false
+                },
+                "delete": {
+                    "type": "bool",
+                    "description": "Whether the entity gets a delete<Type> mutation. On unless set to false.",
+                    "of": null,
+                    "values": null,
+                    "nullable": false,
+                    "default": true,
+                    "hasDefault": true
                 }
             },
             "queryConfig": {

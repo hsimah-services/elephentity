@@ -9,6 +9,9 @@ public enum MutationKind
     /// <summary>Updates a row from the settable fields.</summary>
     Update,
 
+    /// <summary>Deletes a row by id; withheld by an entity's <c>delete: false</c>.</summary>
+    Delete,
+
     /// <summary>Runs a declared action.</summary>
     Action,
 }
@@ -17,8 +20,7 @@ public enum MutationKind
 /// One GraphQL mutation.
 /// </summary>
 /// <remarks>
-/// Ported from <c>Eleph\GraphQL\Manifest\MutationEntry</c>. Delete is not here: it takes an id and nothing else, so the schema builder
-/// derives it from each root field.
+/// Ported from <c>Eleph\GraphQL\Manifest\MutationEntry</c>. Delete takes an id and nothing else, so its entry carries only that.
 /// </remarks>
 /// <param name="Name">The mutation's name.</param>
 /// <param name="Kind">What it does.</param>

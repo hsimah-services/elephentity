@@ -26,7 +26,7 @@ application's own middleware.
 - Connections `{From}To{To}Connection` (`{From}To{Ucfirst(field)}Connection` when the field takes `where`) with `first`/`after`
   paging. `last` and `before` are refused, a malformed cursor is refused, `first: 0` is an empty page, a negative `first` is an
   error and a large one is capped. `totalCount` is counted only when asked for.
-- Relay mutations, `clientMutationId` on input and payload, and `delete<Type>` returning the global `deletedId`.
+- Relay mutations, `clientMutationId` on input and payload, and `delete<Type>` returning the global `deletedId`; delete is a `MutationKind.Delete` manifest entry, withheld per entity by `delete: false`.
 - Errors carry `extensions.code`: `FORBIDDEN` (access denied), `BAD_USER_INPUT` (a rejected commit, with `violations`, or something
   the client got wrong), `NOT_FOUND`, and `INTERNAL` for everything else, with the message masked and the exception logged.
 - `ElephentitySchemaPrinter.Print(schema)` prints the SDL sorted the way `tsquid-schema fetch` normalises it, and

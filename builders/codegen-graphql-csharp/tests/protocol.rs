@@ -105,6 +105,29 @@ fn every_fixture_generates_the_frozen_manifest() {
 }
 
 #[test]
+fn delete_is_a_manifest_mutation_unless_the_entity_opts_out() {
+    let body = |request: &Value| {
+        let response = answer(request);
+
+        assert_eq!(response["errors"], json!([]));
+
+        response["files"][0]["body"].as_str().unwrap().to_owned()
+    };
+
+    let mut request = fixture("book");
+    let with = body(&request);
+
+    assert!(with.contains("[\"deleteBook\"] = new("));
+    assert!(with.contains("MutationKind.Delete"));
+
+    request["schema"]["entities"]["Book"]["integrations"]["graphql"]["delete"] = json!(false);
+    let without = body(&request);
+
+    assert!(!without.contains("deleteBook"));
+    assert!(without.contains("[\"createBook\"]"));
+}
+
+#[test]
 fn the_output_is_the_same_every_time() {
     for name in FIXTURES {
         assert_eq!(answer(&fixture(name)), answer(&fixture(name)), "{name}");
@@ -169,7 +192,7 @@ fn describe_provides_the_graphql_integration_under_the_key_the_php_target_uses()
             .unwrap()
             .keys()
             .collect::<Vec<_>>(),
-        ["singular", "plural"]
+        ["singular", "plural", "delete"]
     );
     assert!(response["provides"].get("drivers").is_none());
 }

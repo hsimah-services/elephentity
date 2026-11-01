@@ -514,7 +514,13 @@ pub fn generate(
             update.push((s(&edge["name"]).into(), t));
         }
 
-        for (kind, inputs) in [("Create", create), ("Update", update)] {
+        let mut kinds = vec![("Create", create), ("Update", update)];
+
+        if deletable(e) {
+            kinds.push(("Delete", vec![("id".to_owned(), ty("ID", true, false))]));
+        }
+
+        for (kind, inputs) in kinds {
             let mn = format!("{}{n}", kind.to_ascii_lowercase());
 
             mutations.insert(

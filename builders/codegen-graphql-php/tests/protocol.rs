@@ -146,6 +146,27 @@ fn gives_default_collection_a_distinct_name() {
 }
 
 #[test]
+fn delete_is_a_manifest_mutation_unless_the_entity_opts_out() {
+    let manifest = |request: &Value| {
+        let response = generate(request);
+        assert_eq!(response["errors"], json!([]));
+        response["files"][0]["body"].as_str().unwrap().to_owned()
+    };
+
+    let mut request = fixture("book");
+    let body = manifest(&request);
+    assert!(body.contains("'deleteBook' => new MutationEntry("));
+    assert!(body.contains("'delete',"));
+
+    request["schema"]["entities"]["Book"]["integrations"]["graphql"]["delete"] = json!(false);
+    let body = manifest(&request);
+    assert!(!body.contains("deleteBook"));
+    assert!(body.contains("'createBook'"));
+    // The root and the read side are untouched by withholding delete.
+    assert!(body.contains("new RootFieldEntry('Book', 'Books', 'Book')"));
+}
+
+#[test]
 fn generated_php_has_checked_types_at_the_boundary() {
     let response = generate(&fixture("book"));
     let body = response["files"]

@@ -59,7 +59,7 @@ documented default.
 ## Rules
 
 - Confirm every class the manifest or verifier names exists in the *generic* runtime.
-- Root entries can also drive delete mutations; clearing roots has consequences beyond queries.
+- Delete is a `delete` manifest mutation, emitted per entity unless it sets `delete: false`; clearing roots no longer removes it.
 - Do not advertise a project option the artifacts and runtime do not honour.
 - Test names, enum members, inverse accessors, processed values, actions and custom query
   returns. Snapshot equality proves stability, not that the host accepts the schema.

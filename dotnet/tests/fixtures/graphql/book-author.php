@@ -80,12 +80,18 @@ $manifest = new Manifest(
             'title' => new GraphQLType('String'),
             'status' => new GraphQLType('BookStatus'),
         ]),
+        'deleteBook' => new MutationEntry('deleteBook', MutationEntry::DELETE, 'Book', [
+            'id' => new GraphQLType('ID', nonNull: true),
+        ]),
         'publishBook' => new MutationEntry('publishBook', MutationEntry::ACTION, 'Book', [
             'id' => new GraphQLType('ID', nonNull: true),
             'at' => new GraphQLType('String'),
         ], 'publish'),
         'createAuthor' => new MutationEntry('createAuthor', MutationEntry::CREATE, 'Author', [
             'name' => new GraphQLType('String', nonNull: true),
+        ]),
+        'deleteAuthor' => new MutationEntry('deleteAuthor', MutationEntry::DELETE, 'Author', [
+            'id' => new GraphQLType('ID', nonNull: true),
         ]),
     ],
     roots: [

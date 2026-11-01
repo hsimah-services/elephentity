@@ -69,6 +69,7 @@ $manifest = new Manifest(
     mutations: [
         'createApiBook' => new MutationEntry('createApiBook', 'create', 'Book', ['author' => new GraphQLType('ID'), 'authors' => new GraphQLType('ID', list: true)]),
         'updateApiBook' => new MutationEntry('updateApiBook', 'update', 'Book', ['id' => new GraphQLType('ID')]),
+        'deleteApiBook' => new MutationEntry('deleteApiBook', 'delete', 'Book', ['id' => new GraphQLType('ID', nonNull: true)]),
         'publishApiBook' => new MutationEntry('publishApiBook', 'action', 'Book', ['id' => new GraphQLType('ID')], 'publish'),
     ],
     roots: ['ApiBook' => new RootFieldEntry('ApiBook', 'ApiBooks', 'Book')],

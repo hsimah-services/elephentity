@@ -5,14 +5,14 @@
     "license": "MIT",
     "require": {
         "php": ">=8.3",
-        "elephentity/runtime": "^0.17",
+        "elephentity/runtime": "^0.18",
         "ext-pdo": "*",
         "ext-pdo_sqlite": "*",
         "ext-mbstring": "*"
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "0.17.x-dev"
+            "dev-main": "0.18.x-dev"
         }
     },
     "autoload": {

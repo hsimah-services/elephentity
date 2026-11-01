@@ -14,30 +14,18 @@ internal sealed partial class SchemaAssembler
     /// <summary>What a mutation field resolves to: the row it touched, and the id to evict for a delete.</summary>
     private sealed record Payload(MutationResult? Result, string? DeletedId, string? ClientMutationId);
 
-    private static FieldType Delete(RootFieldEntry root) => new()
-    {
-        Name = "delete" + root.Type,
-        ResolvedType = Ref("Delete" + root.Type + "Payload"),
-        Arguments = new QueryArguments(Argument("input", new NonNullGraphType(Ref("Delete" + root.Type + "Input")))),
-        Resolver = new DelegateResolver(async context =>
-        {
-            var input = Input(context);
-            var id = Identifier(input, root.Type);
-
-            await Gateway(context).DeleteAsync(root.Entity, id, context.CancellationToken).ConfigureAwait(false);
-
-            // The global form, because it is the id the client cached under and so the one it has to evict.
-            return new Payload(null, GlobalId.Encode(root.Type, id), ClientId(input));
-        }),
-    };
-
     private void Mutation(MutationEntry entry)
     {
         var inputs = entry.Inputs.ToDictionary(pair => pair.Key, pair => pair.Value);
         var type = TypeFor(entry.Entity);
         var name = entry.Name;
 
-        AddPayload(name, [(LowerFirst(type), Ref(type), context => ((Payload)context.Source!).Result?.Entity)]);
+        // A delete hands back the id to evict rather than the row, which is gone.
+        AddPayload(
+            name,
+            entry.Kind == MutationKind.Delete
+                ? [("deletedId", Ref("ID"), context => ((Payload)context.Source!).DeletedId)]
+                : [(LowerFirst(type), Ref(type), context => ((Payload)context.Source!).Result?.Entity)]);
         AddInput(name, inputs);
 
         mutation.AddField(new FieldType
@@ -50,6 +38,16 @@ internal sealed partial class SchemaAssembler
                 var input = Input(context);
                 var gateway = Gateway(context);
                 var token = context.CancellationToken;
+
+                if (entry.Kind == MutationKind.Delete)
+                {
+                    var id = Identifier(input, type);
+
+                    await gateway.DeleteAsync(entry.Entity, id, token).ConfigureAwait(false);
+
+                    // The global form, because it is the id the client cached under and so the one it has to evict.
+                    return new Payload(null, GlobalId.Encode(type, id), ClientId(input));
+                }
 
                 var result = entry.Kind switch
                 {
@@ -64,16 +62,6 @@ internal sealed partial class SchemaAssembler
                 return new Payload(result, null, ClientId(input));
             }),
         });
-    }
-
-    /// <summary>Registers the derived delete input and payload types; called once per root, before the delete field is used.</summary>
-    private void DeleteTypes()
-    {
-        foreach (var root in manifest.Roots.Values)
-        {
-            AddPayload("delete" + root.Type, [("deletedId", Ref("ID"), context => ((Payload)context.Source!).DeletedId)]);
-            AddInput("delete" + root.Type, new Dictionary<string, GraphQLType> { ["id"] = new("ID", NonNull: true) });
-        }
     }
 
     private void AddPayload(string mutationName, IEnumerable<(string Name, IGraphType Type, Func<IResolveFieldContext, object?> Read)> outputs)
