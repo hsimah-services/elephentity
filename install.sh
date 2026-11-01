@@ -13,7 +13,7 @@
 #   ELEPH_RELEASES_URL  where releases are downloaded from (default https://github.com); a
 #                       file:// directory laid out the same way works as a mirror.
 #
-# Linux (x64, arm64) and macOS (arm64). On Windows use install.ps1.
+# Linux (x64, arm64). On Windows use install.ps1. There is no macOS build.
 
 set -eu
 
@@ -34,8 +34,7 @@ command -v curl >/dev/null 2>&1 || fail "curl is required."
 case "$(uname -s)-$(uname -m)" in
     Linux-x86_64) rid=linux-x64 ;;
     Linux-aarch64 | Linux-arm64) rid=linux-arm64 ;;
-    Darwin-arm64) rid=osx-arm64 ;;
-    *) fail "there is no prebuilt eleph for $(uname -s) on $(uname -m). Releases are built for linux-x64, linux-arm64, osx-arm64 and win-x64 (install.ps1)." ;;
+    *) fail "there is no prebuilt eleph for $(uname -s) on $(uname -m). Releases are built for linux-x64, linux-arm64 and win-x64 (install.ps1); on anything else, build eleph with cargo." ;;
 esac
 
 if [ -z "$version" ]; then

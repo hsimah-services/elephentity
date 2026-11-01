@@ -30,7 +30,6 @@ names the program: `v<version>` for `eleph`, `<binary>-v<version>` for any other
 |---|---|---|---|
 | `linux-x64` | `x86_64-unknown-linux-gnu` | `.tar.gz` | ubuntu-22.04 |
 | `linux-arm64` | `aarch64-unknown-linux-gnu` | `.tar.gz` | ubuntu-22.04-arm |
-| `osx-arm64` | `aarch64-apple-darwin` | `.tar.gz` | macos-14 |
 | `win-x64` | `x86_64-pc-windows-msvc` | `.zip` | windows-2022 |
 
 For example `eleph-codegen-0.2.0-linux-x64.tar.gz`. Each archive holds exactly two entries
@@ -44,16 +43,16 @@ need glibc 2.35 or newer.
 digest, two spaces, then the bare archive name, one line per archive. `sha256sum -c
 SHA256SUMS` passes when run next to the archives.
 
-**Release.** Named by its tag. The notes are the annotated tag's message. It holds the four
+**Release.** Named by its tag. The notes are the annotated tag's message. It holds the three
 archives and `SHA256SUMS`, nothing else.
 
 ## What the workflow checks
 
 On every run, tag or not, before anything is published:
 
-1. All four archives build with `cargo build --release --locked`, so `Cargo.lock` must be
+1. All three archives build with `cargo build --release --locked`, so `Cargo.lock` must be
    committed.
-2. There are exactly four archives, one per rid, and `sha256sum -c SHA256SUMS` passes.
+2. There are exactly three archives, one per rid, and `sha256sum -c SHA256SUMS` passes.
 3. The linux-x64 binary starts, answering `--help`, in clean `debian:stable-slim` and
    `debian:bookworm-slim` containers. "Starts" means it is not a missing file, a missing
    library or a crash; whatever else it says is its own business.

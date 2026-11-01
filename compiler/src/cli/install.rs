@@ -440,15 +440,14 @@ impl Record {
     }
 }
 
-/// `linux-x64`, `linux-arm64`, `osx-arm64` or `win-x64`: the platforms release-binary.yml builds.
+/// `linux-x64`, `linux-arm64` or `win-x64`: the platforms release-binary.yml builds.
 fn runtime_identifier() -> Result<String, String> {
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("linux", "x86_64") => Ok("linux-x64"),
         ("linux", "aarch64") => Ok("linux-arm64"),
-        ("macos", "aarch64") => Ok("osx-arm64"),
         ("windows", "x86_64") => Ok("win-x64"),
         (os, arch) => Err(format!(
-            "There is no prebuilt release for {os} on {arch}. Releases are built for linux-x64, linux-arm64, osx-arm64 and win-x64; build the program with cargo and put it in tools/builders/."
+            "There is no prebuilt release for {os} on {arch}. Releases are built for linux-x64, linux-arm64 and win-x64; build the program with cargo and put it in tools/builders/."
         )),
     }
     .map(str::to_string)

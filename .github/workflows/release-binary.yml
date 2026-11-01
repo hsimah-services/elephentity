@@ -1,6 +1,6 @@
 name: Release binary
 
-# Reusable: builds a Rust binary for four platforms, checks the archives, and on a tag
+# Reusable: builds a Rust binary for three platforms, checks the archives, and on a tag
 # publishes them to that tag's GitHub Release. Several programs live in this repository, so the
 # tag is `v<version>` for eleph and `<binary>-v<version>` for every other program. The archive names are a contract with
 # `eleph install`; see docs/RELEASING.md before changing anything here.
@@ -36,7 +36,6 @@ jobs:
           # the glibc it was linked against, and Raspberry Pi OS (Debian 12) ships 2.36.
           - { target: x86_64-unknown-linux-gnu, rid: linux-x64, os: ubuntu-22.04, archive: tar.gz }
           - { target: aarch64-unknown-linux-gnu, rid: linux-arm64, os: ubuntu-22.04-arm, archive: tar.gz }
-          - { target: aarch64-apple-darwin, rid: osx-arm64, os: macos-14, archive: tar.gz }
           - { target: x86_64-pc-windows-msvc, rid: win-x64, os: windows-2022, archive: zip }
 
     defaults:
@@ -161,12 +160,12 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Four archives, and they match their checksums
+      - name: Three archives, and they match their checksums
         working-directory: dist
         run: |
           ls -l
-          test "$(ls | grep -c -E '\.(tar\.gz|zip)$')" -eq 4
-          for rid in linux-x64 linux-arm64 osx-arm64 win-x64; do
+          test "$(ls | grep -c -E '\.(tar\.gz|zip)$')" -eq 3
+          for rid in linux-x64 linux-arm64 win-x64; do
             ls | grep -E -- "^$BINARY-.+-$rid\.(tar\.gz|zip)$"
           done
           sha256sum -c SHA256SUMS
