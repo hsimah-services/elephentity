@@ -18,7 +18,7 @@ $directory = if ($env:ELEPH_INSTALL_DIR) { $env:ELEPH_INSTALL_DIR } else { Join-
 $version = if ($env:ELEPH_VERSION) { $env:ELEPH_VERSION.TrimStart('v') } else { '' }
 
 if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
-    throw "There is no prebuilt eleph for $($env:PROCESSOR_ARCHITECTURE). Releases are built for win-x64, linux-x64, linux-arm64 and osx-arm64."
+    throw "There is no prebuilt eleph for $($env:PROCESSOR_ARCHITECTURE). Releases are built for win-x64, linux-x64 and linux-arm64."
 }
 
 $rid = 'win-x64'

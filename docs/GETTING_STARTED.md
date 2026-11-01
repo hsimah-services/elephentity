@@ -44,7 +44,7 @@ A project that generates C# (or anything else a Rust builder emits) needs no PHP
 no cargo. Three steps:
 
 ```bash
-# 1. The `eleph` command: Linux and macOS (use install.ps1 on Windows)
+# 1. The `eleph` command: Linux (use install.ps1 on Windows; there is no macOS build)
 curl -fsSL https://github.com/hsimah-services/elephentity/releases/latest/download/install.sh | sh
 
 # 2. Pin the generator and each builder in eleph.json, by version (below), then fetch them
@@ -83,7 +83,7 @@ It fetches exactly what you pinned. There is no "latest", so a build never chang
 somebody published a release, and a builder you did not pin (`vendor/bin/eleph-gen-php`, a path)
 is left to whatever installed it. The repositories of the Elephentity programs are known; for
 anything else, say where its releases are with `"source": "owner/repo"` on the target. Releases
-are built for linux-x64, linux-arm64, osx-arm64 and win-x64.
+are built for linux-x64, linux-arm64 and win-x64.
 
 PHP projects can keep installing builders with Composer: `eleph` finds `eleph-codegen` and
 the builders in `vendor/bin`. `eleph` itself always comes from `install.sh`; the PHP compiler

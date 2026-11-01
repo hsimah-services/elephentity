@@ -1,6 +1,6 @@
 name: Release
 
-# On a v* tag: build `eleph` for linux-x64, linux-arm64, osx-arm64 and win-x64, check the
+# On a v* tag: build `eleph` for linux-x64, linux-arm64 and win-x64, check the
 # archives, publish them with SHA256SUMS to the tag's GitHub Release, and attach the two scripts
 # that bootstrap it (install.sh, install.ps1).
 #

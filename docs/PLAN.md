@@ -1984,7 +1984,7 @@ and distribution assumptions where they conflict.
   because a serde round trip cannot reproduce PHP's output exactly.
 - **GitHub Release binaries and `eleph install`.** A PHP-free distribution cannot
   depend on Composer. The reusable `elephentity-codegen` release workflow builds
-  linux-x64, linux-arm64, osx-arm64 and win-x64 archives with `SHA256SUMS`.
+  linux-x64, linux-arm64 and win-x64 archives with `SHA256SUMS`.
   `install.sh` and `install.ps1` bootstrap `eleph`; `eleph install` fetches versions
   pinned as `eleph-gen-csharp@0.1.0` in `eleph.json`, verifies checksums and places
   builders in the already-searched `tools/builders/`. Composer and cargo remain
