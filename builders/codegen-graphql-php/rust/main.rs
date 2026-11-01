@@ -39,6 +39,10 @@ fn low(s: &str) -> String {
 fn exposure(e: &Value) -> bool {
     !e["integrations"]["graphql"].is_null()
 }
+/// Whether the entity gets a `delete<Type>` mutation: on unless it says `delete: false`.
+fn deletable(e: &Value) -> bool {
+    e["integrations"]["graphql"]["delete"] != false
+}
 fn name(e: &Value) -> &str {
     e["integrations"]["graphql"]["singular"]
         .as_str()

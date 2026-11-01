@@ -66,8 +66,6 @@ internal sealed partial class SchemaAssembler(GraphQLManifest manifest, Elephent
             Published(published);
         }
 
-        DeleteTypes();
-
         foreach (var entry in manifest.Mutations.Values)
         {
             Mutation(entry);

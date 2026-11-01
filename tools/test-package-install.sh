@@ -12,8 +12,8 @@ cat > composer.json <<'JSON'
 {
   "name": "elephentity/package-install-check",
   "require": {
-    "elephentity/elephentity": "^0.17",
-    "elephentity/memory": "^0.17"
+    "elephentity/elephentity": "^0.17 || ^0.18",
+    "elephentity/memory": "^0.17 || ^0.18"
   },
   "require-dev": {
     "elephentity/codegen": "^0.7",

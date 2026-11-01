@@ -151,6 +151,46 @@ public static class GraphQLManifestFactory
             },
             null,
             "Create a ClogSite."),
+        ["deleteClogInventory"] = new(
+            "deleteClogInventory",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Inventory",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a ClogInventory."),
+        ["deleteClogItem"] = new(
+            "deleteClogItem",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Item",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a ClogItem."),
+        ["deleteClogLocation"] = new(
+            "deleteClogLocation",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Location",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a ClogLocation."),
+        ["deleteClogSite"] = new(
+            "deleteClogSite",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Site",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a ClogSite."),
         ["discontinueClogItem"] = new(
             "discontinueClogItem",
             global::Elephentity.GraphQL.Manifest.MutationKind.Action,

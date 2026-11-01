@@ -2178,3 +2178,20 @@ disagree about a table, which is the reason `EdgePlanner` is shared. This is the
 - **PHP's bytes did not change.** The frozen responses in `builders/codegen-sqlite/tests/fixtures` are the proof.
 - **The adaptor honours `KeysetCursor`**, which PHP has no use for, because reading a policy-gated entity relies on it.
   Everything else it does, SQL included, is PHP's; the differences are listed in `dotnet/docs/divergence.md`.
+
+### GraphQL delete is a manifest mutation, withheld per entity
+
+Delete used to exist only because the runtime looped over `roots` and registered `delete<Type>` for each, so it was the one
+mutation a reader of the generated manifest could not see, and an exposed entity could not decline it. It is now a `delete`
+entry in the manifest (`MutationEntry::DELETE` in PHP, `MutationKind.Delete` in .NET), emitted by `eleph-gen-graphql-php` and
+`eleph-gen-graphql-csharp` for every exposed entity, and the registrars read it from there.
+
+- **On by default, `delete: false` withholds it.** Create and update are on for every exposed entity, so delete follows; a
+  public API that must not delete says so on the entity, in the same `integrations.graphql` block that exposes it. Opt-in was
+  rejected because it silently removes delete from every existing project on upgrade.
+- **The key is declared by the builders**, in `provides.json`, like `singular` and `plural`; the compiler validates it as a
+  `bool` and knows nothing about GraphQL.
+- **Withholding delete removes the mutation, not the rule.** `onDelete`, cascades and write policies are the runtime's and apply
+  to a delete that arrives some other way.
+- **Not backward compatible with a stale manifest.** A runtime from this change over a manifest generated before it registers no
+  deletes; regenerate. The builder and the runtime ship separately, so release them together.

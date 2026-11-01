@@ -78,6 +78,19 @@ integrations:
 An entity that says nothing is not exposed. Adding an entity should never silently
 widen a public API, so the extra two lines are the point rather than a cost.
 
+An exposed entity also gets `delete<Type>(input: { id })`, which returns `deletedId` (the
+global id, the one a client has to evict from its cache). It is on by default, because
+create and update are too; withhold it per entity:
+
+```yaml
+integrations:
+  graphql:
+    delete: false         # no delete<Type> mutation; reads, create and update are unchanged
+```
+
+Delete follows `onDelete` and the write policies like any other delete, so `delete: false`
+only removes the mutation from the API, not the rule that governs deletion.
+
 The generator never pluralises on your behalf — the same rule as edge inverses, and
 "Inventory Entry" / "Inventory" is why — so `plural` is yours to name.
 

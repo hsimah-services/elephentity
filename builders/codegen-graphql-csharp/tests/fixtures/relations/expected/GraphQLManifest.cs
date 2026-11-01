@@ -159,6 +159,46 @@ public static class GraphQLManifestFactory
             },
             null,
             "Create a Tag."),
+        ["deleteAuthor"] = new(
+            "deleteAuthor",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Author",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a Author."),
+        ["deleteComment"] = new(
+            "deleteComment",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Comment",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a Comment."),
+        ["deletePost"] = new(
+            "deletePost",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Post",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a Post."),
+        ["deleteTag"] = new(
+            "deleteTag",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Tag",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a Tag."),
         ["publishPost"] = new(
             "publishPost",
             global::Elephentity.GraphQL.Manifest.MutationKind.Action,

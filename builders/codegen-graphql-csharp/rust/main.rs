@@ -156,6 +156,11 @@ fn exposure(e: &Value) -> bool {
     !e["integrations"]["graphql"].is_null()
 }
 
+/// Whether the entity gets a `delete<Type>` mutation: on unless it says `delete: false`.
+fn deletable(e: &Value) -> bool {
+    e["integrations"]["graphql"]["delete"] != false
+}
+
 /// The GraphQL type name: the integration's `singular`, else the entity's name.
 fn name(e: &Value) -> &str {
     e["integrations"]["graphql"]["singular"]

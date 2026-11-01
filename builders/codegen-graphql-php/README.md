@@ -85,9 +85,11 @@ registration, HTTP transport, authentication, and any connection argument adapta
 - Declared query fields and their arguments.
 - Rejection of invalid or colliding GraphQL type/field/enum names and unexposed query return types.
 
-Delete mutations are derived from root entries by the runtime registrar. Project-wide
-`rootQueries` and `mutations` toggles are intentionally not declared by this initial
-integration: the current generic runtime uses roots for delete registration too.
+Delete is a `delete` mutation in the manifest, like create and update, for every exposed
+entity that does not set `delete: false` under `integrations.graphql`. The runtime registrar
+reads it from there; it no longer derives delete from the roots, so a manifest generated
+before this change has no deletes until it is regenerated. Project-wide `rootQueries` and
+`mutations` toggles are intentionally not declared by this initial integration.
 The existing standalone runtime's ID validation, backward-pagination and query-only
 schema limitations are not changed by adding this generator. Those are tracked in
 [elephentity#90](https://github.com/hsimah-services/elephentity/issues/90).

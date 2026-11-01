@@ -284,6 +284,20 @@ pub fn generate(schema: &Value) -> Result<String> {
                 ),
             );
         }
+        if deletable(e) {
+            let mn = format!("delete{n}");
+            mutations.insert(
+                mn.clone(),
+                mutation(
+                    &mn,
+                    "delete",
+                    en,
+                    &[("id".into(), ty("ID", true, false))],
+                    "null",
+                    &q(&format!("Delete a {n}.")),
+                ),
+            );
+        }
         for a in vals(&e["actions"]) {
             let an = s(&a["name"]);
             let mn = format!("{an}{n}");

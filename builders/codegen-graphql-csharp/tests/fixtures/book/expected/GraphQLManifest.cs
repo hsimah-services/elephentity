@@ -51,6 +51,16 @@ public static class GraphQLManifestFactory
             },
             null,
             "Create a Book."),
+        ["deleteBook"] = new(
+            "deleteBook",
+            global::Elephentity.GraphQL.Manifest.MutationKind.Delete,
+            "Book",
+            new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
+            {
+                ["id"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
+            },
+            null,
+            "Delete a Book."),
         ["renameBook"] = new(
             "renameBook",
             global::Elephentity.GraphQL.Manifest.MutationKind.Action,

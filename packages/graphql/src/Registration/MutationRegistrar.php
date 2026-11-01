@@ -42,35 +42,42 @@ final readonly class MutationRegistrar
         $configs = [];
 
         foreach ($this->manifest->mutations as $mutation) {
-            $configs[$mutation->name] = [
-                'description' => $mutation->description ?? '',
-                'inputFields' => $this->inputs($mutation),
-                'outputFields' => $this->outputs($mutation),
-                'mutateAndGetPayload' => $this->resolver($mutation),
-            ];
-        }
-
-        foreach ($this->manifest->roots as $root) {
-            // Delete is not in the manifest's mutation list: it takes no fields beyond
-            // an id, so there is nothing for the builder to derive from the spec.
-            $configs['delete' . $root->type] = [
-                'description' => sprintf('Delete a %s.', $root->type),
-                'inputFields' => ['id' => ['type' => ['non_null' => 'ID']]],
-                'outputFields' => ['deletedId' => ['type' => 'ID']],
-                'mutateAndGetPayload' => function (array $input) use ($root): array {
-                    $id = $this->identifier($input, $root->type);
-                    $this->gateway->delete($root->entity, $id);
-
-                    // The global form, because it is the id the client cached under
-                    // and so the one it has to evict.
-                    return ['deletedId' => GlobalId::encode($root->type, (string) $id)];
-                },
-            ];
+            $configs[$mutation->name] = MutationEntry::DELETE === $mutation->kind
+                ? $this->deleteConfig($mutation)
+                : [
+                    'description' => $mutation->description ?? '',
+                    'inputFields' => $this->inputs($mutation),
+                    'outputFields' => $this->outputs($mutation),
+                    'mutateAndGetPayload' => $this->resolver($mutation),
+                ];
         }
 
         ksort($configs);
 
         return $configs;
+    }
+
+    /**
+     * Delete takes an id and hands back the global form of it: the id the client cached
+     * the row under, and so the one it has to evict.
+     *
+     * @return array<string, mixed>
+     */
+    private function deleteConfig(MutationEntry $mutation): array
+    {
+        $type = $this->typeFor($mutation->entity);
+
+        return [
+            'description' => $mutation->description ?? sprintf('Delete a %s.', $type),
+            'inputFields' => $this->inputs($mutation),
+            'outputFields' => ['deletedId' => ['type' => 'ID']],
+            'mutateAndGetPayload' => function (array $input) use ($mutation, $type): array {
+                $id = $this->identifier($input, $type);
+                $this->gateway->delete($mutation->entity, $id);
+
+                return ['deletedId' => GlobalId::encode($type, (string) $id)];
+            },
+        ];
     }
 
     /**

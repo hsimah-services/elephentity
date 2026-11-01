@@ -34,8 +34,6 @@ internal sealed partial class SchemaAssembler
             root.CollectionField(),
             null,
             context => ValueTask.FromResult<object?>(Gateway(context).All(root.Entity)));
-
-        mutation.AddField(Delete(root));
     }
 
     private void Published(QueryFieldEntry published)
