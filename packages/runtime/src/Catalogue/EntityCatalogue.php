@@ -92,6 +92,18 @@ interface EntityCatalogue
     public function requiredEdges(string $entity): array;
 
     /**
+     * String fields with a `maxLength`, and the limit in characters.
+     *
+     * The storage builders turn the limit into a constraint, but a constraint fails as
+     * a storage exception, which a client sees as an internal error. The runtime checks
+     * it first and reports a field violation instead, counting characters (not bytes)
+     * the way SQLite's length() does.
+     *
+     * @return array<string, positive-int> field => limit
+     */
+    public function maxLengths(string $entity): array;
+
+    /**
      * Fields carrying a uniqueness constraint, so the commit can check one before the
      * database does and report it as a violation rather than a SQL exception.
      *

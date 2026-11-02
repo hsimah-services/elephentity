@@ -89,9 +89,7 @@ public sealed class DeletionPlanner
 
                 if (remaining > 0)
                 {
-                    throw new InvalidOperationException(
-                        $"Cannot delete {deletion.Key()}: {remaining} {rule.Dependent} still depend{(remaining == 1 ? "s" : string.Empty)} "
-                        + $"on it through \"{rule.Edge}\". The edge says restrict.");
+                    throw new DeletionRestrictedException(deletion.Entity, deletion.Id, rule.Dependent, rule.Edge, remaining);
                 }
 
                 continue;

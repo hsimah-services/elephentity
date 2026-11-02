@@ -67,7 +67,7 @@ type CreateAuthorPayload {
 }
 
 input CreateCommentInput {
-  author: ID
+  author: ID!
   body: String!
   clientMutationId: String
 }

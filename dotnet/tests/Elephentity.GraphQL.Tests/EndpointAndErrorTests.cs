@@ -90,9 +90,21 @@ public sealed class EndpointAndErrorTests
         var violations = Assert.IsType<List<Dictionary<string, object?>>>(info.Extensions!["violations"]);
 
         Assert.Equal("BAD_USER_INPUT", info.Extensions["code"]);
+        Assert.Equal("Book.title: A title is required. Book.pages: Too many.", info.Message);
         Assert.Equal(2, violations.Count);
         Assert.Equal("Book.title", violations[0]["path"]);
         Assert.Equal("range", violations[1]["code"]);
+    }
+
+    [Fact]
+    public void ARestrictedDeleteIsBadUserInputThatNamesTheDependents()
+    {
+        var restricted = new Elephentity.Runtime.UnitOfWork.DeletionRestrictedException("Post", Elephentity.Runtime.Identity.EntityId.Of(3), "Tag", "tags", 1);
+
+        var info = new ElephentityErrorInfoProvider().GetInfo(new global::GraphQL.Execution.UnhandledError("x", restricted));
+
+        Assert.Equal("BAD_USER_INPUT", info.Extensions!["code"]);
+        Assert.Equal("Cannot delete Post#3: 1 Tag still depends on it through \"tags\". The edge says restrict.", info.Message);
     }
 
     [Fact]

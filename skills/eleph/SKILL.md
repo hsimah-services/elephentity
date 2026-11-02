@@ -94,7 +94,7 @@ C#:
             "output": "Generated",
             "namespace": "App.Entity",
             "typeNamespace": "App.Type",
-            "check": ["dotnet", "test", "tests/Contracts"]
+            "check": ["dotnet", "run", "--no-build", "--project", "tests/Contracts", "--", "eleph-check"]
         }
     }
 }
@@ -104,6 +104,11 @@ The versions above are examples; keep whatever the project pins. A driver or int
 the spec asks for must have a target that provides it: `driver: sqlite` with no sqlite
 target, or `integrations: { graphql: … }` with no graphql target, is a `validate` error.
 `eleph-codegen doctor` (PHP projects) confirms the builders are where the config expects.
+
+Two C# details that are easy to miss. A `graphql` target on `eleph-gen-graphql-csharp` needs
+`namespace` (its own) and `entityNamespace`, which must be the `csharp` target's `namespace`. And the
+`check` command's standard output may hold only `{"severity", "message"}` JSON lines, so it is
+`dotnet run --no-build` against a project you build first; plain `dotnet run` prints build output there.
 
 ## The loop
 

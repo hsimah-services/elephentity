@@ -205,6 +205,33 @@ impl Gen<'_> {
                 .document(doc("@return list<string>")),
             );
         }
+        let mut arms = vec![];
+        for e in &entities {
+            let limits = vals(&e["fields"])
+                .into_iter()
+                .filter_map(|f| {
+                    f["maxLength"]
+                        .as_i64()
+                        .map(|n| format!("{} => {n}", quote(s(&f["name"]))))
+                })
+                .collect::<Vec<_>>();
+            if !limits.is_empty() {
+                arms.push(arm(s(&e["name"]), &format!("[{}]", limits.join(", "))));
+            }
+        }
+        out.add(
+            method(
+                "maxLengths",
+                "array",
+                &if arms.is_empty() {
+                    "return [];".into()
+                } else {
+                    format!("return {};", matching("$entity", &arms, "[]"))
+                },
+            )
+            .parameter(param("entity", "string", false))
+            .document(doc("@return array<string, positive-int>")),
+        );
         let mut managed = vec![];
         for e in &entities {
             for f in vals(&e["fields"]) {

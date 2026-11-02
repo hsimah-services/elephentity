@@ -151,3 +151,15 @@ foreach ([GlobalId::encode('ApiBook', 2), GlobalId::encode('Missing', 1), Global
     check($node($id) === ['data' => ['node' => null]], 'node(id:) returned something for an unresolvable ID.');
 }
 echo "PASS: Node, PageInfo and node(id:) from a manifest alone\n";
+
+// A published collection query with no arguments: its own connection, and no empty `where` input.
+$schema = SchemaBuilder::fromManifest(new Manifest(
+    objects: ['ApiBook' => new ObjectTypeEntry('ApiBook', 'Book', ['id' => new FieldEntry('id', new GraphQLType('ID', nonNull: true), 'getId')])],
+    roots: ['ApiBook' => new RootFieldEntry('ApiBook', 'ApiBooks', 'Book')],
+    queries: ['recentBooks' => new QueryFieldEntry('recentBooks', 'ApiBook', true, 'Book', 'recent')],
+), new TestGateway())->build();
+$schema->assertValid();
+$recent = $schema->getQueryType()?->getField('recentBooks');
+check($recent !== null && $recent->getType()->toString() === 'RootQueryToRecentBooksConnection', 'An argument-less query lost its own connection name.');
+check($recent->getArg('where') === null && !$schema->hasType('RootQueryToRecentBooksConnectionWhereArgs'), 'An argument-less query registered an empty where input.');
+echo "PASS: a published query with no arguments\n";

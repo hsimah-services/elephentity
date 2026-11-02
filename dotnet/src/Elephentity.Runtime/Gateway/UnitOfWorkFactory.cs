@@ -51,6 +51,7 @@ public sealed class UnitOfWorkFactory : IDeletionRules
         var requiredEdges = new Dictionary<string, IReadOnlyList<string>>();
         var nonNullable = new Dictionary<string, IReadOnlyList<string>>();
         var unique = new Dictionary<string, IReadOnlyList<string>>();
+        var maxLengths = new Dictionary<string, IReadOnlyDictionary<string, int>>();
 
         foreach (var entity in catalogue.Entities())
         {
@@ -60,6 +61,7 @@ public sealed class UnitOfWorkFactory : IDeletionRules
             nonNullable[entity] = catalogue.NonNullableFields(entity);
             requiredEdges[entity] = catalogue.RequiredEdges(entity);
             unique[entity] = catalogue.UniqueFields(entity);
+            maxLengths[entity] = catalogue.MaxLengths(entity);
         }
 
         var fieldTypes = catalogue.FieldTypes();
@@ -67,7 +69,7 @@ public sealed class UnitOfWorkFactory : IDeletionRules
 
         return new UnitOfWork.UnitOfWork(
             storage,
-            new VerificationPipeline(verifiers, fieldTypes, processors, required, requiredEdges, nonNullable),
+            new VerificationPipeline(verifiers, fieldTypes, processors, required, requiredEdges, nonNullable, maxLengths),
             encoder,
             new SideEffectDispatcher(sideEffects, log),
             managed: new ManagedFields(catalogue.ManagedFields()),

@@ -58,6 +58,9 @@ public class StubEntityCatalogue : IEntityCatalogue
     public virtual IReadOnlyList<string> RequiredEdges(string entity) => [];
 
     /// <inheritdoc />
+    public virtual IReadOnlyDictionary<string, int> MaxLengths(string entity) => new Dictionary<string, int>();
+
+    /// <inheritdoc />
     public virtual IReadOnlyList<string> UniqueFields(string entity) => [];
 
     /// <inheritdoc />

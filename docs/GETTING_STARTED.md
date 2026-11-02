@@ -262,11 +262,14 @@ the builder echoes it back:
 
 ```json
 { "targets": { "csharp": { "builder": "eleph-gen-csharp", "output": "generated",
-                           "check": ["dotnet", "test", "tests/Contracts"] } } }
+                           "check": ["dotnet", "run", "--no-build", "--project", "tests/Contracts", "--", "eleph-check"] } } }
 ```
 
 A checker exits zero to pass and non-zero to fail, and prints one
-`{"severity": "error|warning|info", "message": "..."}` per line. `eleph check` never passes silently:
+`{"severity": "error|warning|info", "message": "..."}` per line, and nothing else on standard output.
+That is why the C# command is `dotnet run --no-build` against a project built beforehand: a plain
+`dotnet run` writes its build progress to standard output, and each of those lines fails the gate.
+The project's entry point calls `ContractCheck.TryRunConsole`, which answers `eleph-check`. `eleph check` never passes silently:
 a target whose builder provides no checker is listed as a warning, and if no target at all was
 checked the gate fails and names them.
 

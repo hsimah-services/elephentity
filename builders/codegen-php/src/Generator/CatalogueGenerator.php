@@ -81,6 +81,7 @@ final readonly class CatalogueGenerator
         $this->addPerEntityList($type, 'nonNullableFields', $this->nonNullableFields());
         $this->addPerEntityList($type, 'requiredEdges', $this->requiredEdges());
         $this->addPerEntityList($type, 'uniqueFields', $this->uniqueFields());
+        $this->addMaxLengths($type);
         $this->addManagedFields($type, $namespace);
         $this->addDeletionRules($type, $namespace);
         $this->addFinder($type, $namespace);
@@ -279,6 +280,35 @@ final readonly class CatalogueGenerator
         }
 
         return $unique;
+    }
+
+    /**
+     * String fields with a maxLength, so the runtime reports an over-long value as a
+     * field violation before the storage constraint turns it into an exception.
+     */
+    private function addMaxLengths(\Nette\PhpGenerator\ClassType $type): void
+    {
+        $arms = [];
+
+        foreach ($this->schema->entities as $entity) {
+            $limits = [];
+
+            foreach ($entity->fields as $field) {
+                if (null !== $field->maxLength) {
+                    $limits[] = sprintf('%s => %d', var_export($field->name, true), $field->maxLength);
+                }
+            }
+
+            if ([] !== $limits) {
+                $arms[] = sprintf('    %s => [%s],', var_export($entity->name, true), implode(', ', $limits));
+            }
+        }
+
+        $method = $type->addMethod('maxLengths')
+            ->setReturnType('array')
+            ->setBody([] === $arms ? 'return [];' : sprintf("return match (\$entity) {\n%s\n    default => [],\n};", implode("\n", $arms)))
+            ->addComment('@return array<string, positive-int>');
+        $method->addParameter('entity')->setType('string');
     }
 
     private function addManagedFields(\Nette\PhpGenerator\ClassType $type, \Nette\PhpGenerator\PhpNamespace $namespace): void

@@ -35,7 +35,7 @@ package: the .NET path needs no PHP, so releases are the only distribution.
       "output": "Generated",
       "namespace": "Hsimah.Entity",
       "typeNamespace": "Hsimah.Type",
-      "check": ["dotnet", "run", "--project", "tests/Contracts", "--", "eleph-check"]
+      "check": ["dotnet", "run", "--no-build", "--project", "tests/Contracts", "--", "eleph-check"]
     }
   }
 }
@@ -58,6 +58,9 @@ Only the project knows where its contract-test project is, so it says so here, a
 the command back in `describe` as `provides.check`. `eleph check` then runs it, with the project as the
 working directory, and reads one `{"severity", "message"}` JSON object per line of its output
 (`ContractCheck.TryRunConsole` in `Elephentity.Runtime.Testing` prints exactly that for `-- eleph-check`).
+**Its standard output must carry nothing else.** Every other line is reported as "not a signal", so
+use `dotnet run --no-build` and build the project first (`dotnet build tests/Contracts`): a plain
+`dotnet run` prints its build progress to the same stream. `dotnet test` does not print signals at all.
 A target with no `check` is reported by `eleph check` as having no checker; it never passes silently.
 
 ## What it writes

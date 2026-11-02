@@ -23,7 +23,11 @@ final class Database
         $this->pdo->exec('PRAGMA journal_mode = WAL');
         $this->pdo->exec('PRAGMA synchronous = FULL');
         $this->pdo->exec('PRAGMA cache_size = -2048');
-        $this->pdo->sqliteCreateCollation('CLOG_NOCASE', static fn ($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
+        // A Unicode-aware case-insensitive comparison. CLOG_NOCASE is the same collation under the
+        // name it had before it was a framework one; databases whose indexes name it must still open.
+        $nocase = static fn (string $a, string $b): int => strcmp(mb_strtolower($a), mb_strtolower($b));
+        $this->pdo->sqliteCreateCollation('ELEPH_NOCASE', $nocase);
+        $this->pdo->sqliteCreateCollation('CLOG_NOCASE', $nocase);
     }
 
     public function prefix(): string { return 'app_'; }

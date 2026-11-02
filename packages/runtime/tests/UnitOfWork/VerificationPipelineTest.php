@@ -27,6 +27,36 @@ final class VerificationPipelineTest extends TestCase
         self::assertSame([], $pipeline->verify($mutation));
     }
 
+    public function testAStringOverItsMaxLengthIsAFieldViolationOnCreateAndUpdate(): void
+    {
+        $pipeline = new VerificationPipeline([], [], $this->createStub(ProcessorRegistry::class), maxLengths: ['Page' => ['excerpt' => 3]]);
+
+        $create = new Mutation('Page', new \Eleph\Runtime\Identity\PendingId('Page'));
+        $create->set('excerpt', 'abcd');
+        $violations = $pipeline->verify($create);
+        self::assertSame(['excerpt'], array_map(static fn ($v): string => $v->field, $violations));
+        self::assertSame('field.maxLength', $violations[0]->violation->code);
+
+        $update = new Mutation('Page', EntityId::of(1), ['excerpt' => 'ab']);
+        $update->set('excerpt', 'abcd');
+        self::assertSame('field.maxLength', $pipeline->verify($update)[0]->violation->code);
+    }
+
+    public function testMaxLengthCountsCharactersNotBytesAndIgnoresUnchangedValues(): void
+    {
+        $pipeline = new VerificationPipeline([], [], $this->createStub(ProcessorRegistry::class), maxLengths: ['Page' => ['excerpt' => 3]]);
+
+        // Three characters, nine bytes: within the limit, as SQLite's length() counts it.
+        $create = new Mutation('Page', new \Eleph\Runtime\Identity\PendingId('Page'));
+        $create->set('excerpt', '日本語');
+        self::assertSame([], $pipeline->verify($create));
+
+        // A row stored before the limit existed is not re-measured until that field changes.
+        $untouched = new Mutation('Page', EntityId::of(1), ['excerpt' => 'too long already']);
+        $untouched->set('title', 'New');
+        self::assertSame([], $pipeline->verify($untouched));
+    }
+
     public function testFinalStateVerifiesUnchangedDependenciesAndExplicitNulls(): void
     {
         $verifiers = new class () implements EntityVerifiers {

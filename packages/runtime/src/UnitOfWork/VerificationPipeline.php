@@ -20,6 +20,10 @@ use Eleph\Runtime\Verification\Violation;
  * MySQL raises an error, and WordPress's default session quietly stores
  * `0000-00-00 00:00:00` instead.
  *
+ * A changed string longer than its field's `maxLength` is a violation too, for the
+ * same reason: otherwise it reaches the storage constraint and surfaces as an
+ * exception rather than something the client can fix.
+ *
  * Then the two value tiers. The field verifier runs first — it is entity-specific and
  * exactly typed — and then the shared type processor. **Both run even when the first
  * fails**, so violations from the two tiers arrive together rather than the second
@@ -35,6 +39,7 @@ final readonly class VerificationPipeline
      * @param array<string, list<string>>    $required      Entity => fields that must be supplied on create.
      * @param array<string, list<string>>    $nonNullable Entity => fields that cannot hold null.
      * @param array<string, list<string>>    $requiredEdges Entity => to-one edges that must be attached on create.
+     * @param array<string, array<string, positive-int>> $maxLengths Entity => field => the most characters it may hold.
      */
     public function __construct(
         private array $verifiers,
@@ -43,6 +48,7 @@ final readonly class VerificationPipeline
         private array $required = [],
         private array $requiredEdges = [],
         private array $nonNullable = [],
+        private array $maxLengths = [],
     ) {
     }
 
@@ -141,6 +147,7 @@ final readonly class VerificationPipeline
     {
         $result = $this->fieldTier($mutation, $field, $value);
         if (null !== $value && $mutation->isChanged($field)) {
+            $result = $result->merge($this->lengthTier($mutation, $field, $value));
             $result = $result->merge($this->typeTier($mutation, $field, $value));
         }
 
@@ -162,6 +169,24 @@ final readonly class VerificationPipeline
         }
 
         return $verifiers->verify($field, $value, $mutation);
+    }
+
+    /**
+     * Only a changed value is measured, so a row stored before the limit existed can still
+     * be read and saved; it fails only when that field is written again.
+     */
+    private function lengthTier(Mutation $mutation, string $field, mixed $value): Verification
+    {
+        $limit = $this->maxLengths[$mutation->entity()][$field] ?? null;
+
+        if (null === $limit || !is_string($value) || mb_strlen($value, 'UTF-8') <= $limit) {
+            return Verification::ok();
+        }
+
+        return Verification::failed(new Violation(
+            'field.maxLength',
+            sprintf('At most %d characters.', $limit),
+        ));
     }
 
     private function typeTier(Mutation $mutation, string $field, mixed $value): Verification
