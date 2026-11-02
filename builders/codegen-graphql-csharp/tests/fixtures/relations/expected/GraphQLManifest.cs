@@ -120,7 +120,7 @@ public static class GraphQLManifestFactory
             new global::System.Collections.Generic.Dictionary<string, global::Elephentity.GraphQL.Manifest.GraphQLType>
             {
                 ["body"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("String", true, false),
-                ["author"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", false, false),
+                ["author"] = new global::Elephentity.GraphQL.Manifest.GraphQLType("ID", true, false),
             },
             null,
             "Create a Comment."),

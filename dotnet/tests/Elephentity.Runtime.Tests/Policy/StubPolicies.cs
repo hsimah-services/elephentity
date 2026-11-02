@@ -86,6 +86,8 @@ internal class StubCatalogue : IEntityCatalogue
 
     public IReadOnlyList<string> RequiredEdges(string entity) => [];
 
+    public IReadOnlyDictionary<string, int> MaxLengths(string entity) => new Dictionary<string, int>();
+
     public IReadOnlyList<string> UniqueFields(string entity) => [];
 
     public IReadOnlyDictionary<string, Managed> ManagedFields() => new Dictionary<string, Managed>();

@@ -10,7 +10,8 @@ namespace Elephentity.Runtime.UnitOfWork;
 /// <para>
 /// Presence comes first, because it is about the mutation rather than a value: a create missing a required
 /// field is rejected here, before any write runs. Without it the omission reaches the database and the outcome
-/// depends on the installation.
+/// depends on the installation. A changed string longer than its field's <c>maxLength</c> is a violation too, for
+/// the same reason: otherwise it reaches the storage constraint and surfaces as an exception.
 /// </para>
 /// <para>
 /// Then the two value tiers. The field verifier runs first (it is entity-specific and exactly typed) and then
@@ -27,6 +28,7 @@ public sealed class VerificationPipeline
     private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> required;
     private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> requiredEdges;
     private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> nonNullable;
+    private readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, int>> maxLengths;
 
     /// <summary>A pipeline for the project's entities.</summary>
     /// <param name="verifiers">Keyed by entity name.</param>
@@ -35,13 +37,15 @@ public sealed class VerificationPipeline
     /// <param name="required">Entity to the fields that must be supplied on create.</param>
     /// <param name="requiredEdges">Entity to the to-one edges that must be attached on create.</param>
     /// <param name="nonNullable">Entity to the fields that cannot hold null.</param>
+    /// <param name="maxLengths">Entity to field to the most characters it may hold.</param>
     public VerificationPipeline(
         IReadOnlyDictionary<string, IEntityVerifiers> verifiers,
         IReadOnlyDictionary<string, string> fieldTypes,
         IProcessorRegistry processors,
         IReadOnlyDictionary<string, IReadOnlyList<string>>? required = null,
         IReadOnlyDictionary<string, IReadOnlyList<string>>? requiredEdges = null,
-        IReadOnlyDictionary<string, IReadOnlyList<string>>? nonNullable = null)
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? nonNullable = null,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, int>>? maxLengths = null)
     {
         this.verifiers = verifiers;
         this.fieldTypes = fieldTypes;
@@ -49,6 +53,7 @@ public sealed class VerificationPipeline
         this.required = required ?? new Dictionary<string, IReadOnlyList<string>>();
         this.requiredEdges = requiredEdges ?? new Dictionary<string, IReadOnlyList<string>>();
         this.nonNullable = nonNullable ?? new Dictionary<string, IReadOnlyList<string>>();
+        this.maxLengths = maxLengths ?? new Dictionary<string, IReadOnlyDictionary<string, int>>();
     }
 
     /// <summary>Verifies a mutation.</summary>
@@ -164,6 +169,7 @@ public sealed class VerificationPipeline
 
         if (value is not null && mutation.IsChanged(field))
         {
+            result = result.Merge(LengthTier(mutation, field, value));
             result = result.Merge(TypeTier(mutation, field, value));
         }
 
@@ -182,6 +188,25 @@ public sealed class VerificationPipeline
         }
 
         return await entityVerifiers.VerifyAsync(field, value, mutation, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Characters as SQLite's <c>length()</c> counts them (code points, not UTF-16 units or bytes). Only a changed value is
+    /// measured, so a row stored before the limit existed can still be read and saved until that field is written again.
+    /// </summary>
+    private Verification.Verification LengthTier(Mutation.Mutation mutation, string field, object value)
+    {
+        if (value is not string text
+            || !maxLengths.TryGetValue(mutation.Entity, out var limits)
+            || !limits.TryGetValue(field, out var limit)
+            || text.EnumerateRunes().Count() <= limit)
+        {
+            return Verification.Verification.Ok();
+        }
+
+        return Verification.Verification.Failed(new Violation(
+            "field.maxLength",
+            string.Create(System.Globalization.CultureInfo.InvariantCulture, $"At most {limit} characters.")));
     }
 
     private Verification.Verification TypeTier(Mutation.Mutation mutation, string field, object value)

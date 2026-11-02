@@ -95,6 +95,15 @@ public interface IEntityCatalogue
     IReadOnlyList<string> RequiredEdges(string entity);
 
     /// <summary>
+    /// String fields with a <c>maxLength</c>, and the limit in characters. The storage builders turn the limit into a
+    /// constraint, but a constraint fails as a storage exception, which a client sees as an internal error; the runtime
+    /// checks it first and reports a field violation instead.
+    /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <returns>Field name to the most characters it may hold.</returns>
+    IReadOnlyDictionary<string, int> MaxLengths(string entity);
+
+    /// <summary>
     /// Fields carrying a uniqueness constraint, so the commit can check one before the database does and report
     /// it as a violation rather than a storage exception.
     /// </summary>

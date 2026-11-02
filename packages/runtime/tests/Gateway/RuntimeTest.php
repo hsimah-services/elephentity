@@ -50,6 +50,26 @@ final class RuntimeTest extends TestCase
         self::assertSame($collection, $runtime->runQuery('Page', 'search', ['slug' => 'visible']));
     }
 
+    public function testABackedEnumArgumentArrivesTypedWhenTheCallerSendsItsValue(): void
+    {
+        $storage = $this->createStub(StorageAdaptor::class);
+        $catalogue = $this->createStub(EntityCatalogue::class);
+        $finder = new class () {
+            public function byStatus(?RuntimeTestStatus $status, bool $home): object
+            {
+                return (object) ['status' => $status, 'home' => $home];
+            }
+        };
+        $catalogue->method('finder')->willReturn($finder);
+        $catalogue->method('queryArguments')->willReturn(['status', 'home']);
+        $viewer = new AnonymousViewerProvider();
+        $runtime = new Runtime($storage, $catalogue, new UnitOfWorkFactory($storage, $catalogue, new NullProcessorRegistry()), new ReadGate($catalogue, $viewer), new WriteGate($catalogue, $viewer));
+
+        self::assertEquals((object) ['status' => RuntimeTestStatus::Draft, 'home' => true], $runtime->runQuery('Page', 'byStatus', ['status' => 'draft', 'home' => true]));
+        self::assertEquals((object) ['status' => RuntimeTestStatus::Published, 'home' => false], $runtime->runQuery('Page', 'byStatus', ['status' => RuntimeTestStatus::Published, 'home' => false]));
+        self::assertEquals((object) ['status' => null, 'home' => false], $runtime->runQuery('Page', 'byStatus', ['home' => false]));
+    }
+
     public function testFindThrowsWhenTheReadPolicyDenies(): void
     {
         $storage = $this->createStub(StorageAdaptor::class);
@@ -77,4 +97,10 @@ final class RuntimeTest extends TestCase
         $this->expectException(\Eleph\Runtime\Policy\AccessDenied::class);
         $runtime->find('Post', EntityId::of(1));
     }
+}
+
+enum RuntimeTestStatus: string
+{
+    case Draft = 'draft';
+    case Published = 'published';
 }

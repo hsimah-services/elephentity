@@ -18,6 +18,26 @@ namespace Elephentity.Runtime.Storage;
 /// are for this item"; the second is the same edge read backwards, not a second edge.
 /// </para>
 /// <para>
+/// Which way each reads, with <c>PageItem.page</c> (to-one, declared on PageItem) and <c>Post.tags</c>
+/// (to-many, declared on Post). The ids always belong to the side the filter starts from, and the
+/// result is always rows of the other side:
+/// </para>
+/// <code>
+/// // The page this item sits on: start at PageItem 7, get Page rows.
+/// Criteria.For("Page").LinkedTo(EdgeFilter.Along("PageItem", "page", itemId));
+/// // The items of a page: start at Page 3, get PageItem rows.
+/// Criteria.For("PageItem").LinkedTo(EdgeFilter.Back("PageItem", "page", pageId));
+/// // A post's tags: start at Post 1, get Tag rows.
+/// Criteria.For("Tag").LinkedTo(EdgeFilter.Along("Post", "tags", postId));
+/// // The posts with a tag: start at Tag 5, get Post rows.
+/// Criteria.For("Post").LinkedTo(EdgeFilter.Back("Post", "tags", tagId));
+/// </code>
+/// <para>
+/// So <c>Along</c> goes from the declaring entity to the edge's target, and <c>Back</c> from the target to
+/// the declaring entity, whatever the cardinality. "Items of a page" is <c>Back</c>, because the edge is
+/// declared on the item.
+/// </para>
+/// <para>
 /// Several parents in one filter mean <em>any of them</em>, which is how one query serves fifty
 /// posts asking for their comments. Separate filters on a criteria remain conjunctive, as field
 /// filters are.

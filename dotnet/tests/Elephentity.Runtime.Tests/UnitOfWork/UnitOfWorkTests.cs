@@ -150,6 +150,40 @@ public sealed class UnitOfWorkTests
         Assert.Empty(storage.Log);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AStringOverItsMaxLengthIsAFieldViolationBeforeAnyWrite(bool create)
+    {
+        var storage = new FakeStorage();
+        var work = Build(storage, maxLengths: new() { ["Page"] = new Dictionary<string, int> { ["excerpt"] = 3 } });
+        var mutation = create ? new Mut("Page", new PendingId("Page")) : new Mut("Page", EntityId.Of(1));
+        mutation.Assign("excerpt", "abcd");
+        work.Register(mutation);
+
+        var rejected = await Assert.ThrowsAsync<CommitRejectedException>(() => work.CommitAsync(Token));
+
+        Assert.Equal(["Page.excerpt"], rejected.Paths());
+        Assert.Equal("field.maxLength", rejected.Violations[0].Violation.Code);
+        Assert.Empty(storage.Log);
+    }
+
+    [Fact]
+    public async Task MaxLengthCountsCharactersNotUtf16UnitsOrBytes()
+    {
+        var storage = new FakeStorage();
+        var work = Build(storage, maxLengths: new() { ["Page"] = new Dictionary<string, int> { ["excerpt"] = 3 } });
+        var mutation = new Mut("Page", new PendingId("Page"));
+
+        // Three characters: ten UTF-8 bytes and four UTF-16 units, but within the limit as SQLite's length() counts.
+        mutation.Assign("excerpt", "😀日本");
+        work.Register(mutation);
+
+        await work.CommitAsync(Token);
+
+        Assert.Equal(["begin", "insert Page", "commit"], storage.Log);
+    }
+
     [Fact]
     public async Task AnUpdateStaysPartialWhateverIsRequired()
     {
@@ -400,14 +434,15 @@ public sealed class UnitOfWorkTests
         DeletionPlanner? planner = null,
         ManagedFields? managed = null,
         Dictionary<string, IReadOnlyList<string>>? required = null,
-        Dictionary<string, IReadOnlyList<string>>? requiredEdges = null)
+        Dictionary<string, IReadOnlyList<string>>? requiredEdges = null,
+        Dictionary<string, IReadOnlyDictionary<string, int>>? maxLengths = null)
     {
         processors ??= new NullProcessorRegistry();
         fieldTypes ??= [];
 
         return new Work(
             storage,
-            new VerificationPipeline(verifiers ?? [], fieldTypes, processors, required, requiredEdges),
+            new VerificationPipeline(verifiers ?? [], fieldTypes, processors, required, requiredEdges, maxLengths: maxLengths),
             new ValueEncoder(fieldTypes, processors),
             new SideEffectDispatcher(sideEffects ?? []),
             managed: managed,

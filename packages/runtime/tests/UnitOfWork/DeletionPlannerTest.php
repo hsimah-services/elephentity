@@ -14,12 +14,13 @@ use Eleph\Runtime\Storage\Write\Delete;
 use Eleph\Runtime\Storage\Write\Unlink;
 use Eleph\Runtime\Storage\Write\WriteOperation;
 use Eleph\Runtime\UnitOfWork\DeletionPlanner;
+use Eleph\Runtime\UnitOfWork\DeletionRestricted;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DeletionPlanner::class)]
+#[CoversClass(DeletionRestricted::class)]
 final class DeletionPlannerTest extends TestCase
 {
     /** @return iterable<string, array{string, string, string, bool, bool}> */
@@ -148,8 +149,8 @@ final class DeletionPlannerTest extends TestCase
         $storage = new FakeStorage();
         $storage->countResult = 3;
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('3 Comment still depend on it through "comments"');
+        $this->expectException(DeletionRestricted::class);
+        $this->expectExceptionMessage('Cannot delete Post#1: 3 Comment still depend on it through "comments". The edge says restrict.');
 
         $this->plan(
             ['Post' => [new DeletionRule('Comment', 'comments', 'Post', DeletionPolicy::Restrict)]],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleph\Runtime\Gateway;
 
+use BackedEnum;
 use Eleph\Runtime\Catalogue\EntityCatalogue;
 use Eleph\Runtime\Identity\EntityId;
 use Eleph\Runtime\Identity\PendingId;
@@ -24,6 +25,8 @@ use Eleph\Runtime\Query\Queries;
 use Eleph\Runtime\Storage\Criteria;
 use Eleph\Runtime\Storage\StorageAdaptor;
 use InvalidArgumentException;
+use ReflectionMethod;
+use ReflectionNamedType;
 use RuntimeException;
 
 /**
@@ -79,7 +82,7 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
         }
 
         /** @var EntityQuery<object>|object|null $result */
-        $result = $finder->{$query}(...array_values($this->named($entity, $query, $args)));
+        $result = $finder->{$query}(...$this->decoded($finder, $query, $this->named($entity, $query, $args)));
 
         return $result;
     }
@@ -236,6 +239,40 @@ final readonly class Runtime implements EntityGateway, HydratorRegistry
 
             if (method_exists($existing, $getter)) {
                 $values[$field] = $existing->{$getter}();
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * Arguments as the finder's signature types them.
+     *
+     * A caller outside PHP (GraphQL, a CLI, a request body) can only send an enum as
+     * its stored value. The generated finder declares the backed enum, so a raw value
+     * reaching it is a TypeError and an internal error for the client. Anything that is
+     * not a raw value for a backed-enum parameter passes through untouched.
+     *
+     * @param array<string, mixed> $named
+     *
+     * @return list<mixed>
+     */
+    private function decoded(object $finder, string $query, array $named): array
+    {
+        $values = array_values($named);
+
+        foreach ((new ReflectionMethod($finder, $query))->getParameters() as $position => $parameter) {
+            $type = $parameter->getType();
+            $value = $values[$position] ?? null;
+
+            if (!$type instanceof ReflectionNamedType || $type->isBuiltin() || !(is_string($value) || is_int($value))) {
+                continue;
+            }
+
+            $class = $type->getName();
+
+            if (is_subclass_of($class, BackedEnum::class)) {
+                $values[$position] = $class::from($value);
             }
         }
 

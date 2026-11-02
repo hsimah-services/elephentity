@@ -120,7 +120,7 @@
               "unique": false
             },
             "onDelete": "nullify",
-            "required": false
+            "required": true
           }
         },
         "queries": {},

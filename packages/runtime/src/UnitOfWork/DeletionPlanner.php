@@ -94,14 +94,7 @@ final readonly class DeletionPlanner
                 $remaining = $this->storage->count($criteria);
 
                 if ($remaining > 0) {
-                    throw new RuntimeException(sprintf(
-                        'Cannot delete %s: %d %s still depend%s on it through "%s". The edge says restrict.',
-                        $deletion->key(),
-                        $remaining,
-                        $rule->dependent,
-                        1 === $remaining ? 's' : '',
-                        $rule->edge,
-                    ));
+                    throw new DeletionRestricted($deletion->entity, $deletion->id, $rule->dependent, $rule->edge, $remaining);
                 }
 
                 continue;

@@ -60,10 +60,11 @@ public sealed class DeletionPlannerTests
     {
         var storage = new FakeStorage { CountResult = 2 };
 
-        var failure = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var failure = await Assert.ThrowsAsync<DeletionRestrictedException>(() =>
             Plan(storage, Rule("Post", new DeletionRule("Comment", "comments", "Post", DeletionPolicy.Restrict)), "Post", 1));
 
-        Assert.Contains("2 Comment still depend on it", failure.Message, StringComparison.Ordinal);
+        Assert.Equal("Cannot delete Post#1: 2 Comment still depend on it through \"comments\". The edge says restrict.", failure.Message);
+        Assert.Equal(("Comment", "comments", 2L), (failure.Dependent, failure.Edge, failure.Remaining));
     }
 
     [Fact]

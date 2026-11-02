@@ -222,7 +222,7 @@ writes the same tables and the same SQL for the same query; see [sqlite.md](sqli
 - **Values are bound as their type.** PDO binds a float as text, which a `REAL` column then converts; a C# `double` is bound as a
   `REAL`. A `bool` is bound as the integer 1 or 0 in both. A value that is not a string, a number, a bool or null is refused with
   an `ArgumentException` naming the field, before any SQL runs.
-- **The `CLOG_NOCASE` collation is not registered.** PHP's `Database` creates it for Clog; no schema this builder writes uses it.
+- **The `ELEPH_NOCASE` collation is not registered.** PHP's `Database` creates it (and its old name, `CLOG_NOCASE`, for databases that already use it); no schema this builder writes uses it.
 - **A failed rollback does not replace the failure that caused it.** SQLite may already have undone the transaction (a disk error does);
   the original exception is the one that propagates.
 - **A link query binds ids as the numbers they are.** PHP binds them as text, which SQLite compares as the same number.

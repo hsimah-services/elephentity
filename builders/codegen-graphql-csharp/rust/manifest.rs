@@ -508,10 +508,14 @@ pub fn generate(
                 continue;
             }
 
-            let t = ty("ID", false, edge["cardinality"] == "many");
+            let many = edge["cardinality"] == "many";
 
-            create.push((s(&edge["name"]).into(), t.clone()));
-            update.push((s(&edge["name"]).into(), t));
+            // A required to-one edge must be attached on create, so the contract says so; an update may leave it as it is.
+            create.push((
+                s(&edge["name"]).into(),
+                ty("ID", !many && b(&edge["required"]), many),
+            ));
+            update.push((s(&edge["name"]).into(), ty("ID", false, many)));
         }
 
         let mut kinds = vec![("Create", create), ("Update", update)];

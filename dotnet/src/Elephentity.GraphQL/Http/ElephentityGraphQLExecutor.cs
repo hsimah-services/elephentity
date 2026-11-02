@@ -1,6 +1,7 @@
 using System.Text;
 using Elephentity.Runtime.Gateway;
 using Elephentity.Runtime.Policy;
+using Elephentity.Runtime.UnitOfWork;
 using Elephentity.Runtime.Verification;
 using GraphQL;
 using GraphQL.Execution;
@@ -104,7 +105,7 @@ public sealed class ElephentityGraphQLExecutor
     {
         // What the client is told is decided by the error info provider; this is only about what the operator is told. A refusal
         // or a bad request is the system working, so it is not an error in the log.
-        if (context.OriginalException is not (AccessDeniedException or CommitRejectedException or EntityNotFoundException or GraphQLInputException or OperationCanceledException))
+        if (context.OriginalException is not (AccessDeniedException or CommitRejectedException or EntityNotFoundException or DeletionRestrictedException or GraphQLInputException or OperationCanceledException))
         {
             if (log is not null)
             {

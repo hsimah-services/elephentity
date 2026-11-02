@@ -200,6 +200,32 @@ public sealed class QueryTests
         Assert.Empty(grouped["3"]);
     }
 
+    [Fact]
+    public async Task ToOneEdgesResolvedInParallelShareTheCacheSafely()
+    {
+        for (var run = 0; run < 50; run++)
+        {
+            var storage = new ConcurrentStorage();
+            var loader = new CachingEdgeLoader(
+                storage,
+                new Hydrators(),
+                new Dictionary<string, string> { ["Item.page"] = "Page", ["Item.author"] = "User" },
+                new ReadGate(new StubCatalogue(), new AnonymousViewerProvider()));
+
+            // 100 items over 10 pages and 10 authors, both edges, all at once, as a parallel resolver asks.
+            var loads = Enumerable.Range(1, 100).SelectMany(n => new[]
+            {
+                loader.ToOneAsync("Item", EntityId.Of(n % 10 + 1), "page", Token).AsTask(),
+                loader.ToOneAsync("Item", EntityId.Of(n % 10 + 1), "author", Token).AsTask(),
+            });
+
+            var found = await Task.WhenAll(loads);
+
+            Assert.All(found, Assert.NotNull);
+            Assert.Equal(20, storage.Queries);
+        }
+    }
+
     private static EntityId Id(object entity) => ((Record)entity).Id;
 
     private static long N(object entity) => Convert.ToInt64(((Record)entity).Value("n"), System.Globalization.CultureInfo.InvariantCulture);
@@ -276,5 +302,21 @@ internal sealed class IgnoringCursorStorage : FakeStorage
             .ToList();
 
         return Task.FromResult(new Page<Record>(page, new KeysetCursor([page[^1].Value("n")], page[^1].Id)));
+    }
+}
+
+/// <summary>Answers every query with one row, after yielding, so concurrent callers really overlap.</summary>
+internal sealed class ConcurrentStorage : FakeStorage
+{
+    private int queries;
+
+    public int Queries => queries;
+
+    public override async Task<Page<Record>> QueryAsync(Criteria criteria, CancellationToken cancellationToken = default)
+    {
+        Interlocked.Increment(ref queries);
+        await Task.Yield();
+
+        return new Page<Record>([new Record(criteria.Entity, EntityId.Of(1), new Dictionary<string, object?>())]);
     }
 }

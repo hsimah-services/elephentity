@@ -489,6 +489,16 @@ genuinely different values collide and nothing tells you.
 oversized `maxLength` with "use `text`" rather than letting VARCHAR creep toward the
 65,535-byte row limit, where the failure arrives much later and is far more confusing.
 
+**`maxLength` is checked at commit too, not only by storage** (#158, #192). The storage
+builders turn it into a constraint, but a constraint fails as a driver exception, which a
+client sees as an internal error, and Cosmos has no constraint at all. So
+`EntityCatalogue::maxLengths()` (field => limit, generated next to `requiredFields()`)
+lets `VerificationPipeline` raise `field.maxLength` before any write. It counts
+characters (Unicode code points), as SQLite's `length()` does, not bytes or UTF-16 units.
+Only a **changed** value is measured: a row stored before the limit existed stays
+readable and savable until that field is written again, so tightening a limit never
+makes unrelated edits fail.
+
 ---
 
 ## 7. Verification

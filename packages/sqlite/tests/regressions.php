@@ -81,3 +81,10 @@ $adaptor = new SQLiteAdaptor($database, [
 $failures = (new \Eleph\Runtime\Storage\Testing\AdaptorConformance())->check($adaptor, 'Owner', 'targets', 'Target', sharedTargets: true);
 check($failures === [], implode('; ', $failures));
 echo "PASS: strict shared conformance including repeated targets in parent batches\n";
+
+$database = new Database(':memory:');
+foreach (['ELEPH_NOCASE', 'CLOG_NOCASE'] as $collation) {
+    $equal = $database->pdo->query("SELECT 'Éclair' = 'éCLAIR' COLLATE {$collation}")->fetchColumn();
+    check(1 === (int) $equal, "{$collation} does not compare case-insensitively.");
+}
+echo "PASS: the case-insensitive collation, under its framework name and its old one\n";

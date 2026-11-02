@@ -1,5 +1,6 @@
 using Elephentity.Runtime.Gateway;
 using Elephentity.Runtime.Policy;
+using Elephentity.Runtime.UnitOfWork;
 using Elephentity.Runtime.Verification;
 using GraphQL;
 using GraphQL.Execution;
@@ -11,7 +12,7 @@ namespace Elephentity.GraphQL.Http;
 /// </summary>
 /// <remarks>
 /// The mapping the clog reference does by hand: an access refusal is <c>FORBIDDEN</c>, a rejected commit is <c>BAD_USER_INPUT</c>
-/// with every violation, a missing row is <c>NOT_FOUND</c>, something the client got wrong is <c>BAD_USER_INPUT</c>, and anything else
+/// with every violation, a delete an edge restricts is <c>BAD_USER_INPUT</c>, a missing row is <c>NOT_FOUND</c>, something the client got wrong is <c>BAD_USER_INPUT</c>, and anything else
 /// is <c>INTERNAL</c> with its message masked, because an exception message is for the log. Errors GraphQL itself raises (a syntax
 /// error, an unknown field, a variable that does not coerce) keep their own message and code.
 /// </remarks>
@@ -37,6 +38,7 @@ public sealed class ElephentityErrorInfoProvider : ErrorInfoProvider
             AccessDeniedException denied => Info("FORBIDDEN", denied.Reason),
             CommitRejectedException rejected => Rejected(rejected),
             EntityNotFoundException missing => Info("NOT_FOUND", missing.Message),
+            DeletionRestrictedException restricted => Info("BAD_USER_INPUT", restricted.Message),
             GraphQLInputException input => Info("BAD_USER_INPUT", input.Message),
             _ => Info("INTERNAL", "Internal server error."),
         };
@@ -56,7 +58,8 @@ public sealed class ElephentityErrorInfoProvider : ErrorInfoProvider
 
     private static ErrorInfo Rejected(CommitRejectedException rejected) => Info(
         "BAD_USER_INPUT",
-        $"The change was rejected by {rejected.Violations.Count} violation(s).",
+        // The violations' own words, so a client that shows only the message still says which rule was broken.
+        string.Join(" ", rejected.Violations.Select(violation => $"{violation.Path()}: {violation.Violation.Message}")),
         new Dictionary<string, object?>
         {
             ["violations"] = rejected.Violations

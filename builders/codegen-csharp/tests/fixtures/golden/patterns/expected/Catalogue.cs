@@ -110,6 +110,11 @@ public sealed class Catalogue : global::Elephentity.Runtime.Catalogue.IEntityCat
         _ => [],
     };
 
+    public global::System.Collections.Generic.IReadOnlyDictionary<string, int> MaxLengths(string entity) => entity switch
+    {
+        _ => new global::System.Collections.Generic.Dictionary<string, int>(),
+    };
+
     /// <summary>
     /// "Entity.field" to when the framework fills it.
     /// </summary>

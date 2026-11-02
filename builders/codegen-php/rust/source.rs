@@ -10,7 +10,7 @@ use php_codegen::{
     Generator, Indentation,
 };
 use serde_json::{json, Value};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 pub fn short(s: &str) -> &str {
     s.rsplit('\\').next().unwrap_or(s)
 }
@@ -56,6 +56,8 @@ pub struct Source {
     pub fq: String,
     pub class: Class,
     pub imports: BTreeSet<String>,
+    /// Imports whose short name another import already holds, and the alias each is used under.
+    pub aliases: BTreeMap<String, String>,
     pub kind: &'static str,
 }
 impl Source {
@@ -65,6 +67,7 @@ impl Source {
             fq,
             class,
             imports: BTreeSet::new(),
+            aliases: BTreeMap::new(),
             kind: "class",
         }
     }
@@ -79,6 +82,34 @@ impl Source {
             ]
             .contains(&name)
         {
+            if let Some(alias) = self.aliases.get(name) {
+                return alias.clone();
+            }
+            if !self.imports.contains(name) {
+                let taken = |candidate: &str| {
+                    candidate == short(&self.fq)
+                        || self.imports.iter().any(|u| {
+                            self.aliases.get(u).map_or(short(u), String::as_str) == candidate
+                        })
+                };
+                if taken(short(name)) {
+                    // Two classes with one short name (Page\Contract\PageItemKindVerifier and
+                    // PageItem\Contract\PageItemKindVerifier): the later one is used under its
+                    // namespace segments, nearest first and at least two of them, so the alias
+                    // names its owner (PageItemContractPageItemKindVerifier), until it is free.
+                    let segments: Vec<&str> = name.split('\\').collect();
+                    let mut alias = short(name).to_owned();
+                    for (depth, segment) in segments.iter().rev().skip(1).enumerate() {
+                        alias = format!("{segment}{alias}");
+                        if depth >= 1 && !taken(&alias) {
+                            break;
+                        }
+                    }
+                    self.aliases.insert(name.into(), alias.clone());
+                    self.imports.insert(name.into());
+                    return alias;
+                }
+            }
             self.imports.insert(name.into());
         }
         short(name).into()
@@ -130,6 +161,10 @@ impl Source {
         let ns = self.fq.rsplit_once('\\').unwrap().0;
         let mut body = format!("namespace {ns};\n\n");
         for u in &self.imports {
+            if let Some(alias) = self.aliases.get(u) {
+                body.push_str(&format!("use {u} as {alias};\n"));
+                continue;
+            }
             if u.rsplit_once('\\').is_some_and(|(parent, _)| parent == ns) {
                 continue;
             }
@@ -161,5 +196,39 @@ impl Source {
             .collect::<Vec<_>>()
             .join("\n");
         json!({"path": format!("{}.php", self.fq.strip_prefix(&format!("{}\\", root.trim_matches('\\'))).unwrap().replace('\\', "/")), "body": body})
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_second_class_with_a_taken_short_name_is_imported_under_an_alias() {
+        let mut out = Source::new(r"App\Wiring".into());
+
+        assert_eq!(
+            out.import(r"App\Page\Contract\PageItemKindVerifier"),
+            "PageItemKindVerifier"
+        );
+        assert_eq!(
+            out.import(r"App\PageItem\Contract\PageItemKindVerifier"),
+            "PageItemContractPageItemKindVerifier"
+        );
+        assert_eq!(
+            out.import(r"App\PageItem\Contract\PageItemKindVerifier"),
+            "PageItemContractPageItemKindVerifier"
+        );
+        assert_eq!(
+            out.import(r"App\Page\Contract\PageItemKindVerifier"),
+            "PageItemKindVerifier"
+        );
+
+        let body = out.file("App")["body"].as_str().unwrap().to_owned();
+
+        assert!(body.contains("use App\\Page\\Contract\\PageItemKindVerifier;\n"));
+        assert!(body.contains(
+            "use App\\PageItem\\Contract\\PageItemKindVerifier as PageItemContractPageItemKindVerifier;\n"
+        ));
     }
 }

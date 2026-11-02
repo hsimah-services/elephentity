@@ -22,6 +22,23 @@ use InvalidArgumentException;
  * second edge. Saying it this way is what lets an inverse accessor exist without the
  * target entity having to declare anything.
  *
+ * Which way each reads, with `PageItem.page` (to-one, declared on PageItem) and
+ * `Post.tags` (to-many, declared on Post). The `$from` ids always belong to the side
+ * the filter starts from, and the result is always rows of the other side:
+ *
+ *     // The page this item sits on: start at PageItem 7, get Page rows.
+ *     Criteria::for('Page')->linkedTo(EdgeFilter::along('PageItem', 'page', $itemId));
+ *     // The items of a page: start at Page 3, get PageItem rows.
+ *     Criteria::for('PageItem')->linkedTo(EdgeFilter::back('PageItem', 'page', $pageId));
+ *     // A post's tags: start at Post 1, get Tag rows.
+ *     Criteria::for('Tag')->linkedTo(EdgeFilter::along('Post', 'tags', $postId));
+ *     // The posts with a tag: start at Tag 5, get Post rows.
+ *     Criteria::for('Post')->linkedTo(EdgeFilter::back('Post', 'tags', $tagId));
+ *
+ * So `along` goes from the declaring entity to the edge's target, and `back` from the
+ * target to the declaring entity, whatever the cardinality. "Items of a page" is
+ * `back`, because the edge is declared on the item.
+ *
  * Several parents in one filter mean *any of them*, which is how one query serves
  * fifty posts asking for their comments. Separate filters on a criteria remain
  * conjunctive, as field filters are.

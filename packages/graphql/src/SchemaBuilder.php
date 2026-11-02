@@ -106,7 +106,9 @@ final class SchemaBuilder
             ...$config['connectionFields'],
         ]]);
         $args = ['first' => ['type' => 'Int'], 'after' => ['type' => 'String'], 'last' => ['type' => 'Int'], 'before' => ['type' => 'String']];
-        if (isset($config['connectionArgs'])) {
+        // A published query with no arguments keeps its own connection name, but an input
+        // object must have fields, so it gets no `where` at all.
+        if (isset($config['connectionArgs']) && [] !== $config['connectionArgs']) {
             $this->input($name . 'WhereArgs', $config['connectionArgs']);
             $args['where'] = ['type' => $name . 'WhereArgs'];
         }

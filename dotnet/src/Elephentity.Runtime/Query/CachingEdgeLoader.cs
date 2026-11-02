@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Elephentity.Runtime.Identity;
 using Elephentity.Runtime.Policy;
 using Elephentity.Runtime.Storage;
@@ -17,11 +18,13 @@ namespace Elephentity.Runtime.Query;
 /// caller that knows all fifty ids up front, as a GraphQL resolver does, which is why
 /// <see cref="PreloadAsync" /> exists and is called there rather than guessed at here.</para>
 /// <para>Between the two sits the identity map: asking the same post for its comments twice costs one query,
-/// not two. One loader serves one request, so the map is not shared between threads.</para>
+/// not two. One loader serves one request, but GraphQL.NET resolves the fields of a list's items in parallel,
+/// so the map is safe to use from several threads at once, and concurrent first loads of one edge share one
+/// read.</para>
 /// </remarks>
 public sealed class CachingEdgeLoader : IEdgeLoader
 {
-    private readonly Dictionary<string, object?> toOne = [];
+    private readonly ConcurrentDictionary<string, Lazy<Task<object?>>> toOne = new();
     private readonly IStorageAdaptor storage;
     private readonly IHydratorRegistry hydrators;
     private readonly IReadOnlyDictionary<string, string> targets;
@@ -121,15 +124,20 @@ public sealed class CachingEdgeLoader : IEdgeLoader
 
     private async ValueTask<object?> OneAsync(string key, string target, EdgeFilter link, CancellationToken cancellationToken)
     {
-        if (toOne.TryGetValue(key, out var cached))
+        var load = toOne.GetOrAdd(
+            key,
+            _ => new Lazy<Task<object?>>(() => Query(target, link).FirstAsync(cancellationToken).AsTask()));
+
+        try
         {
-            return cached;
+            return await load.Value.ConfigureAwait(false);
         }
-
-        var found = await Query(target, link).FirstAsync(cancellationToken).ConfigureAwait(false);
-        toOne[key] = found;
-
-        return found;
+        catch
+        {
+            // A failed or cancelled read is not an answer, so the next caller tries again.
+            toOne.TryRemove(new KeyValuePair<string, Lazy<Task<object?>>>(key, load));
+            throw;
+        }
     }
 
     private string Target(string entity, string edge) =>

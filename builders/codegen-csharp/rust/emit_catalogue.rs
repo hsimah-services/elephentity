@@ -232,6 +232,33 @@ impl Gen<'_> {
         }
 
         code.blank();
+        code.open(format!(
+            "public {READ_ONLY_DICTIONARY}<string, int> MaxLengths(string entity) => entity switch"
+        ));
+
+        for e in &entities {
+            let limits: Vec<String> = vals(&e["fields"])
+                .into_iter()
+                .filter_map(|f| {
+                    f["maxLength"]
+                        .as_i64()
+                        .map(|n| format!("[{}] = {n}", literal(s(&f["name"]))))
+                })
+                .collect();
+
+            if !limits.is_empty() {
+                code.line(format!(
+                    "{} => new {DICTIONARY}<string, int> {{ {} }},",
+                    literal(s(&e["name"])),
+                    limits.join(", ")
+                ));
+            }
+        }
+
+        code.line(format!("_ => new {DICTIONARY}<string, int>(),"));
+        code.close_with(";");
+
+        code.blank();
         code.doc("\"Entity.field\" to when the framework fills it.");
         code.line(format!(
             "public {READ_ONLY_DICTIONARY}<string, {MANAGED}> ManagedFields() =>"

@@ -362,3 +362,35 @@ fn a_describe_without_a_request_key_is_a_generate() {
 
     assert_eq!(answer(&request)["errors"], json!([]));
 }
+
+#[test]
+fn contracts_with_one_name_in_two_entities_are_an_error_naming_both_fields() {
+    // Page.itemKind and PageItem.kind both make IPageItemKindVerifier, and C# contracts share one namespace.
+    let mut request = with_config(fixture("valid"), valid_config());
+    let entities = request["schema"]["entities"].as_object_mut().unwrap();
+
+    for (entity, field) in [("Page", "itemKind"), ("PageItem", "kind")] {
+        let mut copy = entities["Tag"].clone();
+        copy["name"] = json!(entity);
+        let mut definition = copy["fields"]["label"].clone();
+        definition["name"] = json!(field);
+        definition["unique"] = json!(false);
+        definition["verify"] = json!(true);
+        copy["fields"] = json!({ field: definition });
+        entities.insert(entity.into(), copy);
+    }
+
+    let response = answer(&request);
+    let errors = response["errors"].as_array().unwrap();
+
+    assert_eq!(response["files"], json!([]));
+    assert!(
+        errors.iter().any(|error| {
+            let error = error.as_str().unwrap();
+            error.contains("IPageItemKindVerifier would be generated twice")
+                && error.contains("Page.itemKind")
+                && error.contains("PageItem.kind")
+        }),
+        "{errors:?}"
+    );
+}

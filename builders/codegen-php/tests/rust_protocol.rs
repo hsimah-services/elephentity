@@ -111,3 +111,54 @@ fn describe_advertises_the_checker() {
         }})
     );
 }
+
+#[test]
+fn contracts_with_one_short_name_in_two_entities_are_aliased_in_wiring() {
+    // Page.itemKind and PageItem.kind both make a PageItemKindVerifier, in different namespaces.
+    let mut request: Value =
+        serde_json::from_str(include_str!("fixtures/golden/valid/request.json")).unwrap();
+    let entities = request["schema"]["entities"].as_object_mut().unwrap();
+    for (entity, field) in [("Page", "itemKind"), ("PageItem", "kind")] {
+        let mut copy = entities["Tag"].clone();
+        copy["name"] = json!(entity);
+        copy["storage"]["table"] = json!(format!("phe_{}", entity.to_lowercase()));
+        let mut definition = copy["fields"]["label"].clone();
+        definition["name"] = json!(field);
+        definition["unique"] = json!(false);
+        definition["verify"] = json!(true);
+        copy["fields"] = json!({ field: definition });
+        entities.insert(entity.into(), copy);
+    }
+
+    let output = invoke(&request);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let wiring = response["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|file| file["path"] == "Wiring.php")
+        .unwrap()["body"]
+        .as_str()
+        .unwrap();
+
+    assert!(
+        wiring.contains("use App\\Elephentity\\Page\\Contract\\PageItemKindVerifier;\n"),
+        "{wiring}"
+    );
+    assert!(wiring.contains("use App\\Elephentity\\PageItem\\Contract\\PageItemKindVerifier as PageItemContractPageItemKindVerifier;\n"), "{wiring}");
+    assert!(
+        wiring.contains("new PageVerifiers(self::resolve($c, PageItemKindVerifier::class))"),
+        "{wiring}"
+    );
+    assert!(
+        wiring.contains(
+            "new PageItemVerifiers(self::resolve($c, PageItemContractPageItemKindVerifier::class))"
+        ),
+        "{wiring}"
+    );
+}
